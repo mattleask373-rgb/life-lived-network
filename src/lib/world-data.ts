@@ -609,3 +609,19 @@ export const LIFE_LIST_SEEDS = [
   "Cook for six people I've never met",
   "Learn enough Portuguese to be rude politely",
 ];
+
+/**
+ * The "Everything" view shows the feeling of a place, not every pin.
+ * A couple of things per layer, so the map is alive without being noisy.
+ */
+export function meaningfulVariety(entries: WorldEntry[], perLayer = 2): WorldEntry[] {
+  const count = new Map<LayerId, number>();
+  const kept: WorldEntry[] = [];
+  for (const e of entries) {
+    const n = count.get(e.layer) ?? 0;
+    if (n >= perLayer) continue;
+    count.set(e.layer, n + 1);
+    kept.push(e);
+  }
+  return kept;
+}

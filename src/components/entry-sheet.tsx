@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { LAYERS, relatedEntries, type WorldEntry } from "@/lib/world-data";
+import { LAYERS, QUALITY_LABEL, relatedEntries, type WorldEntry } from "@/lib/world-data";
 import { duration, layerText, money } from "./layer-colour";
 
 export function EntrySheet({
@@ -102,13 +102,18 @@ export function EntrySheet({
             {entry.host}
             {entry.verified ? (
               <span className="ml-2 rounded-full border border-primary/40 px-2 py-0.5 text-xs text-primary">
-                Checked
+                {QUALITY_LABEL.verified}
               </span>
             ) : (
               <span className="ml-2 rounded-full border border-border px-2 py-0.5 text-xs">
-                Not yet checked — ask before you rely on it
+                {entry.quality ? QUALITY_LABEL[entry.quality] : QUALITY_LABEL.unverified}
               </span>
             )}
+            {entry.community ? (
+              <span className="ml-2 rounded-full border border-border px-2 py-0.5 text-xs">
+                Posted by someone here
+              </span>
+            ) : null}
           </p>
 
           <div className="mt-5 flex flex-wrap gap-2">
