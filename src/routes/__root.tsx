@@ -154,6 +154,20 @@ function SiteHeader() {
           >
             Life list
           </Link>
+          <Link
+            to="/make"
+            activeProps={{ className: "text-foreground" }}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Make something
+          </Link>
+          <Link
+            to="/profile"
+            activeProps={{ className: "text-foreground" }}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            You
+          </Link>
         </div>
       </nav>
     </header>
