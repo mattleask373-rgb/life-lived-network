@@ -3,7 +3,7 @@ import { layerBg } from "./layer-colour";
 
 interface Props {
   entries: WorldEntry[];
-  activeId?: string;
+  activeId?: string | undefined;
   onSelect: (entry: WorldEntry) => void;
 }
 
