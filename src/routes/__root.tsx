@@ -126,11 +126,46 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function SiteHeader() {
+  return (
+    <header className="border-b border-border bg-card/80 backdrop-blur-sm">
+      <nav
+        aria-label="Main"
+        className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:flex sm:justify-between sm:px-6"
+      >
+        <Link to="/" className="min-w-0 truncate font-semibold tracking-tight">
+          The Living World
+        </Link>
+        <div className="flex shrink-0 items-center gap-4 text-sm">
+          <Link to="/" activeProps={{ className: "text-foreground" }} className="text-muted-foreground hover:text-foreground">
+            Map
+          </Link>
+          <Link
+            to="/journey"
+            activeProps={{ className: "text-foreground" }}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Journey
+          </Link>
+          <Link
+            to="/life-list"
+            activeProps={{ className: "text-foreground" }}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Life list
+          </Link>
+        </div>
+      </nav>
+    </header>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
+      <SiteHeader />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>
