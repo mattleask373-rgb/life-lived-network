@@ -47,7 +47,32 @@ export interface WorldEntry {
   verified: boolean;
   social: "quiet" | "friendly" | "lively";
   outdoors: boolean;
+  /** True when a real person on the platform posted this, not demo content. */
+  community?: boolean;
+  /** How trustworthy the information is right now. */
+  quality?: DataQuality;
+  /** What kind of thing this is, for community-posted entries. */
+  kind?: string;
+  /** What the person could give, in their own words. */
+  skills?: string[];
 }
+
+export type DataQuality =
+  | "unverified"
+  | "community confirmed"
+  | "verified"
+  | "recently updated"
+  | "may have changed"
+  | "expired";
+
+export const QUALITY_LABEL: Record<DataQuality, string> = {
+  unverified: "Not yet checked — ask before you rely on it",
+  "community confirmed": "Confirmed by people who went",
+  verified: "Checked",
+  "recently updated": "Updated recently",
+  "may have changed": "May have changed — worth asking",
+  expired: "This has probably passed",
+};
 
 export interface Layer {
   id: LayerId;
@@ -584,3 +609,19 @@ export const LIFE_LIST_SEEDS = [
   "Cook for six people I've never met",
   "Learn enough Portuguese to be rude politely",
 ];
+
+/**
+ * The "Everything" view shows the feeling of a place, not every pin.
+ * A couple of things per layer, so the map is alive without being noisy.
+ */
+export function meaningfulVariety(entries: WorldEntry[], perLayer = 2): WorldEntry[] {
+  const count = new Map<LayerId, number>();
+  const kept: WorldEntry[] = [];
+  for (const e of entries) {
+    const n = count.get(e.layer) ?? 0;
+    if (n >= perLayer) continue;
+    count.set(e.layer, n + 1);
+    kept.push(e);
+  }
+  return kept;
+}

@@ -3,7 +3,9 @@ import { useState } from "react";
 import { EntryCard } from "@/components/entry-card";
 import { EntrySheet } from "@/components/entry-sheet";
 import { useLifeList } from "@/hooks/use-life-list";
-import { entryById, LIFE_LIST_SEEDS, type WorldEntry } from "@/lib/world-data";
+import { useQuery } from "@tanstack/react-query";
+import { fetchWorld } from "@/lib/listings";
+import { LIFE_LIST_SEEDS, type WorldEntry } from "@/lib/world-data";
 
 const title = "Your life list — The Living World";
 const description =
@@ -24,7 +26,10 @@ export const Route = createFileRoute("/life-list")({
 function LifeListPage() {
   const { ids, ready, has, toggle } = useLifeList();
   const [open, setOpen] = useState<WorldEntry | null>(null);
-  const saved = ids.map(entryById).filter((e): e is WorldEntry => Boolean(e));
+  const { data: world } = useQuery({ queryKey: ["world"], queryFn: fetchWorld });
+  const saved = ids
+    .map((id) => (world ?? []).find((e) => e.id === id))
+    .filter((e): e is WorldEntry => Boolean(e));
 
   return (
     <main className="paper-grain min-h-screen">

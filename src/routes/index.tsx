@@ -6,9 +6,11 @@ import { EntrySheet } from "@/components/entry-sheet";
 import { EntryCard } from "@/components/entry-card";
 import { ThreeHours } from "@/components/three-hours";
 import { useLifeList } from "@/hooks/use-life-list";
+import { useQuery } from "@tanstack/react-query";
+import { fetchWorld } from "@/lib/listings";
 import {
   activitySnapshot,
-  entriesByLayer,
+  meaningfulVariety,
   PLACE,
   type LayerId,
   type WorldEntry,
@@ -35,7 +37,13 @@ function Home() {
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle } = useLifeList();
 
-  const entries = useMemo(() => entriesByLayer(layers), [layers]);
+  const { data: world } = useQuery({ queryKey: ["world"], queryFn: fetchWorld });
+  const all = world ?? [];
+
+  const entries = useMemo(() => {
+    const filtered = layers.length ? all.filter((e) => layers.includes(e.layer)) : all;
+    return layers.length ? filtered : meaningfulVariety(filtered);
+  }, [all, layers]);
   const snapshot = useMemo(() => activitySnapshot(), []);
   const tonight = useMemo(
     () => entries.filter((e) => e.band === "tonight" || e.band === "today").slice(0, 3),
