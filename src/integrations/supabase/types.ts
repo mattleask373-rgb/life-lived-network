@@ -14,7 +14,174 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      listings: {
+        Row: {
+          accessibility: string | null
+          band: string
+          contact_note: string | null
+          cost: number
+          created_at: string
+          creator_id: string
+          currency: string
+          data_quality: string
+          details: string[]
+          give: string | null
+          id: string
+          kind: string
+          layer: string
+          minutes: number
+          neighbourhood: string
+          outdoors: boolean
+          people_needed: number | null
+          place: string
+          skills: string[]
+          social: string
+          status: string
+          summary: string
+          title: string
+          updated_at: string
+          when_text: string
+          x: number
+          y: number
+        }
+        Insert: {
+          accessibility?: string | null
+          band?: string
+          contact_note?: string | null
+          cost?: number
+          created_at?: string
+          creator_id: string
+          currency?: string
+          data_quality?: string
+          details?: string[]
+          give?: string | null
+          id?: string
+          kind: string
+          layer: string
+          minutes?: number
+          neighbourhood?: string
+          outdoors?: boolean
+          people_needed?: number | null
+          place?: string
+          skills?: string[]
+          social?: string
+          status?: string
+          summary?: string
+          title: string
+          updated_at?: string
+          when_text?: string
+          x?: number
+          y?: number
+        }
+        Update: {
+          accessibility?: string | null
+          band?: string
+          contact_note?: string | null
+          cost?: number
+          created_at?: string
+          creator_id?: string
+          currency?: string
+          data_quality?: string
+          details?: string[]
+          give?: string | null
+          id?: string
+          kind?: string
+          layer?: string
+          minutes?: number
+          neighbourhood?: string
+          outdoors?: boolean
+          people_needed?: number | null
+          place?: string
+          skills?: string[]
+          social?: string
+          status?: string
+          summary?: string
+          title?: string
+          updated_at?: string
+          when_text?: string
+          x?: number
+          y?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          can_offer: string[]
+          can_teach: string[]
+          created_at: string
+          discoverable: boolean
+          display_name: string
+          id: string
+          interests: string[]
+          intro: string
+          languages: string[]
+          location: string
+          photo_url: string | null
+          updated_at: string
+          wants_to_learn: string[]
+          would_love_to: string[]
+        }
+        Insert: {
+          can_offer?: string[]
+          can_teach?: string[]
+          created_at?: string
+          discoverable?: boolean
+          display_name?: string
+          id: string
+          interests?: string[]
+          intro?: string
+          languages?: string[]
+          location?: string
+          photo_url?: string | null
+          updated_at?: string
+          wants_to_learn?: string[]
+          would_love_to?: string[]
+        }
+        Update: {
+          can_offer?: string[]
+          can_teach?: string[]
+          created_at?: string
+          discoverable?: boolean
+          display_name?: string
+          id?: string
+          interests?: string[]
+          intro?: string
+          languages?: string[]
+          location?: string
+          photo_url?: string | null
+          updated_at?: string
+          wants_to_learn?: string[]
+          would_love_to?: string[]
+        }
+        Relationships: []
+      }
+      saved_items: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          note: string | null
+          ref: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          ref: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          ref?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
