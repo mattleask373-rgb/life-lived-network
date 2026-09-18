@@ -155,6 +155,13 @@ function SiteHeader() {
             Life list
           </Link>
           <Link
+            to="/give"
+            activeProps={{ className: "text-foreground" }}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Give an hour
+          </Link>
+          <Link
             to="/make"
             activeProps={{ className: "text-foreground" }}
             className="text-muted-foreground hover:text-foreground"
