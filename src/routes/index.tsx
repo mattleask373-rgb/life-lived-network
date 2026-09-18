@@ -5,6 +5,7 @@ import { LayerFilter } from "@/components/layer-filter";
 import { EntrySheet } from "@/components/entry-sheet";
 import { EntryCard } from "@/components/entry-card";
 import { ThreeHours } from "@/components/three-hours";
+import { DoSomethingToday } from "@/components/do-something-today";
 import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWorld } from "@/lib/listings";
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/")({
 function Home() {
   const [layers, setLayers] = useState<LayerId[]>([]);
   const [open, setOpen] = useState<WorldEntry | null>(null);
-  const { has, toggle } = useLifeList();
+  const { has, toggle, ids } = useLifeList();
 
   const { data: world } = useQuery({ queryKey: ["world"], queryFn: fetchWorld });
   const all = world ?? [];
@@ -132,10 +133,30 @@ function Home() {
           </section>
         )}
 
+        {/* Do something today */}
+        <div className="mt-10">
+          <DoSomethingToday world={all} savedIds={ids} onOpen={setOpen} />
+        </div>
+
         {/* I have three hours */}
         <div className="mt-10">
           <ThreeHours onOpen={setOpen} />
         </div>
+
+        {/* What can you give */}
+        <section className="card-paper mt-10 p-5">
+          <h2 className="text-xl">What can you give?</h2>
+          <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+            An hour of something useful — teaching, painting, photography, a language, a pair
+            of hands. Nothing here is scored or counted.
+          </p>
+          <Link
+            to="/give"
+            className="focus-ink mt-4 inline-flex rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
+          >
+            I have one hour
+          </Link>
+        </section>
 
         {/* Journey */}
         <section className="card-paper mt-10 p-5">
