@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      hour_offers: {
+        Row: {
+          created_at: string
+          detail: string
+          direction: string
+          id: string
+          minutes: number
+          neighbourhood: string
+          skills: string[]
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          when_text: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string
+          direction?: string
+          id?: string
+          minutes?: number
+          neighbourhood?: string
+          skills?: string[]
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          when_text?: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string
+          direction?: string
+          id?: string
+          minutes?: number
+          neighbourhood?: string
+          skills?: string[]
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          when_text?: string
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           accessibility: string | null
