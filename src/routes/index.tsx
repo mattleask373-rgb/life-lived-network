@@ -59,7 +59,7 @@ function Home() {
     const filtered = layers.length ? all.filter((e) => layers.includes(e.layer)) : all;
     return layers.length ? filtered : meaningfulVariety(filtered);
   }, [all, layers]);
-  const snapshot = useMemo(() => activitySnapshot(), []);
+  const snapshot = useMemo(() => activitySnapshot(all), [all]);
   const tonight = useMemo(
     () => entries.filter((e) => e.band === "tonight" || e.band === "today").slice(0, 3),
     [entries],
