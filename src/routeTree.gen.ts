@@ -17,6 +17,7 @@ import { Route as HelpRouteImport } from './routes/help'
 import { Route as JourneyRouteImport } from './routes/journey'
 import { Route as LifeListRouteImport } from './routes/life-list'
 import { Route as MakeRouteImport } from './routes/make'
+import { Route as ModerationRouteImport } from './routes/moderation'
 import { Route as NeedRouteImport } from './routes/need'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as NeedIdRouteImport } from './routes/need.$id'
@@ -61,6 +62,11 @@ const MakeRoute = MakeRouteImport.update({
   path: '/make',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ModerationRoute = ModerationRouteImport.update({
+  id: '/moderation',
+  path: '/moderation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NeedRoute = NeedRouteImport.update({
   id: '/need',
   path: '/need',
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/journey': typeof JourneyRoute
   '/life-list': typeof LifeListRoute
   '/make': typeof MakeRoute
+  '/moderation': typeof ModerationRoute
   '/need': typeof NeedRouteWithChildren
   '/profile': typeof ProfileRoute
   '/need/$id': typeof NeedIdRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/journey': typeof JourneyRoute
   '/life-list': typeof LifeListRoute
   '/make': typeof MakeRoute
+  '/moderation': typeof ModerationRoute
   '/need': typeof NeedRouteWithChildren
   '/profile': typeof ProfileRoute
   '/need/$id': typeof NeedIdRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/journey': typeof JourneyRoute
   '/life-list': typeof LifeListRoute
   '/make': typeof MakeRoute
+  '/moderation': typeof ModerationRoute
   '/need': typeof NeedRouteWithChildren
   '/profile': typeof ProfileRoute
   '/need/$id': typeof NeedIdRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/journey'
     | '/life-list'
     | '/make'
+    | '/moderation'
     | '/need'
     | '/profile'
     | '/need/$id'
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/journey'
     | '/life-list'
     | '/make'
+    | '/moderation'
     | '/need'
     | '/profile'
     | '/need/$id'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/journey'
     | '/life-list'
     | '/make'
+    | '/moderation'
     | '/need'
     | '/profile'
     | '/need/$id'
@@ -168,6 +180,7 @@ export interface RootRouteChildren {
   JourneyRoute: typeof JourneyRoute
   LifeListRoute: typeof LifeListRoute
   MakeRoute: typeof MakeRoute
+  ModerationRoute: typeof ModerationRoute
   NeedRoute: typeof NeedRouteWithChildren
   ProfileRoute: typeof ProfileRoute
 }
@@ -230,6 +243,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MakeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/moderation': {
+      id: '/moderation'
+      path: '/moderation'
+      fullPath: '/moderation'
+      preLoaderRoute: typeof ModerationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/need': {
       id: '/need'
       path: '/need'
@@ -273,6 +293,7 @@ const rootRouteChildren: RootRouteChildren = {
   JourneyRoute: JourneyRoute,
   LifeListRoute: LifeListRoute,
   MakeRoute: MakeRoute,
+  ModerationRoute: ModerationRoute,
   NeedRoute: NeedRouteWithChildren,
   ProfileRoute: ProfileRoute,
 }
