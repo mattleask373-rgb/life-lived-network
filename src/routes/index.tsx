@@ -163,27 +163,53 @@ function Home() {
           </p>
         </section>
 
-        {/* Soon */}
-        {tonight.length ? (
-          <section aria-labelledby="soon-heading" className="mt-10">
-            <h2 id="soon-heading" className="text-xl">
-              Happening soon
-            </h2>
+        {/* What's happening — everything with a real date, by day */}
+        <WhatsHappening events={events} placeName={placeName} onOpen={setOpen} />
+
+        {/* What's here — providers and their practices and services */}
+        <WhatsHere groups={groups} placeName={placeName} onOpen={setOpen} />
+
+        {/* Who's here, and what people have asked for */}
+        <section aria-labelledby="who" id="who" className="mt-10 scroll-mt-6">
+          <h2 id="who-heading" className="text-2xl">
+            Who's here, and what's needed
+          </h2>
+          {given.length ? (
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              {tonight.map((e) => (
-                <EntryCard key={e.id} entry={e} onOpen={setOpen} />
+              {given.slice(0, 6).map((e) => (
+                <EntryCard key={e.id} entry={e} onOpen={setOpen} note={e.give} />
               ))}
             </div>
-          </section>
-        ) : !quiet ? (
-          <section className="card-paper mt-10 p-5">
-            <h2 className="text-xl">Nothing in the next day or two.</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              There are things here, just not imminently. Try a wider area, or put something on for
-              a day that's empty.
+          ) : (
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+              Nobody in {placeName} has offered an hour or a skill yet. You could be the first, and
+              it takes a minute.
             </p>
-          </section>
-        ) : null}
+          )}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link
+              to="/need"
+              className="focus-ink rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
+            >
+              {needCount
+                ? `${needCount} ${needCount === 1 ? "thing" : "things"} people have asked for`
+                : "Ask for something yourself"}
+            </Link>
+            <Link
+              to="/give"
+              className="focus-ink rounded-full border border-border px-5 py-2.5 text-sm"
+            >
+              I have one hour
+            </Link>
+            <Link
+              to="/help"
+              className="focus-ink rounded-full border border-border px-5 py-2.5 text-sm"
+            >
+              Say what you can do
+            </Link>
+          </div>
+        </section>
+
 
         {/* Do something today */}
         <div className="mt-10">
