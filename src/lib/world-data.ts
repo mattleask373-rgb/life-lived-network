@@ -11,14 +11,7 @@
  */
 
 export type LayerId =
-  | "work"
-  | "experience"
-  | "music"
-  | "art"
-  | "community"
-  | "people"
-  | "nature"
-  | "food";
+  "work" | "experience" | "music" | "art" | "community" | "people" | "nature" | "food";
 
 export type TimeBand = "now" | "today" | "tonight" | "tomorrow" | "weekend";
 
@@ -92,14 +85,7 @@ export interface Layer {
 }
 
 export type LayerIconKey =
-  | "hammer"
-  | "compass"
-  | "music"
-  | "palette"
-  | "users"
-  | "person"
-  | "tree"
-  | "utensils";
+  "hammer" | "compass" | "music" | "palette" | "users" | "person" | "tree" | "utensils";
 
 export const LAYERS: Layer[] = [
   { id: "work", label: "Work", icon: "hammer", blurb: "Paid hours, near you" },
@@ -130,11 +116,7 @@ export function activitySnapshot(entries: WorldEntry[]): { layer: Layer; count: 
 }
 
 /** Things nearby that relate to a given entry, without any ranking magic. */
-export function relatedEntries(
-  entries: WorldEntry[],
-  entry: WorldEntry,
-  limit = 3,
-): WorldEntry[] {
+export function relatedEntries(entries: WorldEntry[], entry: WorldEntry, limit = 3): WorldEntry[] {
   return entries
     .filter((e) => e.id !== entry.id)
     .map((e) => {

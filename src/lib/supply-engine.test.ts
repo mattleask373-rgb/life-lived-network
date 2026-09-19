@@ -65,7 +65,11 @@ describe("supply engine", () => {
   });
 
   it("goes quiet rather than inventing", () => {
-    const answer = findSupply({ need: cleanerNeed, people: [latentGardener], entries: [unrelatedEntry] });
+    const answer = findSupply({
+      need: cleanerNeed,
+      people: [latentGardener],
+      entries: [unrelatedEntry],
+    });
     expect(answer.results).toHaveLength(0);
     expect(answer.quiet).toBe(true);
   });

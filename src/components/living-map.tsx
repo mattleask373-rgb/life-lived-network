@@ -71,10 +71,12 @@ export function LivingMap({ entries, activeId, onSelect }: Props) {
                   layerBg[entry.layer]
                 } ${active ? "h-9 w-9 scale-110" : "h-7 w-7 hover:scale-110"}`}
               >
-                 {(() => {
-                   const layer = LAYERS.find((item) => item.id === entry.layer);
-                   return layer ? <LayerIcon icon={layer.icon} size={active ? 17 : 14} strokeWidth={1.8} /> : null;
-                 })()}
+                {(() => {
+                  const layer = LAYERS.find((item) => item.id === entry.layer);
+                  return layer ? (
+                    <LayerIcon icon={layer.icon} size={active ? 17 : 14} strokeWidth={1.8} />
+                  ) : null;
+                })()}
               </span>
               <span className="h-2 w-px bg-ink/40" />
             </span>

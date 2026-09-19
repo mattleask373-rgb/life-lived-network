@@ -9,11 +9,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-import {
-  rowToCapability,
-  type CapabilityRow,
-  type OpportunityPreference,
-} from "./capability";
+import { rowToCapability, type CapabilityRow, type OpportunityPreference } from "./capability";
 import { findOpportunitiesForPerson, type PersonOpportunity } from "./reciprocal";
 import { rowToNeed, type Need, type NeedRow } from "./needs";
 import { rowToEntry, type ListingRow } from "./listings";
@@ -122,18 +118,26 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
     const people: PersonCandidate[] = [];
     if (userIds.size) {
       const ids = [...userIds].slice(0, 200);
-      const [{ data: profiles }, { data: caps }, { data: areas }, { data: windows }, { data: prefs }] =
-        await Promise.all([
-          supabase
-            .from("profiles")
-            .select("id, display_name, photo_url, location, place_id, wants_to_learn")
-            .in("id", ids)
-            .eq("discoverable", true),
-          supabase.from("person_capabilities").select("*").in("user_id", ids),
-          supabase.from("service_areas").select("user_id, place_id, relation").in("user_id", ids),
-          supabase.from("availability_windows").select("user_id, starts_at, ends_at").in("user_id", ids),
-          supabase.from("opportunity_preferences").select("user_id, preference").in("user_id", ids),
-        ]);
+      const [
+        { data: profiles },
+        { data: caps },
+        { data: areas },
+        { data: windows },
+        { data: prefs },
+      ] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, display_name, photo_url, location, place_id, wants_to_learn")
+          .in("id", ids)
+          .eq("discoverable", true),
+        supabase.from("person_capabilities").select("*").in("user_id", ids),
+        supabase.from("service_areas").select("user_id, place_id, relation").in("user_id", ids),
+        supabase
+          .from("availability_windows")
+          .select("user_id, starts_at, ends_at")
+          .in("user_id", ids),
+        supabase.from("opportunity_preferences").select("user_id, preference").in("user_id", ids),
+      ]);
 
       for (const profile of profiles ?? []) {
         people.push({
@@ -210,7 +214,6 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
     return findSupply({ need, people, entries });
   });
 
-
 /**
  * The same evidence, read the other way round: what could I help with?
  *
@@ -223,7 +226,11 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const [{ data: profile }, { data: caps }, { data: areas }, { data: windows }, { data: prefs }] =
       await Promise.all([
-        supabase.from("profiles").select("display_name, photo_url, location, place_id, wants_to_learn").eq("id", userId).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("display_name, photo_url, location, place_id, wants_to_learn")
+          .eq("id", userId)
+          .maybeSingle(),
         supabase.from("person_capabilities").select("*").eq("user_id", userId),
         supabase.from("service_areas").select("place_id, relation").eq("user_id", userId),
         supabase.from("availability_windows").select("starts_at, ends_at").eq("user_id", userId),
@@ -238,7 +245,9 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
       .map((a) => a.place_id);
 
     const placeIds = [
-      ...new Set([profile?.place_id, ...serviceAreaPlaceIds, ...travellingThroughPlaceIds].filter(Boolean)),
+      ...new Set(
+        [profile?.place_id, ...serviceAreaPlaceIds, ...travellingThroughPlaceIds].filter(Boolean),
+      ),
     ] as string[];
     if (!placeIds.length) return [];
 

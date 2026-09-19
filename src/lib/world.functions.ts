@@ -9,13 +9,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 
-import {
-  decodeCursor,
-  pageLimit,
-  toPage,
-  type DiscoveryContext,
-  type Page,
-} from "./data/contract";
+import { decodeCursor, pageLimit, toPage, type DiscoveryContext, type Page } from "./data/contract";
 import { asDataError } from "./data/errors";
 import { rowToEntry, type ListingRow } from "./listings";
 import type { SourcePhoto, WorldEntry } from "./world-data";
@@ -72,7 +66,10 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       const { data: photoRows, error: photoError } = await supabase
         .from("listing_photos")
         .select("listing_id, image_url, source_url, credit, alt_text, position")
-        .in("listing_id", listings.map((listing) => listing.id))
+        .in(
+          "listing_id",
+          listings.map((listing) => listing.id),
+        )
         .order("position", { ascending: true });
       if (photoError) throw photoError;
       for (const photo of photoRows ?? []) {

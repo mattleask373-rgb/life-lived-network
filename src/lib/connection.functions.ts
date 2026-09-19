@@ -135,9 +135,7 @@ export const getMyConnections = createServerFn({ method: "GET" })
     if (!requests.length) return [];
 
     const otherIds = [
-      ...new Set(
-        requests.map((r) => (r.senderId === context.userId ? r.recipientId : r.senderId)),
-      ),
+      ...new Set(requests.map((r) => (r.senderId === context.userId ? r.recipientId : r.senderId))),
     ];
     const [{ data: profiles }, { data: messages }] = await Promise.all([
       context.supabase
@@ -272,7 +270,10 @@ export const blockConnectionPerson = createServerFn({ method: "POST" })
 
     const { error: blockError } = await context.supabase
       .from("user_blocks")
-      .upsert({ blocker_id: context.userId, blocked_id: blockedId }, { onConflict: "blocker_id,blocked_id" });
+      .upsert(
+        { blocker_id: context.userId, blocked_id: blockedId },
+        { onConflict: "blocker_id,blocked_id" },
+      );
     if (blockError) throw blockError;
     return { blocked: true };
   });

@@ -229,15 +229,33 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
       diagnostics.excludedByPlace += 1;
       continue;
     }
-    const visibleCurrent = person.capabilities.filter((candidate) =>
-      candidate.visibility !== "private" && isCurrent(freshness({ lastConfirmedAt: candidate.lastConfirmedAt, expiresAt: candidate.expiresOn, kind: "capability", now })),
+    const visibleCurrent = person.capabilities.filter(
+      (candidate) =>
+        candidate.visibility !== "private" &&
+        isCurrent(
+          freshness({
+            lastConfirmedAt: candidate.lastConfirmedAt,
+            expiresAt: candidate.expiresOn,
+            kind: "capability",
+            now,
+          }),
+        ),
     );
     if (person.capabilities.length && !visibleCurrent.length) {
       diagnostics.excludedByFreshness += 1;
       continue;
     }
     const qualification = need.requiredQualifications.length
-      ? visibleCurrent.find((candidate) => candidate.kind === "qualification" && matchesTerms(candidate.label, need.requiredQualifications.flatMap((item) => terms({ ...need, category: item, title: "", requiredSkills: [] }))))
+      ? visibleCurrent.find(
+          (candidate) =>
+            candidate.kind === "qualification" &&
+            matchesTerms(
+              candidate.label,
+              need.requiredQualifications.flatMap((item) =>
+                terms({ ...need, category: item, title: "", requiredSkills: [] }),
+              ),
+            ),
+        )
       : null;
     if (need.requiredQualifications.length && !qualification) {
       diagnostics.excludedByQualification += 1;
@@ -251,7 +269,13 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
 
     const openTo = person.preferences.some((p) =>
       need.paymentType === "paid"
-        ? ["paid_work", "one_off_work", "recurring_work", "casual_work", "professional_services"].includes(p)
+        ? [
+            "paid_work",
+            "one_off_work",
+            "recurring_work",
+            "casual_work",
+            "professional_services",
+          ].includes(p)
         : ["helping_people", "volunteering", "community_projects", "skills_exchange"].includes(p),
     );
     const window = overlapsNeedTime(person, need);
@@ -260,15 +284,13 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
       usedPeople.add(person.id);
       push({
         id: `person-open-${person.id}`,
-      personId: person.id,
+        personId: person.id,
         ...(person.photoUrl ? { photoUrl: person.photoUrl } : {}),
         band: "open_to_opportunities",
         title: person.displayName,
         what: `Says they can: ${capability.label}`,
         where: person.placeName,
-        when: window
-          ? "Has said they're free around then"
-          : "Hasn't said when they're free",
+        when: window ? "Has said they're free around then" : "Hasn't said when they're free",
         why: [
           `${capability.kind === "qualification" ? "Qualified in" : "Says they can"} ${capability.label}`,
           "Has opted into being found for this kind of thing",
@@ -277,9 +299,20 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
         caveat: BAND_CAVEAT.open_to_opportunities,
         actions: ["contact", "view"],
         evidence: {
-          passed: ["capability", "service area", "opportunity preference", ...(qualification ? ["required qualification"] : []), ...(window ? ["availability overlap"] : [])],
+          passed: [
+            "capability",
+            "service area",
+            "opportunity preference",
+            ...(qualification ? ["required qualification"] : []),
+            ...(window ? ["availability overlap"] : []),
+          ],
           unknown: window ? [] : ["availability"],
-          freshness: freshness({ lastConfirmedAt: capability.lastConfirmedAt, expiresAt: capability.expiresOn, kind: "capability", now }),
+          freshness: freshness({
+            lastConfirmedAt: capability.lastConfirmedAt,
+            expiresAt: capability.expiresOn,
+            kind: "capability",
+            now,
+          }),
           verification: capability.verification,
         },
       });
@@ -303,9 +336,18 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
       caveat: BAND_CAVEAT.local_capability,
       actions: ["view"],
       evidence: {
-        passed: ["capability", "service area", ...(qualification ? ["required qualification"] : [])],
+        passed: [
+          "capability",
+          "service area",
+          ...(qualification ? ["required qualification"] : []),
+        ],
         unknown: ["availability", "opportunity preference"],
-        freshness: freshness({ lastConfirmedAt: capability.lastConfirmedAt, expiresAt: capability.expiresOn, kind: "capability", now }),
+        freshness: freshness({
+          lastConfirmedAt: capability.lastConfirmedAt,
+          expiresAt: capability.expiresOn,
+          kind: "capability",
+          now,
+        }),
         verification: capability.verification,
       },
     });
@@ -383,10 +425,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
       what: `Travelling, and can ${capability.label}`,
       where: `Passing through ${person.placeName}`,
       when: "Depends entirely on their plans",
-      why: [
-        `Says they can ${capability.label}`,
-        "Has opted into opportunities while travelling",
-      ],
+      why: [`Says they can ${capability.label}`, "Has opted into opportunities while travelling"],
       caveat: BAND_CAVEAT.journey,
       actions: ["contact"],
     });
