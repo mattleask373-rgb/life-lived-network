@@ -21,6 +21,21 @@ export type NeedIntent =
   | "skills_exchange";
 
 export type PaymentType = "paid" | "exchange" | "contribution" | "unsure";
+
+/**
+ * What the money actually means. A bare number says nothing: "£40" could be
+ * the whole job, the hourly rate, or a hopeful guess.
+ */
+export type PaymentModel =
+  | "free"
+  | "fixed"
+  | "from"
+  | "range"
+  | "donation"
+  | "exchange"
+  | "unpaid"
+  | "ask_them"
+  | "unknown";
 export type Flexibility = "fixed" | "some" | "very";
 export type Urgency = "today" | "soon" | "whenever";
 export type NeedVisibility = "private" | "local_discovery" | "public";
