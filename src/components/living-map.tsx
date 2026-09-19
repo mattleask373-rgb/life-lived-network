@@ -1,6 +1,17 @@
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Minus, Plus, Crosshair } from "lucide-react";
 
 import { LAYERS, type WorldEntry } from "@/lib/world-data";
+import {
+  SCALE_LABEL,
+  clusterPlaced,
+  fitView,
+  placeEntries,
+  panView,
+  scaleOf,
+  zoomView,
+  type MapView,
+} from "@/lib/map-view";
 import { layerBg } from "./layer-colour";
 import { LayerIcon } from "./layer-icon";
 
@@ -10,23 +21,96 @@ interface Props {
   onSelect: (entry: WorldEntry) => void;
   /** Approximate centre of the locality being looked at, when it is known. */
   centre?: { lat: number | null; lng: number | null } | null;
+  /** Name of the locality, for the "back to here" control. */
+  centreName?: string | undefined;
+  /** Somewhere the viewport has wandered over, offered but never imposed. */
+  area?: { name: string; slug: string } | null;
+  onExploreArea?: ((slug: string) => void) | undefined;
+  onViewChange?: ((view: MapView) => void) | undefined;
 }
 
 /**
- * A hand-drawn map of a real place.
+ * A hand-drawn map you can actually move around.
  *
- * The geometry is deliberately illustrative rather than survey-accurate, but
- * the pin positions are now derived from real approximate coordinates around
- * the locality being looked at, so the same map works for a neighbourhood, a
- * rural county or a whole country. Entries with no coordinates fall back to
- * their illustrative position. No exact personal locations are ever plotted,
- * and no external map provider is involved.
+ * The backdrop stays illustrative — no tiles, no provider, no survey accuracy —
+ * but the pins come from real approximate coordinates and are projected for the
+ * current viewport, so the same map works for a street, a county or a country.
+ * Panning and zooming change only what you are looking at; where you are is a
+ * separate, persisted choice that changes only when you ask it to.
  */
-export function LivingMap({ entries, activeId, onSelect, centre }: Props) {
-  const placed = useMemo(() => project(entries, centre ?? null), [entries, centre]);
+export function LivingMap({
+  entries,
+  activeId,
+  onSelect,
+  centre,
+  centreName,
+  area,
+  onExploreArea,
+  onViewChange,
+}: Props) {
+  const home = useMemo(() => fitView(entries, centre ?? null), [entries, centre]);
+  const [view, setView] = useState<MapView>(home);
+  const frame = useRef<HTMLDivElement | null>(null);
+  const drag = useRef<{ x: number; y: number } | null>(null);
+  const [moved, setMoved] = useState(false);
+
+  // A new locality (or its first activity) resets the view to fit it.
+  useEffect(() => {
+    setView(home);
+    setMoved(false);
+  }, [home]);
+
+  useEffect(() => {
+    onViewChange?.(view);
+  }, [view, onViewChange]);
+
+  const change = useCallback((next: MapView) => {
+    setView(next);
+    setMoved(true);
+  }, []);
+
+  const placed = useMemo(() => placeEntries(entries, view), [entries, view]);
+  const scale = scaleOf(view);
+  // Wide views cluster; close up, every pin is its own.
+  const clusters = useMemo(
+    () => clusterPlaced(placed, scale === "neighbourhood" ? 3 : 8),
+    [placed, scale],
+  );
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    drag.current = { x: e.clientX, y: e.clientY };
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    const start = drag.current;
+    const box = frame.current?.getBoundingClientRect();
+    if (!start || !box) return;
+    const dx = (e.clientX - start.x) / box.width;
+    const dy = (e.clientY - start.y) / box.height;
+    if (Math.abs(dx) < 0.002 && Math.abs(dy) < 0.002) return;
+    drag.current = { x: e.clientX, y: e.clientY };
+    change(panView(view, -dx, dy));
+  };
+  const onPointerUp = () => {
+    drag.current = null;
+  };
+
+  const onWheel = (e: React.WheelEvent) => {
+    if (!e.ctrlKey && Math.abs(e.deltaY) < 2) return;
+    e.preventDefault();
+    change(zoomView(view, e.deltaY > 0 ? 1.2 : 1 / 1.2));
+  };
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-xl border border-border bg-land">
+    <div
+      ref={frame}
+      className="relative h-full w-full touch-none select-none overflow-hidden rounded-xl border border-border bg-land"
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+      onWheel={onWheel}
+    >
       <svg
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
@@ -61,101 +145,100 @@ export function LivingMap({ entries, activeId, onSelect, centre }: Props) {
         </g>
       </svg>
 
-      {/* Pins */}
-      {placed.map(({ entry, left, top }) => {
-        const active = entry.id === activeId;
+      {clusters.map((cluster) => {
+        const first = cluster.entries[0];
+        if (!first) return null;
+        if (cluster.entries.length === 1) {
+          const active = first.id === activeId;
+          const layer = LAYERS.find((item) => item.id === first.layer);
+          return (
+            <button
+              key={cluster.key}
+              type="button"
+              onClick={() => onSelect(first)}
+              aria-label={`${first.title} — ${first.place}`}
+              aria-pressed={active}
+              className="focus-ink absolute -translate-x-1/2 -translate-y-full"
+              style={{ left: `${cluster.left}%`, top: `${cluster.top}%` }}
+            >
+              <span className="flex flex-col items-center">
+                <span
+                  className={`grid place-items-center rounded-full border border-card text-[0.72rem] shadow-lift transition-transform ${
+                    layerBg[first.layer]
+                  } ${active ? "h-9 w-9 scale-110" : "h-7 w-7 hover:scale-110"}`}
+                >
+                  {layer ? (
+                    <LayerIcon icon={layer.icon} size={active ? 17 : 14} strokeWidth={1.8} />
+                  ) : null}
+                </span>
+                <span className="h-2 w-px bg-ink/40" />
+              </span>
+            </button>
+          );
+        }
         return (
           <button
-            key={entry.id}
+            key={cluster.key}
             type="button"
-            onClick={() => onSelect(entry)}
-            aria-label={`${entry.title} — ${entry.place}`}
-            aria-pressed={active}
-            className="focus-ink absolute -translate-x-1/2 -translate-y-full"
-            style={{ left: `${left}%`, top: `${top}%` }}
+            onClick={() => change(zoomView({ ...view, lat: view.lat, lng: view.lng }, 0.45))}
+            aria-label={`${cluster.entries.length} things here — zoom in to see them`}
+            className="focus-ink absolute -translate-x-1/2 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-full border border-card bg-card/90 text-sm shadow-lift hover:scale-110"
+            style={{ left: `${cluster.left}%`, top: `${cluster.top}%` }}
           >
-            <span className="flex flex-col items-center">
-              <span
-                className={`grid place-items-center rounded-full border border-card text-[0.72rem] shadow-lift transition-transform ${
-                  layerBg[entry.layer]
-                } ${active ? "h-9 w-9 scale-110" : "h-7 w-7 hover:scale-110"}`}
-              >
-                {(() => {
-                  const layer = LAYERS.find((item) => item.id === entry.layer);
-                  return layer ? (
-                    <LayerIcon icon={layer.icon} size={active ? 17 : 14} strokeWidth={1.8} />
-                  ) : null;
-                })()}
-              </span>
-              <span className="h-2 w-px bg-ink/40" />
-            </span>
+            {cluster.entries.length}
           </button>
         );
       })}
+
+      {/* Controls */}
+      <div className="absolute right-3 top-3 flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => change(zoomView(view, 1 / 1.5))}
+          aria-label="Zoom in"
+          className="focus-ink grid h-9 w-9 place-items-center rounded-full border border-border bg-card shadow-lift"
+        >
+          <Plus size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={() => change(zoomView(view, 1.5))}
+          aria-label="Zoom out"
+          className="focus-ink grid h-9 w-9 place-items-center rounded-full border border-border bg-card shadow-lift"
+        >
+          <Minus size={16} />
+        </button>
+        {moved ? (
+          <button
+            type="button"
+            onClick={() => {
+              setView(home);
+              setMoved(false);
+            }}
+            aria-label={centreName ? `Back to ${centreName}` : "Back to where you are"}
+            className="focus-ink grid h-9 w-9 place-items-center rounded-full border border-border bg-card shadow-lift"
+          >
+            <Crosshair size={16} />
+          </button>
+        ) : null}
+      </div>
+
+      <p className="pointer-events-none absolute bottom-2 left-3 text-xs text-muted-foreground">
+        {SCALE_LABEL[scale]}
+      </p>
+
+      {moved && area && onExploreArea ? (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-border bg-card/95 px-3 py-1.5 text-xs shadow-lift">
+          <span className="text-muted-foreground">Looking at {area.name}.</span>{" "}
+          <button
+            type="button"
+            onClick={() => onExploreArea(area.slug)}
+            className="focus-ink underline"
+          >
+            Make this my area
+          </button>
+        </div>
+      ) : null}
     </div>
   );
-}
-
-interface Placed {
-  entry: WorldEntry;
-  left: number;
-  top: number;
-}
-
-const MIN_SPAN = 0.06; // degrees, so a single pin isn't zoomed to infinity
-
-/**
- * Real coordinates to percentages inside the drawn frame.
- *
- * A plain equirectangular fit of whatever is on screen: correct enough for an
- * illustrative map at any scale, with no projection library and no tiles.
- */
-export function project(
-  entries: WorldEntry[],
-  centre: { lat: number | null; lng: number | null } | null,
-): Placed[] {
-  const points = entries.filter(
-    (e) => typeof e.lat === "number" && typeof e.lng === "number",
-  ) as (WorldEntry & { lat: number; lng: number })[];
-
-  if (!points.length) {
-    return entries.map((entry) => ({ entry, left: clamp(entry.x), top: clamp(entry.y) }));
-  }
-
-  const lats = points.map((p) => p.lat);
-  const lngs = points.map((p) => p.lng);
-  if (centre && typeof centre.lat === "number" && typeof centre.lng === "number") {
-    lats.push(centre.lat);
-    lngs.push(centre.lng);
-  }
-
-  let minLat = Math.min(...lats);
-  let maxLat = Math.max(...lats);
-  let minLng = Math.min(...lngs);
-  let maxLng = Math.max(...lngs);
-
-  const padLat = Math.max((maxLat - minLat) * 0.15, MIN_SPAN / 2);
-  const padLng = Math.max((maxLng - minLng) * 0.15, MIN_SPAN / 2);
-  minLat -= padLat;
-  maxLat += padLat;
-  minLng -= padLng;
-  maxLng += padLng;
-
-  const spanLat = maxLat - minLat || MIN_SPAN;
-  const spanLng = maxLng - minLng || MIN_SPAN;
-
-  return entries.map((entry) => {
-    if (typeof entry.lat !== "number" || typeof entry.lng !== "number") {
-      return { entry, left: clamp(entry.x), top: clamp(entry.y) };
-    }
-    const left = ((entry.lng - minLng) / spanLng) * 100;
-    // Latitude increases northwards; the screen increases downwards.
-    const top = ((maxLat - entry.lat) / spanLat) * 100;
-    return { entry, left: clamp(left), top: clamp(top) };
-  });
-}
-
-function clamp(value: number): number {
-  if (!Number.isFinite(value)) return 50;
-  return Math.min(96, Math.max(4, value));
 }

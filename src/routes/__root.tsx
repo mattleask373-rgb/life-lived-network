@@ -153,6 +153,14 @@ function SiteHeader() {
             Journey
           </Link>
           <Link
+            to="/road-trip"
+            activeProps={{ className: "text-foreground" }}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Road trip
+          </Link>
+
+          <Link
             to="/life-list"
             activeProps={{ className: "text-foreground" }}
             className="text-muted-foreground hover:text-foreground"
