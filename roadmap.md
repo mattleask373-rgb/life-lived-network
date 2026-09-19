@@ -7,6 +7,9 @@
 - [x] Make Road Trip stop restoration resilient and storage-safe.
 - [x] Clear test, typecheck, lint, build, security and desktop/mobile release gates.
 - [ ] Remove `.env` from repository tracking; it is ignored now, but repository-index changes are platform-managed.
+- [x] Replace blank account loading with visible loading and recoverable read/session errors.
+- [x] Prevent failed world reads from appearing as honest empty-locality states.
+- [x] Keep locality-aware money/date formatting and provenance visible in saved Road Trip stops.
 
 ## Done
 

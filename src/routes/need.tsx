@@ -8,6 +8,7 @@ import { useSession } from "@/hooks/use-session";
 import { createNeed, getMyNeeds, getOpenNeeds } from "@/lib/needs.functions";
 import { FLEXIBILITIES, NEED_INTENTS, URGENCIES, type Need } from "@/lib/needs";
 import { fetchDefaultPlace } from "@/lib/places";
+import { money } from "@/components/layer-colour";
 
 const title = "What do you need? — The Living World";
 const description =
@@ -109,7 +110,7 @@ function NeedList({ heading, needs, empty }: { heading: string; needs: Need[]; e
                       })
                     : "Time still to agree"}
                   {need.paymentType === "paid" && need.budget
-                    ? ` · up to ${need.budget} ${need.currency}`
+                    ? ` · up to ${money(need.budget, need.currency)}`
                     : need.paymentType === "contribution"
                       ? " · given time"
                       : need.paymentType === "exchange"

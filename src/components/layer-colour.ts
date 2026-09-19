@@ -44,10 +44,15 @@ export function currencySymbol(currency = "GBP"): string {
 }
 
 export function money(cost: number, currency = "GBP"): string {
-  const symbol = SYMBOL[currency] ?? `${currency} `;
-  if (cost < 0) return `Pays ${symbol}${Math.abs(cost)}`;
+  const amount = new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: Number.isInteger(cost) ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(Math.abs(cost));
+  if (cost < 0) return `Pays ${amount}`;
   if (cost === 0) return "Free";
-  return `${symbol}${cost}`;
+  return amount;
 }
 
 export function duration(minutes: number): string {
