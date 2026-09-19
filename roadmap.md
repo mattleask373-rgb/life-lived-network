@@ -48,13 +48,17 @@ Blockers unchanged: Ticketmaster key absent; genuine Guildhall details not suppl
   prove. Tests: `src/lib/road-trip.test.ts`.
 - Routing is honest: no provider is connected, so straight-line distance is shown
   and detour times are labelled unavailable rather than estimated.
+- Road-trip discoveries now show every supported interest match, event timing,
+  provenance and meaningful freshness without inventing evidence.
+- A device-persisted journey builder adds canonical entry stops without duplicates,
+  shows origin/stops/destination, supports move/remove, and recalculates without
+  pretending to optimise a driving route.
 
 ### Open (blocked, needs a decision or credentials)
 - Route provider (real distance, duration, polyline, detours): needs a chosen
   provider and key. Slice 3 of the plan.
 - Public transport provider and journey legs: Slice 6, needs a key.
-- Adding stops to a saved journey, and car sharing from people's own journeys:
-  Slices 5 and 7, not started.
+- Car sharing from people's explicitly shared journeys: Slice 7, not started.
 
 ## SEO slice 1 — technical foundation (done)
 - `src/lib/seo.ts`: one place decides what a page tells a search engine. Canonical

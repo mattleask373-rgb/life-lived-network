@@ -13,7 +13,7 @@
  */
 
 import { descendantIdsOf, distanceKm, type Place, type PlaceIndex } from "./places";
-import type { WorldEntry } from "./world-data";
+import { QUALITY_LABEL, type WorldEntry } from "./world-data";
 
 export type TravelMode = "driving" | "walking" | "cycling" | "public_transport";
 
@@ -166,6 +166,12 @@ export interface Discovery {
   group: DiscoveryGroup;
   position: number;
   offRouteKm: number;
+  /** Every selected interest that is actually present in the listing's own words. */
+  matchedInterests: string[];
+  /** A restrained evidence label backed by the entry itself. */
+  evidenceLabel: string | null;
+  /** Only a time-sensitive quality statement; verification is evidence, not freshness. */
+  freshnessLabel: string | null;
   /** Only things we can actually show a source for. */
   reasons: string[];
 }
@@ -216,15 +222,23 @@ export function routeDiscoveries(input: DiscoveryInput, limit = 60): Discovery[]
     }
     if (entry.sourceName) reasons.push(`Listed by ${entry.sourceName}`);
     if (entry.demonstration) reasons.push("Demonstration record, not live information");
-    const text = `${entry.title} ${entry.summary} ${(entry.skills ?? []).join(" ")}`.toLowerCase();
-    const matched = interests.find((i) => text.includes(i));
-    if (matched) reasons.push(`Matches what you said you like: ${matched}`);
+    const text = `${entry.title} ${entry.summary} ${(entry.skills ?? []).join(" ")} ${entry.layer}`.toLowerCase();
+    const matchedInterests = plan.interests.filter((interest, index) => {
+      const normalised = interest.trim().toLowerCase();
+      return Boolean(normalised) && interests.indexOf(normalised) === index && text.includes(normalised);
+    });
+    if (matchedInterests.length) {
+      reasons.push(`Matches ${matchedInterests.join(" + ")}`);
+    }
 
     results.push({
       entry,
       group: groupOf(position, offRouteKm, inDestination),
       position,
       offRouteKm,
+      matchedInterests,
+      evidenceLabel: evidenceLabelFor(entry),
+      freshnessLabel: freshnessLabelFor(entry),
       reasons,
     });
   }
@@ -236,6 +250,25 @@ export function routeDiscoveries(input: DiscoveryInput, limit = 60): Discovery[]
       a.entry.title.localeCompare(b.entry.title),
   );
   return results.slice(0, limit);
+}
+
+export function evidenceLabelFor(entry: WorldEntry): string | null {
+  if (entry.demonstration) return "Demonstration record";
+  if (entry.verified || entry.quality === "verified") return "Verified listing";
+  if (entry.sourceName) return entry.startsAt ? `Event information · ${entry.sourceName}` : `Listed by ${entry.sourceName}`;
+  if (entry.origin === "resident" || entry.community) return "Local discovery";
+  return null;
+}
+
+export function freshnessLabelFor(entry: WorldEntry): string | null {
+  if (
+    entry.quality === "recently updated" ||
+    entry.quality === "may have changed" ||
+    entry.quality === "expired"
+  ) {
+    return QUALITY_LABEL[entry.quality];
+  }
+  return null;
 }
 
 function groupOf(position: number, offRouteKm: number, inDestination: boolean): DiscoveryGroup {

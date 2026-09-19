@@ -1,15 +1,25 @@
 import { publicPage } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Check, ChevronDown, ChevronUp, Plus, RotateCcw, Trash2 } from "lucide-react";
 
-import { EntryCard } from "@/components/entry-card";
 import { EntrySheet } from "@/components/entry-sheet";
+import { eventDate, layerText } from "@/components/layer-colour";
 import { LivingMap } from "@/components/living-map";
 import { PlaceSearch } from "@/components/place-search";
+import { Button } from "@/components/ui/button";
 import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
 import { descendantIdsOf, distanceKm, type Place } from "@/lib/places";
+import {
+  ROAD_TRIP_DRAFT_KEY,
+  addJourneyStop,
+  draftFromPlan,
+  moveJourneyStop,
+  readRoadTripDraft,
+  removeJourneyStop,
+} from "@/lib/road-trip-journey";
 import { useWorldContext } from "@/lib/world-context";
 import type { WorldEntry } from "@/lib/world-data";
 import {
@@ -21,6 +31,7 @@ import {
   routeDiscoveries,
   straightLineSummary,
   type CorridorPlace,
+  type Discovery,
   type DiscoveryGroup,
   type RoutePlan,
   type TravelMode,
@@ -52,6 +63,9 @@ function RoadTrip() {
   const [interests, setInterests] = useState("");
   const [planned, setPlanned] = useState<RoutePlan | null>(null);
   const [open, setOpen] = useState<WorldEntry | null>(null);
+  const [stopIds, setStopIds] = useState<string[]>([]);
+  const [draftReady, setDraftReady] = useState(false);
+  const [recalculated, setRecalculated] = useState(false);
 
   // Where we already are is a sensible starting point, never an imposed one.
   const origin = from ?? place;
@@ -67,7 +81,7 @@ function RoadTrip() {
     [index, planned, corridor],
   );
 
-  const { data: entries, isLoading } = useQuery({
+  const { data: entries, isLoading, refetch } = useQuery({
     queryKey: ["road-trip", placeIds.join(",")],
     enabled: placeIds.length > 0,
     queryFn: () => fetchWorldEntries({ placeIds, limit: 120 }),
@@ -86,6 +100,43 @@ function RoadTrip() {
 
   const summary = planned ? straightLineSummary(planned) : null;
   const mapEntries = useMemo(() => discoveries.map((d) => d.entry), [discoveries]);
+  const journeyStops = useMemo(
+    () => stopIds.map((id) => discoveries.find((item) => item.entry.id === id)?.entry).filter((entry): entry is WorldEntry => Boolean(entry)),
+    [discoveries, stopIds],
+  );
+
+  useEffect(() => {
+    if (!index || draftReady) return;
+    const draft = readRoadTripDraft(window.localStorage.getItem(ROAD_TRIP_DRAFT_KEY));
+    if (draft) {
+      const savedFrom = index.byId.get(draft.fromId);
+      const savedTo = index.byId.get(draft.toId);
+      if (savedFrom && savedTo) {
+        setFrom(savedFrom);
+        setTo(savedTo);
+        setMode(draft.mode);
+        setDate(draft.date);
+        setInterests(draft.interests.join(", "));
+        setStopIds(draft.stopIds);
+        setPlanned({
+          from: savedFrom,
+          to: savedTo,
+          mode: draft.mode,
+          date: draft.date || undefined,
+          interests: draft.interests,
+        });
+      }
+    }
+    setDraftReady(true);
+  }, [draftReady, index]);
+
+  useEffect(() => {
+    if (!draftReady || !planned) return;
+    window.localStorage.setItem(
+      ROAD_TRIP_DRAFT_KEY,
+      JSON.stringify(draftFromPlan(planned, stopIds)),
+    );
+  }, [draftReady, planned, stopIds]);
 
   return (
     <main className="paper-grain min-h-screen">
@@ -101,7 +152,7 @@ function RoadTrip() {
           onSubmit={(e) => {
             e.preventDefault();
             if (!origin || !to) return;
-            setPlanned({
+            const nextPlan: RoutePlan = {
               from: origin,
               to,
               mode,
@@ -110,7 +161,12 @@ function RoadTrip() {
                 .split(",")
                 .map((i) => i.trim())
                 .filter(Boolean),
-            });
+            };
+            if (planned && (planned.from.id !== nextPlan.from.id || planned.to.id !== nextPlan.to.id)) {
+              setStopIds([]);
+            }
+            setRecalculated(false);
+            setPlanned(nextPlan);
           }}
         >
           <PlaceSearch
@@ -125,19 +181,17 @@ function RoadTrip() {
             <span className="block text-sm text-muted-foreground">How you are travelling</span>
             <div className="mt-2 flex flex-wrap gap-2">
               {TRAVEL_MODES.map((option) => (
-                <button
+                <Button
                   key={option.id}
                   type="button"
+                  variant={mode === option.id ? "default" : "outline"}
+                  size="sm"
                   onClick={() => setMode(option.id)}
                   aria-pressed={mode === option.id}
-                  className={`focus-ink rounded-full border px-3 py-1.5 text-sm ${
-                    mode === option.id
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card"
-                  }`}
+                  className="rounded-full"
                 >
                   {option.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -166,13 +220,13 @@ function RoadTrip() {
           </div>
 
           <div className="sm:col-span-2">
-            <button
+            <Button
               type="submit"
               disabled={!origin || !to}
-              className="focus-ink rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground disabled:opacity-50"
+              className="rounded-full"
             >
               Plan this journey
-            </button>
+            </Button>
           </div>
         </form>
 
@@ -209,12 +263,24 @@ function RoadTrip() {
               />
             </div>
 
+            <JourneyPanel
+              plan={planned}
+              stops={journeyStops}
+              onMove={(id, direction) => setStopIds((current) => moveJourneyStop(current, id, direction))}
+              onRemove={(id) => setStopIds((current) => removeJourneyStop(current, id))}
+              onRecalculate={() => {
+                setRecalculated(true);
+                void refetch();
+              }}
+              recalculated={recalculated}
+            />
+
             {isLoading ? (
               <p className="mt-6 text-sm text-muted-foreground">Looking along the way…</p>
             ) : discoveries.length === 0 ? (
               <p className="mt-6 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
-                Nothing is listed along this route yet. That is the honest answer rather than
-                a filled page — try a wider destination, or add something yourself.
+                <strong className="block font-medium text-foreground">Nothing found along this route</strong>
+                Try changing your interests or adjusting your route.
               </p>
             ) : (
               GROUP_ORDER.map((group) => {
@@ -225,14 +291,13 @@ function RoadTrip() {
                     <h3 className="text-xl">{GROUP_LABEL[group]}</h3>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       {items.map((item) => (
-                        <div key={item.entry.id}>
-                          <EntryCard entry={item.entry} onOpen={setOpen} />
-                          <ul className="mt-1 space-y-0.5 pl-1 text-xs text-muted-foreground">
-                            {item.reasons.map((reason) => (
-                              <li key={reason}>{reason}</li>
-                            ))}
-                          </ul>
-                        </div>
+                        <RoadTripCard
+                          key={item.entry.id}
+                          discovery={item}
+                          added={stopIds.includes(item.entry.id)}
+                          onAdd={() => setStopIds((current) => addJourneyStop(current, item.entry.id))}
+                          onOpen={() => setOpen(item.entry)}
+                        />
                       ))}
                     </div>
                   </section>
@@ -254,5 +319,114 @@ function RoadTrip() {
         />
       ) : null}
     </main>
+  );
+}
+
+function RoadTripCard({
+  discovery,
+  added,
+  onAdd,
+  onOpen,
+}: {
+  discovery: Discovery;
+  added: boolean;
+  onAdd: () => void;
+  onOpen: () => void;
+}) {
+  const { entry } = discovery;
+  const timing = entry.startsAt ? eventDate(entry.startsAt, entry.timezone) : "";
+  const routeReason = discovery.reasons[0];
+  return (
+    <article className="card-paper flex h-full flex-col p-4">
+      <p className={`text-xs uppercase tracking-widest ${layerText[entry.layer]}`}>
+        {GROUP_LABEL[discovery.group]}
+      </p>
+      <h4 className="mt-1 text-lg leading-snug">{entry.title}</h4>
+      <p className="mt-1 text-sm text-muted-foreground">{entry.place} · {entry.neighbourhood}</p>
+      {entry.summary ? <p className="mt-3 line-clamp-2 text-sm text-foreground/80">{entry.summary}</p> : null}
+      <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+        {discovery.matchedInterests.length ? (
+          <p><span className="text-foreground">Matches:</span> {discovery.matchedInterests.join(" · ")}</p>
+        ) : null}
+        {routeReason ? <p>{routeReason}</p> : null}
+        {timing ? <p className="font-medium text-foreground">{timing}</p> : null}
+        {discovery.freshnessLabel ? <p>{discovery.freshnessLabel}</p> : null}
+        {discovery.evidenceLabel ? <p>{discovery.evidenceLabel}</p> : null}
+      </div>
+      <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
+        <Button type="button" size="sm" onClick={onAdd} disabled={added}>
+          {added ? <Check aria-hidden="true" /> : <Plus aria-hidden="true" />}
+          {added ? "Added to journey" : "Add to journey"}
+        </Button>
+        <Button type="button" size="sm" variant="ghost" onClick={onOpen}>View details</Button>
+      </div>
+    </article>
+  );
+}
+
+function JourneyPanel({
+  plan,
+  stops,
+  onMove,
+  onRemove,
+  onRecalculate,
+  recalculated,
+}: {
+  plan: RoutePlan;
+  stops: WorldEntry[];
+  onMove: (id: string, direction: "up" | "down") => void;
+  onRemove: (id: string) => void;
+  onRecalculate: () => void;
+  recalculated: boolean;
+}) {
+  return (
+    <section className="mt-6 border-y border-border py-5" aria-labelledby="your-journey">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 id="your-journey" className="text-xl">Your journey</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Saved on this device as you build it.</p>
+        </div>
+        <Button type="button" variant="outline" size="sm" onClick={onRecalculate}>
+          <RotateCcw aria-hidden="true" /> Recalculate journey
+        </Button>
+      </div>
+
+      <ol className="mt-5 grid gap-2">
+        <JourneyEndpoint label="From" name={plan.from.name} />
+        {stops.length === 0 ? (
+          <li className="border-l-2 border-dashed border-border py-4 pl-4">
+            <p className="font-medium">Your journey is empty</p>
+            <p className="text-sm text-muted-foreground">Add interesting places from the results below to build your trip.</p>
+          </li>
+        ) : stops.map((stop, index) => (
+          <li key={stop.id} className="flex items-center gap-3 border-l-2 border-primary py-2 pl-4">
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs uppercase tracking-widest text-muted-foreground">Stop {index + 1}</span>
+              <span className="block truncate font-medium">{stop.title}</span>
+              <span className="block truncate text-xs text-muted-foreground">{stop.place}</span>
+            </span>
+            <span className="flex shrink-0 gap-1">
+              <Button type="button" variant="ghost" size="icon" disabled={index === 0} onClick={() => onMove(stop.id, "up")} aria-label={`Move ${stop.title} up`} title="Move up"><ChevronUp /></Button>
+              <Button type="button" variant="ghost" size="icon" disabled={index === stops.length - 1} onClick={() => onMove(stop.id, "down")} aria-label={`Move ${stop.title} down`} title="Move down"><ChevronDown /></Button>
+              <Button type="button" variant="ghost" size="icon" onClick={() => onRemove(stop.id)} aria-label={`Remove ${stop.title}`} title="Remove stop"><Trash2 /></Button>
+            </span>
+          </li>
+        ))}
+        <JourneyEndpoint label="To" name={plan.to.name} />
+      </ol>
+      <p className="mt-4 text-xs text-muted-foreground">
+        Route placement is based on geographic proximity. Driving times and exact detours will be available when routing is connected.
+      </p>
+      {recalculated ? <p role="status" className="mt-2 text-sm text-foreground">Journey refreshed. Your stop order has been kept.</p> : null}
+    </section>
+  );
+}
+
+function JourneyEndpoint({ label, name }: { label: string; name: string }) {
+  return (
+    <li className="border-l-2 border-foreground py-2 pl-4">
+      <span className="block text-xs uppercase tracking-widest text-muted-foreground">{label}</span>
+      <span className="font-medium">{name}</span>
+    </li>
   );
 }
