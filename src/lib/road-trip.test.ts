@@ -5,6 +5,8 @@ import {
   corridorPlaceIds,
   corridorPlaces,
   corridorWidthKm,
+  evidenceLabelFor,
+  freshnessLabelFor,
   offRoute,
   routeDiscoveries,
   straightLineSummary,
@@ -197,6 +199,29 @@ describe("route discoveries", () => {
     expect(reasons).toContain("Listed by Example Listings");
     expect(reasons).toContain("Demonstration record");
     expect(reasons).toContain("folk");
+    expect(first!.matchedInterests).toEqual(["folk"]);
+    expect(first!.evidenceLabel).toBe("Demonstration record");
+  });
+
+  it("keeps every supported interest match in the selected order", () => {
+    const [first] = routeDiscoveries({
+      entries: [entry("market", "bristol", { title: "Food and local history market" })],
+      plan: { ...plan, interests: ["Food", "History", "Nature"] },
+      corridor,
+      destinationIds,
+      routed: false,
+    });
+    expect(first!.matchedInterests).toEqual(["Food", "History"]);
+  });
+
+  it("only exposes evidence and freshness labels backed by stored facts", () => {
+    expect(evidenceLabelFor(entry("source", "bristol", {
+      sourceName: "Town listings",
+      startsAt: "2026-05-02T19:00:00Z",
+    }))).toBe("Event information · Town listings");
+    expect(evidenceLabelFor(entry("unknown", "bristol"))).toBeNull();
+    expect(freshnessLabelFor(entry("fresh", "bristol", { quality: "recently updated" }))).toBe("Updated recently");
+    expect(freshnessLabelFor(entry("unchecked", "bristol", { quality: "unverified" }))).toBeNull();
   });
 
   it("is deterministic", () => {
