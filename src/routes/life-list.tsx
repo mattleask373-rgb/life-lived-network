@@ -5,7 +5,8 @@ import { EntrySheet } from "@/components/entry-sheet";
 import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWorldEntries } from "@/lib/listings";
-import { LIFE_LIST_SEEDS, type WorldEntry } from "@/lib/world-data";
+import { LIFE_LIST_SEEDS } from "@/lib/fixtures/world-entries";
+import type { WorldEntry } from "@/lib/world-data";
 
 const title = "Your life list — The Living World";
 const description =
