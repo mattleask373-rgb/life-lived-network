@@ -1,3 +1,4 @@
+import { privatePage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -15,7 +16,6 @@ import {
 } from "@/lib/connection.functions";
 import { GROUP_HEADING, STATUS_LABEL, isOpen } from "@/lib/connection";
 import { REPORT_REASONS, type ReportReason } from "@/lib/safety";
-import { privatePage } from "@/lib/seo";
 
 const title = "Your conversations — The Living World";
 const description =

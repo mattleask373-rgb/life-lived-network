@@ -1,3 +1,4 @@
+import { publicPage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { EntryCard } from "@/components/entry-card";
@@ -7,7 +8,6 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchWorldEntries } from "@/lib/listings";
 import { LIFE_LIST_SEEDS } from "@/lib/fixtures/world-entries";
 import type { WorldEntry } from "@/lib/world-data";
-import { publicPage } from "@/lib/seo";
 
 const title = "Your life list — The Living World";
 const description =

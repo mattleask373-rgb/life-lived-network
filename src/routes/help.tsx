@@ -1,3 +1,4 @@
+import { privatePage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -9,7 +10,6 @@ import { useSession } from "@/hooks/use-session";
 import { getMyOpportunities } from "@/lib/needs.functions";
 import { OPPORTUNITY_HEADING, OPPORTUNITY_ORDER } from "@/lib/reciprocal";
 import { PAYMENT_MODELS } from "@/lib/needs";
-import { privatePage } from "@/lib/seo";
 
 const title = "What could you help with? — The Living World";
 const description =

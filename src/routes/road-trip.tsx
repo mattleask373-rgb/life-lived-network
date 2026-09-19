@@ -1,3 +1,4 @@
+import { publicPage } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -12,7 +13,6 @@ import { descendantIdsOf, distanceKm, type Place } from "@/lib/places";
 import { useWorldContext } from "@/lib/world-context";
 import type { WorldEntry } from "@/lib/world-data";
 import {
-import { publicPage } from "@/lib/seo";
   GROUP_LABEL,
   TRAVEL_MODES,
   corridorPlaceIds,

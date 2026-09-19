@@ -1,8 +1,8 @@
+import { privatePage } from "@/lib/seo";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { privatePage } from "@/lib/seo";
 
 const title = "Join in — The Living World";
 const description =

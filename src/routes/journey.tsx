@@ -1,3 +1,4 @@
+import { publicPage } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { planJourney, type Journey } from "@/lib/journey-engine";
@@ -8,7 +9,6 @@ import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWorldEntries } from "@/lib/listings";
 import { useWorldContext } from "@/lib/world-context";
-import { publicPage } from "@/lib/seo";
 
 const title = "What could your journey become? — The Living World";
 const description =

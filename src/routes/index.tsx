@@ -1,3 +1,4 @@
+import { publicPage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { LivingMap } from "@/components/living-map";
@@ -21,7 +22,6 @@ import { WhatsHappening } from "@/components/whats-happening";
 import { WhatsHere } from "@/components/whats-here";
 import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
 import {
-import { publicPage } from "@/lib/seo";
   activitySnapshot,
   meaningfulVariety,
   type LayerId,

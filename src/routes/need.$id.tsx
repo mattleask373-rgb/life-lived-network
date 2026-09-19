@@ -1,3 +1,4 @@
+import { privatePage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -11,7 +12,6 @@ import { findSupplyForNeed } from "@/lib/needs.functions";
 import { getWorld } from "@/lib/world.functions";
 import { nextStepFor, providerLine, servicePossibilities } from "@/lib/services";
 import { BAND_HEADING, BAND_ORDER, type SupplyBand, type SupplyResult } from "@/lib/supply-engine";
-import { privatePage } from "@/lib/seo";
 
 const title = "Who could help — The Living World";
 const description =

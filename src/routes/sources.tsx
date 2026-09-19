@@ -1,3 +1,4 @@
+import { privatePage } from "@/lib/seo";
 /**
  * An internal tool for bringing the outside world in.
  *
@@ -16,7 +17,6 @@ import { useWorldContext } from "@/lib/world-context";
 import { amISafetyReviewer } from "@/lib/moderation.functions";
 import { listSources, refreshSource, type SourcePanelRow } from "@/lib/ingest.functions";
 import type { IngestOutcome } from "@/lib/ingest/contract";
-import { privatePage } from "@/lib/seo";
 
 const title = "Sources — internal";
 const description = "Internal panel for refreshing outside sources of activity. Not a public page.";

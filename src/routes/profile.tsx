@@ -1,3 +1,4 @@
+import { privatePage } from "@/lib/seo";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +7,6 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchPlaces } from "@/lib/places";
 import { CapabilityPanel } from "@/components/capability-panel";
 import { ProfilePhoto } from "@/components/profile-photo";
-import { privatePage } from "@/lib/seo";
 
 const title = "Who you are — The Living World";
 const description =

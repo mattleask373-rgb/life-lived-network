@@ -1,9 +1,9 @@
+import { publicPage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/hooks/use-session";
 import { closeHour, createHour, fetchHours, type HourDirection } from "@/lib/hours";
-import { publicPage } from "@/lib/seo";
 
 const title = "What can you give? — The Living World";
 const description =

@@ -1,3 +1,4 @@
+import { privatePage } from "@/lib/seo";
 /**
  * An internal safety tool, not a product feature.
  *
@@ -19,7 +20,6 @@ import {
   type ReviewerReport,
 } from "@/lib/moderation.functions";
 import { REASON_LABEL, RESOLUTIONS, SUBJECT_LABEL } from "@/lib/moderation";
-import { privatePage } from "@/lib/seo";
 
 const title = "Report review — internal";
 const description = "Internal safety review of reports. Not a public page.";
