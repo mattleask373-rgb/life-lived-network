@@ -4,13 +4,15 @@ import { LivingMap } from "@/components/living-map";
 import { LayerFilter } from "@/components/layer-filter";
 import { EntrySheet } from "@/components/entry-sheet";
 import { EntryCard } from "@/components/entry-card";
+import { PlacePicker } from "@/components/place-picker";
 import { ThreeHours } from "@/components/three-hours";
 import { DoSomethingToday } from "@/components/do-something-today";
 import { LayerIcon } from "@/components/layer-icon";
 import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWorldEntries } from "@/lib/listings";
-import { fetchDefaultPlace, PLACE_FALLBACK } from "@/lib/places";
+import { PLACE_FALLBACK } from "@/lib/places";
+import { useWorldContext } from "@/lib/world-context";
 import {
   activitySnapshot,
   meaningfulVariety,
@@ -18,9 +20,9 @@ import {
   type WorldEntry,
 } from "@/lib/world-data";
 
-const title = "The Living World — what's actually happening in Lisbon";
+const title = "The Living World — what's actually happening near you";
 const description =
-  "A living map of real work, music, food, nature, community projects and people open to meeting, in one place. Find something, then go and live it.";
+  "A living map of real work, music, food, nature, community projects and people open to meeting, across the UK and Ireland. Find something, then go and live it.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -39,22 +41,24 @@ function Home() {
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle, ids } = useLifeList();
 
-  // The place we're looking at is a real record, not a constant.
-  const { data: resolved } = useQuery({
-    queryKey: ["place", "default"],
-    queryFn: fetchDefaultPlace,
-  });
-  const placeId = resolved?.place.id ?? null;
+  // Where we are is shared application context, not a constant in this file.
+  const { place, ancestors, placeIds, placeSlugs, loading } = useWorldContext();
 
   // The page asks for possibilities in a context; it never knows the source.
-  const { data: world } = useQuery({
-    queryKey: ["world", placeId],
-    queryFn: () => fetchWorldEntries(placeId ? { placeId } : {}),
+  const { data: world, isLoading: worldLoading } = useQuery({
+    queryKey: ["world", place?.id ?? null, placeIds.length],
+    enabled: Boolean(place),
+    queryFn: () =>
+      fetchWorldEntries({
+        placeId: place?.id ?? null,
+        placeIds,
+        placeSlugs,
+      }),
   });
   const all = world ?? [];
-  const placeName = resolved?.place.name ?? PLACE_FALLBACK.name;
-  const regionName = resolved?.parent?.name ?? PLACE_FALLBACK.region;
-  const placeBlurb = resolved?.place.blurb || PLACE_FALLBACK.blurb;
+  const placeName = place?.name ?? PLACE_FALLBACK.name;
+  const regionName = ancestors[0]?.name ?? "";
+  const placeBlurb = place?.blurb || PLACE_FALLBACK.blurb;
 
   const entries = useMemo(() => {
     const filtered = layers.length ? all.filter((e) => layers.includes(e.layer)) : all;
@@ -65,39 +69,63 @@ function Home() {
     () => entries.filter((e) => e.band === "tonight" || e.band === "today").slice(0, 3),
     [entries],
   );
+  const quiet = !worldLoading && !loading && all.length === 0;
 
   return (
     <main className="paper-grain min-h-screen">
       <div className="mx-auto max-w-5xl px-4 pt-8 pb-20 sm:px-6">
         <header>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Where are you?</p>
-          <h1 className="mt-1 text-4xl leading-none sm:text-5xl">
+          <h1 className="text-4xl leading-none sm:text-5xl">
             {placeName}
-            <span className="text-muted-foreground">, {regionName}</span>
+            {regionName ? <span className="text-muted-foreground">, {regionName}</span> : null}
           </h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">{placeBlurb}</p>
         </header>
 
+        <div className="mt-5">
+          <PlacePicker />
+        </div>
+
         {/* Something's happening here */}
-        <section aria-labelledby="happening-heading" className="card-paper mt-6 p-5">
-          <h2 id="happening-heading" className="text-xl">
-            Something's happening here
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Not a ranking. Just what's real in {placeName} this week.
-          </p>
-          <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {snapshot.map(({ layer, count }) => (
-              <li key={layer.id} className="rounded-lg border border-border bg-background p-3">
-                <p className="flex items-center gap-2 text-2xl">
-                  <LayerIcon icon={layer.icon} size={20} strokeWidth={1.6} />
-                  {count}
-                </p>
-                <p className="text-sm text-muted-foreground">{layer.blurb}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
+        {snapshot.length ? (
+          <section aria-labelledby="happening-heading" className="card-paper mt-6 p-5">
+            <h2 id="happening-heading" className="text-xl">
+              Something's happening here
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Not a ranking. Just what's real in {placeName} this week.
+            </p>
+            <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {snapshot.map(({ layer, count }) => (
+                <li key={layer.id} className="rounded-lg border border-border bg-background p-3">
+                  <p className="flex items-center gap-2 text-2xl">
+                    <LayerIcon icon={layer.icon} size={20} strokeWidth={1.6} />
+                    {count}
+                  </p>
+                  <p className="text-sm text-muted-foreground">{layer.blurb}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        {/* The quiet truth, when a place is quiet */}
+        {quiet ? (
+          <section className="card-paper mt-6 p-5">
+            <h2 className="text-xl">There isn't much here yet.</h2>
+            <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+              Nothing has been put into {placeName} so far, and we'd rather say that than invent
+              something. Look at somewhere wider — a county or a country — or put the first real
+              thing here yourself.
+            </p>
+            <Link
+              to="/make"
+              className="focus-ink mt-4 inline-flex rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
+            >
+              Make something happen here
+            </Link>
+          </section>
+        ) : null}
 
         {/* The map */}
         <section aria-labelledby="map-heading" className="mt-8">
@@ -111,7 +139,12 @@ function Home() {
             <LayerFilter active={layers} onChange={setLayers} />
           </div>
           <div className="mt-3 h-[62vh] min-h-80 sm:h-[30rem]">
-            <LivingMap entries={entries} activeId={open?.id} onSelect={setOpen} />
+            <LivingMap
+              entries={entries}
+              activeId={open?.id}
+              onSelect={setOpen}
+              centre={place ? { lat: place.lat, lng: place.lng } : null}
+            />
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
             Places are shown approximately. Nobody's exact location is ever on this map.
@@ -130,14 +163,15 @@ function Home() {
               ))}
             </div>
           </section>
-        ) : (
+        ) : !quiet ? (
           <section className="card-paper mt-10 p-5">
-            <h2 className="text-xl">It's quiet here.</h2>
+            <h2 className="text-xl">Nothing in the next day or two.</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Want to help make something happen? A venue nearby has an empty Tuesday.
+              There are things here, just not imminently. Try a wider area, or put something on for
+              a day that's empty.
             </p>
           </section>
-        )}
+        ) : null}
 
         {/* Do something today */}
         <div className="mt-10">
