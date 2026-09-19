@@ -847,10 +847,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      people_are_blocked: {
-        Args: { _first: string; _second: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
