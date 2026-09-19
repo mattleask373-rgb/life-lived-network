@@ -12,7 +12,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
 import { useSession } from "@/hooks/use-session";
-import { useWorld } from "@/hooks/use-world";
+import { useWorldContext } from "@/lib/world-context";
 import { amISafetyReviewer } from "@/lib/moderation.functions";
 import { listSources, refreshSource, type SourcePanelRow } from "@/lib/ingest.functions";
 import type { IngestOutcome } from "@/lib/ingest/contract";
@@ -47,7 +47,7 @@ function when(value: string | null): string {
 
 function Sources() {
   const { user, ready } = useSession();
-  const { place } = useWorld();
+  const { place } = useWorldContext();
   const checkRole = useServerFn(amISafetyReviewer);
   const load = useServerFn(listSources);
   const run = useServerFn(refreshSource);
@@ -70,7 +70,7 @@ function Sources() {
 
   const refresh = useMutation({
     mutationFn: (sourceId: string) =>
-      run({ data: { sourceId, placeSlug: place?.place.slug ?? "", days, force: true } }),
+      run({ data: { sourceId, placeSlug: place?.slug ?? "", days, force: true } }),
     onSuccess: (outcome) => {
       setFailure("");
       setResult(outcome);
@@ -97,7 +97,7 @@ function Sources() {
       <h1 className="text-2xl">Sources</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Outside sources of activity. Refreshing asks a source what is happening in the locality
-        currently selected — {place ? place.place.name : "none chosen yet"} — and brings it in
+        currently selected — {place ? place.name : "none chosen yet"} — and brings it in
         credited and linked back. Nothing here is invented, and a source that fails changes nothing.
       </p>
 
