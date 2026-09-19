@@ -169,6 +169,13 @@ function SiteHeader() {
             Ask for help
           </Link>
           <Link
+            to="/conversations"
+            activeProps={{ className: "text-foreground" }}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Conversations
+          </Link>
+          <Link
             to="/help"
             activeProps={{ className: "text-foreground" }}
             className="text-muted-foreground hover:text-foreground"
