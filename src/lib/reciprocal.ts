@@ -115,6 +115,16 @@ export function findOpportunitiesForPerson(input: ReciprocalInput): PersonOpport
     const capability = currentCapabilities.find((c) =>
       asked.some((w) => c.label.toLowerCase().includes(w)),
     );
+    const requiredQualification = need.requiredQualifications.length
+      ? currentCapabilities.find(
+          (candidate) =>
+            candidate.kind === "qualification" &&
+            need.requiredQualifications.some((required) =>
+              words(required).some((word) => candidate.label.toLowerCase().includes(word)),
+            ),
+        )
+      : null;
+    if (need.requiredQualifications.length && !requiredQualification) continue;
 
     const here = reachable(person, need);
     const free = overlaps(person, need);

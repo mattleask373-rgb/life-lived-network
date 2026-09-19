@@ -121,7 +121,8 @@ export const travellingGardener = person({
   placeId: PLACE_ELSEWHERE,
   placeName: "Somewhere else",
   capabilities: [capability("gardening")],
-  serviceAreaPlaceIds: [PLACE_KINGS_HEATH],
+  serviceAreaPlaceIds: [],
+  travellingThroughPlaceIds: [PLACE_KINGS_HEATH],
   preferences: ["travelling_opportunities"],
 });
 

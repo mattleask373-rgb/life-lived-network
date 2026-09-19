@@ -126,7 +126,7 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
         await Promise.all([
           supabase
             .from("profiles")
-            .select("id, display_name, location, place_id, wants_to_learn")
+            .select("id, display_name, photo_url, location, place_id, wants_to_learn")
             .in("id", ids)
             .eq("discoverable", true),
           supabase.from("person_capabilities").select("*").in("user_id", ids),
@@ -159,6 +159,7 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
             .filter((p) => p.user_id === profile.id)
             .map((p) => p.preference as OpportunityPreference),
           wantsToLearn: profile.wants_to_learn ?? [],
+          photoUrl: profile.photo_url,
         });
       }
     }
@@ -222,7 +223,7 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const [{ data: profile }, { data: caps }, { data: areas }, { data: windows }, { data: prefs }] =
       await Promise.all([
-        supabase.from("profiles").select("display_name, location, place_id, wants_to_learn").eq("id", userId).maybeSingle(),
+        supabase.from("profiles").select("display_name, photo_url, location, place_id, wants_to_learn").eq("id", userId).maybeSingle(),
         supabase.from("person_capabilities").select("*").eq("user_id", userId),
         supabase.from("service_areas").select("place_id, relation").eq("user_id", userId),
         supabase.from("availability_windows").select("starts_at, ends_at").eq("user_id", userId),
@@ -240,6 +241,12 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
       ...new Set([profile?.place_id, ...serviceAreaPlaceIds, ...travellingThroughPlaceIds].filter(Boolean)),
     ] as string[];
     if (!placeIds.length) return [];
+
+    const { data: blockRows } = await supabase
+      .from("user_blocks")
+      .select("blocked_id")
+      .eq("blocker_id", userId);
+    const blockedIds = new Set((blockRows ?? []).map((row) => row.blocked_id));
 
     const { data: needRows, error } = await supabase
       .from("needs")
@@ -264,8 +271,11 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
         availability: (windows ?? []).map((w) => ({ startsAt: w.starts_at, endsAt: w.ends_at })),
         preferences: (prefs ?? []).map((p) => p.preference as OpportunityPreference),
         wantsToLearn: profile?.wants_to_learn ?? [],
+        photoUrl: profile?.photo_url,
       },
-      needs: ((needRows ?? []) as unknown as NeedRow[]).map(rowToNeed),
+      needs: ((needRows ?? []) as unknown as NeedRow[])
+        .map(rowToNeed)
+        .filter((need) => !blockedIds.has(need.creatorId)),
       now: new Date().toISOString(),
     });
   });
