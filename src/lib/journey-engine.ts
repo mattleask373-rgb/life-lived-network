@@ -9,12 +9,7 @@
  * dropped in later without any UI change.
  */
 
-import {
-  ENTRIES,
-  type LayerId,
-  type TimeBand,
-  type WorldEntry,
-} from "./world-data";
+import { type LayerId, type TimeBand, type WorldEntry } from "./world-data";
 
 export interface JourneyBrief {
   days: number;
