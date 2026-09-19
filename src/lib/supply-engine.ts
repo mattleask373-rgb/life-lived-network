@@ -14,6 +14,7 @@
 import type { Capability, OpportunityPreference } from "./capability";
 import type { Need } from "./needs";
 import type { WorldEntry } from "./world-data";
+import { freshness, isCurrent, type FreshnessState } from "./capability-freshness";
 
 export type SupplyBand =
   | "direct"
@@ -91,6 +92,14 @@ export interface SupplyResult {
   actions: SupplyAction[];
   /** Set when this result is a person, so the asker can invite them. */
   personId?: string;
+  evidence?: MatchEvidence;
+}
+
+export interface MatchEvidence {
+  passed: string[];
+  unknown: string[];
+  freshness: FreshnessState;
+  verification: Capability["verification"];
 }
 
 export type SupplyAction = "contact" | "save" | "go" | "join" | "view";
@@ -110,6 +119,7 @@ export interface SupplyInput {
   entries: WorldEntry[];
   /** Per-band cap, so the answer stays small and useful. */
   perBand?: number;
+  now?: string | number | Date;
 }
 
 function terms(need: Need): string[] {
@@ -160,6 +170,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
   const { need, people, entries } = input;
   const perBand = input.perBand ?? 3;
   const words = terms(need);
+  const now = input.now ?? new Date();
   const results: SupplyResult[] = [];
   const usedPeople = new Set<string>();
 
@@ -197,7 +208,14 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
   // 4 — people who additionally said they're open to this kind of thing.
   for (const person of people) {
     if (!inArea(person, need)) continue;
-    const capability = person.capabilities.find((c) => matchesTerms(c.label, words));
+    const visibleCurrent = person.capabilities.filter((candidate) =>
+      candidate.visibility !== "private" && isCurrent(freshness({ lastConfirmedAt: candidate.lastConfirmedAt, expiresAt: candidate.expiresOn, kind: "capability", now })),
+    );
+    const qualification = need.requiredQualifications.length
+      ? visibleCurrent.find((candidate) => candidate.kind === "qualification" && matchesTerms(candidate.label, need.requiredQualifications.flatMap((item) => terms({ ...need, category: item, title: "", requiredSkills: [] }))))
+      : null;
+    if (need.requiredQualifications.length && !qualification) continue;
+    const capability = visibleCurrent.find((c) => matchesTerms(c.label, words));
     if (!capability) continue;
 
     const openTo = person.preferences.some((p) =>
@@ -226,6 +244,12 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
         ],
         caveat: BAND_CAVEAT.open_to_opportunities,
         actions: ["contact", "view"],
+        evidence: {
+          passed: ["capability", "service area", "opportunity preference", ...(qualification ? ["required qualification"] : []), ...(window ? ["availability overlap"] : [])],
+          unknown: window ? [] : ["availability"],
+          freshness: freshness({ lastConfirmedAt: capability.lastConfirmedAt, expiresAt: capability.expiresOn, kind: "capability", now }),
+          verification: capability.verification,
+        },
       });
       continue;
     }
@@ -245,6 +269,12 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
       why: [`Lists ${capability.label} on their profile`],
       caveat: BAND_CAVEAT.local_capability,
       actions: ["view"],
+      evidence: {
+        passed: ["capability", "service area", ...(qualification ? ["required qualification"] : [])],
+        unknown: ["availability", "opportunity preference"],
+        freshness: freshness({ lastConfirmedAt: capability.lastConfirmedAt, expiresAt: capability.expiresOn, kind: "capability", now }),
+        verification: capability.verification,
+      },
     });
   }
 
@@ -309,7 +339,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
     if (!person.preferences.includes("travelling_opportunities")) continue;
     const capability = person.capabilities.find((c) => matchesTerms(c.label, words));
     if (!capability) continue;
-    if (!need.placeId || !person.serviceAreaPlaceIds.includes(need.placeId)) continue;
+    if (!need.placeId || !(person.travellingThroughPlaceIds ?? []).includes(need.placeId)) continue;
     push({
       id: `journey-${person.id}`,
       personId: person.id,
