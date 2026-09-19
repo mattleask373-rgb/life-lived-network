@@ -9,7 +9,7 @@ import {
   type ConnectionRequest,
   type ConnectionRequestRow,
 } from "./connection";
-import { AIRBNB_CHANGEOVER } from "./fixtures/people-and-needs";
+import { BRIGHTON_CHANGEOVER_NEED } from "./fixtures/people-and-needs";
 
 const row: ConnectionRequestRow = {
   id: "r1",
@@ -38,14 +38,14 @@ describe("connection requests", () => {
   });
 
   it("builds context from a need without inventing anything", () => {
-    const context = contextFromNeed(AIRBNB_CHANGEOVER);
-    expect(context.title).toBe(AIRBNB_CHANGEOVER.title);
-    expect(context.place).toBe(AIRBNB_CHANGEOVER.placeText || "Nearby");
+    const context = contextFromNeed(BRIGHTON_CHANGEOVER_NEED);
+    expect(context.title).toBe(BRIGHTON_CHANGEOVER_NEED.title);
+    expect(context.place).toBe(BRIGHTON_CHANGEOVER_NEED.placeText || "Nearby");
     expect(context.when).not.toBe("");
   });
 
   it("says plainly when a need has no agreed time", () => {
-    const context = contextFromNeed({ ...AIRBNB_CHANGEOVER, startsAt: null });
+    const context = contextFromNeed({ ...BRIGHTON_CHANGEOVER_NEED, startsAt: null });
     expect(context.when).toBe("Time still to agree");
   });
 
