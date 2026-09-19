@@ -5,11 +5,11 @@ import { entryInScope, exactGeography, geographicReach, needGeography } from "./
 function place(id: string, kind: Place["kind"], parentId: string | null): Place {
   return {
     id,
-    parentId,
+    parent_id: parentId,
     kind,
     name: id,
     slug: id,
-    countryCode: "GB",
+    country_code: "GB",
     timezone: "Europe/London",
     currency: "GBP",
     lat: null,
@@ -23,7 +23,7 @@ const INDEX = buildPlaceIndex([
   place("west-midlands", "region", "uk"),
   place("birmingham", "city", "west-midlands"),
   place("kings-heath", "neighbourhood", "birmingham"),
-  place("herefordshire", "county", "uk"),
+  place("herefordshire", "area", "uk"),
 ]);
 
 describe("how far a need reaches", () => {
