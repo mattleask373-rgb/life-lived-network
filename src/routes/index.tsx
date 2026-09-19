@@ -118,6 +118,21 @@ function Home() {
               something. Look at somewhere wider — a county or a country — or put the first real
               thing here yourself.
             </p>
+            {ancestors.length ? (
+              <div className="mt-4 flex flex-wrap items-baseline gap-2">
+                <span className="text-sm text-muted-foreground">Step out to</span>
+                {ancestors.slice(0, 3).map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => setPlaceSlug(a.slug)}
+                    className="focus-ink rounded-full border border-border bg-background px-3 py-1 text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    {a.name}
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <Link
               to="/make"
               className="focus-ink mt-4 inline-flex rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
@@ -126,6 +141,7 @@ function Home() {
             </Link>
           </section>
         ) : null}
+
 
         {/* The map */}
         <section aria-labelledby="map-heading" className="mt-8">
