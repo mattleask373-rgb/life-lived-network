@@ -1,14 +1,15 @@
 /**
  * The real half of the world.
  *
- * Demo entries live in world-data.ts. Everything a real person posts lives in
- * the `listings` table and is mapped into the very same `WorldEntry` shape, so
- * the map, the sheets and the journey engine don't care where a thing came from.
+ * Everything a real person posts lives in the `listings` table and is mapped
+ * into the `WorldEntry` domain shape by rowToEntry() — the one normalisation
+ * seam. Demo entries are fixtures (`fixtures/world-entries.ts`) and only the
+ * server decides whether they belong in an answer.
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import type { DiscoveryContext, Page } from "./data/contract";
 import {
-  ENTRIES,
   type DataQuality,
   type LayerId,
   type TimeBand,
@@ -119,49 +120,24 @@ export function rowToEntry(row: ListingRow, hostName?: string): WorldEntry {
   };
 }
 
-/** Everything real people have posted, newest first. */
-export async function fetchCommunityEntries(): Promise<WorldEntry[]> {
-  const { data, error } = await supabase
-    .from("listings")
-    .select("*")
-    .eq("status", "published")
-    .neq("data_quality", "expired")
-    .order("created_at", { ascending: false })
-    .limit(200);
-  if (error) throw error;
-
-  const rows = (data ?? []) as unknown as ListingRow[];
-  const creatorIds = [...new Set(rows.map((r) => r.creator_id))];
-  const names = new Map<string, string>();
-  if (creatorIds.length) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, display_name")
-      .in("id", creatorIds);
-    for (const p of profiles ?? []) {
-      if (p.display_name) names.set(p.id, p.display_name);
-    }
-  }
-  return rows.map((r) => rowToEntry(r, names.get(r.creator_id)));
+/**
+ * The world for a given context, through the server boundary.
+ *
+ * The caller says where and how much; paging, limits, batching, fixtures policy
+ * and future providers all live below this line.
+ */
+export async function fetchWorld(
+  context: DiscoveryContext = {},
+): Promise<Page<WorldEntry>> {
+  const { getWorld } = await import("./world.functions");
+  return getWorld({ data: context });
 }
 
-/**
- * The whole world. Read through the server now, so paging, indexes and later
- * caching live in one place. Falls back to the demo place if the server read
- * fails, rather than showing an empty world.
- */
-export async function fetchWorld(): Promise<WorldEntry[]> {
-  try {
-    const { getWorld } = await import("./world.functions");
-    return await getWorld({ data: {} });
-  } catch {
-    try {
-      const community = await fetchCommunityEntries();
-      return [...community, ...ENTRIES];
-    } catch {
-      return ENTRIES;
-    }
-  }
+/** Convenience for screens that just want the current page of entries. */
+export async function fetchWorldEntries(
+  context: DiscoveryContext = {},
+): Promise<WorldEntry[]> {
+  return (await fetchWorld(context)).items;
 }
 
 export interface NewListing {

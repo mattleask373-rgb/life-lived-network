@@ -1,29 +1,44 @@
 /**
- * Public world reads, behind the server.
+ * The world, behind the server boundary.
  *
- * The browser no longer queries the database for the shared world; it asks the
- * server, which pages and filters by place. WorldEntry and rowToEntry() remain
- * the boundary — nothing database-shaped travels further than this file.
+ * The browser never queries the shared world directly any more: it hands over a
+ * DiscoveryContext and gets back a page of domain entities. rowToEntry() stays
+ * the single normalisation seam, so database shapes never travel upwards, and a
+ * future provider adapter can feed the same page without a caller changing.
  */
 
 import { createServerFn } from "@tanstack/react-start";
 
+import {
+  decodeCursor,
+  pageLimit,
+  toPage,
+  type DiscoveryContext,
+  type Page,
+} from "./data/contract";
+import { asDataError } from "./data/errors";
 import { rowToEntry, type ListingRow } from "./listings";
-import { ENTRIES, type WorldEntry } from "./world-data";
-
-export interface WorldQuery {
-  placeId?: string | null;
-  limit?: number;
-  offset?: number;
-}
+import type { WorldEntry } from "./world-data";
 
 export const getWorld = createServerFn({ method: "GET" })
-  .inputValidator((input: WorldQuery | undefined) => input ?? {})
-  .handler(async ({ data }): Promise<WorldEntry[]> => {
+  .inputValidator((input: DiscoveryContext | undefined) => input ?? {})
+  .handler(async ({ data }): Promise<Page<WorldEntry>> => {
+    const { observe } = await import("./data/observe.server");
+    return observe(
+      "world.page",
+      () => readWorld(data),
+      (page) => page.items.length,
+    );
+  });
+
+async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
+  const limit = pageLimit(context.limit);
+  const offset = decodeCursor(context.cursor);
+
+  try {
     const { publicServerClient } = await import("./supabase-public.server");
+    const { fixturesAllowed } = await import("./data/fixtures-policy.server");
     const supabase = publicServerClient();
-    const limit = Math.min(data.limit ?? 100, 200);
-    const offset = data.offset ?? 0;
 
     let query = supabase
       .from("listings")
@@ -32,12 +47,13 @@ export const getWorld = createServerFn({ method: "GET" })
       .neq("data_quality", "expired")
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
-    if (data.placeId) query = query.eq("place_id", data.placeId);
+    if (context.placeId) query = query.eq("place_id", context.placeId);
 
     const { data: rows, error } = await query;
     if (error) throw error;
 
     const listings = (rows ?? []) as unknown as ListingRow[];
+    // One extra query for all creators, never one per listing.
     const names = new Map<string, string>();
     const creatorIds = [...new Set(listings.map((r) => r.creator_id))];
     if (creatorIds.length) {
@@ -51,7 +67,19 @@ export const getWorld = createServerFn({ method: "GET" })
       }
     }
 
-    const community = listings.map((r) => rowToEntry(r, names.get(r.creator_id)));
-    // The demonstration place stays until a locality has real density of its own.
-    return offset === 0 ? [...community, ...ENTRIES] : community;
-  });
+    const page = toPage(
+      listings.map((r) => rowToEntry(r, names.get(r.creator_id))),
+      offset,
+      limit,
+    );
+
+    // Fixtures are a development courtesy only, and only on the first page.
+    if (offset === 0 && fixturesAllowed()) {
+      const { DEMO_ENTRIES } = await import("./fixtures/world-entries");
+      return { ...page, items: [...page.items, ...DEMO_ENTRIES] };
+    }
+    return page;
+  } catch (error) {
+    throw asDataError(error);
+  }
+}

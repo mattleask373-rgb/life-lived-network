@@ -4,12 +4,15 @@ import { duration, layerText, money } from "./layer-colour";
 
 export function EntrySheet({
   entry,
+  world = [],
   saved,
   onSave,
   onClose,
   onOpenEntry,
 }: {
   entry: WorldEntry;
+  /** The entries this screen is already showing; related things come from here. */
+  world?: WorldEntry[];
   saved: boolean;
   onSave: (id: string) => void;
   onClose: () => void;
@@ -24,7 +27,7 @@ export function EntrySheet({
   }, [onClose]);
 
   const layer = LAYERS.find((l) => l.id === entry.layer);
-  const related = relatedEntries(entry);
+  const related = relatedEntries(world, entry);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">

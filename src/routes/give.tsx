@@ -34,7 +34,7 @@ const SUGGESTIONS = [
 function Give() {
   const { user, ready } = useSession();
   const qc = useQueryClient();
-  const { data: hours, isLoading } = useQuery({ queryKey: ["hours"], queryFn: fetchHours });
+  const { data: hours, isLoading } = useQuery({ queryKey: ["hours"], queryFn: () => fetchHours() });
 
   const offering = (hours ?? []).filter((h) => h.direction === "offering");
   const asking = (hours ?? []).filter((h) => h.direction === "asking");

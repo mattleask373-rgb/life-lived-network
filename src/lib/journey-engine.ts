@@ -9,12 +9,7 @@
  * dropped in later without any UI change.
  */
 
-import {
-  ENTRIES,
-  type LayerId,
-  type TimeBand,
-  type WorldEntry,
-} from "./world-data";
+import { type LayerId, type TimeBand, type WorldEntry } from "./world-data";
 
 export interface JourneyBrief {
   days: number;
@@ -136,14 +131,12 @@ function reason(entry: WorldEntry, brief: JourneyBrief): string {
 }
 
 /**
- * Journeys from whatever world is passed in — real listings included. Falls
- * back to the demo place only when nothing else has loaded yet.
+ * Journeys arranged from the entities handed in — nothing else. No data source,
+ * no demo constants: real listings, fixtures, cached or future provider records
+ * all work here unchanged. An empty world honestly yields no journeys.
  */
-export function planJourney(
-  brief: JourneyBrief,
-  world: WorldEntry[] = ENTRIES,
-): Journey[] {
-  const pool = world.length ? world : ENTRIES;
+export function planJourney(brief: JourneyBrief, world: WorldEntry[]): Journey[] {
+  const pool = world;
   return SHAPES.map((shape) => buildShape(shape, brief, pool))
     .filter((j) => j.steps.length >= 2)
     .sort((a, b) => {
@@ -161,13 +154,9 @@ export interface HoursBrief {
   interests: LayerId[];
 }
 
-/** "I have three hours." Returns a small handful, never a wall of options. */
-export function whatIsPossible(
-  brief: HoursBrief,
-  world: WorldEntry[] = ENTRIES,
-): WorldEntry[] {
-  const pool = world.length ? world : ENTRIES;
-  return pool
+/** "I have three hours." Returns a small handful from the supplied world. */
+export function whatIsPossible(brief: HoursBrief, world: WorldEntry[]): WorldEntry[] {
+  return world
     .filter((e) => e.minutes > 0)
     .filter((e) => e.minutes <= brief.minutes + 30)
     .filter((e) => Math.max(0, e.cost) <= brief.spend)

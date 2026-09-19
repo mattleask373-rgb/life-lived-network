@@ -8,7 +8,7 @@ import { ThreeHours } from "@/components/three-hours";
 import { DoSomethingToday } from "@/components/do-something-today";
 import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
-import { fetchWorld } from "@/lib/listings";
+import { fetchWorldEntries } from "@/lib/listings";
 import { fetchDefaultPlace, PLACE_FALLBACK } from "@/lib/places";
 import {
   activitySnapshot,
@@ -38,14 +38,19 @@ function Home() {
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle, ids } = useLifeList();
 
-  const { data: world } = useQuery({ queryKey: ["world"], queryFn: fetchWorld });
-  const all = world ?? [];
-
-  // The place we're looking at is a real record now, not a constant.
+  // The place we're looking at is a real record, not a constant.
   const { data: resolved } = useQuery({
     queryKey: ["place", "default"],
     queryFn: fetchDefaultPlace,
   });
+  const placeId = resolved?.place.id ?? null;
+
+  // The page asks for possibilities in a context; it never knows the source.
+  const { data: world } = useQuery({
+    queryKey: ["world", placeId],
+    queryFn: () => fetchWorldEntries(placeId ? { placeId } : {}),
+  });
+  const all = world ?? [];
   const placeName = resolved?.place.name ?? PLACE_FALLBACK.name;
   const regionName = resolved?.parent?.name ?? PLACE_FALLBACK.region;
   const placeBlurb = resolved?.place.blurb || PLACE_FALLBACK.blurb;
@@ -54,7 +59,7 @@ function Home() {
     const filtered = layers.length ? all.filter((e) => layers.includes(e.layer)) : all;
     return layers.length ? filtered : meaningfulVariety(filtered);
   }, [all, layers]);
-  const snapshot = useMemo(() => activitySnapshot(), []);
+  const snapshot = useMemo(() => activitySnapshot(all), [all]);
   const tonight = useMemo(
     () => entries.filter((e) => e.band === "tonight" || e.band === "today").slice(0, 3),
     [entries],
@@ -189,6 +194,7 @@ function Home() {
 
       {open ? (
         <EntrySheet
+          world={entries}
           entry={open}
           saved={has(open.id)}
           onSave={toggle}

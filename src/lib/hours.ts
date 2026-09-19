@@ -6,6 +6,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import type { DiscoveryContext } from "./data/contract";
 
 export type HourDirection = "offering" | "asking";
 
@@ -35,31 +36,11 @@ export interface NewHourOffer {
   direction: HourDirection;
 }
 
-export async function fetchHours(): Promise<HourOffer[]> {
-  const { data, error } = await supabase
-    .from("hour_offers")
-    .select("*")
-    .eq("status", "open")
-    .order("created_at", { ascending: false })
-    .limit(100);
-  if (error) throw error;
-
-  const rows = (data ?? []) as HourOffer[];
-  const ids = [...new Set(rows.map((r) => r.user_id))];
-  const names = new Map<string, string>();
-  if (ids.length) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, display_name")
-      .in("id", ids);
-    for (const p of profiles ?? []) {
-      if (p.display_name) names.set(p.id, p.display_name);
-    }
-  }
-  return rows.map((r) => {
-    const person = names.get(r.user_id);
-    return person ? { ...r, person } : r;
-  });
+/** Open hours for a context, read through the server boundary and paged. */
+export async function fetchHours(context: DiscoveryContext = {}): Promise<HourOffer[]> {
+  const { getOpenHours } = await import("./hours.functions");
+  const page = await getOpenHours({ data: context });
+  return page.items;
 }
 
 export async function createHour(input: NewHourOffer, userId: string) {
