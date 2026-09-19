@@ -52,6 +52,14 @@ function Home() {
       // Only where we are travels; the hierarchy is expanded behind the server.
       fetchWorldEntries({ placeId: place?.id ?? null }),
   });
+  // What people here have asked for. Counted honestly, never invented.
+  const openNeedsFn = useServerFn(getOpenNeeds);
+  const { data: openNeeds } = useQuery({
+    queryKey: ["open-needs", place?.id ?? null],
+    enabled: Boolean(place),
+    queryFn: () => openNeedsFn({ data: { placeId: place?.id ?? null } }),
+  });
+
   const all = world ?? [];
   const placeName = place?.name ?? PLACE_FALLBACK.name;
   const regionName = ancestors[0]?.name ?? "";
