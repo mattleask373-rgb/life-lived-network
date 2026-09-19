@@ -261,7 +261,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
       push({
         id: `person-open-${person.id}`,
       personId: person.id,
-        photoUrl: person.photoUrl,
+        ...(person.photoUrl ? { photoUrl: person.photoUrl } : {}),
         band: "open_to_opportunities",
         title: person.displayName,
         what: `Says they can: ${capability.label}`,
@@ -293,7 +293,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
     push({
       id: `person-cap-${person.id}`,
       personId: person.id,
-      photoUrl: person.photoUrl,
+      ...(person.photoUrl ? { photoUrl: person.photoUrl } : {}),
       band: "local_capability",
       title: person.displayName,
       what: `Says they can: ${capability.label}`,
@@ -351,7 +351,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
     push({
       id: `exchange-${person.id}`,
       personId: person.id,
-      photoUrl: person.photoUrl,
+      ...(person.photoUrl ? { photoUrl: person.photoUrl } : {}),
       band: "skills_exchange",
       title: person.displayName,
       what: `Would swap: ${capability.label}`,
@@ -377,7 +377,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
     push({
       id: `journey-${person.id}`,
       personId: person.id,
-      photoUrl: person.photoUrl,
+      ...(person.photoUrl ? { photoUrl: person.photoUrl } : {}),
       band: "journey",
       title: person.displayName,
       what: `Travelling, and can ${capability.label}`,

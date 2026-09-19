@@ -159,7 +159,7 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
             .filter((p) => p.user_id === profile.id)
             .map((p) => p.preference as OpportunityPreference),
           wantsToLearn: profile.wants_to_learn ?? [],
-          photoUrl: profile.photo_url,
+          ...(profile.photo_url ? { photoUrl: profile.photo_url } : {}),
         });
       }
     }
@@ -271,7 +271,7 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
         availability: (windows ?? []).map((w) => ({ startsAt: w.starts_at, endsAt: w.ends_at })),
         preferences: (prefs ?? []).map((p) => p.preference as OpportunityPreference),
         wantsToLearn: profile?.wants_to_learn ?? [],
-        photoUrl: profile?.photo_url,
+        ...(profile?.photo_url ? { photoUrl: profile.photo_url } : {}),
       },
       needs: ((needRows ?? []) as unknown as NeedRow[])
         .map(rowToNeed)
