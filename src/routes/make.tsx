@@ -45,11 +45,12 @@ const BANDS: { id: TimeBand; label: string }[] = [
 function MakePage() {
   const { user, ready } = useSession();
   const navigate = useNavigate();
-  // What someone posts belongs to a real place, not to a hard-coded city.
-  const { data: resolved } = useQuery({
-    queryKey: ["place", "default"],
-    queryFn: fetchDefaultPlace,
-  });
+  // What someone posts belongs to a real place from the shared hierarchy.
+  const { place, children, path } = useWorldContext();
+  // Either exactly here, or somewhere inside here.
+  const options = useMemo(() => (place ? [place, ...children] : []), [place, children]);
+  const [areaId, setAreaId] = useState<string>("");
+  const chosen = options.find((p) => p.id === areaId) ?? place ?? null;
   const [kind, setKind] = useState<string | null>(null);
   const [mine, setMine] = useState<{ id: string; title: string; kind: string }[]>([]);
   const [busy, setBusy] = useState(false);
@@ -61,7 +62,6 @@ function MakePage() {
     summary: "",
     details: "",
     place: "",
-    area: AREAS[0]!.name,
     layer: "experience" as LayerId,
     when_text: "",
     band: "today" as TimeBand,
