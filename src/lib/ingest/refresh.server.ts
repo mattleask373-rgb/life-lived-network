@@ -20,6 +20,7 @@ import { bandFor, minutesBetween, normaliseEvent, usableImages, whenWording } fr
 import { cancellationFor, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent } from "./dedupe";
 import { TICKETMASTER_KEY, TICKETMASTER_ROOT, ticketmasterQuery } from "./ticketmaster";
+import { FIXTURE_SOURCE_KEY, fixturePayload } from "./fixture-source";
 
 const MAX_PAGES = 2;
 const MAX_EVENTS = 120;
@@ -34,8 +35,23 @@ export interface RefreshRequest {
   radiusKm?: number;
   startsAfter: string;
   endsBefore: string;
+  /** The locality's own name and clock, for wording only. */
+  localityName?: string;
+  timezone?: string;
   /** Ignore the source's own interval. Reviewers only, for a live check. */
   force?: boolean;
+}
+
+/** A plain word for what went wrong, for the internal health panel. */
+export function errorCategory(failure: string): string {
+  const text = failure.toLowerCase();
+  if (text.includes("credential is configured")) return "no credential";
+  if (text.includes("rejected the credential")) return "credential refused";
+  if (text.includes("answered with")) return "source error";
+  if (text.includes("no adapter")) return "no adapter";
+  if (text.includes("switched off")) return "switched off";
+  if (text.includes("refreshed recently")) return "";
+  return "unreachable";
 }
 
 export function sourceKeyFor(name: string): string {
@@ -123,14 +139,18 @@ export async function refreshSourceRun(request: RefreshRequest): Promise<IngestO
 
   async function finish(row: SourceRow, result: IngestOutcome): Promise<IngestOutcome> {
     const failed = Boolean(result.failure);
+    const now = new Date().toISOString();
     await supabaseAdmin
       .from("sources")
       .update({
-        last_run_at: new Date().toISOString(),
+        last_run_at: now,
         last_outcome: failed
           ? result.failure!.slice(0, 200)
           : `${result.imported} new, ${result.updated} updated, ${result.duplicates} already known`,
         consecutive_failures: failed ? row.consecutive_failures + 1 : 0,
+        ...(failed
+          ? { last_failure_at: now, last_error_category: errorCategory(result.failure!) }
+          : { last_success_at: now, last_error_category: "" }),
       })
       .eq("id", row.id);
     return result;
@@ -146,6 +166,23 @@ async function readFromSource(
   outcome: IngestOutcome,
   parse: Parser,
 ): Promise<SourceEvent[]> {
+  // The demonstration feed reaches no network at all. It exists so the whole
+  // road can be proven before a live credential exists, and everything it
+  // brings in is stored as a demonstration record.
+  if (key === FIXTURE_SOURCE_KEY) {
+    const parsed = parse(
+      fixturePayload({
+        lat: request.lat,
+        lng: request.lng,
+        localityName: request.localityName ?? "",
+        timezone: request.timezone ?? "Europe/London",
+      }),
+    );
+    outcome.read += parsed.events.length;
+    outcome.skipped.push(...parsed.skipped.slice(0, 10));
+    return parsed.events;
+  }
+
   if (key !== TICKETMASTER_KEY) throw new Error("This source has no live connection yet.");
   const apiKey = process.env["TICKETMASTER_API_KEY"];
   if (!apiKey) throw new Error("No credential is configured for this source.");
@@ -240,6 +277,9 @@ async function storeEvent(
     cancellation: cancellationFor(event.state),
     last_checked_at: now,
     origin: "source",
+    // Anything from the demonstration feed is stored as a demonstration record,
+    // so the interface can never present it as a real event.
+    demonstration: sourceKeyFor(source.name) === FIXTURE_SOURCE_KEY,
   };
 
   // Already known to this source: update in place, keep its provenance.

@@ -23,7 +23,9 @@ export interface DemoEntry extends WorldEntry {
   placeSlug: string;
 }
 
-function demo(entry: Omit<DemoEntry, "demonstration" | "community" | "verified" | "host">): DemoEntry {
+function demo(
+  entry: Omit<DemoEntry, "demonstration" | "community" | "verified" | "host">,
+): DemoEntry {
   return {
     ...entry,
     demonstration: true,
@@ -125,7 +127,11 @@ export const DEMO_ENTRIES: DemoEntry[] = [
     cost: 0,
     summary:
       "An example of an interest and a free Saturday lining up: three hours walking and photographing, whatever camera you own.",
-    details: ["Any camera, including a phone", "Outdoors, so weather decides", "Illustrative record"],
+    details: [
+      "Any camera, including a phone",
+      "Outdoors, so weather decides",
+      "Illustrative record",
+    ],
     give: "Show someone how you frame a shot",
     social: "quiet",
     outdoors: true,
@@ -455,6 +461,138 @@ export const DEMO_ENTRIES: DemoEntry[] = [
     social: "friendly",
     outdoors: false,
     skills: ["photography"],
+  }),
+
+  // ------------------------------------------- Kings Heath: services & practices
+  //
+  // The Guildhall is the first organisation modelled as a service anchor, and it
+  // is modelled with nothing built specially for it: the same canonical activity
+  // record, the same locality, the same provenance and the same booking states
+  // any practice, clinic, studio or venue anywhere would use.
+  //
+  // No genuine Guildhall information has been supplied yet, so every record
+  // below is a clearly-labelled demonstration: no real practitioner is named, no
+  // qualification is claimed, no availability is invented, and nothing here can
+  // be booked.
+  demo({
+    id: "demo-kh-guildhall-anchor",
+    placeSlug: "kings-heath",
+    layer: "people",
+    kind: "service",
+    title: "A local practice building, offering rooms and practices",
+    place: "A practice building on the high street",
+    neighbourhood: "Kings Heath",
+    x: 50,
+    y: 58,
+    lat: 52.431,
+    lng: -1.893,
+    when: "Opening hours not yet supplied",
+    band: "today",
+    minutes: 60,
+    cost: 0,
+    summary:
+      "An example of how a real organisation appears here: one place, several practices, each with its own provider, availability and booking state. Real details replace this record once the organisation supplies them.",
+    details: [
+      "Demonstration record standing in for a real practice building",
+      "Opening hours, practitioners and prices are not yet supplied",
+      "Nothing here is bookable",
+    ],
+    social: "quiet",
+    outdoors: false,
+    skills: [],
+    organisation: "A Kings Heath practice building (demonstration)",
+    providerNote: "Provider details not yet supplied",
+    qualificationNote: "No qualification has been verified for this record",
+    bookingState: "not_bookable",
+  }),
+  demo({
+    id: "demo-kh-guildhall-therapy",
+    placeSlug: "kings-heath",
+    layer: "people",
+    kind: "service",
+    title: "An hour of hands-on therapy, by appointment",
+    place: "A treatment room in the practice building",
+    neighbourhood: "Kings Heath",
+    x: 51,
+    y: 59,
+    lat: 52.431,
+    lng: -1.893,
+    when: "Weekday mornings, by arrangement",
+    band: "tomorrow",
+    minutes: 60,
+    cost: 45,
+    summary:
+      "An example of a paid service with a real next step: there is no automatic booking, so a person asks, and the practitioner answers. Skills, qualifications and experience stay separate facts.",
+    details: [
+      "Demonstration record — no real practitioner is described",
+      "Price shown is an example, not a quoted fee",
+      "Enquiry only: no appointment is allocated automatically",
+    ],
+    social: "quiet",
+    outdoors: false,
+    skills: ["massage", "mobility"],
+    organisation: "A Kings Heath practice building (demonstration)",
+    providerNote: "Practitioner not named until a real profile is connected",
+    qualificationNote: "No qualification has been verified for this demonstration record",
+    bookingState: "enquire",
+  }),
+  demo({
+    id: "demo-kh-guildhall-room",
+    placeSlug: "kings-heath",
+    layer: "community",
+    kind: "service",
+    title: "A room to hire for a class or a rehearsal",
+    place: "The upstairs hall of the practice building",
+    neighbourhood: "Kings Heath",
+    x: 49,
+    y: 57,
+    lat: 52.431,
+    lng: -1.893,
+    when: "Evenings, subject to the building's own diary",
+    band: "tonight",
+    minutes: 120,
+    cost: 30,
+    summary:
+      "An example of a service booked somewhere else: the Living World shows what it is, where it is and what it costs, and the booking itself happens on the provider's own system.",
+    details: [
+      "Demonstration record — the booking address below is a fixture, not a real diary",
+      "Booking happens on the provider's own system, never inside the Living World",
+      "No payment is handled here",
+    ],
+    social: "friendly",
+    outdoors: false,
+    skills: [],
+    organisation: "A Kings Heath practice building (demonstration)",
+    providerNote: "Room hire is handled by the building, not by an individual",
+    qualificationNote: "No qualification applies to hiring a room",
+    bookingState: "external",
+    bookingUrl: "https://example.org/fixtures/room-hire",
+  }),
+  demo({
+    id: "demo-kh-repair-hours",
+    placeSlug: "kings-heath",
+    layer: "community",
+    title: "Two hours mending things, given freely",
+    place: "A back room behind a shop",
+    neighbourhood: "Kings Heath",
+    x: 46,
+    y: 60,
+    lat: 52.43,
+    lng: -1.897,
+    when: "Saturday, 11:00",
+    band: "weekend",
+    minutes: 120,
+    cost: 0,
+    summary:
+      "The community side of the same locality: hours offered freely, alongside the paid practices, neither pushing the other out of the way.",
+    details: [
+      "Illustrative record, not a real session",
+      "Nothing is charged and nothing is booked",
+    ],
+    social: "friendly",
+    outdoors: false,
+    skills: ["repair", "sewing"],
+    give: "An hour of patience and a steady hand",
   }),
 ];
 

@@ -135,7 +135,7 @@ function Sources() {
                 {refresh.isPending ? "Asking…" : "Refresh this locality"}
               </button>
             </div>
-            <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-4">
+            <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-3">
               <div>
                 <dt>State</dt>
                 <dd className="text-foreground">
@@ -145,7 +145,11 @@ function Sources() {
               <div>
                 <dt>Credential</dt>
                 <dd className="text-foreground">
-                  {source.credentialPresent ? "configured" : "not configured"}
+                  {!source.credentialRequired
+                    ? "not needed"
+                    : source.credentialPresent
+                      ? "configured"
+                      : "Live source not configured"}
                 </dd>
               </div>
               <div>
@@ -153,8 +157,19 @@ function Sources() {
                 <dd className="text-foreground">{when(source.lastRunAt)}</dd>
               </div>
               <div>
+                <dt>Last worked</dt>
+                <dd className="text-foreground">{when(source.lastSuccessAt)}</dd>
+              </div>
+              <div>
+                <dt>Last failed</dt>
+                <dd className="text-foreground">{when(source.lastFailureAt)}</dd>
+              </div>
+              <div>
                 <dt>Failures in a row</dt>
-                <dd className="text-foreground">{source.consecutiveFailures}</dd>
+                <dd className="text-foreground">
+                  {source.consecutiveFailures}
+                  {source.lastErrorCategory ? ` · ${source.lastErrorCategory}` : ""}
+                </dd>
               </div>
             </dl>
             {source.lastOutcome ? (

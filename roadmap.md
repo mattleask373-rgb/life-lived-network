@@ -1,20 +1,16 @@
 # Roadmap
 
-## Now
-- [ ] Birmingham live event discovery, UK-wide architecture (plan awaiting approval)
-  - [ ] Ticketmaster Discovery adapter behind the existing source registry (needs API key from Matt)
-  - [ ] Canonical event fields surfaced through existing activity model + cards/detail
-  - [ ] Locality + date driven event retrieval (no city-specific code)
-  - [ ] Reviewer-only refresh trigger, truthful freshness, quiet states
-  - [ ] Tests: provider parsing, freshness, dedupe, geography, regression
+## Done
+- UK & Ireland geography, locality picker, descendant discovery (Slice 1)
+- Human possibility, connection requests, safety, moderation review (Slice 2)
+- Event pipeline: source registry, adapter, normalise, dedupe, provenance, freshness (Slice 3A)
+- Kings Heath first locality: development fixture feed (no network), service and
+  practice representation with truthful booking states, service answers on a
+  need, reviewer source health
 
-## Blocked / needs Matt
-- [ ] Ticketmaster Discovery API key (free tier) — nothing live can appear without it
-
-## Already landed (groundwork, before this plan)
-- [x] `sources` + `source_records` registry tables
-- [x] Optional event fields on activity records (start/end, timezone, organiser, ticket URL, cancellation, imported/checked, origin)
-- [x] Ingest contract, normalisation/sanitising, freshness, deduplication modules
-
-## Deferred (not this build)
-- Intent front door, My Living World, routing, extra providers, payments, bookings, feeds, realtime, AI matching
+## Open (blocked)
+- Live Birmingham events: waiting on a Ticketmaster API key. The source stays
+  switched off and says "Live source not configured" until one is supplied.
+- Genuine Guildhall details (hours, practices, practitioners, booking pathway):
+  waiting on the organisation. Until then those records are labelled
+  demonstrations and nothing is bookable.

@@ -1,5 +1,14 @@
 import { useEffect } from "react";
+import { Link } from "@tanstack/react-router";
 import { LAYERS, QUALITY_LABEL, relatedEntries, type WorldEntry } from "@/lib/world-data";
+import {
+  asBookingState,
+  BOOKING_LABEL,
+  isService,
+  nextStepFor,
+  providerLine,
+  qualificationLine,
+} from "@/lib/services";
 import { duration, eventDate, layerText, money } from "./layer-colour";
 import { LayerIcon } from "./layer-icon";
 
@@ -29,6 +38,8 @@ export function EntrySheet({
 
   const layer = LAYERS.find((l) => l.id === entry.layer);
   const related = relatedEntries(world, entry);
+  const service = isService(entry);
+  const step = nextStepFor(entry);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
@@ -134,6 +145,50 @@ export function EntrySheet({
           </dl>
 
           <p className="mt-4 leading-relaxed">{entry.summary}</p>
+
+          {/* A service: what it is, who provides it, where, when, what it costs,
+              and the one next step that is actually true. */}
+          {service ? (
+            <div className="mt-4 rounded-lg border border-border bg-background p-3 text-sm">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                Service or practice
+              </p>
+              <p className="mt-1">{providerLine(entry)}</p>
+              <p className="mt-1 text-muted-foreground">
+                {entry.place} · {entry.neighbourhood}
+              </p>
+              <p className="mt-1 text-muted-foreground">Availability: {entry.when}</p>
+              <p className="mt-1 text-muted-foreground">
+                {BOOKING_LABEL[asBookingState(entry.bookingState)]} ·{" "}
+                {money(entry.cost, entry.currency)}
+              </p>
+              <p className="mt-1 text-muted-foreground">{qualificationLine(entry)}</p>
+              <div className="mt-3">
+                {step.href ? (
+                  <a
+                    href={step.href}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="focus-ink inline-flex rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground"
+                  >
+                    {step.label}
+                  </a>
+                ) : step.kind === "enquire" ? (
+                  <Link
+                    to="/need"
+                    className="focus-ink inline-flex rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground"
+                  >
+                    {step.label}
+                  </Link>
+                ) : (
+                  <span className="inline-flex rounded-full border border-border px-4 py-2 text-sm text-muted-foreground">
+                    {step.label}
+                  </span>
+                )}
+                <p className="mt-2 text-xs text-muted-foreground">{step.note}</p>
+              </div>
+            </div>
+          ) : null}
 
           {/* Where this came from, said plainly, with the way back to them. */}
           {entry.origin === "source" || entry.origin === "confirmed" ? (

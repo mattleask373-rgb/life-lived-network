@@ -6,8 +6,9 @@
 
 import type { SourceAdapter } from "./contract";
 import { ticketmasterAdapter, TICKETMASTER_KEY } from "./ticketmaster";
+import { fixtureAdapter, FIXTURE_SOURCE_KEY } from "./fixture-source";
 
-const ADAPTERS: SourceAdapter[] = [ticketmasterAdapter];
+const ADAPTERS: SourceAdapter[] = [ticketmasterAdapter, fixtureAdapter];
 
 export function adapterFor(key: string): SourceAdapter | null {
   return ADAPTERS.find((adapter) => adapter.key === key) ?? null;
@@ -17,4 +18,4 @@ export function adapterKeys(): string[] {
   return ADAPTERS.map((adapter) => adapter.key);
 }
 
-export { TICKETMASTER_KEY };
+export { TICKETMASTER_KEY, FIXTURE_SOURCE_KEY };
