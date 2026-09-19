@@ -6,8 +6,8 @@ describe("regulated things", () => {
   it("flags therapy without deciding anything about the person", () => {
     const flags = regulatedFlags("Looking for counselling in Lisbon");
     expect(flags).toHaveLength(1);
-    expect(flags[0].area).toBe("mental_health");
-    expect(flags[0].note).toMatch(/registered/i);
+    expect(flags[0]!.area).toBe("mental_health");
+    expect(flags[0]!.note).toMatch(/registered/i);
   });
 
   it("flags gas and electrical work", () => {

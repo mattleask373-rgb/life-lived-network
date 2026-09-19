@@ -7,7 +7,7 @@ const now = FIXTURE_NOW;
 
 describe("freshness", () => {
   it("treats a recently confirmed skill as current", () => {
-    expect(freshness({ lastConfirmedAt: SARAH.capabilities[0].lastConfirmedAt, kind: "capability", now })).toBe(
+    expect(freshness({ lastConfirmedAt: SARAH.capabilities[0]!.lastConfirmedAt, kind: "capability", now })).toBe(
       "fresh",
     );
   });
@@ -19,7 +19,7 @@ describe("freshness", () => {
 
   it("calls a year-old skill out of date", () => {
     expect(
-      freshness({ lastConfirmedAt: STALE.capabilities[0].lastConfirmedAt, kind: "capability", now }),
+      freshness({ lastConfirmedAt: STALE.capabilities[0]!.lastConfirmedAt, kind: "capability", now }),
     ).toBe("out_of_date");
   });
 
