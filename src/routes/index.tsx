@@ -42,7 +42,7 @@ function Home() {
   const { has, toggle, ids } = useLifeList();
 
   // Where we are is shared application context, not a constant in this file.
-  const { place, ancestors, placeIds, placeSlugs, loading } = useWorldContext();
+  const { place, ancestors, placeIds, placeSlugs, setPlaceSlug, loading } = useWorldContext();
 
   // The page asks for possibilities in a context; it never knows the source.
   const { data: world, isLoading: worldLoading } = useQuery({
