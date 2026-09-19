@@ -185,7 +185,7 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
         cost: 0,
         summary: h.detail,
         details: [],
-        give: h.direction === "offering" ? h.title : undefined,
+        ...(h.direction === "offering" ? { give: h.title } : {}),
         host: "Someone here",
         verified: false,
         social: "friendly",
