@@ -79,7 +79,7 @@ describe("service taxonomy", () => {
       entry({ id: "b", title: "Osteopathic check-up" }),
       entry({ id: "c", title: "Yoga class", quality: "expired" }),
       entry({ id: "d", title: "Plumbing callout", cancellation: "cancelled" }),
-      entry({ id: "e", title: "Gardening hour", organisation: undefined }),
+      { ...entry({ id: "e", title: "Gardening hour" }), organisation: undefined },
     ]);
     const slugs = present.map((p) => p.category.slug);
     expect(slugs).toContain("osteopathy");
