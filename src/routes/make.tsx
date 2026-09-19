@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { createListing, KINDS, type NewListing } from "@/lib/listings";
+import { currencySymbol } from "@/components/layer-colour";
 import { useWorldContext } from "@/lib/world-context";
 import { PlacePicker } from "@/components/place-picker";
 import { LAYERS, type LayerId, type TimeBand } from "@/lib/world-data";
@@ -314,7 +315,9 @@ function MakePage() {
               </label>
               <label className="block text-sm">
                 <span className="text-muted-foreground">
-                  {form.pays ? "What it pays (€)" : "What it costs (€, 0 for free)"}
+                  {form.pays
+                    ? `What it pays (${currencySymbol(place?.currency)})`
+                    : `What it costs (${currencySymbol(place?.currency)}, 0 for free)`}
                 </span>
                 <input
                   type="number"

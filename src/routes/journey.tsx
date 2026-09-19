@@ -4,7 +4,7 @@ import { useState } from "react";
 import { planJourney, type Journey } from "@/lib/journey-engine";
 import { LAYERS, type LayerId, type WorldEntry } from "@/lib/world-data";
 import { EntrySheet } from "@/components/entry-sheet";
-import { duration, layerText, money } from "@/components/layer-colour";
+import { currencySymbol, duration, layerText, money } from "@/components/layer-colour";
 import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWorldEntries } from "@/lib/listings";
@@ -115,8 +115,11 @@ function JourneyPage() {
                 <h2 className="text-2xl">{j.name}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{j.idea}</p>
                 <p className="mt-2 text-sm">
-                  You'd spend about €{j.spend}
-                  {j.earn > 0 ? ` and earn about €${j.earn}.` : "."}
+                  You'd spend about {currencySymbol(place?.currency)}
+                  {j.spend}
+                  {j.earn > 0
+                    ? ` and earn about ${currencySymbol(place?.currency)}${j.earn}.`
+                    : "."}
                 </p>
 
                 <ol className="mt-4 space-y-3">
@@ -134,7 +137,7 @@ function JourneyPage() {
                           {s.entry.title}
                         </span>
                         <span className="block text-sm text-muted-foreground">
-                          {s.entry.place} · {duration(s.entry.minutes)} · {money(s.entry.cost)}
+                          {s.entry.place} · {duration(s.entry.minutes)} · {money(s.entry.cost, s.entry.currency)}
                         </span>
                       </button>
                       <p className="mt-1 text-sm text-foreground/75 italic">{s.why}</p>

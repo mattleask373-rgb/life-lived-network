@@ -2,6 +2,8 @@ import { useState } from "react";
 import { whatIsPossible } from "@/lib/journey-engine";
 import { LAYERS, type LayerId, type WorldEntry } from "@/lib/world-data";
 import { EntryCard } from "./entry-card";
+import { currencySymbol } from "./layer-colour";
+import { useWorldContext } from "@/lib/world-context";
 
 const HOURS = [1, 2, 3, 5];
 const SPENDS = [0, 10, 30, 60];
@@ -14,6 +16,8 @@ export function ThreeHours({
   /** The world as loaded — real listings included. */
   world?: WorldEntry[];
 }) {
+  const { place } = useWorldContext();
+  const symbol = currencySymbol(place?.currency);
   const [minutes, setMinutes] = useState(180);
   const [spend, setSpend] = useState(30);
   const [outdoors, setOutdoors] = useState(false);
@@ -44,7 +48,7 @@ export function ThreeHours({
       <Row label="Spend">
         {SPENDS.map((s) => (
           <Chip key={s} on={spend === s} onClick={() => setSpend(s)}>
-            {s === 0 ? "Nothing" : `Up to €${s}`}
+            {s === 0 ? "Nothing" : `Up to ${symbol}${s}`}
           </Chip>
         ))}
       </Row>

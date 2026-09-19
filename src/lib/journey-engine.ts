@@ -9,6 +9,7 @@
  * dropped in later without any UI change.
  */
 
+import { money } from "@/components/layer-colour";
 import { type LayerId, type TimeBand, type WorldEntry } from "./world-data";
 
 export interface JourneyBrief {
@@ -121,7 +122,7 @@ function buildShape(
 }
 
 function reason(entry: WorldEntry, brief: JourneyBrief): string {
-  if (entry.cost < 0) return `Pays €${Math.abs(entry.cost)} the same day.`;
+  if (entry.cost < 0) return `${money(entry.cost, entry.currency)} the same day.`;
   if (brief.interests.includes(entry.layer) && entry.give)
     return `You said this interests you — and there's something to give here.`;
   if (brief.interests.includes(entry.layer)) return "You said this interests you.";

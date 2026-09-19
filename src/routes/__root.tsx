@@ -127,88 +127,86 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Three doors into one world.
+ *
+ * Explore, Find and Journey are not three products — they are three ways into
+ * the same places, people, needs and possibilities. Everything else a person
+ * does (their hour, their skills, their saved things, their conversations) sits
+ * quietly underneath the door it belongs to, rather than competing with it.
+ */
+const DOORS: { to: string; label: string; blurb: string; under: { to: string; label: string }[] }[] =
+  [
+    {
+      to: "/",
+      label: "Explore",
+      blurb: "What's around you",
+      under: [
+        { to: "/make", label: "Add something real" },
+        { to: "/life-list", label: "Your life list" },
+      ],
+    },
+    {
+      to: "/need",
+      label: "Find",
+      blurb: "What you need, or can give",
+      under: [
+        { to: "/give", label: "I have an hour" },
+        { to: "/help", label: "What you can do" },
+        { to: "/conversations", label: "Conversations" },
+      ],
+    },
+    {
+      to: "/road-trip",
+      label: "Journey",
+      blurb: "What's along your way",
+      under: [{ to: "/journey", label: "Shape a longer stay" }],
+    },
+  ];
+
 function SiteHeader() {
   return (
     <header className="border-b border-border bg-card/80 backdrop-blur-sm">
       <nav
         aria-label="Main"
-        className="mx-auto max-w-5xl px-4 py-3 sm:flex sm:items-center sm:justify-between sm:gap-5 sm:px-6"
+        className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6"
       >
-        <Link to="/" className="hidden min-w-0 truncate font-semibold tracking-tight sm:block">
-          The Living World
-        </Link>
-        <div className="flex items-center gap-5 overflow-x-auto whitespace-nowrap pb-1 text-sm sm:shrink-0 sm:pb-0">
-          <Link
-            to="/"
-            activeProps={{ className: "text-foreground" }}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Map
-          </Link>
-          <Link
-            to="/journey"
-            activeProps={{ className: "text-foreground" }}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Journey
-          </Link>
-          <Link
-            to="/road-trip"
-            activeProps={{ className: "text-foreground" }}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Road trip
-          </Link>
-
-          <Link
-            to="/life-list"
-            activeProps={{ className: "text-foreground" }}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Life list
-          </Link>
-          <Link
-            to="/give"
-            activeProps={{ className: "text-foreground" }}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Give an hour
-          </Link>
-          <Link
-            to="/need"
-            activeProps={{ className: "text-foreground" }}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Ask for help
-          </Link>
-          <Link
-            to="/conversations"
-            activeProps={{ className: "text-foreground" }}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Conversations
-          </Link>
-          <Link
-            to="/help"
-            activeProps={{ className: "text-foreground" }}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Help someone
-          </Link>
-          <Link
-            to="/make"
-            activeProps={{ className: "text-foreground" }}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Make something
+        <div className="flex items-baseline justify-between gap-4">
+          <Link to="/" className="min-w-0 truncate font-semibold tracking-tight">
+            The Living World
           </Link>
           <Link
             to="/profile"
             activeProps={{ className: "text-foreground" }}
-            className="text-muted-foreground hover:text-foreground"
+            className="shrink-0 text-sm text-muted-foreground hover:text-foreground"
           >
             You
           </Link>
+        </div>
+        <div className="flex items-stretch gap-2 overflow-x-auto pb-1">
+          {DOORS.map((door) => (
+            <Link
+              key={door.to}
+              to={door.to}
+              activeProps={{ className: "border-primary/60 bg-background text-foreground" }}
+              className="focus-ink min-w-0 flex-1 whitespace-nowrap rounded-xl border border-border px-3 py-2 hover:bg-background"
+            >
+              <span className="block text-sm font-medium">{door.label}</span>
+              <span className="block truncate text-xs text-muted-foreground">{door.blurb}</span>
+            </Link>
+          ))}
+        </div>
+        <div className="flex items-center gap-4 overflow-x-auto whitespace-nowrap text-xs text-muted-foreground">
+          {DOORS.flatMap((door) => door.under).map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              activeProps={{ className: "text-foreground" }}
+              className="hover:text-foreground"
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
       </nav>
     </header>
