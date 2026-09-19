@@ -154,13 +154,9 @@ export interface HoursBrief {
   interests: LayerId[];
 }
 
-/** "I have three hours." Returns a small handful, never a wall of options. */
-export function whatIsPossible(
-  brief: HoursBrief,
-  world: WorldEntry[] = ENTRIES,
-): WorldEntry[] {
-  const pool = world.length ? world : ENTRIES;
-  return pool
+/** "I have three hours." Returns a small handful from the supplied world. */
+export function whatIsPossible(brief: HoursBrief, world: WorldEntry[]): WorldEntry[] {
+  return world
     .filter((e) => e.minutes > 0)
     .filter((e) => e.minutes <= brief.minutes + 30)
     .filter((e) => Math.max(0, e.cost) <= brief.spend)
