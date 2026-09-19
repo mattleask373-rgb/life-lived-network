@@ -98,6 +98,10 @@ export interface NeedRow {
   budget: number | string | null;
   currency: string;
   payment_type: string;
+  payment_model?: string | null;
+  budget_max?: number | string | null;
+  last_confirmed_at?: string | null;
+  required_roles?: string[] | null;
   required_skills: string[];
   required_qualifications: string[];
   preferred_experience: string;
