@@ -115,10 +115,48 @@ export const openGardener = person({
   availability: [{ startsAt: "2026-09-24T08:00:00.000Z", endsAt: "2026-09-24T18:00:00.000Z" }],
 });
 
-/** Travelling through, explicitly open to opportunities on the way. */
+/**
+ * Travelling through, with a journey they actually shared and opted in on.
+ * A journey is the only thing that puts someone in the travelling band.
+ */
 export const travellingGardener = person({
   id: "travelling-gardener",
   displayName: "Cass",
+  placeId: PLACE_ELSEWHERE,
+  placeName: "Somewhere else",
+  capabilities: [capability("gardening")],
+  serviceAreaPlaceIds: [],
+  preferences: ["travelling_opportunities"],
+  journeys: [
+    {
+      id: "journey-cass",
+      ownerId: "travelling-gardener",
+      title: "Down through the Midlands",
+      startsAt: "2026-09-23T08:00:00.000Z",
+      endsAt: "2026-09-26T20:00:00.000Z",
+      timezone: "Europe/London",
+      visibility: "public",
+      opportunityOptIn: true,
+      status: "active",
+      lastConfirmedAt: "2026-09-19T09:00:00.000Z",
+      expiresAt: null,
+      freshness: "fresh",
+      places: [
+        {
+          placeId: PLACE_KINGS_HEATH,
+          position: 0,
+          arrivesAt: "2026-09-23T10:00:00.000Z",
+          departsAt: "2026-09-25T10:00:00.000Z",
+        },
+      ],
+    },
+  ],
+});
+
+/** Says they'd be passing through, but never shared a journey. Not a possibility. */
+export const passingThroughOnly = person({
+  id: "passing-only",
+  displayName: "Fen",
   placeId: PLACE_ELSEWHERE,
   placeName: "Somewhere else",
   capabilities: [capability("gardening")],

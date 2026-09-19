@@ -40,6 +40,12 @@ import type {
 import type { JourneyContext } from "./journey-context";
 import { journeyOverlaps } from "./journey-context";
 import { regulatedFlags } from "./policy";
+import {
+  entryInScope,
+  exactGeography,
+  geographicReach,
+  type NeedGeography,
+} from "./geo-scope";
 
 export type SupplyBand =
   | "direct"
@@ -165,6 +171,11 @@ export interface SupplyInput {
   /** Per-band cap, so the answer stays small and useful. */
   perBand?: number;
   now?: string | number | Date;
+  /**
+   * How far the need's place reaches in the real geography. Without it the
+   * engine falls back to that one place exactly, which is correct but narrow.
+   */
+  geography?: NeedGeography;
 }
 
 function overlapsNeedTime(
@@ -181,10 +192,6 @@ function overlapsNeedTime(
   );
 }
 
-function inArea(person: PersonCandidate, need: Need): boolean {
-  if (!need.placeId) return false;
-  return person.placeId === need.placeId || person.serviceAreaPlaceIds.includes(need.placeId);
-}
 
 function whenText(need: Need): string {
   if (!need.startsAt) return "Time still to agree";
@@ -198,6 +205,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
   const perBand = input.perBand ?? 3;
   const words = needTerms(need);
   const now = input.now ?? new Date();
+  const geo = input.geography ?? exactGeography(need.placeId);
   const results: SupplyResult[] = [];
   const usedPeople = new Set<string>();
   const diagnostics: MatchDiagnostics = {
@@ -277,7 +285,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
     if (!hit) continue;
     const isOffer = entry.layer === "work" || entry.kind === "skill" || entry.cost < 0;
     if (!isOffer) continue;
-    if (need.placeId && entry.placeId && entry.placeId !== need.placeId) continue;
+    if (!entryInScope(entry.placeId ?? null, geo)) continue;
     push({
       id: entry.id,
       band: "direct",
@@ -306,7 +314,8 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
       });
       continue;
     }
-    if (!inArea(person, need)) {
+    const reach = geographicReach(person, geo);
+    if (!reach) {
       diagnostics.excludedByPlace += 1;
       continue;
     }
@@ -369,6 +378,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
         when: window ? "Has said they're free around then" : "Hasn't said when they're free",
         why: [
           `${capability.kind === "qualification" ? "Qualified in" : "Says they can"} ${capability.label}`,
+          reach.reason,
           "Has opted into being found for this kind of thing",
           ...(window ? ["An availability window they set overlaps your time"] : []),
         ],
@@ -408,7 +418,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
       what: `Says they can: ${capability.label}`,
       where: person.placeName,
       when: "Nothing said about availability",
-      why: [`Lists ${capability.label} on their profile`],
+      why: [`Lists ${capability.label} on their profile`, reach.reason],
       caveat: BAND_CAVEAT.local_capability,
       actions: ["view"],
       evidence: {
@@ -433,6 +443,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
   for (const entry of entries) {
     const hit = matchTerms([entry.title, entry.summary, entry.give ?? ""].join(" "), words);
     if (!hit) continue;
+    if (!entryInScope(entry.placeId ?? null, geo)) continue;
     if (entry.layer === "community") {
       push({
         id: `community-${entry.id}`,
@@ -513,14 +524,14 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
         )
       : null;
     if (need.requiredQualifications.length && !qualification) continue;
+    // A journey only counts when the person shared it, opted into
+    // opportunities, it is still active, and it actually covers this place at
+    // this time. Merely having ticked a place as "passing through" is not a
+    // journey and no longer produces a possibility.
     const journey = person.journeys?.find((candidate) =>
       journeyOverlaps(candidate, need.placeId, need.startsAt, need.endsAt),
     );
-    const legacyRoute =
-      !person.journeys?.length &&
-      need.placeId &&
-      (person.travellingThroughPlaceIds ?? []).includes(need.placeId);
-    if (!journey && !legacyRoute) continue;
+    if (!journey) continue;
     push({
       id: `journey-${person.id}`,
       personId: person.id,
@@ -529,14 +540,13 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
       title: person.displayName,
       what: `Travelling, and can ${capability.label}`,
       where: `Passing through ${person.placeName}`,
-      when:
-        journey && need.startsAt
-          ? "Their shared journey window overlaps this time"
-          : "Depends entirely on their plans",
+      when: need.startsAt
+        ? "Their shared journey window overlaps this time"
+        : "Depends entirely on their plans",
       why: [
         `Says they can ${capability.label}`,
         "Has opted into opportunities while travelling",
-        ...(journey ? ["Their public journey overlaps this place and time"] : []),
+        "Their shared journey covers this place and time",
       ],
       caveat: BAND_CAVEAT.journey,
       actions: ["contact"],
@@ -545,10 +555,10 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
           "current capability",
           "journey opt-in",
           "route overlap",
-          ...(journey ? ["journey time overlap"] : []),
+          "journey time overlap",
           ...(qualification ? ["required qualification"] : []),
         ],
-        unknown: journey ? ["availability"] : ["journey dates", "availability"],
+        unknown: ["availability"],
         freshness: freshness({
           lastConfirmedAt: capability.lastConfirmedAt,
           expiresAt: capability.expiresOn,
@@ -570,8 +580,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
           skill.toLowerCase().includes(candidate.toLowerCase()),
       ),
     );
-    const nearby = !need.placeId || !entry.placeId || need.placeId === entry.placeId;
-    if (!categoryHit || !nearby) continue;
+    if (!categoryHit || !entryInScope(entry.placeId ?? null, geo)) continue;
     push({
       id: `related-${entry.id}`,
       band: "related",

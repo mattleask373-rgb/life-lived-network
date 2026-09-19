@@ -155,6 +155,10 @@ export type Database = {
           reason: string
           reported_user_id: string | null
           reporter_id: string
+          resolution: string
+          review_note: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string
           subject_id: string
           subject_type: string
@@ -167,6 +171,10 @@ export type Database = {
           reason: string
           reported_user_id?: string | null
           reporter_id: string
+          resolution?: string
+          review_note?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           subject_id: string
           subject_type: string
@@ -179,6 +187,10 @@ export type Database = {
           reason?: string
           reported_user_id?: string | null
           reporter_id?: string
+          resolution?: string
+          review_note?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           subject_id?: string
           subject_type?: string

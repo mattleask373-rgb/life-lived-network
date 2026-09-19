@@ -14,6 +14,7 @@ import type { Need } from "./needs";
 import { regulatedFlags } from "./policy";
 import { journeyOverlaps } from "./journey-context";
 import { matchTerms, needTerms, usableCapability } from "./match-signals";
+import { exactGeography, geographicReach, type NeedGeography } from "./geo-scope";
 
 export type OpportunityKind =
   "exact_match" | "possible_match" | "community_possibility" | "travelling_possibility" | "swap";
@@ -61,6 +62,8 @@ export interface ReciprocalInput {
   limit?: number;
   /** Availability windows the person set, with their own freshness. */
   availabilityConfirmedAt?: string | null;
+  /** How far each need's place reaches in the real geography. */
+  geographyFor?: (need: Need) => NeedGeography;
 }
 
 function overlaps(person: PersonCandidate, need: Need): boolean {
@@ -72,10 +75,9 @@ function overlaps(person: PersonCandidate, need: Need): boolean {
   );
 }
 
-function reachable(person: PersonCandidate, need: Need): boolean {
-  if (!need.placeId) return false;
+function reachable(person: PersonCandidate, geo: NeedGeography): boolean {
   // Passing through somewhere is deliberately not "working there".
-  return person.placeId === need.placeId || person.serviceAreaPlaceIds.includes(need.placeId);
+  return Boolean(geographicReach(person, geo));
 }
 
 /** What could this person genuinely help with? */
@@ -114,7 +116,8 @@ export function findOpportunitiesForPerson(input: ReciprocalInput): PersonOpport
       : null;
     if (need.requiredQualifications.length && !requiredQualification) continue;
 
-    const here = reachable(person, need);
+    const geo = input.geographyFor?.(need) ?? exactGeography(need.placeId);
+    const here = reachable(person, geo);
     const free = overlaps(person, need);
     const notes = regulatedFlags(
       `${need.category} ${need.title} ${need.requiredSkills.join(" ")}`,
@@ -190,21 +193,24 @@ export function findOpportunitiesForPerson(input: ReciprocalInput): PersonOpport
       continue;
     }
 
+    // Only a shared, opted-in journey that actually covers this place and time
+    // counts. Ticking a place as "passing through" is not a journey.
     if (
       capability &&
       person.preferences.includes("travelling_opportunities") &&
       need.placeId &&
-      (person.journeys?.some((journey) =>
+      person.journeys?.some((journey) =>
         journeyOverlaps(journey, need.placeId, need.startsAt, need.endsAt),
-      ) ||
-        (!person.journeys?.length &&
-          (person.travellingThroughPlaceIds ?? []).includes(need.placeId)))
+      )
     ) {
       found.push({
         id: `travelling-${need.id}`,
         kind: "travelling_possibility",
         need,
-        why: [`They asked for ${capability.label}`, "You said you'd be passing through there"],
+        why: [
+          `They asked for ${capability.label}`,
+          "A journey you shared covers this place and time",
+        ],
         caveat: OPPORTUNITY_CAVEAT.travelling_possibility,
         notes,
       });
