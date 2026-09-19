@@ -417,7 +417,6 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
     const { data: needRows, error } = await needQuery;
     if (error) throw error;
 
-
     const { data: journeyRows } = await supabase
       .from("journeys")
       .select("*, journey_places(*)")

@@ -63,7 +63,6 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       query = query.eq("place_id", context.placeId);
     }
 
-
     // An event that has finished is never upcoming. Anything without a start
     // time is unaffected by time filtering.
     const settled = new Date(Date.now() - 3 * 3600000).toISOString();

@@ -113,7 +113,6 @@ export function PlacePicker() {
               ) : null}
             </div>
           ) : null}
-
         </div>
       ) : null}
     </div>

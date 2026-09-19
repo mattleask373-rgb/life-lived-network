@@ -142,7 +142,6 @@ function Home() {
           </section>
         ) : null}
 
-
         {/* The map */}
         <section aria-labelledby="map-heading" className="mt-8">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3 sm:flex sm:justify-between">

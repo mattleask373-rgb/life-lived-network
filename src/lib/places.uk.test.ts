@@ -118,8 +118,16 @@ const places: Place[] = [
   p("dublin", "Dublin", "city", "county-dublin", ie),
 
   // The rest of the world still works the same way.
-  p("portugal", "Portugal", "country", null, { country_code: "PT", currency: "EUR", timezone: "Europe/Lisbon" }),
-  p("lisbon", "Lisbon", "city", "portugal", { country_code: "PT", currency: "EUR", timezone: "Europe/Lisbon" }),
+  p("portugal", "Portugal", "country", null, {
+    country_code: "PT",
+    currency: "EUR",
+    timezone: "Europe/Lisbon",
+  }),
+  p("lisbon", "Lisbon", "city", "portugal", {
+    country_code: "PT",
+    currency: "EUR",
+    timezone: "Europe/Lisbon",
+  }),
 ];
 
 const index = buildPlaceIndex(places);
@@ -219,10 +227,7 @@ describe("UK-wide localities", () => {
   });
 
   it("keeps a district and the city of the same name apart", () => {
-    expect(searchPlaces(index, "cardiff").map((x) => x.slug)).toEqual([
-      "cardiff-area",
-      "cardiff",
-    ]);
+    expect(searchPlaces(index, "cardiff").map((x) => x.slug)).toEqual(["cardiff-area", "cardiff"]);
     expect(placePath(index, "cardiff")).toBe("Cardiff, Cardiff, Wales");
   });
 
