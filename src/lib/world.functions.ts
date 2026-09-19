@@ -49,9 +49,20 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       .range(offset, offset + limit - 1);
     // A locality, or a locality and everywhere inside it. Either way the read
     // stays bounded by the same page limit.
-    const localities = (context.placeIds ?? []).slice(0, 400);
-    if (localities.length) query = query.in("place_id", localities);
-    else if (context.placeId) query = query.eq("place_id", context.placeId);
+    //
+    // A very wide selection — a nation, or the whole world region — can name
+    // more localities than it is sensible to put in one filter. Rather than
+    // quietly filtering by an arbitrary slice of them, which would hide real
+    // activity, the locality filter is dropped: at that width it excludes
+    // almost nothing anyway, and the page limit still bounds the read.
+    const LOCALITY_FILTER_CAP = 400;
+    const localities = context.placeIds ?? [];
+    if (localities.length && localities.length <= LOCALITY_FILTER_CAP) {
+      query = query.in("place_id", localities);
+    } else if (!localities.length && context.placeId) {
+      query = query.eq("place_id", context.placeId);
+    }
+
 
     // An event that has finished is never upcoming. Anything without a start
     // time is unaffected by time filtering.
