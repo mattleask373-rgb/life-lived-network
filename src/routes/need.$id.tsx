@@ -237,21 +237,9 @@ function Band({
         {rows.map((r) => (
           <li key={r.id} className="card-paper p-4">
             {r.personId ? (
-              r.photoUrl ? (
-                <img
-                  src={r.photoUrl}
-                  alt=""
-                  className="mb-3 h-12 w-12 rounded-full object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                <div
-                  aria-hidden="true"
-                  className="mb-3 grid h-12 w-12 place-items-center rounded-full border border-border bg-muted text-sm text-muted-foreground"
-                >
-                  {r.title.trim().charAt(0).toUpperCase() || "?"}
-                </div>
-              )
+              <span className="mb-3 block">
+                <PersonAvatar name={r.title} photoUrl={r.photoUrl} size={48} />
+              </span>
             ) : null}
             <p className="text-lg leading-tight">{r.title}</p>
             <p className="mt-1 text-sm">{r.what}</p>
