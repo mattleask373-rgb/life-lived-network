@@ -66,7 +66,7 @@ function Home() {
     queryFn: () => openNeedsFn({ data: { placeId: place?.id ?? null } }),
   });
 
-  const all = world ?? [];
+  const all = useMemo(() => world ?? [], [world]);
   const placeName = place?.name ?? PLACE_FALLBACK.name;
   const regionName = ancestors[0]?.name ?? "";
   const placeBlurb = place?.blurb || PLACE_FALLBACK.blurb;
