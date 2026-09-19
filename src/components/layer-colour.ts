@@ -38,6 +38,11 @@ export const layerBorder: Record<LayerId, string> = {
 
 const SYMBOL: Record<string, string> = { GBP: "£", EUR: "€", USD: "$" };
 
+/** Just the symbol, for labels and ranges that are not a single amount. */
+export function currencySymbol(currency = "GBP"): string {
+  return SYMBOL[currency] ?? `${currency} `;
+}
+
 export function money(cost: number, currency = "GBP"): string {
   const symbol = SYMBOL[currency] ?? `${currency} `;
   if (cost < 0) return `Pays ${symbol}${Math.abs(cost)}`;

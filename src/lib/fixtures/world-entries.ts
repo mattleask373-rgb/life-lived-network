@@ -37,6 +37,17 @@ function demo(
   };
 }
 
+/**
+ * A real instant a given number of days ahead, so a demonstration with a date
+ * is always genuinely upcoming rather than quietly stale.
+ */
+function soon(days: number, hour: number, minute: number): string {
+  const at = new Date();
+  at.setDate(at.getDate() + days);
+  at.setHours(hour, minute, 0, 0);
+  return at.toISOString();
+}
+
 export const DEMO_ENTRIES: DemoEntry[] = [
   // ---------------------------------------------------------------- Birmingham
   demo({
@@ -593,6 +604,92 @@ export const DEMO_ENTRIES: DemoEntry[] = [
     outdoors: false,
     skills: ["repair", "sewing"],
     give: "An hour of patience and a steady hand",
+  }),
+
+  // -------------------------------------------- Dated demonstration activity
+  //
+  // Until an outside source is credentialled, no real dated events exist. These
+  // records show how something with a genuine date and time reads: they carry a
+  // real future instant so nothing finished can appear upcoming, and they are
+  // demonstrations — no origin, no source credit, no ticket link, because there
+  // is no source and no ticket.
+  demo({
+    id: "demo-kh-evening-music",
+    placeSlug: "kings-heath",
+    layer: "music",
+    title: "An evening of live music in a back room",
+    place: "A back room with a piano in it",
+    neighbourhood: "Kings Heath",
+    x: 48,
+    y: 55,
+    lat: 52.4315,
+    lng: -1.8945,
+    when: "",
+    band: "tonight",
+    minutes: 150,
+    cost: 6,
+    summary:
+      "An example of something with a real date and time: it appears under what's happening until it has happened, and then it stops appearing.",
+    details: [
+      "Demonstration record — no venue, promoter or performer is real",
+      "No tickets are sold here and none are held",
+    ],
+    social: "friendly",
+    outdoors: false,
+    skills: [],
+    startsAt: soon(2, 19, 30),
+    endsAt: soon(2, 22, 0),
+    timezone: "Europe/London",
+  }),
+  demo({
+    id: "demo-kh-morning-market",
+    placeSlug: "kings-heath",
+    layer: "food",
+    title: "A Saturday morning market, on the park side",
+    place: "The park end of the high street",
+    neighbourhood: "Kings Heath",
+    x: 44,
+    y: 52,
+    lat: 52.4302,
+    lng: -1.8952,
+    when: "",
+    band: "weekend",
+    minutes: 180,
+    cost: 0,
+    summary:
+      "A free, dated example: something to walk to rather than sign up for, shown with the date it actually happens on.",
+    details: ["Demonstration record — not a real market", "Nothing is booked and nothing is sold"],
+    social: "lively",
+    outdoors: true,
+    skills: [],
+    startsAt: soon(5, 9, 0),
+    endsAt: soon(5, 13, 0),
+    timezone: "Europe/London",
+  }),
+  demo({
+    id: "demo-bhm-evening-talk",
+    placeSlug: "digbeth",
+    layer: "art",
+    title: "A talk and a look around a working studio",
+    place: "A studio under the arches",
+    neighbourhood: "Digbeth",
+    x: 57,
+    y: 42,
+    lat: 52.4755,
+    lng: -1.8832,
+    when: "",
+    band: "tomorrow",
+    minutes: 90,
+    cost: 0,
+    summary:
+      "The same dated shape one city layer up, so a wider locality also has something with a time attached.",
+    details: ["Demonstration record — no studio or speaker is real"],
+    social: "quiet",
+    outdoors: false,
+    skills: [],
+    startsAt: soon(1, 18, 30),
+    endsAt: soon(1, 20, 0),
+    timezone: "Europe/London",
   }),
 ];
 

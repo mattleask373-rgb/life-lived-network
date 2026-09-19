@@ -97,6 +97,17 @@ function Home() {
           <PlacePicker />
         </div>
 
+        {/* The same locality, as a page anyone can be sent to or find by searching. */}
+        {place && place.country_code ? (
+          <Link
+            to="/$country/$place"
+            params={{ country: place.country_code.toLowerCase(), place: place.slug }}
+            className="focus-ink mt-3 inline-flex text-sm text-muted-foreground underline decoration-dotted underline-offset-4 hover:text-foreground"
+          >
+            The {placeName} page — everything here on one page
+          </Link>
+        ) : null}
+
         <LocalityQuestions questions={questions} placeName={placeName} />
 
         {/* Something's happening here */}
