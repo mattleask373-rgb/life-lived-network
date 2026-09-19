@@ -85,6 +85,15 @@ function capability(label: string, over: Partial<PersonCandidate["capabilities"]
     level: "confident" as const,
     evidence: "",
     verification: "self_stated" as const,
+    visibility: "local_discovery" as const,
+    lastConfirmedAt: "2026-09-19T09:00:00.000Z",
+    issuingBody: "",
+    obtainedOn: null,
+    expiresOn: null,
+    organisation: "",
+    yearsExperience: null,
+    startedOn: null,
+    endedOn: null,
     ...over,
   };
 }
