@@ -425,6 +425,7 @@ export type Database = {
         Row: {
           accessibility: string | null
           band: string
+          cancellation: string
           contact_note: string | null
           cost: number
           created_at: string
@@ -432,22 +433,31 @@ export type Database = {
           currency: string
           data_quality: string
           details: string[]
+          ends_at: string | null
           give: string | null
           id: string
+          imported_at: string | null
           kind: string
+          last_checked_at: string | null
           lat: number | null
           layer: string
           lng: number | null
           minutes: number
           neighbourhood: string
+          organiser: string
+          origin: string
           outdoors: boolean
           people_needed: number | null
           place: string
           place_id: string | null
+          recurrence: string
           skills: string[]
           social: string
+          starts_at: string | null
           status: string
           summary: string
+          ticket_url: string
+          timezone: string
           title: string
           updated_at: string
           when_text: string
@@ -457,6 +467,7 @@ export type Database = {
         Insert: {
           accessibility?: string | null
           band?: string
+          cancellation?: string
           contact_note?: string | null
           cost?: number
           created_at?: string
@@ -464,22 +475,31 @@ export type Database = {
           currency?: string
           data_quality?: string
           details?: string[]
+          ends_at?: string | null
           give?: string | null
           id?: string
+          imported_at?: string | null
           kind: string
+          last_checked_at?: string | null
           lat?: number | null
           layer: string
           lng?: number | null
           minutes?: number
           neighbourhood?: string
+          organiser?: string
+          origin?: string
           outdoors?: boolean
           people_needed?: number | null
           place?: string
           place_id?: string | null
+          recurrence?: string
           skills?: string[]
           social?: string
+          starts_at?: string | null
           status?: string
           summary?: string
+          ticket_url?: string
+          timezone?: string
           title: string
           updated_at?: string
           when_text?: string
@@ -489,6 +509,7 @@ export type Database = {
         Update: {
           accessibility?: string | null
           band?: string
+          cancellation?: string
           contact_note?: string | null
           cost?: number
           created_at?: string
@@ -496,22 +517,31 @@ export type Database = {
           currency?: string
           data_quality?: string
           details?: string[]
+          ends_at?: string | null
           give?: string | null
           id?: string
+          imported_at?: string | null
           kind?: string
+          last_checked_at?: string | null
           lat?: number | null
           layer?: string
           lng?: number | null
           minutes?: number
           neighbourhood?: string
+          organiser?: string
+          origin?: string
           outdoors?: boolean
           people_needed?: number | null
           place?: string
           place_id?: string | null
+          recurrence?: string
           skills?: string[]
           social?: string
+          starts_at?: string | null
           status?: string
           summary?: string
+          ticket_url?: string
+          timezone?: string
           title?: string
           updated_at?: string
           when_text?: string
@@ -928,6 +958,126 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      source_records: {
+        Row: {
+          created_at: string
+          external_id: string
+          first_imported_at: string
+          id: string
+          last_seen_at: string
+          listing_id: string | null
+          payload_hash: string
+          source_id: string
+          source_state: string
+          source_updated_at: string | null
+          source_url: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          external_id: string
+          first_imported_at?: string
+          id?: string
+          last_seen_at?: string
+          listing_id?: string | null
+          payload_hash?: string
+          source_id: string
+          source_state?: string
+          source_updated_at?: string | null
+          source_url?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          external_id?: string
+          first_imported_at?: string
+          id?: string
+          last_seen_at?: string
+          listing_id?: string | null
+          payload_hash?: string
+          source_id?: string
+          source_state?: string
+          source_updated_at?: string | null
+          source_url?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "source_records_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "source_records_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sources: {
+        Row: {
+          access_method: string
+          attribution: string
+          consecutive_failures: number
+          created_at: string
+          enabled: boolean
+          homepage_url: string
+          id: string
+          kind: string
+          last_outcome: string
+          last_run_at: string | null
+          name: string
+          place_ids: string[]
+          refresh_minutes: number
+          status: string
+          store_images: boolean
+          terms_url: string
+          updated_at: string
+        }
+        Insert: {
+          access_method: string
+          attribution?: string
+          consecutive_failures?: number
+          created_at?: string
+          enabled?: boolean
+          homepage_url?: string
+          id?: string
+          kind: string
+          last_outcome?: string
+          last_run_at?: string | null
+          name: string
+          place_ids?: string[]
+          refresh_minutes?: number
+          status?: string
+          store_images?: boolean
+          terms_url?: string
+          updated_at?: string
+        }
+        Update: {
+          access_method?: string
+          attribution?: string
+          consecutive_failures?: number
+          created_at?: string
+          enabled?: boolean
+          homepage_url?: string
+          id?: string
+          kind?: string
+          last_outcome?: string
+          last_run_at?: string | null
+          name?: string
+          place_ids?: string[]
+          refresh_minutes?: number
+          status?: string
+          store_images?: boolean
+          terms_url?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_blocks: {
         Row: {
