@@ -5,6 +5,7 @@ import { useSession } from "@/hooks/use-session";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPlaces } from "@/lib/places";
 import { CapabilityPanel } from "@/components/capability-panel";
+import { ProfilePhoto } from "@/components/profile-photo";
 
 const title = "Who you are — The Living World";
 const description =
