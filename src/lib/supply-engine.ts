@@ -89,6 +89,8 @@ export interface SupplyResult {
   why: string[];
   caveat: string;
   actions: SupplyAction[];
+  /** Set when this result is a person, so the asker can invite them. */
+  personId?: string;
 }
 
 export type SupplyAction = "contact" | "save" | "go" | "join" | "view";
@@ -209,6 +211,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
       usedPeople.add(person.id);
       push({
         id: `person-open-${person.id}`,
+      personId: person.id,
         band: "open_to_opportunities",
         title: person.displayName,
         what: `Says they can: ${capability.label}`,
@@ -233,6 +236,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
     usedPeople.add(person.id);
     push({
       id: `person-cap-${person.id}`,
+      personId: person.id,
       band: "local_capability",
       title: person.displayName,
       what: `Says they can: ${capability.label}`,
@@ -283,6 +287,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
     if (!person.preferences.includes("skills_exchange")) continue;
     push({
       id: `exchange-${person.id}`,
+      personId: person.id,
       band: "skills_exchange",
       title: person.displayName,
       what: `Would swap: ${capability.label}`,
@@ -307,6 +312,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
     if (!need.placeId || !person.serviceAreaPlaceIds.includes(need.placeId)) continue;
     push({
       id: `journey-${person.id}`,
+      personId: person.id,
       band: "journey",
       title: person.displayName,
       what: `Travelling, and can ${capability.label}`,

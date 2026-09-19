@@ -1,6 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+
+import { useSession } from "@/hooks/use-session";
+import { sendConnectionRequest } from "@/lib/connection.functions";
 
 import { findSupplyForNeed } from "@/lib/needs.functions";
 import {
@@ -55,6 +59,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 function NeedAnswer() {
   const { id } = Route.useParams();
+  const { user } = useSession();
   const find = useServerFn(findSupplyForNeed);
   const { data, isLoading } = useQuery({
     queryKey: ["supply", id],
@@ -119,7 +124,15 @@ function NeedAnswer() {
           {BAND_ORDER.map((band) => {
             const rows = results.filter((r) => r.band === band);
             if (!rows.length) return null;
-            return <Band key={band} band={band} rows={rows} />;
+            return (
+              <Band
+                key={band}
+                band={band}
+                rows={rows}
+                needId={id}
+                canInvite={Boolean(user && user.id === need.creatorId)}
+              />
+            );
           })}
         </div>
       )}
@@ -131,7 +144,80 @@ function NeedAnswer() {
   );
 }
 
-function Band({ band, rows }: { band: SupplyBand; rows: SupplyResult[] }) {
+function Invite({ needId, personId }: { needId: string; personId: string }) {
+  const [note, setNote] = useState("");
+  const [open, setOpen] = useState(false);
+  const send = useMutation({ mutationFn: useServerFn(sendConnectionRequest) });
+
+  if (send.isSuccess) {
+    return (
+      <p className="mt-3 text-xs text-muted-foreground">
+        Asked. It's in your{" "}
+        <Link to="/conversations" className="focus-ink underline">
+          conversations
+        </Link>
+        . They'll see the thing you asked about, and nothing else.
+      </p>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="focus-ink mt-3 rounded-full border border-border bg-card px-4 py-1.5 text-sm"
+      >
+        Ask if they'd help
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3">
+      <label className="grid gap-1 text-sm">
+        Anything you'd like to say
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          rows={2}
+          placeholder="Optional. What it involves, or when suits."
+          className="focus-ink rounded-lg border border-border bg-background px-3 py-2"
+        />
+      </label>
+      <button
+        type="button"
+        disabled={send.isPending}
+        onClick={() =>
+          send.mutate({
+            data: { needId, recipientId: personId, direction: "invite", note: note.trim() },
+          })
+        }
+        className="focus-ink mt-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm disabled:opacity-60"
+      >
+        Send it
+      </button>
+      {send.isError ? (
+        <p className="mt-2 text-xs text-muted-foreground">That didn't send. Try again in a moment.</p>
+      ) : null}
+      <p className="mt-2 text-xs text-muted-foreground">
+        No contact details are shared. You'll both be able to reply here.
+      </p>
+    </div>
+  );
+}
+
+function Band({
+  band,
+  rows,
+  needId,
+  canInvite,
+}: {
+  band: SupplyBand;
+  rows: SupplyResult[];
+  needId: string;
+  canInvite: boolean;
+}) {
   return (
     <section>
       <h2 className="text-2xl leading-tight">{BAND_HEADING[band]}</h2>
@@ -151,6 +237,7 @@ function Band({ band, rows }: { band: SupplyBand; rows: SupplyResult[] }) {
                 ))}
               </ul>
             ) : null}
+            {canInvite && r.personId ? <Invite needId={needId} personId={r.personId} /> : null}
           </li>
         ))}
       </ul>

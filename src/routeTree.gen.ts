@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ConversationsRouteImport } from './routes/conversations'
 import { Route as GiveRouteImport } from './routes/give'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as JourneyRouteImport } from './routes/journey'
@@ -28,6 +29,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConversationsRoute = ConversationsRouteImport.update({
+  id: '/conversations',
+  path: '/conversations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GiveRoute = GiveRouteImport.update({
@@ -74,6 +80,7 @@ const NeedIdRoute = NeedIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/conversations': typeof ConversationsRoute
   '/give': typeof GiveRoute
   '/help': typeof HelpRoute
   '/journey': typeof JourneyRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/conversations': typeof ConversationsRoute
   '/give': typeof GiveRoute
   '/help': typeof HelpRoute
   '/journey': typeof JourneyRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/conversations': typeof ConversationsRoute
   '/give': typeof GiveRoute
   '/help': typeof HelpRoute
   '/journey': typeof JourneyRoute
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/conversations'
     | '/give'
     | '/help'
     | '/journey'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/conversations'
     | '/give'
     | '/help'
     | '/journey'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/conversations'
     | '/give'
     | '/help'
     | '/journey'
@@ -150,6 +162,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  ConversationsRoute: typeof ConversationsRoute
   GiveRoute: typeof GiveRoute
   HelpRoute: typeof HelpRoute
   JourneyRoute: typeof JourneyRoute
@@ -173,6 +186,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conversations': {
+      id: '/conversations'
+      path: '/conversations'
+      fullPath: '/conversations'
+      preLoaderRoute: typeof ConversationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/give': {
@@ -247,6 +267,7 @@ const NeedRouteWithChildren = NeedRoute._addFileChildren(NeedRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  ConversationsRoute: ConversationsRoute,
   GiveRoute: GiveRoute,
   HelpRoute: HelpRoute,
   JourneyRoute: JourneyRoute,

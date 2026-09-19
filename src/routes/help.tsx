@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+
+import { sendConnectionRequest } from "@/lib/connection.functions";
 
 import { useSession } from "@/hooks/use-session";
 import { getMyOpportunities } from "@/lib/needs.functions";
@@ -25,6 +28,69 @@ export const Route = createFileRoute("/help")({
   }),
   component: HelpPage,
 });
+
+function Offer({ needId, askerId }: { needId: string; askerId: string }) {
+  const [note, setNote] = useState("");
+  const [open, setOpen] = useState(false);
+  const send = useMutation({ mutationFn: useServerFn(sendConnectionRequest) });
+
+  if (send.isSuccess) {
+    return (
+      <p className="mt-3 text-xs text-muted-foreground">
+        Sent. It's in your{" "}
+        <Link to="/conversations" className="focus-ink underline">
+          conversations
+        </Link>
+        , along with what it was about.
+      </p>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="focus-ink mt-3 rounded-full border border-border bg-card px-4 py-1.5 text-sm"
+      >
+        I could help with this
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3">
+      <label className="grid gap-1 text-sm">
+        In your own words
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          rows={2}
+          placeholder="Optional. Why you could help, or when you're free."
+          className="focus-ink rounded-lg border border-border bg-background px-3 py-2"
+        />
+      </label>
+      <button
+        type="button"
+        disabled={send.isPending}
+        onClick={() =>
+          send.mutate({
+            data: { needId, recipientId: askerId, direction: "offer", note: note.trim() },
+          })
+        }
+        className="focus-ink mt-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm disabled:opacity-60"
+      >
+        Send it
+      </button>
+      {send.isError ? (
+        <p className="mt-2 text-xs text-muted-foreground">That didn't send. Try again in a moment.</p>
+      ) : null}
+      <p className="mt-2 text-xs text-muted-foreground">
+        They'll see what you wrote and the thing it's about. No contact details are shared.
+      </p>
+    </div>
+  );
+}
 
 function HelpPage() {
   const { user, ready } = useSession();
@@ -98,6 +164,7 @@ function HelpPage() {
                       {n}
                     </p>
                   ))}
+                  <Offer needId={o.need.id} askerId={o.need.creatorId} />
                 </li>
               ))}
             </ul>
