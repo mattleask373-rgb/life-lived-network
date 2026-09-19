@@ -78,8 +78,9 @@ export const getMyCapabilityProfile = createServerFn({ method: "GET" })
         note: c.note,
         visibility: (c.visibility || "local_discovery") as Visibility,
       })),
-      earningPreference: (prefRows.find((p) => p.earning_preference && p.earning_preference !== "unstated")
-        ?.earning_preference ?? "unstated") as EarningPreference,
+      earningPreference: (prefRows.find(
+        (p) => p.earning_preference && p.earning_preference !== "unstated",
+      )?.earning_preference ?? "unstated") as EarningPreference,
     };
   });
 
@@ -113,14 +114,14 @@ export const addCapability = createServerFn({ method: "POST" })
       verification: "self_stated",
       last_confirmed_at: new Date().toISOString(),
       // Qualification detail only means anything on a qualification.
-      issuing_body: data.kind === "qualification" ? data.issuingBody ?? "" : "",
-      obtained_on: data.kind === "qualification" ? data.obtainedOn ?? null : null,
-      expires_on: data.kind === "qualification" ? data.expiresOn ?? null : null,
+      issuing_body: data.kind === "qualification" ? (data.issuingBody ?? "") : "",
+      obtained_on: data.kind === "qualification" ? (data.obtainedOn ?? null) : null,
+      expires_on: data.kind === "qualification" ? (data.expiresOn ?? null) : null,
       // And experience detail only on experience.
-      organisation: data.kind === "experience" ? data.organisation ?? "" : "",
-      years_experience: data.kind === "experience" ? data.yearsExperience ?? null : null,
-      started_on: data.kind === "experience" ? data.startedOn ?? null : null,
-      ended_on: data.kind === "experience" ? data.endedOn ?? null : null,
+      organisation: data.kind === "experience" ? (data.organisation ?? "") : "",
+      years_experience: data.kind === "experience" ? (data.yearsExperience ?? null) : null,
+      started_on: data.kind === "experience" ? (data.startedOn ?? null) : null,
+      ended_on: data.kind === "experience" ? (data.endedOn ?? null) : null,
     });
     if (error) throw error;
     return { ok: true };

@@ -21,13 +21,7 @@ import { isService } from "./services";
 import type { WorldEntry } from "./world-data";
 
 export type ServiceGroupId =
-  | "health"
-  | "home"
-  | "creative"
-  | "learning"
-  | "professional"
-  | "community"
-  | "events";
+  "health" | "home" | "creative" | "learning" | "professional" | "community" | "events";
 
 export interface ServiceGroup {
   id: ServiceGroupId;
@@ -61,54 +55,270 @@ export interface ServiceCategory {
 
 export const SERVICE_CATEGORIES: ServiceCategory[] = [
   // Health & wellbeing
-  { slug: "osteopathy", label: "Osteopathy", plural: "Osteopaths", group: "health", words: ["osteopath", "osteopathy", "osteopathic"] },
-  { slug: "sports-massage", label: "Sports massage", plural: "Sports massage therapists", group: "health", words: ["sports massage", "deep tissue", "sports therapy"] },
-  { slug: "massage", label: "Massage", plural: "Massage therapists", group: "health", words: ["massage", "reflexology", "aromatherapy"] },
-  { slug: "physiotherapy", label: "Physiotherapy", plural: "Physiotherapists", group: "health", words: ["physiotherapy", "physiotherapist", "physio"] },
-  { slug: "yoga", label: "Yoga", plural: "Yoga teachers and classes", group: "health", words: ["yoga", "pilates", "vinyasa"] },
-  { slug: "personal-training", label: "Personal training", plural: "Personal trainers", group: "health", words: ["personal training", "personal trainer", "strength coaching"] },
-  { slug: "counselling", label: "Counselling & therapy", plural: "Counsellors and therapists", group: "health", words: ["counselling", "counsellor", "psychotherapy", "talking therapy"] },
-  { slug: "acupuncture", label: "Acupuncture", plural: "Acupuncturists", group: "health", words: ["acupuncture", "acupuncturist"] },
+  {
+    slug: "osteopathy",
+    label: "Osteopathy",
+    plural: "Osteopaths",
+    group: "health",
+    words: ["osteopath", "osteopathy", "osteopathic"],
+  },
+  {
+    slug: "sports-massage",
+    label: "Sports massage",
+    plural: "Sports massage therapists",
+    group: "health",
+    words: ["sports massage", "deep tissue", "sports therapy"],
+  },
+  {
+    slug: "massage",
+    label: "Massage",
+    plural: "Massage therapists",
+    group: "health",
+    words: ["massage", "reflexology", "aromatherapy"],
+  },
+  {
+    slug: "physiotherapy",
+    label: "Physiotherapy",
+    plural: "Physiotherapists",
+    group: "health",
+    words: ["physiotherapy", "physiotherapist", "physio"],
+  },
+  {
+    slug: "yoga",
+    label: "Yoga",
+    plural: "Yoga teachers and classes",
+    group: "health",
+    words: ["yoga", "pilates", "vinyasa"],
+  },
+  {
+    slug: "personal-training",
+    label: "Personal training",
+    plural: "Personal trainers",
+    group: "health",
+    words: ["personal training", "personal trainer", "strength coaching"],
+  },
+  {
+    slug: "counselling",
+    label: "Counselling & therapy",
+    plural: "Counsellors and therapists",
+    group: "health",
+    words: ["counselling", "counsellor", "psychotherapy", "talking therapy"],
+  },
+  {
+    slug: "acupuncture",
+    label: "Acupuncture",
+    plural: "Acupuncturists",
+    group: "health",
+    words: ["acupuncture", "acupuncturist"],
+  },
 
   // Home & garden
-  { slug: "gardening", label: "Gardening", plural: "Gardeners", group: "home", words: ["gardener", "gardening", "landscaping", "hedge"] },
-  { slug: "cleaning", label: "Cleaning", plural: "Cleaners", group: "home", words: ["cleaner", "cleaning", "housekeeping"] },
-  { slug: "handyman", label: "Repairs & odd jobs", plural: "Repairers and handypeople", group: "home", words: ["handyman", "handyperson", "odd jobs", "repair", "fixing"] },
-  { slug: "electrician", label: "Electrical work", plural: "Electricians", group: "home", words: ["electrician", "electrical", "rewiring"] },
-  { slug: "plumbing", label: "Plumbing", plural: "Plumbers", group: "home", words: ["plumber", "plumbing", "boiler"] },
-  { slug: "decorating", label: "Painting & decorating", plural: "Painters and decorators", group: "home", words: ["decorator", "decorating", "painting and decorating", "plastering"] },
-  { slug: "dog-walking", label: "Dog walking & pet care", plural: "Dog walkers and pet carers", group: "home", words: ["dog walking", "dog walker", "pet sitting", "pet care"] },
+  {
+    slug: "gardening",
+    label: "Gardening",
+    plural: "Gardeners",
+    group: "home",
+    words: ["gardener", "gardening", "landscaping", "hedge"],
+  },
+  {
+    slug: "cleaning",
+    label: "Cleaning",
+    plural: "Cleaners",
+    group: "home",
+    words: ["cleaner", "cleaning", "housekeeping"],
+  },
+  {
+    slug: "handyman",
+    label: "Repairs & odd jobs",
+    plural: "Repairers and handypeople",
+    group: "home",
+    words: ["handyman", "handyperson", "odd jobs", "repair", "fixing"],
+  },
+  {
+    slug: "electrician",
+    label: "Electrical work",
+    plural: "Electricians",
+    group: "home",
+    words: ["electrician", "electrical", "rewiring"],
+  },
+  {
+    slug: "plumbing",
+    label: "Plumbing",
+    plural: "Plumbers",
+    group: "home",
+    words: ["plumber", "plumbing", "boiler"],
+  },
+  {
+    slug: "decorating",
+    label: "Painting & decorating",
+    plural: "Painters and decorators",
+    group: "home",
+    words: ["decorator", "decorating", "painting and decorating", "plastering"],
+  },
+  {
+    slug: "dog-walking",
+    label: "Dog walking & pet care",
+    plural: "Dog walkers and pet carers",
+    group: "home",
+    words: ["dog walking", "dog walker", "pet sitting", "pet care"],
+  },
 
   // Creative
-  { slug: "photography", label: "Photography", plural: "Photographers", group: "creative", words: ["photographer", "photography", "photo shoot"] },
-  { slug: "wedding-photography", label: "Wedding photography", plural: "Wedding photographers", group: "creative", words: ["wedding photography", "wedding photographer"] },
-  { slug: "videography", label: "Video", plural: "Videographers", group: "creative", words: ["videographer", "videography", "filming"] },
-  { slug: "music-performance", label: "Live music", plural: "Musicians and bands", group: "creative", words: ["musician", "band", "live music", "gig", "dj"] },
-  { slug: "art", label: "Art & making", plural: "Artists and makers", group: "creative", words: ["artist", "illustration", "printmaking", "ceramics", "sculpture"] },
-  { slug: "design", label: "Design", plural: "Designers", group: "creative", words: ["graphic design", "designer", "branding", "illustrator"] },
+  {
+    slug: "photography",
+    label: "Photography",
+    plural: "Photographers",
+    group: "creative",
+    words: ["photographer", "photography", "photo shoot"],
+  },
+  {
+    slug: "wedding-photography",
+    label: "Wedding photography",
+    plural: "Wedding photographers",
+    group: "creative",
+    words: ["wedding photography", "wedding photographer"],
+  },
+  {
+    slug: "videography",
+    label: "Video",
+    plural: "Videographers",
+    group: "creative",
+    words: ["videographer", "videography", "filming"],
+  },
+  {
+    slug: "music-performance",
+    label: "Live music",
+    plural: "Musicians and bands",
+    group: "creative",
+    words: ["musician", "band", "live music", "gig", "dj"],
+  },
+  {
+    slug: "art",
+    label: "Art & making",
+    plural: "Artists and makers",
+    group: "creative",
+    words: ["artist", "illustration", "printmaking", "ceramics", "sculpture"],
+  },
+  {
+    slug: "design",
+    label: "Design",
+    plural: "Designers",
+    group: "creative",
+    words: ["graphic design", "designer", "branding", "illustrator"],
+  },
 
   // Family & learning
-  { slug: "tutoring", label: "Tutoring", plural: "Tutors", group: "learning", words: ["tutor", "tutoring", "revision", "exam support"] },
-  { slug: "music-lessons", label: "Music lessons", plural: "Music teachers", group: "learning", words: ["music lessons", "music teacher", "guitar lessons", "piano lessons", "singing lessons"] },
-  { slug: "childcare", label: "Childcare", plural: "Childcare and childminders", group: "learning", words: ["childcare", "childminder", "babysitting", "nursery"] },
-  { slug: "language-lessons", label: "Language lessons", plural: "Language teachers", group: "learning", words: ["language lessons", "language teacher", "english lessons", "conversation practice"] },
+  {
+    slug: "tutoring",
+    label: "Tutoring",
+    plural: "Tutors",
+    group: "learning",
+    words: ["tutor", "tutoring", "revision", "exam support"],
+  },
+  {
+    slug: "music-lessons",
+    label: "Music lessons",
+    plural: "Music teachers",
+    group: "learning",
+    words: ["music lessons", "music teacher", "guitar lessons", "piano lessons", "singing lessons"],
+  },
+  {
+    slug: "childcare",
+    label: "Childcare",
+    plural: "Childcare and childminders",
+    group: "learning",
+    words: ["childcare", "childminder", "babysitting", "nursery"],
+  },
+  {
+    slug: "language-lessons",
+    label: "Language lessons",
+    plural: "Language teachers",
+    group: "learning",
+    words: ["language lessons", "language teacher", "english lessons", "conversation practice"],
+  },
 
   // Professional
-  { slug: "accountancy", label: "Accountancy", plural: "Accountants and bookkeepers", group: "professional", words: ["accountant", "accountancy", "bookkeeping", "tax return"] },
-  { slug: "legal", label: "Legal help", plural: "Solicitors and legal advisers", group: "professional", words: ["solicitor", "legal advice", "conveyancing"] },
-  { slug: "consulting", label: "Consulting", plural: "Consultants", group: "professional", words: ["consultant", "consultancy", "advisory"] },
-  { slug: "coaching", label: "Coaching", plural: "Coaches", group: "professional", words: ["coaching", "coach", "mentoring"] },
-  { slug: "trades-training", label: "Training & courses", plural: "Trainers and courses", group: "professional", words: ["training course", "workshop", "short course", "certification"] },
+  {
+    slug: "accountancy",
+    label: "Accountancy",
+    plural: "Accountants and bookkeepers",
+    group: "professional",
+    words: ["accountant", "accountancy", "bookkeeping", "tax return"],
+  },
+  {
+    slug: "legal",
+    label: "Legal help",
+    plural: "Solicitors and legal advisers",
+    group: "professional",
+    words: ["solicitor", "legal advice", "conveyancing"],
+  },
+  {
+    slug: "consulting",
+    label: "Consulting",
+    plural: "Consultants",
+    group: "professional",
+    words: ["consultant", "consultancy", "advisory"],
+  },
+  {
+    slug: "coaching",
+    label: "Coaching",
+    plural: "Coaches",
+    group: "professional",
+    words: ["coaching", "coach", "mentoring"],
+  },
+  {
+    slug: "trades-training",
+    label: "Training & courses",
+    plural: "Trainers and courses",
+    group: "professional",
+    words: ["training course", "workshop", "short course", "certification"],
+  },
 
   // Community
-  { slug: "volunteering", label: "Volunteering", plural: "Ways to volunteer", group: "community", words: ["volunteer", "volunteering"] },
-  { slug: "community-projects", label: "Community projects", plural: "Community projects", group: "community", words: ["community project", "community garden", "mutual aid", "residents"] },
-  { slug: "repair-cafe", label: "Repair & reuse", plural: "Repair and reuse sessions", group: "community", words: ["repair cafe", "repair café", "reuse", "mending"] },
-  { slug: "support-services", label: "Support services", plural: "Support services", group: "community", words: ["support service", "advice service", "food bank", "drop-in"] },
+  {
+    slug: "volunteering",
+    label: "Volunteering",
+    plural: "Ways to volunteer",
+    group: "community",
+    words: ["volunteer", "volunteering"],
+  },
+  {
+    slug: "community-projects",
+    label: "Community projects",
+    plural: "Community projects",
+    group: "community",
+    words: ["community project", "community garden", "mutual aid", "residents"],
+  },
+  {
+    slug: "repair-cafe",
+    label: "Repair & reuse",
+    plural: "Repair and reuse sessions",
+    group: "community",
+    words: ["repair cafe", "repair café", "reuse", "mending"],
+  },
+  {
+    slug: "support-services",
+    label: "Support services",
+    plural: "Support services",
+    group: "community",
+    words: ["support service", "advice service", "food bank", "drop-in"],
+  },
 
   // Events
-  { slug: "venue-hire", label: "Room & venue hire", plural: "Rooms and venues to hire", group: "events", words: ["room hire", "venue hire", "hall hire", "studio hire"] },
-  { slug: "event-services", label: "Event services", plural: "Event services", group: "events", words: ["catering", "event planning", "sound engineer", "lighting"] },
+  {
+    slug: "venue-hire",
+    label: "Room & venue hire",
+    plural: "Rooms and venues to hire",
+    group: "events",
+    words: ["room hire", "venue hire", "hall hire", "studio hire"],
+  },
+  {
+    slug: "event-services",
+    label: "Event services",
+    plural: "Event services",
+    group: "events",
+    words: ["catering", "event planning", "sound engineer", "lighting"],
+  },
 ];
 
 const BY_SLUG = new Map(SERVICE_CATEGORIES.map((category) => [category.slug, category]));
@@ -132,7 +342,13 @@ export interface CategoryMatch {
 }
 
 function haystack(entry: WorldEntry): string {
-  return [entry.title, entry.summary, ...(entry.skills ?? []), entry.kind ?? "", entry.organisation ?? ""]
+  return [
+    entry.title,
+    entry.summary,
+    ...(entry.skills ?? []),
+    entry.kind ?? "",
+    entry.organisation ?? "",
+  ]
     .join(" · ")
     .toLowerCase();
 }

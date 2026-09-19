@@ -26,7 +26,11 @@ interface Props {
   /** Somewhere the viewport has wandered over, offered but never imposed. */
   area?: { name: string; slug: string } | null;
   onExploreArea?: ((slug: string) => void) | undefined;
+  onAdoptArea?: ((slug: string) => void) | undefined;
   onViewChange?: ((view: MapView) => void) | undefined;
+  loading?: boolean | undefined;
+  error?: boolean | undefined;
+  onRetry?: (() => void) | undefined;
 }
 
 /**
@@ -46,7 +50,11 @@ export function LivingMap({
   centreName,
   area,
   onExploreArea,
+  onAdoptArea,
   onViewChange,
+  loading = false,
+  error = false,
+  onRetry,
 }: Props) {
   // Depend on the coordinates themselves, not on a freshly-built object, so a
   // re-render of the page never re-fits the view underneath the person.
@@ -234,16 +242,50 @@ export function LivingMap({
         {SCALE_LABEL[scale]}
       </p>
 
+      {loading ? (
+        <p
+          className="absolute left-3 top-3 rounded-full border border-border bg-card/95 px-3 py-2 text-xs shadow-paper"
+          role="status"
+        >
+          Looking around…
+        </p>
+      ) : error ? (
+        <div
+          className="absolute left-3 top-3 rounded-lg border border-border bg-card/95 p-3 text-xs shadow-paper"
+          role="alert"
+        >
+          <p>We couldn't load this area.</p>
+          {onRetry ? (
+            <button type="button" className="focus-ink mt-2 underline" onClick={onRetry}>
+              Try again
+            </button>
+          ) : null}
+        </div>
+      ) : entries.length === 0 ? (
+        <p className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-card/95 p-3 text-center text-sm text-muted-foreground shadow-paper">
+          Nothing has been recorded in this view yet.
+        </p>
+      ) : null}
+
       {moved && area && onExploreArea ? (
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-border bg-card/95 px-3 py-1.5 text-xs shadow-lift">
-          <span className="text-muted-foreground">Looking at {area.name}.</span>{" "}
+        <div className="absolute inset-x-3 bottom-3 mx-auto flex max-w-sm flex-wrap items-center justify-center gap-2 rounded-lg border border-border bg-card/95 p-2 text-xs shadow-lift">
+          <span className="w-full text-center text-muted-foreground">Looking at {area.name}</span>
           <button
             type="button"
             onClick={() => onExploreArea(area.slug)}
-            className="focus-ink underline"
+            className="focus-ink min-h-11 rounded-full border border-border px-3"
           >
-            Make this my area
+            Explore this area
           </button>
+          {onAdoptArea ? (
+            <button
+              type="button"
+              onClick={() => onAdoptArea(area.slug)}
+              className="focus-ink min-h-11 rounded-full bg-primary px-3 text-primary-foreground"
+            >
+              Make this my area
+            </button>
+          ) : null}
         </div>
       ) : null}
     </div>

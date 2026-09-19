@@ -53,8 +53,8 @@ function AuthPage() {
         if (err) throw err;
         setNote("If that address has an account, a reset link is on its way.");
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "That didn't work. Try again?");
+    } catch {
+      setError("We couldn't complete that. Check your details and try again.");
     } finally {
       setBusy(false);
     }
@@ -80,8 +80,8 @@ function AuthPage() {
           {mode === "up" ? "Come in" : mode === "in" ? "Welcome back" : "Forgotten it?"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          You never needed an account to look around. You need one to save things, post
-          something real, or say hello to someone.
+          You never needed an account to look around. You need one to save things, post something
+          real, or say hello to someone.
         </p>
 
         <form onSubmit={submit} className="card-paper mt-6 space-y-4 p-5">

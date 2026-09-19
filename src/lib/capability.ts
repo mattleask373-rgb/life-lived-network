@@ -15,11 +15,7 @@
 export type CapabilityKind = "role" | "skill" | "qualification" | "experience";
 
 export type CapabilityLevel =
-  | "unstated"
-  | "learning"
-  | "confident"
-  | "years_of_it"
-  | "professional";
+  "unstated" | "learning" | "confident" | "years_of_it" | "professional";
 
 /**
  * Being checked is not one badge. Each of these is a different fact about a
@@ -178,7 +174,11 @@ export interface ContributionPreference {
 export const CAPABILITY_KINDS: { id: CapabilityKind; label: string; blurb: string }[] = [
   { id: "role", label: "Something I do", blurb: "How you'd describe the work itself" },
   { id: "skill", label: "Something I'm good at", blurb: "Not a claim to be a professional" },
-  { id: "qualification", label: "Something I'm qualified in", blurb: "A real certificate or licence" },
+  {
+    id: "qualification",
+    label: "Something I'm qualified in",
+    blurb: "A real certificate or licence",
+  },
   { id: "experience", label: "Something I've done", blurb: "Where and for how long" },
 ];
 

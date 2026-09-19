@@ -67,9 +67,9 @@ function Sources() {
       setResult(outcome);
       void sources.refetch();
     },
-    onError: (error: Error) => {
+    onError: () => {
       setResult(null);
-      setFailure(error.message);
+      setFailure("This source couldn't be refreshed right now. Existing information is unchanged.");
     },
   });
 

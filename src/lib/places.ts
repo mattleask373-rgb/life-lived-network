@@ -17,13 +17,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type PlaceKind =
-  | "country"
-  | "region"
-  | "area"
-  | "city"
-  | "town"
-  | "village"
-  | "neighbourhood";
+  "country" | "region" | "area" | "city" | "town" | "village" | "neighbourhood";
 
 export interface Place {
   id: string;
@@ -110,8 +104,7 @@ function toPlace(row: PlaceRow): Place {
   };
 }
 
-const SELECT =
-  "id, parent_id, kind, name, slug, country_code, timezone, currency, lat, lng, blurb";
+const SELECT = "id, parent_id, kind, name, slug, country_code, timezone, currency, lat, lng, blurb";
 
 /** A place and, if it has one, the place it sits inside. */
 export interface ResolvedPlace {
@@ -294,9 +287,7 @@ export function searchPlaces(index: PlaceIndex, query: string, limit = 12): Plac
 /** "Lisbon, Portugal" / "Birmingham, West Midlands" — whatever depth we know. */
 export function placeLabel(resolved: ResolvedPlace | null | undefined): string {
   if (!resolved) return PLACE_FALLBACK.name;
-  return resolved.parent
-    ? `${resolved.place.name}, ${resolved.parent.name}`
-    : resolved.place.name;
+  return resolved.parent ? `${resolved.place.name}, ${resolved.parent.name}` : resolved.place.name;
 }
 
 /** Rough straight-line distance in km between two places or coordinates. */
@@ -310,8 +301,6 @@ export function distanceKm(
   const dLng = ((b.lng - a.lng) * Math.PI) / 180;
   const lat1 = (a.lat * Math.PI) / 180;
   const lat2 = (b.lat * Math.PI) / 180;
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
   return Math.round(2 * R * Math.asin(Math.sqrt(h)) * 10) / 10;
 }

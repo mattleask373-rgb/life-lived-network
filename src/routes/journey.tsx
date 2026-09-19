@@ -9,6 +9,7 @@ import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWorldEntries } from "@/lib/listings";
 import { useWorldContext } from "@/lib/world-context";
+import { DataErrorState } from "@/components/data-state";
 
 const title = "What could your journey become? — The Living World";
 const description =
@@ -30,7 +31,11 @@ function JourneyPage() {
   const { has, toggle } = useLifeList();
   // The journey is built from wherever the person is looking.
   const { place } = useWorldContext();
-  const { data: world } = useQuery({
+  const {
+    data: world,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["world", place?.id ?? null],
     enabled: Boolean(place),
     queryFn: () => fetchWorldEntries({ placeId: place?.id ?? null }),
@@ -57,7 +62,7 @@ function JourneyPage() {
           <Field label="What you can spend a day">
             {[0, 15, 30, 60].map((b) => (
               <Chip key={b} on={budget === b} onClick={() => setBudget(b)}>
-                {b === 0 ? "Almost nothing" : `£${b}`}
+                {b === 0 ? "Almost nothing" : `${currencySymbol(place?.currency)}${b}`}
               </Chip>
             ))}
           </Field>
@@ -108,6 +113,8 @@ function JourneyPage() {
           </button>
         </section>
 
+        {isError ? <DataErrorState retry={() => void refetch()} /> : null}
+
         {journeys?.length ? (
           <div className="mt-8 space-y-8">
             {journeys.map((j) => (
@@ -137,7 +144,8 @@ function JourneyPage() {
                           {s.entry.title}
                         </span>
                         <span className="block text-sm text-muted-foreground">
-                          {s.entry.place} · {duration(s.entry.minutes)} · {money(s.entry.cost, s.entry.currency)}
+                          {s.entry.place} · {duration(s.entry.minutes)} ·{" "}
+                          {money(s.entry.cost, s.entry.currency)}
                         </span>
                       </button>
                       <p className="mt-1 text-sm text-foreground/75 italic">{s.why}</p>

@@ -38,7 +38,9 @@ export interface LocalityGeography {
 
 export const getLocality = createServerFn({ method: "GET" })
   .inputValidator((input: { slug?: string } | undefined) => ({
-    slug: String(input?.slug ?? "").trim().toLowerCase(),
+    slug: String(input?.slug ?? "")
+      .trim()
+      .toLowerCase(),
   }))
   .handler(async ({ data }): Promise<LocalityGeography | null> => {
     if (!data.slug) return null;

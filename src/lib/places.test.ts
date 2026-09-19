@@ -32,17 +32,57 @@ function place(partial: Partial<Place> & Pick<Place, "id" | "name" | "slug" | "k
 
 const places: Place[] = [
   place({ id: "r", name: "United Kingdom & Ireland", slug: "uk-and-ireland", kind: "region" }),
-  place({ id: "gb", name: "United Kingdom", slug: "united-kingdom", kind: "country", parent_id: "r" }),
-  place({ id: "ie", name: "Ireland", slug: "ireland", kind: "country", parent_id: "r", country_code: "IE", currency: "EUR" }),
+  place({
+    id: "gb",
+    name: "United Kingdom",
+    slug: "united-kingdom",
+    kind: "country",
+    parent_id: "r",
+  }),
+  place({
+    id: "ie",
+    name: "Ireland",
+    slug: "ireland",
+    kind: "country",
+    parent_id: "r",
+    country_code: "IE",
+    currency: "EUR",
+  }),
   place({ id: "wm", name: "West Midlands", slug: "west-midlands", kind: "area", parent_id: "gb" }),
   place({ id: "bham", name: "Birmingham", slug: "birmingham", kind: "city", parent_id: "wm" }),
-  place({ id: "digbeth", name: "Digbeth", slug: "digbeth", kind: "neighbourhood", parent_id: "bham" }),
+  place({
+    id: "digbeth",
+    name: "Digbeth",
+    slug: "digbeth",
+    kind: "neighbourhood",
+    parent_id: "bham",
+  }),
   place({ id: "hfd", name: "Herefordshire", slug: "herefordshire", kind: "area", parent_id: "gb" }),
   // Deliberately the same display name in two counties.
-  place({ id: "newtown-wm", name: "Newtown", slug: "newtown-birmingham", kind: "neighbourhood", parent_id: "bham" }),
-  place({ id: "newtown-hfd", name: "Newtown", slug: "newtown-herefordshire", kind: "village", parent_id: "hfd" }),
+  place({
+    id: "newtown-wm",
+    name: "Newtown",
+    slug: "newtown-birmingham",
+    kind: "neighbourhood",
+    parent_id: "bham",
+  }),
+  place({
+    id: "newtown-hfd",
+    name: "Newtown",
+    slug: "newtown-herefordshire",
+    kind: "village",
+    parent_id: "hfd",
+  }),
   place({ id: "pt", name: "Portugal", slug: "portugal", kind: "country" }),
-  place({ id: "lis", name: "Lisbon", slug: "lisbon", kind: "city", parent_id: "pt", country_code: "PT", currency: "EUR" }),
+  place({
+    id: "lis",
+    name: "Lisbon",
+    slug: "lisbon",
+    kind: "city",
+    parent_id: "pt",
+    country_code: "PT",
+    currency: "EUR",
+  }),
 ];
 
 const index = buildPlaceIndex(places);

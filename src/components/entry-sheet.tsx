@@ -1,5 +1,5 @@
-import { useEffect } from "react";
 import { Link } from "@tanstack/react-router";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { LAYERS, QUALITY_LABEL, relatedEntries, type WorldEntry } from "@/lib/world-data";
 import {
   asBookingState,
@@ -28,32 +28,21 @@ export function EntrySheet({
   onClose: () => void;
   onOpenEntry: (entry: WorldEntry) => void;
 }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   const layer = LAYERS.find((l) => l.id === entry.layer);
   const related = relatedEntries(world, entry);
   const service = isService(entry);
   const step = nextStepFor(entry);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <button
-        type="button"
-        aria-label="Close"
-        onClick={onClose}
-        className="absolute inset-0 bg-ink/40"
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={entry.title}
-        className="paper-grain relative max-h-[88vh] w-full overflow-y-auto rounded-t-3xl border border-border shadow-lift sm:max-w-lg sm:rounded-2xl"
+    <Dialog
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+    >
+      <DialogContent
+        aria-describedby={undefined}
+        className="paper-grain bottom-0 top-auto max-h-[88vh] w-full max-w-none translate-y-0 gap-0 overflow-y-auto rounded-t-2xl p-0 sm:bottom-auto sm:top-1/2 sm:max-w-lg sm:-translate-y-1/2 sm:rounded-lg"
       >
         <div
           className={`relative border-b border-border ${entry.photos?.length ? "bg-muted" : "photo-placeholder h-32"}`}
@@ -93,13 +82,6 @@ export function EntrySheet({
               A photo goes here when someone who was there shares one.
             </p>
           )}
-          <button
-            type="button"
-            onClick={onClose}
-            className="focus-ink absolute top-3 right-3 rounded-full border border-border bg-card px-3 py-1 text-sm"
-          >
-            Close
-          </button>
         </div>
 
         <div className="p-5">
@@ -109,7 +91,7 @@ export function EntrySheet({
             {layer ? <LayerIcon icon={layer.icon} size={15} strokeWidth={1.7} /> : null}{" "}
             {layer?.label}
           </p>
-          <h2 className="mt-1 text-2xl leading-tight">{entry.title}</h2>
+          <DialogTitle className="mt-1 text-2xl leading-tight">{entry.title}</DialogTitle>
           {entry.demonstration ? (
             <p className="mt-2 rounded-lg border border-border bg-background p-3 text-xs text-muted-foreground">
               <span className="uppercase tracking-widest">Demonstration record</span> — this is
@@ -313,7 +295,7 @@ export function EntrySheet({
             </div>
           ) : null}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

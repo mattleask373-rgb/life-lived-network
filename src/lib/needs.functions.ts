@@ -340,14 +340,15 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
 
 /** Turn stored photo paths into short-lived links. Full URLs are left alone. */
 async function signPhotos(
-  supabase: ReturnType<typeof import("./supabase-public.server").publicServerClient>,
+  _supabase: ReturnType<typeof import("./supabase-public.server").publicServerClient>,
   people: PersonCandidate[],
 ): Promise<void> {
   const paths = people
     .map((person) => person.photoUrl)
     .filter((value): value is string => Boolean(value) && !value!.startsWith("http"));
   if (!paths.length) return;
-  const { data } = await supabase.storage.from("profile-photos").createSignedUrls(paths, 3600);
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.storage.from("profile-photos").createSignedUrls(paths, 3600);
   const signed = new Map((data ?? []).map((item) => [item.path ?? "", item.signedUrl]));
   for (const person of people) {
     if (person.photoUrl && !person.photoUrl.startsWith("http")) {

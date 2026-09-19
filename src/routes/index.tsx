@@ -47,14 +47,22 @@ function Home() {
   // What the map is looking at. Separate from where we are: moving the map never
   // moves the person, it only offers somewhere they could choose instead.
   const [view, setView] = useState<MapView | null>(null);
+  const [exploredSlug, setExploredSlug] = useState<string | null>(null);
+  const exploredPlace = exploredSlug && index ? index.bySlug.get(exploredSlug) : null;
+  const discoveryPlace = exploredPlace ?? place;
 
   // The page asks for possibilities in a context; it never knows the source.
-  const { data: world, isLoading: worldLoading } = useQuery({
-    queryKey: ["world", place?.id ?? null],
-    enabled: Boolean(place),
+  const {
+    data: world,
+    isLoading: worldLoading,
+    isError: worldError,
+    refetch: refetchWorld,
+  } = useQuery({
+    queryKey: ["world", discoveryPlace?.id ?? null],
+    enabled: Boolean(discoveryPlace),
     queryFn: () =>
       // Only where we are travels; the hierarchy is expanded behind the server.
-      fetchWorldEntries({ placeId: place?.id ?? null }),
+      fetchWorldEntries({ placeId: discoveryPlace?.id ?? null }),
   });
   // What people here have asked for. Counted honestly, never invented.
   const openNeedsFn = useServerFn(getOpenNeeds);
@@ -91,6 +99,24 @@ function Home() {
             {regionName ? <span className="text-muted-foreground">, {regionName}</span> : null}
           </h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">{placeBlurb}</p>
+          <p className="mt-4 max-w-2xl text-base">
+            Find real things to do, people who can help, and worthwhile stops along your way — then
+            close the app and go live them.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <a
+              href="#map-heading"
+              className="focus-ink rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
+            >
+              Explore the map
+            </a>
+            <Link
+              to="/road-trip"
+              className="focus-ink rounded-full border border-border bg-card px-5 py-2.5 text-sm"
+            >
+              Plan a road trip
+            </Link>
+          </div>
         </header>
 
         <div className="mt-5">
@@ -172,7 +198,9 @@ function Home() {
             <h2 id="map-heading" className="truncate text-xl">
               What's around you
             </h2>
-            <p className="shrink-0 text-sm text-muted-foreground">{entries.length} things</p>
+            <p className="shrink-0 text-sm text-muted-foreground">
+              {worldLoading ? "Looking…" : `${entries.length} things`}
+            </p>
           </div>
           <div className="mt-3">
             <LayerFilter active={layers} onChange={setLayers} />
@@ -192,10 +220,31 @@ function Home() {
                     })()
                   : null
               }
-              onExploreArea={setPlaceSlug}
+              onExploreArea={setExploredSlug}
+              onAdoptArea={(slug) => {
+                setPlaceSlug(slug);
+                setExploredSlug(null);
+              }}
               onViewChange={setView}
+              loading={worldLoading}
+              error={worldError}
+              onRetry={() => void refetchWorld()}
             />
           </div>
+          {exploredPlace ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-muted-foreground">
+                Exploring {exploredPlace.name}. Your area is still {placeName}.
+              </span>
+              <button
+                type="button"
+                onClick={() => setExploredSlug(null)}
+                className="focus-ink underline underline-offset-4"
+              >
+                Return to {placeName}
+              </button>
+            </div>
+          ) : null}
           <p className="mt-2 text-xs text-muted-foreground">
             Places are shown approximately. Nobody's exact location is ever on this map.
           </p>

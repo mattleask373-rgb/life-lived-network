@@ -44,16 +44,11 @@ export async function fetchHours(context: DiscoveryContext = {}): Promise<HourOf
 }
 
 export async function createHour(input: NewHourOffer, userId: string) {
-  const { error } = await supabase
-    .from("hour_offers")
-    .insert({ ...input, user_id: userId });
+  const { error } = await supabase.from("hour_offers").insert({ ...input, user_id: userId });
   if (error) throw error;
 }
 
 export async function closeHour(id: string) {
-  const { error } = await supabase
-    .from("hour_offers")
-    .update({ status: "closed" })
-    .eq("id", id);
+  const { error } = await supabase.from("hour_offers").update({ status: "closed" }).eq("id", id);
   if (error) throw error;
 }

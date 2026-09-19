@@ -36,9 +36,7 @@ describe("how far a need reaches", () => {
 
   it("lets a stated wider area reach inwards, but living wider does not", () => {
     const geo = needGeography(INDEX, "kings-heath");
-    expect(
-      geographicReach({ placeId: "birmingham", serviceAreaPlaceIds: [] }, geo),
-    ).toBeNull();
+    expect(geographicReach({ placeId: "birmingham", serviceAreaPlaceIds: [] }, geo)).toBeNull();
     expect(
       geographicReach({ placeId: "birmingham", serviceAreaPlaceIds: ["birmingham"] }, geo)?.kind,
     ).toBe("stated_service_area");

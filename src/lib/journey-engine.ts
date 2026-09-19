@@ -114,9 +114,7 @@ function buildShape(
 
   const spend = steps.reduce((n, s) => n + Math.max(0, s.entry.cost), 0);
   const earn = steps.reduce((n, s) => n + Math.max(0, -s.entry.cost), 0);
-  const uncertain = steps
-    .filter((s) => !s.entry.verified)
-    .map((s) => s.entry.title);
+  const uncertain = steps.filter((s) => !s.entry.verified).map((s) => s.entry.title);
 
   return { name: shape.name, idea: shape.idea, steps, spend, earn, uncertain };
 }

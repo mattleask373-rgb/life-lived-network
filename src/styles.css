@@ -62,7 +62,8 @@
   --font-display: "Fraunces", Georgia, serif;
   --font-sans: "Karla", ui-sans-serif, system-ui, sans-serif;
 
-  --shadow-paper: 0 1px 0 color-mix(in oklab, var(--ink) 6%, transparent),
+  --shadow-paper:
+    0 1px 0 color-mix(in oklab, var(--ink) 6%, transparent),
     0 10px 24px -18px color-mix(in oklab, var(--ink) 45%, transparent);
   --shadow-lift: 0 18px 44px -26px color-mix(in oklab, var(--ink) 55%, transparent);
 }
@@ -136,13 +137,15 @@
 @utility paper-grain {
   position: relative;
   background-color: var(--color-paper);
-  background-image: radial-gradient(
-      color-mix(in oklab, var(--ink) 5%, transparent) 0.5px,
-      transparent 0.5px
-    ),
+  background-image:
+    radial-gradient(color-mix(in oklab, var(--ink) 5%, transparent) 0.5px, transparent 0.5px),
     radial-gradient(color-mix(in oklab, var(--ink) 4%, transparent) 0.5px, transparent 0.5px);
-  background-size: 14px 14px, 22px 22px;
-  background-position: 0 0, 7px 11px;
+  background-size:
+    14px 14px,
+    22px 22px;
+  background-position:
+    0 0,
+    7px 11px;
 }
 
 /* A neutral, hand-made stand-in where a real photograph will go. */

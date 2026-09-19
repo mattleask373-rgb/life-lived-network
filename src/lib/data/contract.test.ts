@@ -41,7 +41,7 @@ describe("paging is bounded and opaque", () => {
 
 describe("data errors stay predictable and quiet", () => {
   it("maps unknown failures to a safe message", () => {
-    const error = asDataError(new Error("relation \"listings\" does not exist"));
+    const error = asDataError(new Error('relation "listings" does not exist'));
     expect(error).toBeInstanceOf(DataError);
     expect(error.code).toBe("DATA_UNAVAILABLE");
     expect(error.message).not.toContain("listings");

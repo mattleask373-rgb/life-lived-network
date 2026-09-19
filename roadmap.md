@@ -1,6 +1,15 @@
 # Roadmap
 
+## Final product hardening (done)
+
+- [x] Restore separate map exploration and explicit area adoption.
+- [x] Harden account restoration, async error states, detail-sheet accessibility and locality presentation.
+- [x] Make Road Trip stop restoration resilient and storage-safe.
+- [x] Clear test, typecheck, lint, build, security and desktop/mobile release gates.
+- [ ] Remove `.env` from repository tracking; it is ignored now, but repository-index changes are platform-managed.
+
 ## Done
+
 - UK & Ireland geography, locality picker, descendant discovery (Slice 1)
 - Human possibility, connection requests, safety, moderation review (Slice 2)
 - Event pipeline: source registry, adapter, normalise, dedupe, provenance, freshness (Slice 3A)
@@ -9,6 +18,7 @@
   need, reviewer source health
 
 ## Open (blocked)
+
 - Live Birmingham events: waiting on a Ticketmaster API key. The source stays
   switched off and says "Live source not configured" until one is supplied.
 - Genuine Guildhall details (hours, practices, practitioners, booking pathway):
@@ -16,6 +26,7 @@
   demonstrations and nothing is bookable.
 
 ## UK-wide scale fabric (done)
+
 - 221 localities across UK nations, counties/council areas, cities, towns, neighbourhoods; Ireland separate; Portugal/Lisbon preserved and non-default.
 - Hierarchy expanded behind the server boundary, so a nation-wide choice no longer sends thousands of localities over the wire.
 - Broad selections never silently filter by a partial slice; reads stay bounded and paged.
@@ -24,10 +35,12 @@
 - Geography tests: src/lib/places.uk.test.ts (147 tests total).
 
 ### Still honestly missing
+
 - Ticketmaster live events: waiting on TICKETMASTER_API_KEY.
 - The Guildhall's real hours, practitioners and booking pathway: waiting on the organisation.
 
 ## Kings Heath hub (done)
+
 - Locality reads as one thing: five honest questions with true counts (including noughts).
 - What's happening (dated things by day), What's here (providers grouped with their services and booking truth), Who's here and what's needed (offered hours + open needs count).
 - Open needs are now read across a locality's descendants, server-side.
@@ -36,6 +49,7 @@
 Blockers unchanged: Ticketmaster key absent; genuine Guildhall details not supplied.
 
 ## Map exploration + road trips (Slices 1 and 2 of the map/journey plan — done)
+
 - The map now has a real viewport: zoom, drag, pinch-friendly, scale label,
   "back to where you are", and grid clustering so a wide view says how much is
   somewhere instead of stacking pins. `src/lib/map-view.ts` is pure and tested.
@@ -55,12 +69,14 @@ Blockers unchanged: Ticketmaster key absent; genuine Guildhall details not suppl
   pretending to optimise a driving route.
 
 ### Open (blocked, needs a decision or credentials)
+
 - Route provider (real distance, duration, polyline, detours): needs a chosen
   provider and key. Slice 3 of the plan.
 - Public transport provider and journey legs: Slice 6, needs a key.
 - Car sharing from people's explicitly shared journeys: Slice 7, not started.
 
 ## SEO slice 1 — technical foundation (done)
+
 - `src/lib/seo.ts`: one place decides what a page tells a search engine. Canonical
   address (tracking parameters and fragments stripped), public vs private
   metadata, sitemap XML builders. Tested in `src/lib/seo.test.ts`.
@@ -74,11 +90,13 @@ Blockers unchanged: Ticketmaster key absent; genuine Guildhall details not suppl
   Lovable address — set it when a custom domain is connected.
 
 ### Next SEO slices (not started)
+
 2 service taxonomy + locality landing pages · 3 service + locality pages with the
 indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
 6 enquiry pathway · 7 cross-navigation, analytics, commercial foundation.
 
 ## SEO slice 2 — service kinds + locality pages (done)
+
 - `src/lib/service-taxonomy.ts`: one shared list of service kinds (osteopathy,
   sports massage, gardening, tutoring, venue hire and so on) in seven groups.
   A listing joins a kind either because its owner declared it (new optional
@@ -99,11 +117,13 @@ indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
   full explainable gate.
 
 ### Still ahead
+
 3 service + locality pages and the indexability gate · 4 provider profiles ·
 5 structured data + locality/service sitemaps · 6 enquiry pathway ·
 7 cross-navigation, analytics, commercial foundation.
 
 ## Pre-meeting hardening (done)
+
 - Navigation reduced to three doors (Explore / Find / Journey) with secondary links.
 - Home locality links to its own public page.
 - Currency now follows the locality everywhere (no leftover euro labels).

@@ -7,9 +7,14 @@ const now = FIXTURE_NOW;
 
 describe("freshness", () => {
   it("treats a recently confirmed skill as current", () => {
-    expect(freshness({ lastConfirmedAt: (SARAH.capabilities[0] as { lastConfirmedAt: string | null }).lastConfirmedAt, kind: "capability", now })).toBe(
-      "fresh",
-    );
+    expect(
+      freshness({
+        lastConfirmedAt: (SARAH.capabilities[0] as { lastConfirmedAt: string | null })
+          .lastConfirmedAt,
+        kind: "capability",
+        now,
+      }),
+    ).toBe("fresh");
   });
 
   it("does not pretend an unconfirmed statement is fine", () => {
@@ -19,7 +24,12 @@ describe("freshness", () => {
 
   it("calls a year-old skill out of date", () => {
     expect(
-      freshness({ lastConfirmedAt: (STALE.capabilities[0] as { lastConfirmedAt: string | null }).lastConfirmedAt, kind: "capability", now }),
+      freshness({
+        lastConfirmedAt: (STALE.capabilities[0] as { lastConfirmedAt: string | null })
+          .lastConfirmedAt,
+        kind: "capability",
+        now,
+      }),
     ).toBe("out_of_date");
   });
 
@@ -33,7 +43,12 @@ describe("freshness", () => {
 
   it("respects a hard expiry whatever else is true", () => {
     expect(
-      freshness({ lastConfirmedAt: now, expiresAt: "2026-03-01T00:00:00.000Z", kind: "availability", now }),
+      freshness({
+        lastConfirmedAt: now,
+        expiresAt: "2026-03-01T00:00:00.000Z",
+        kind: "availability",
+        now,
+      }),
     ).toBe("out_of_date");
   });
 });

@@ -74,9 +74,9 @@ describe("service taxonomy", () => {
   it("never invents a category from an unknown declared slug", () => {
     expect(categoryBySlug("brain-surgery-kings-heath")).toBeNull();
     // Falls back to the record's own words rather than to a made-up category.
-    expect(categoryOf(entry({ serviceCategory: "nonsense", title: "Gardening" }))?.category.slug).toBe(
-      "gardening",
-    );
+    expect(
+      categoryOf(entry({ serviceCategory: "nonsense", title: "Gardening" }))?.category.slug,
+    ).toBe("gardening");
   });
 
   it("lists only categories that genuinely contain something current", () => {

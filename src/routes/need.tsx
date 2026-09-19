@@ -44,9 +44,9 @@ function NeedPage() {
           </p>
           <h1 className="mt-1 text-4xl leading-none">What do you need?</h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-            A gardener on Thursday. A hand clearing a community plot. Someone to swap an hour
-            with. Say it plainly and we'll show you what's actually there — and say so when
-            there's nothing.
+            A gardener on Thursday. A hand clearing a community plot. Someone to swap an hour with.
+            Say it plainly and we'll show you what's actually there — and say so when there's
+            nothing.
           </p>
         </header>
 
@@ -86,15 +86,7 @@ function NeedPage() {
   );
 }
 
-function NeedList({
-  heading,
-  needs,
-  empty,
-}: {
-  heading: string;
-  needs: Need[];
-  empty?: string;
-}) {
+function NeedList({ heading, needs, empty }: { heading: string; needs: Need[]; empty?: string }) {
   return (
     <section className="mt-10">
       <h2 className="text-2xl">{heading}</h2>
@@ -124,9 +116,7 @@ function NeedList({
                         ? " · a swap"
                         : ""}
                 </p>
-                {need.description ? (
-                  <p className="mt-2 text-sm">{need.description}</p>
-                ) : null}
+                {need.description ? <p className="mt-2 text-sm">{need.description}</p> : null}
                 <p className="mt-2 text-xs text-muted-foreground">See who could help →</p>
               </Link>
             </li>
@@ -217,8 +207,8 @@ function NeedForm({
       setBudget("");
       setWhen("");
       onDone();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "That didn't save. Try again?");
+    } catch {
+      setError("We couldn't save that right now. Please try again.");
     } finally {
       setBusy(false);
     }

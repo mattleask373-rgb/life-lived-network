@@ -77,7 +77,6 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       query = query.eq("place_id", context.placeId);
     }
 
-
     // An event that has finished is never upcoming. Anything without a start
     // time is unaffected by time filtering.
     const settled = new Date(Date.now() - 3 * 3600000).toISOString();
@@ -132,7 +131,8 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
     const provenance = new Map<string, { sourceName: string; sourceUrl: string }>();
     const imported = listings.filter((r) => r.origin === "source" || r.origin === "confirmed");
     if (imported.length) {
-      const { data: records } = await supabase
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: records } = await supabaseAdmin
         .from("source_records")
         .select("listing_id, source_id, source_url")
         .in(
@@ -142,7 +142,7 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       const sourceIds = [...new Set((records ?? []).map((r) => r.source_id))];
       const sourceNames = new Map<string, string>();
       if (sourceIds.length) {
-        const { data: sources } = await supabase
+        const { data: sources } = await supabaseAdmin
           .from("sources")
           .select("id, name, attribution")
           .in("id", sourceIds);

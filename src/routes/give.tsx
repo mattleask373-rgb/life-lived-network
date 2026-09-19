@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/hooks/use-session";
 import { closeHour, createHour, fetchHours, type HourDirection } from "@/lib/hours";
+import { DataErrorState } from "@/components/data-state";
 
 const title = "What can you give? — The Living World";
 const description =
@@ -28,7 +29,12 @@ const SUGGESTIONS = [
 function Give() {
   const { user, ready } = useSession();
   const qc = useQueryClient();
-  const { data: hours, isLoading } = useQuery({ queryKey: ["hours"], queryFn: () => fetchHours() });
+  const {
+    data: hours,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({ queryKey: ["hours"], queryFn: () => fetchHours() });
 
   const offering = (hours ?? []).filter((h) => h.direction === "offering");
   const asking = (hours ?? []).filter((h) => h.direction === "asking");
@@ -42,8 +48,8 @@ function Give() {
           </p>
           <h1 className="mt-1 text-4xl leading-none">What can you give?</h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-            One hour is enough to change somebody's week. Nothing here is scored, ranked or
-            counted — it's just hours, in people's own words.
+            One hour is enough to change somebody's week. Nothing here is scored, ranked or counted
+            — it's just hours, in people's own words.
           </p>
         </header>
 
@@ -64,10 +70,11 @@ function Give() {
           </section>
         )}
 
+        {isError ? <DataErrorState retry={() => void refetch()} /> : null}
         <Column
           heading="Hours people are offering"
           empty="Nobody has offered an hour yet. Yours could be the first."
-          loading={isLoading}
+          loading={isLoading && !isError}
           rows={offering}
           userId={user?.id}
           onClose={async (id) => {
@@ -79,7 +86,7 @@ function Give() {
         <Column
           heading="Hours people would love"
           empty="Nobody's asked for a hand yet."
-          loading={isLoading}
+          loading={isLoading && !isError}
           rows={asking}
           userId={user?.id}
           onClose={async (id) => {
@@ -121,9 +128,7 @@ function Column({
           {rows.map((h) => (
             <li key={h.id} className="card-paper p-4">
               <p className="text-base">{h.title}</p>
-              {h.detail ? (
-                <p className="mt-1 text-sm text-muted-foreground">{h.detail}</p>
-              ) : null}
+              {h.detail ? <p className="mt-1 text-sm text-muted-foreground">{h.detail}</p> : null}
               <p className="mt-2 text-xs text-muted-foreground">
                 {[
                   h.person ?? "Someone here",
@@ -225,7 +230,9 @@ function NewHour({ userId, onDone }: { userId: string; onDone: () => void }) {
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder={direction === "offering" ? "I can teach guitar" : "I need help painting a room"}
+          placeholder={
+            direction === "offering" ? "I can teach guitar" : "I need help painting a room"
+          }
           className="focus-ink mt-1 w-full rounded-lg border border-border bg-background px-3 py-2"
         />
       </label>
