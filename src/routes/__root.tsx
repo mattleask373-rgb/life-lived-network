@@ -162,6 +162,13 @@ function SiteHeader() {
             Give an hour
           </Link>
           <Link
+            to="/need"
+            activeProps={{ className: "text-foreground" }}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Ask for help
+          </Link>
+          <Link
             to="/make"
             activeProps={{ className: "text-foreground" }}
             className="text-muted-foreground hover:text-foreground"
