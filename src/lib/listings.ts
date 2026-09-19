@@ -62,6 +62,8 @@ export interface ListingRow {
   /** True only for clearly-labelled trial records. */
   demonstration?: boolean;
   // Service facts. Empty on anything that is not offered as a service.
+  /** A declared shared service category slug, when the owner set one. */
+  service_category?: string | null;
   organisation?: string;
   provider_note?: string;
   qualification_note?: string;
@@ -200,6 +202,7 @@ export function rowToEntry(
       ? { cancellation: row.cancellation }
       : {}),
     ...(row.demonstration ? { demonstration: true } : {}),
+    ...(row.service_category ? { serviceCategory: row.service_category } : {}),
     ...(row.organisation ? { organisation: row.organisation } : {}),
     ...(row.provider_note ? { providerNote: row.provider_note } : {}),
     ...(row.qualification_note ? { qualificationNote: row.qualification_note } : {}),
