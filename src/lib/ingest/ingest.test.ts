@@ -17,13 +17,21 @@ const GOOD = {
   name: "A brass band in a railway arch",
   url: "https://www.ticketmaster.co.uk/event/G1Ab-12345",
   info: "An evening of brass.",
-  dates: { start: { dateTime: "2099-04-18T19:30:00Z" }, timezone: "Europe/London", status: { code: "onsale" } },
+  dates: {
+    start: { dateTime: "2099-04-18T19:30:00Z" },
+    timezone: "Europe/London",
+    status: { code: "onsale" },
+  },
   classifications: [{ segment: { name: "Music" } }],
   priceRanges: [{ min: 12, currency: "GBP" }],
   images: [{ url: "https://s1.ticketm.net/img/a.jpg", width: 1024 }],
   _embedded: {
     venues: [
-      { name: "An arch venue", city: { name: "Digbeth" }, location: { latitude: "52.476", longitude: "-1.884" } },
+      {
+        name: "An arch venue",
+        city: { name: "Digbeth" },
+        location: { latitude: "52.476", longitude: "-1.884" },
+      },
     ],
     attractions: [{ name: "A brass band" }],
   },
@@ -90,7 +98,10 @@ describe("the provider adapter", () => {
 
   it("handles a date with no time as that day where the event is", () => {
     const { events } = ticketmasterAdapter.parse(
-      payload({ ...GOOD, dates: { start: { localDate: "2099-06-01" }, timezone: "Europe/Dublin" } }),
+      payload({
+        ...GOOD,
+        dates: { start: { localDate: "2099-06-01" }, timezone: "Europe/Dublin" },
+      }),
     );
     expect(events[0]!.startsAt).toBe("2099-06-01T00:00:00.000Z");
   });
@@ -262,7 +273,12 @@ describe("deciding when two records are one event", () => {
   };
 
   it("merges the same night from two sources", () => {
-    const two = { ...one, externalId: "b", title: "Brass Band, the Arch", startsAt: "2099-04-18T19:45:00Z" };
+    const two = {
+      ...one,
+      externalId: "b",
+      title: "Brass Band, the Arch",
+      startsAt: "2099-04-18T19:45:00Z",
+    };
     expect(sameEvent(one, two).same).toBe(true);
   });
 
@@ -271,7 +287,9 @@ describe("deciding when two records are one event", () => {
   });
 
   it("keeps the same title at a different venue separate", () => {
-    expect(sameEvent(one, { ...one, placeId: "place-2", venueName: "Another hall" }).same).toBe(false);
+    expect(sameEvent(one, { ...one, placeId: "place-2", venueName: "Another hall" }).same).toBe(
+      false,
+    );
   });
 
   it("keeps a near miss separate rather than guessing", () => {
@@ -279,7 +297,9 @@ describe("deciding when two records are one event", () => {
   });
 
   it("explains every decision in words", () => {
-    expect(sameEvent(one, { ...one, startsAt: "2099-04-19T19:30:00Z" }).reason).toMatch(/Start times/);
+    expect(sameEvent(one, { ...one, startsAt: "2099-04-19T19:30:00Z" }).reason).toMatch(
+      /Start times/,
+    );
   });
 
   it("compares titles as words, not punctuation", () => {

@@ -10,11 +10,7 @@ import type { DataQuality } from "../world-data";
 import type { SourceState } from "./contract";
 
 export type EventFreshness =
-  | "recently_updated"
-  | "current"
-  | "aging"
-  | "may_have_changed"
-  | "expired";
+  "recently_updated" | "current" | "aging" | "may_have_changed" | "expired";
 
 export interface FreshnessInput {
   /** When we last read this at the source. */

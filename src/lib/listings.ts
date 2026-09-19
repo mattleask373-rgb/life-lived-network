@@ -137,9 +137,9 @@ export function rowToEntry(
   provenance?: { sourceName: string; sourceUrl: string },
 ): WorldEntry {
   const quality = row.data_quality as DataQuality;
-  const origin = (row.origin === "source" || row.origin === "confirmed"
-    ? row.origin
-    : "resident") as "resident" | "source" | "confirmed";
+  const origin = (
+    row.origin === "source" || row.origin === "confirmed" ? row.origin : "resident"
+  ) as "resident" | "source" | "confirmed";
   const fromSource = origin !== "resident";
   return {
     id: row.id,

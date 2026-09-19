@@ -97,8 +97,8 @@ function Sources() {
       <h1 className="text-2xl">Sources</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Outside sources of activity. Refreshing asks a source what is happening in the locality
-        currently selected — {place ? place.name : "none chosen yet"} — and brings it in
-        credited and linked back. Nothing here is invented, and a source that fails changes nothing.
+        currently selected — {place ? place.name : "none chosen yet"} — and brings it in credited
+        and linked back. Nothing here is invented, and a source that fails changes nothing.
       </p>
 
       <label className="mt-4 block text-sm">
