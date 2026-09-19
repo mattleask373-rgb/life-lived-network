@@ -1,9 +1,10 @@
 /**
- * Demo data for the first Living World prototype.
+ * The domain vocabulary of the Living World.
  *
- * IMPORTANT: this is placeholder demo content for a single realistic city
- * (Lisbon). It is deliberately kept behind a small module boundary so it can be
- * replaced by a real data service (Supabase / API) without touching the UI.
+ * Types, layers, honesty labels, and pure helpers — nothing else. There is no
+ * data in this file: every helper works on entries it is handed, wherever they
+ * came from (database, fixtures, a future provider). Demo entries now live in
+ * `fixtures/world-entries.ts`.
  *
  * No AI-generated imagery is used anywhere. Entries carry no photographs; the
  * UI renders neutral, hand-made placeholders instead.
