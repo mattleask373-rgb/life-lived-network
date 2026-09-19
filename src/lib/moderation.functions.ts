@@ -28,30 +28,9 @@ export interface ReviewerReport extends Report {
   contextPlace: string;
 }
 
-interface RoleReader {
-  from: (table: "user_roles") => {
-    select: (columns: string) => {
-      eq: (
-        column: string,
-        value: string,
-      ) => {
-        in: (
-          column: string,
-          values: string[],
-        ) => PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>;
-      };
-    };
-  };
-}
-
-async function requireReviewer(context: { supabase: RoleReader; userId: string }): Promise<void> {
-  const { data, error } = await context.supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", context.userId)
-    .in("role", ["admin", "moderator"]);
-  if (error) throw error;
-  if (!data || data.length === 0) throw new Error("This is not open to you.");
+/** Refuse anyone who hasn't been given the role, before any data is touched. */
+function requireReviewer(rows: { role: string }[] | null): void {
+  if (!rows || rows.length === 0) throw new Error("This is not open to you.");
 }
 
 /** Are you allowed to review reports? Used only to decide what to render. */
