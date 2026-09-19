@@ -225,6 +225,9 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
       continue;
     }
 
+    // Someone who only said they'd swap belongs in the swap band, not here.
+    if (person.preferences.includes("skills_exchange")) continue;
+
     usedPeople.add(person.id);
     push({
       id: `person-cap-${person.id}`,
