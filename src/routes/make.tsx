@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { createListing, KINDS, type NewListing } from "@/lib/listings";
-import { fetchDefaultPlace } from "@/lib/places";
-import { useQuery } from "@tanstack/react-query";
+import { useWorldContext } from "@/lib/world-context";
+import { PlacePicker } from "@/components/place-picker";
 import { LAYERS, type LayerId, type TimeBand } from "@/lib/world-data";
 
 const title = "Make something happen — The Living World";
@@ -98,8 +98,8 @@ function MakePage() {
     if (!user || !kind) return;
     setBusy(true);
     setError(null);
-    const area = AREAS.find((a) => a.name === form.area) ?? AREAS[0]!;
     const amount = Math.abs(Number(form.cost) || 0);
+    const drawn = illustrativePosition(form.title || kind);
     try {
       await createListing(
         {
@@ -111,10 +111,10 @@ function MakePage() {
             .split("\n")
             .map((d) => d.trim())
             .filter(Boolean),
-          place: form.place,
-          neighbourhood: area.name,
-          x: area.x,
-          y: area.y,
+          place: form.place || (chosen?.name ?? ""),
+          neighbourhood: chosen?.name ?? "",
+          x: drawn.x,
+          y: drawn.y,
           when_text: form.when_text,
           band: form.band,
           minutes: Math.round((Number(form.hours) || 1) * 60),
@@ -125,10 +125,10 @@ function MakePage() {
           people_needed: form.people_needed ? Number(form.people_needed) : null,
           accessibility: form.accessibility.trim() || null,
           contact_note: form.contact_note.trim() || null,
-          place_id: resolved?.place.id ?? null,
+          place_id: chosen?.id ?? null,
           // Place-level coordinates only. Never an address, never a home.
-          lat: resolved?.place.lat ?? null,
-          lng: resolved?.place.lng ?? null,
+          lat: chosen?.lat ?? null,
+          lng: chosen?.lng ?? null,
         },
         user.id,
       );
