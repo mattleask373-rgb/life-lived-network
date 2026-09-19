@@ -8,7 +8,7 @@ import { ThreeHours } from "@/components/three-hours";
 import { DoSomethingToday } from "@/components/do-something-today";
 import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
-import { fetchWorld } from "@/lib/listings";
+import { fetchWorldEntries } from "@/lib/listings";
 import { fetchDefaultPlace, PLACE_FALLBACK } from "@/lib/places";
 import {
   activitySnapshot,
