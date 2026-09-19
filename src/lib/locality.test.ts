@@ -49,9 +49,9 @@ describe("a locality read as one thing", () => {
 
   it("gathers services under whoever provides them, named providers first", () => {
     const groups = providerGroups([
-      entry({ title: "Loose service", serviceKind: "service", organisation: "" }),
-      entry({ title: "Room hire", serviceKind: "service", organisation: "A practice building" }),
-      entry({ title: "Therapy", serviceKind: "service", organisation: "A practice building" }),
+      entry({ title: "Loose service", kind: "service", organisation: "" }),
+      entry({ title: "Room hire", kind: "service", organisation: "A practice building" }),
+      entry({ title: "Therapy", kind: "service", organisation: "A practice building" }),
       entry({ title: "Not a service" }),
     ]);
     expect(groups[0]?.organisation).toBe("A practice building");
@@ -63,7 +63,7 @@ describe("a locality read as one thing", () => {
   it("counts offered hours without counting services as gifts", () => {
     const given = contributions([
       entry({ title: "An hour of bike repair", give: "An hour of bike repair" }),
-      entry({ title: "Paid service", serviceKind: "service", give: "" }),
+      entry({ title: "Paid service", kind: "service", give: "" }),
     ]);
     expect(given.map((e) => e.title)).toEqual(["An hour of bike repair"]);
   });
