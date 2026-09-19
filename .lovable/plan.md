@@ -1,102 +1,131 @@
-# The Living World — UK-First Trial: Three Slices
+# The Living World — UK & Ireland Investor-Ready Activation
 
-The architecture already exists. This plan activates it in Britain. Nothing here is a redesign: every slice extends the existing geography, discovery, matching, journey, connection and design systems.
+The architecture already exists. This plan activates it across the UK and Ireland. Nothing here is a redesign: every slice extends the existing geography, discovery, matching, journey, connection and design systems.
 
 Portugal and Lisbon stay valid places. They simply stop being the default world.
 
-## What already exists (and is reused, not rebuilt)
+## Reconciliation — what is actually in the repository today
 
-- One generic place hierarchy: country, region, area, city, town, village, neighbourhood — with parent links, slug, country code, timezone, currency and approximate centre. Only Portugal and Lisbon are populated today.
-- One person model plus separate, private-by-default records for capabilities, qualifications, experience, service areas, availability, opportunity preferences and contributions.
+Working:
+- One generic place hierarchy: country, region, county/area, city, town, village, neighbourhood — with parent links, slug, country code, timezone, currency and approximate centre.
+- One person model with separate, private-by-default records for capabilities, qualifications, experience, service areas, availability, opportunity preferences and contributions.
 - Needs as a first-class thing, covering paid work, help, community projects, volunteering and swaps.
-- One deterministic possibility engine that explains every result, keeps unknown availability unknown, and says plainly when there is nothing honest to show.
-- Explicit connection requests, participant-only conversations, blocking and reporting.
-- Persisted journeys with stops and times, private unless the owner opts in.
-- The hand-drawn map, warm design language, honest freshness labels, source-attributed photos and neutral avatars.
-- The live backend currently has no accounts and no content. Everything visible today is development-only demonstration material.
+- One deterministic possibility engine that explains every result from stored facts, keeps unknown availability unknown, and shows an honest quiet state when there is nothing real to show. Reciprocal (need→people and person→needs) uses the same rules.
+- Explicit connection requests with an immutable context snapshot, participant-only conversations, blocking and reporting.
+- Persisted journeys with stops, times, visibility and opportunity opt-in — private unless the owner opts in.
+- Hand-drawn map, warm design language, mature line icons, honest freshness labels, source-attributed photo records, neutral avatars, server-side bounded reads with paging.
 
-## Current default assumptions to change (UK-first)
+Partially implemented:
+- Journey screen is not wired to the saved-journey records; the arranger is separate.
+- Blocking is enforced in connection rules but not consistently before discovery and matching results are shown.
+- Reports exist but have no explicit review state or owner.
+- Photo records exist for listings, but there is no way for a person to upload their own photograph.
+- Discovery matches one exact locality only: no parent/child hierarchy, no radius, no time-window filter applied.
 
-Default place is Lisbon; loading fallback text is Lisbon/Portugal; home and journey copy name Lisbon; the create-something screen has a fixed list of Lisbon districts; the give-an-hour example is a Lisbon district; the map artwork is Lisbon-shaped; discovery matches one exact locality with no parent/child or travel-time reasoning. Only these assumptions are removed — the generic model stays.
-
----
-
-## SLICE 1 — The UK world, genuinely populated
-
-**User-visible outcome.** Opening the app lands in Britain, not Portugal. You can choose where you are — Birmingham, Bristol or Herefordshire to begin with, and any other supported British locality as it is added — and everything on screen follows that choice: the map, what's around you, what's on today, tonight and this weekend, and the things people have posted. Rural Herefordshire and metropolitan Birmingham behave identically, because there is no city-specific code. Anything that is demonstration material is labelled as such, plainly, on the card itself.
-
-**Existing architecture reused.** The place hierarchy; the single listing-to-card conversion seam; the server-side world read with its context, paging and limits; the map component's existing interface; the existing time bands and honesty labels; the existing development-only demonstration policy.
-
-**Files and components affected.** Place helpers (default becomes the UK, fallback copy stops naming Lisbon, label no longer falls back to a wrong city, add ancestor/descendant lookup and bounded place search); the shared world read (accept a locality and its child localities, apply the time and radius fields the contract already defines); the world card shape (carry real coordinates, currency and timezone alongside the existing illustrative position); the home screen (locality chooser, UK copy, today/tonight/weekend views); create-a-listing and give-an-hour screens (choose a real place instead of a fixed district list); the map component (draw from real coordinates, with the existing illustrated view kept as fallback); demonstration content moved to Britain and clearly marked.
-
-**Database changes.** Add British places: United Kingdom; England, Scotland, Wales, Northern Ireland; the counties/areas needed for the named cities and towns; Birmingham, Bristol and Herefordshire with their towns and a modest set of real neighbourhoods; and the secondary cities listed (London, Manchester, Liverpool, Leeds, Sheffield, Nottingham, Leicester, Coventry, Oxford, Cambridge, Newcastle, Edinburgh, Glasgow, Cardiff, Belfast) as valid, empty localities. Add locality identity that tolerates repeated British place names, coordinate sanity checks, and indexes for locality, time and status discovery. Portugal and Lisbon rows are untouched.
-
-**Data required.** Real place names, hierarchy, timezone (Europe/London), currency (GBP) and approximate centres for the British localities. Real listing content only where it is genuinely known; otherwise a small, coherent, clearly-labelled trial set for Birmingham, Bristol and Herefordshire.
-
-**Real versus demonstration data.** Geography is real. Activity content in the three trial areas is a deliberately small trial set, visibly marked as demonstration, never presented as a real named person or a real named local event that does not exist. No fabricated people, no invented photographs, no AI faces, no stock imagery standing in for a real local event. Empty localities stay honestly empty.
-
-**Security implications.** No change to who can see what. Geography stays publicly readable and service-managed. Locality names and approximate centres only — never an address, never a live position.
-
-**Testing.** Deep hierarchy resolves (neighbourhood up to United Kingdom); repeated British place names resolve unambiguously; a city-level view includes its neighbourhoods; Herefordshire and Birmingham both return their own world; Lisbon still works; empty localities read as quiet rather than inventing content; demonstration labelling is present; map renders on phone and desktop; existing tests and build stay green.
-
-**Complexity and cost.** Medium. The geography data is the bulk of the work. A real map provider is deliberately **not** introduced here — the existing illustrated map continues, driven by real coordinates, so this slice adds no metered external usage.
-
-**Not touched.** Matching, Needs, capabilities, connections, conversations, journeys, Life List, the design system, authentication, privacy rules, or anything about Portugal beyond it no longer being the default.
+Missing / blocking the UK & Ireland demonstration:
+- The live backend contains only Portugal and Lisbon, and zero accounts or content.
+- Default place, loading and fallback copy, home and journey copy, the create-a-listing district list, and the give-an-hour example are all Lisbon-specific.
+- The map artwork is Lisbon-shaped and positions things by illustrative percentages, not real coordinates.
+- No locality selector, so the user cannot choose or change where they are.
+- No intent front door, no "My Living World" view, no along-the-journey or roughly-30-minutes discovery.
+- No routing source, so travel time cannot be claimed — only honestly labelled approximate distance.
 
 ---
 
-## SLICE 2 — The real human possibility and connection loop
+## SLICE 1 — UK & Ireland world activation
 
-**User-visible outcome.** A person in Birmingham can say what they need help with; a person in Herefordshire can say what they can genuinely offer. Each sees explained possibilities — why this person, where they are, what they said they were free for, and what has not been checked — and chooses whether to make contact. Nothing happens automatically. Blocked people disappear from everything, not just conversations. You can add a real photograph of yourself, or keep a neutral one.
+**User-visible outcome.** Opening the app lands in the UK and Ireland, not Portugal. You choose where you are, anywhere from a neighbourhood up to a country, and move between places and up and down the hierarchy without losing context. Everything on screen follows that choice. Birmingham, Bristol and Herefordshire have coherent demonstration content — city, creative city, rural — and everywhere else is genuinely navigable and honestly quiet. Scotland, Wales, Northern Ireland and Ireland visibly belong to the same world. Lisbon still works.
 
-**Existing architecture reused.** The deterministic possibility engine, unchanged as the source of truth; the existing reciprocal "what could I give" path; capabilities, availability, service areas and preferences exactly as modelled; existing connection requests, conversations, blocking and reporting; the existing explanation and freshness labels.
+**Existing architecture reused.** The place hierarchy; the single listing-to-card conversion seam; the server-side world read with its existing context, paging and limits; the map component's existing interface; existing time bands, honesty labels and demonstration policy.
 
-**Files and components affected.** The possibility retrieval layer (use locality hierarchy and stated service areas rather than one exact place; apply time; group candidates efficiently; report when results were cut short); the possibility engine (retire the older ungated travelling shortcut so only explicitly opted-in journeys can ever suggest someone); safety filtering applied consistently before results are shown in both directions; the need, help and conversation screens (clearer evidence, quiet states and safety actions); profile (add a photograph, remove it, neutral fallback kept); the person-facing capability and availability panel; report submission made explicit.
+**Files and components affected.** Place helpers (default becomes the UK and Ireland world, fallback copy stops naming Lisbon, add ancestor/descendant resolution and bounded place search); the shared world read (accept a locality plus its child localities, apply the time and radius fields the contract already defines); the world card shape (carry real coordinates, currency and timezone alongside the existing illustrative position); the home screen (locality chooser, UK and Ireland copy, today/tonight/weekend views); create-a-listing and give-an-hour screens (choose a real place instead of the fixed district list); the map component (draw from real coordinates, keeping the existing illustrated treatment); demonstration content relocated and clearly marked.
 
-**Database changes.** A private photo store with owner-only writes and controlled reading; missing account links with proper cleanup on the older capability, service-area, availability, preference and Need tables; indexes supporting the hierarchy-and-time candidate reads.
+**Database changes.** Add real places: United Kingdom with England, Scotland, Wales and Northern Ireland; Ireland as a separate country; meaningful regions and counties beneath each; the cities, towns and a modest set of real neighbourhoods needed for navigation, including Birmingham, Bristol and Herefordshire in depth and a credible path through the Republic of Ireland. Add locality identity that tolerates repeated place names across the isles, coordinate sanity checks, and indexes for locality, time and status discovery. Portugal and Lisbon rows untouched.
 
-**Data required.** Real trial participants creating their own capabilities, availability and Needs. A small number of clearly-labelled demonstration people for the three trial areas so the loop is demonstrable before real sign-ups exist — always identified as demonstration, never as a real named individual.
+**Data changes.** Real names, hierarchy, timezone (Europe/London, Europe/Dublin), currency (GBP, EUR) and approximate centres. A small, geographically coherent, clearly-labelled trial set of activity for the three hotspots only.
 
-**Security implications.** This is the safety slice. Blocking must hold across browsing, matching, invitations and messaging. Private facts stay private; stale availability stops appearing; regulated things (childcare, gas, electrical, medical and similar) keep their "nobody has checked this" warning. Photographs are owner-controlled, size- and type-limited, and deletable. Reports gain an explicit review path and a named person responsible during the trial.
+**UI changes.** Locality selector, hierarchy navigation, UK and Ireland copy throughout, honest quiet states, map fed by real coordinates. No visual redesign.
 
-**Testing.** A full two-account run: sign up, profile, capability, availability, preference, Need, possibilities, contact, reply, block, report, unblock. Blocked-person tests in every direction. Private and stale facts excluded. Regulated warning present. Rural and urban both return sensible, different results. Photo upload, replacement, deletion and fallback.
+**Real versus demonstration data.** Geography is real. Activity in the three hotspots is a small trial set, visibly marked as demonstration, isolated from genuine user data and removable. No fabricated towns, coordinates, people, events, photographs, reviews or testimonials. Everywhere else stays honestly empty.
 
-**Complexity and cost.** Medium-high, mostly careful work rather than new architecture. No AI, no realtime, no notifications platform.
+**Security implications.** No change to who can see what. Geography stays publicly readable and service-managed; approximate centres only, never an address or a live position.
 
-**Not touched.** The map, the design system, journeys, Life List, the way possibilities are explained or ordered, or the deterministic nature of matching.
+**Tests.** Deep hierarchy resolves both directions; repeated place names resolve unambiguously; a city view includes its neighbourhoods; Birmingham, Bristol, Herefordshire, a Scottish, Welsh, Northern Irish and Irish locality each return their own world; Lisbon still works; empty localities read as quiet; demonstration labelling present; map renders on phone and desktop; existing suite and build stay green.
+
+**Dependencies.** None external. No map or routing provider introduced.
+
+**Complexity.** Medium — the geography dataset is the bulk of the work.
+
+**Unlocks.** Every later slice; without a real world there is nothing to demonstrate.
+
+**Not touched.** Matching, Needs, capabilities, connections, conversations, journeys, Life List, design system, authentication, privacy rules.
 
 ---
 
-## SLICE 3 — Journeys, local discovery and the investor front door
+## SLICE 2 — Human possibility to connection
 
-**User-visible outcome.** The front door asks what you want to do — look around you, find something to do, find somewhere to go, find people, find help, offer what you can do, or explore a journey — and each answer resolves into the one existing discovery system. "My Living World" gathers where you are, what you want, what you can offer, what you need and where you're going, in one quiet place. You can build a real British journey (for example Bristol to Birmingham to Manchester) and see what is genuinely along it. "What's within about thirty minutes?" works, and says clearly whether that is a travel time or a straight-line estimate. The signature moment works end to end: "I have Saturday free and I'm interested in photography" returns explainable real possibilities across place, time, interest, people, events and communities.
+**User-visible outcome.** A person in Birmingham says what they need; a person in Herefordshire says what they can genuinely offer. Each sees explained possibilities — why this person, where they are, what they said they were free for, what has not been checked — and chooses whether to make contact. The recipient sees the context and accepts or declines; a conversation follows. Nothing contacts anyone automatically. Blocked people disappear from everything. You can add a real photograph of yourself, or keep a neutral one.
+
+**Existing architecture reused.** The deterministic possibility engine unchanged as the source of truth; the existing reciprocal path; capabilities, availability, service areas and preferences as modelled; existing connection requests, conversations, blocking and reporting; existing explanation and freshness labels.
+
+**Files and components affected.** Possibility retrieval (use locality hierarchy and stated service areas instead of one exact place, apply time, group candidates efficiently, report when results were cut short); the possibility engine (retire the older ungated travelling shortcut so only explicit journey opt-in can suggest someone); safety filtering applied consistently before results in both directions; the need, help and conversation screens (clearer evidence, quiet states, safety actions); profile (add, replace and remove a photograph, neutral fallback); the capability and availability panel; report submission made explicit.
+
+**Database changes.** A private photo store with owner-only writes and controlled reads; missing account links with proper cleanup on the older capability, service-area, availability, preference and Need tables; an explicit review state for reports; indexes for hierarchy-and-time candidate reads.
+
+**Data changes.** Real trial participants creating their own records. A small number of clearly-labelled demonstration people in the three hotspots so the loop is demonstrable before real sign-ups — always identified as demonstration, never presented as a real named resident, never with an AI-generated face.
+
+**UI changes.** Evidence and freshness made legible; block, report and unblock reachable from conversations and profiles; photograph controls; honest quiet states.
+
+**Security implications.** This is the safety slice. Blocking holds across browsing, matching, invitations, conversations and reciprocal discovery. Private facts stay private; stale availability stops appearing but is distinguished from incapable; regulated categories (childcare, gas, electrical, medical and similar) keep their "nobody has checked this" warning. Photographs are owner-controlled, type- and size-limited, deletable. Reports get a review state and a named person responsible during the trial. No RLS weakened for the sake of the demo.
+
+**Tests.** A full two-account run: sign up, profile, capability, availability, service area, preference, Need, possibilities, contact, accept, decline, reply, block, report, unblock. Blocked-person tests in every direction. Private and stale facts excluded. Regulated warning present. Rural and urban return sensibly different results. Photo upload, replacement, deletion, fallback.
+
+**Dependencies.** Slice 1 (hierarchy and real localities).
+
+**Complexity.** Medium-high — careful work, no new architecture. No AI, no realtime, no notifications platform.
+
+**Unlocks.** The core human loop, and the investor's "I could contact them" moment.
+
+**Not touched.** The map, design system, journeys, Life List, or the deterministic nature and ordering of matching.
+
+---
+
+## SLICE 3 — Journey, discovery and the investor experience
+
+**User-visible outcome.** The front door asks what you want to do — explore around me, find something to do, find somewhere to go, find people, find help, say what I need, offer what I can do, explore a journey — and each resolves into the one existing discovery system. "My Living World" gathers where you are, what you want, what you need, what you can offer, your availability and interests, relevant nearby activity and where you're going, in one quiet place — no feed, no likes, no followers, no ranking. You can build a real journey (Bristol → Birmingham → Manchester, London → Bristol → Herefordshire, or one through Ireland) and see what genuinely lies along it. "What's within about thirty minutes?" works and says plainly whether that is a travel time or a straight-line estimate. The signature moment works end to end: "I have Saturday free and I'm interested in photography" returns explainable possibilities across place, time, interest, people, activities, communities, opportunities and needs.
 
 **Existing architecture reused.** One discovery path with named intents — no second search engine; the persisted journey records and their overlap rules; the pure journey arranger; the same possibility engine and explanations; existing cards, sheets and map.
 
-**Files and components affected.** The home screen becomes the intent front door; a "My Living World" view assembled from existing data; the journey screen connected to the existing saved-journey functions, with stops, dates, visibility and opportunity opt-in; along-the-journey and nearby-in-time discovery added to the existing retrieval; a travel-time helper that labels its own certainty; polish across every screen — dead controls, placeholder copy, empty and error states, loading, mobile and desktop layout, consistent wording, and unique page information for each locality page worth sharing.
+**Files and components affected.** Home becomes the intent front door; a "My Living World" view assembled from existing data; the journey screen connected to the existing saved-journey functions, with stops, dates, times, visibility and opportunity opt-in; along-the-journey and nearby-in-time discovery added to the existing retrieval; a distance/travel-time helper that labels its own certainty; polish across every screen — dead controls, placeholder copy, broken links, loading, empty and error states, mobile and desktop layout, consistent wording, remaining Lisbon references; unique page information for locality pages that have something real to say.
 
-**Database changes.** Minimal: indexes for journey-stop and time discovery, if needed. No new entity model.
+**Database changes.** Minimal — indexes for journey-stop and time discovery if needed. No new entity model.
 
-**Data required.** Journey stops from the real UK place hierarchy. Travel time only where a routing source is genuinely available; otherwise clearly-labelled approximate distance.
+**Data changes.** Journey stops drawn from the real place hierarchy. Travel time only if a routing source is genuinely available; otherwise clearly-labelled approximate distance.
 
-**Real versus demonstration data.** Every journey and weekend result must trace back to a real record or a labelled trial record. No result is invented to fill a gap, and empty is shown as empty.
+**UI changes.** Intent front door, My Living World, journey builder and along-route results, 30-minute view with its honesty label, final polish pass.
 
-**Security implications.** Journeys stay private unless the owner chooses public and opts into opportunities; a journey never implies a live location or that someone is available for work. If a routing service is used, calls stay on the server, behind sign-in, bounded and cached to avoid runaway cost.
+**Real versus demonstration data.** Every journey and weekend result traces back to a real record or a labelled trial record. Nothing is invented to fill a gap; empty is shown as empty.
 
-**Testing.** Intent front door resolves each intent to real results or an honest quiet state. Saturday-photography flow in Birmingham, Bristol and Herefordshire. Journey visibility matrix. Along-the-route correctness. Travel-time labelling. Full walkthrough of every screen on phone and desktop for dead ends, broken links and placeholder text.
+**Security implications.** Journeys stay private unless the owner chooses public and opts into opportunities; a journey never implies availability, employment intent, live location or willingness to meet. If routing is ever enabled, calls stay server-side, behind sign-in, bounded and cached against runaway metered cost.
 
-**Complexity and cost.** Medium. Any routing or map provider is the only metered cost, is optional, and is introduced with limits and caching. Its selection is confirmed before use.
+**Tests.** Each intent resolves to real results or an honest quiet state. Saturday-photography flow in Birmingham, Bristol and Herefordshire. Journey visibility matrix. Along-the-route correctness. Distance-versus-travel-time labelling. Full walkthrough of every screen on phone and desktop for dead ends, broken links and placeholder text. The 23-step investor sequence run start to finish.
 
-**Not touched.** The matching engine's logic, privacy model, payments, booking, bookings, ratings, followers, feeds, realtime, machine learning, external provider ingestion, or a separate graph database.
+**Dependencies.** Slices 1 and 2.
+
+**Complexity.** Medium. Any routing or map provider is optional, is the only metered cost, and is confirmed with you before use.
+
+**Unlocks.** The complete investor walkthrough.
+
+**Not touched.** Matching logic, privacy model, payments, booking, ratings, followers, feeds, realtime, machine learning, external provider ingestion, separate graph database.
 
 ---
 
 ## Open questions (flagging, not blocking)
 
-- A real interactive map and any travel-time routing need a paid mapping service. Slice 1 works without one; confirm before Slice 3 whether to enable it.
-- Named trial participants for Birmingham, Bristol and Herefordshire: real invitees, or labelled demonstration people until real ones sign up?
+- An interactive map and real travel time need a paid mapping service. Slices 1 and 2 need neither; confirm before Slice 3 whether to enable one.
+- Demonstration people for the hotspots: real invitees, or clearly-labelled demonstration records until real people sign up?
 - Who reviews safety reports during the trial?
 
 ## Note
 
-The project task list cannot be updated from plan mode; the three slices above will be recorded there as soon as building begins.
+Slices are built one at a time, each approved deliberately. The project task list will be updated with these three slices as soon as building begins (it cannot be edited from plan mode).
