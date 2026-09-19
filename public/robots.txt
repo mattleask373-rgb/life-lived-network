@@ -1,14 +1,14 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+
+# Personal, private and internal screens. Nothing useful for a search engine,
+# and nothing anyone else should be shown.
+Disallow: /auth
+Disallow: /profile
+Disallow: /conversations
+Disallow: /need
+Disallow: /help
+Disallow: /moderation
+Disallow: /sources
+
+Sitemap: https://life-lived-network.lovable.app/api/public/sitemap.xml
