@@ -71,6 +71,7 @@ function LifeListPage() {
 
       {open ? (
         <EntrySheet
+          world={saved}
           entry={open}
           saved={has(open.id)}
           onSave={toggle}

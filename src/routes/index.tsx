@@ -194,6 +194,7 @@ function Home() {
 
       {open ? (
         <EntrySheet
+          world={entries}
           entry={open}
           saved={has(open.id)}
           onSave={toggle}

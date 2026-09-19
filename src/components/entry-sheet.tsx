@@ -27,7 +27,7 @@ export function EntrySheet({
   }, [onClose]);
 
   const layer = LAYERS.find((l) => l.id === entry.layer);
-  const related = relatedEntries(entry);
+  const related = relatedEntries(world, entry);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">

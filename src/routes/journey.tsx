@@ -163,6 +163,7 @@ function JourneyPage() {
 
       {open ? (
         <EntrySheet
+          world={world ?? []}
           entry={open}
           saved={has(open.id)}
           onSave={toggle}
