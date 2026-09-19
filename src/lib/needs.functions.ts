@@ -104,7 +104,6 @@ export const getOpenNeeds = createServerFn({ method: "GET" })
     return ((rows ?? []) as unknown as NeedRow[]).map(rowToNeed);
   });
 
-
 /**
  * The answer to "who or what could meet this?".
  *

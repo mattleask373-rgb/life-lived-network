@@ -43,17 +43,19 @@ export function providerGroups(entries: WorldEntry[]): ProviderGroup[] {
     if (list) list.push(entry);
     else groups.set(key, [entry]);
   }
-  return [...groups.entries()]
-    .map(([organisation, list]) => ({
-      organisation,
-      entries: [...list].sort((a, b) => a.title.localeCompare(b.title)),
-    }))
-    // A named provider before loose services; then alphabetical, never ranked.
-    .sort((a, b) => {
-      if (Boolean(a.organisation) !== Boolean(b.organisation)) return a.organisation ? -1 : 1;
-      if (a.entries.length !== b.entries.length) return b.entries.length - a.entries.length;
-      return a.organisation.localeCompare(b.organisation);
-    });
+  return (
+    [...groups.entries()]
+      .map(([organisation, list]) => ({
+        organisation,
+        entries: [...list].sort((a, b) => a.title.localeCompare(b.title)),
+      }))
+      // A named provider before loose services; then alphabetical, never ranked.
+      .sort((a, b) => {
+        if (Boolean(a.organisation) !== Boolean(b.organisation)) return a.organisation ? -1 : 1;
+        if (a.entries.length !== b.entries.length) return b.entries.length - a.entries.length;
+        return a.organisation.localeCompare(b.organisation);
+      })
+  );
 }
 
 /** Hours and skills somebody has actually offered here. */
