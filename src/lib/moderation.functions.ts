@@ -14,12 +14,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-import {
-  isValidResolution,
-  rowToReport,
-  type Report,
-  type ReportRow,
-} from "./moderation";
+import { isValidResolution, rowToReport, type Report, type ReportRow } from "./moderation";
 
 const MAX_LIST = 100;
 const MAX_NOTE = 1000;
@@ -49,10 +44,7 @@ interface RoleReader {
   };
 }
 
-async function requireReviewer(context: {
-  supabase: RoleReader;
-  userId: string;
-}): Promise<void> {
+async function requireReviewer(context: { supabase: RoleReader; userId: string }): Promise<void> {
   const { data, error } = await context.supabase
     .from("user_roles")
     .select("role")
@@ -118,10 +110,10 @@ export const listReports = createServerFn({ method: "GET" })
     const names = new Map((profiles ?? []).map((p) => [p.id, p.display_name as string]));
     const contexts = new Map(
       (requests ?? []).map((r: Record<string, unknown>) => [
-        r['id'] as string,
+        r["id"] as string,
         {
-          title: (r['context_title'] as string) ?? "",
-          place: (r['context_place'] as string) ?? "",
+          title: (r["context_title"] as string) ?? "",
+          place: (r["context_place"] as string) ?? "",
         },
       ]),
     );

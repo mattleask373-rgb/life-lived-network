@@ -10,11 +10,7 @@
 export type ReportStatus = "open" | "reviewed";
 
 export type ReportResolution =
-  | ""
-  | "no_action"
-  | "guidance_given"
-  | "content_removed"
-  | "account_restricted";
+  "" | "no_action" | "guidance_given" | "content_removed" | "account_restricted";
 
 export const RESOLUTIONS: { id: Exclude<ReportResolution, "">; label: string }[] = [
   { id: "no_action", label: "Nothing needed" },
