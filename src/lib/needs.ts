@@ -60,9 +60,15 @@ export interface Need {
   budget: number | null;
   currency: string;
   paymentType: PaymentType;
+  budgetMax: number | null;
+  paymentModel: PaymentModel;
   requiredSkills: string[];
+  /** A role is not a skill: "a plumber" and "can fix a tap" differ. */
+  requiredRoles: string[];
   requiredQualifications: string[];
   preferredExperience: string;
+  /** When the person last said this is still needed. */
+  lastConfirmedAt: string;
   recurring: boolean;
   urgency: Urgency;
   contactPreference: string;
