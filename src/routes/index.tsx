@@ -49,11 +49,8 @@ function Home() {
     queryKey: ["world", place?.id ?? null, placeIds.length],
     enabled: Boolean(place),
     queryFn: () =>
-      fetchWorldEntries({
-        placeId: place?.id ?? null,
-        placeIds,
-        placeSlugs,
-      }),
+      // Only where we are travels; the hierarchy is expanded behind the server.
+      fetchWorldEntries({ placeId: place?.id ?? null }),
   });
   const all = world ?? [];
   const placeName = place?.name ?? PLACE_FALLBACK.name;

@@ -39,7 +39,7 @@ function JourneyPage() {
   const { data: world } = useQuery({
     queryKey: ["world", place?.id ?? null, placeIds.length],
     enabled: Boolean(place),
-    queryFn: () => fetchWorldEntries({ placeId: place?.id ?? null, placeIds, placeSlugs }),
+    queryFn: () => fetchWorldEntries({ placeId: place?.id ?? null }),
   });
 
   return (
