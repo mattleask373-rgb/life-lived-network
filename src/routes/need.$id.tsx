@@ -8,6 +8,8 @@ import { PersonAvatar } from "@/components/person-avatar";
 import { sendConnectionRequest } from "@/lib/connection.functions";
 
 import { findSupplyForNeed } from "@/lib/needs.functions";
+import { getWorld } from "@/lib/world.functions";
+import { nextStepFor, providerLine, servicePossibilities } from "@/lib/services";
 import { BAND_HEADING, BAND_ORDER, type SupplyBand, type SupplyResult } from "@/lib/supply-engine";
 
 const title = "Who could help — The Living World";
@@ -135,6 +137,8 @@ function NeedAnswer() {
           })}
         </div>
       )}
+
+      <Services need={need} />
 
       <p className="mt-12 text-center text-sm text-muted-foreground">
         Nothing here is a promise. Everything here is a real person or a real posting.
@@ -268,6 +272,66 @@ function Band({
             {canInvite && r.personId ? <Invite needId={needId} personId={r.personId} /> : null}
           </li>
         ))}
+      </ul>
+    </section>
+  );
+}
+
+/**
+ * Services and practices in the same locality that could answer this need.
+ * Deliberately separate from the human possibilities above, and deliberately
+ * not a second matching engine: it reuses the same world read and the same
+ * deterministic service filter.
+ */
+function Services({
+  need,
+}: {
+  need: {
+    placeId?: string | null;
+    category?: string | null;
+    title: string;
+    description?: string | null;
+    requiredSkills?: string[] | null;
+  };
+}) {
+  const read = useServerFn(getWorld);
+  const { data } = useQuery({
+    queryKey: ["world-services", need.placeId ?? ""],
+    queryFn: () => read({ data: { placeId: need.placeId ?? null } }),
+  });
+
+  const matches = servicePossibilities(data?.items ?? [], {
+    ...(need.placeId ? { placeId: need.placeId } : {}),
+    ...(need.category ? { category: need.category } : {}),
+    ...(need.requiredSkills?.length ? { requiredSkills: need.requiredSkills } : {}),
+    text: `${need.title} ${need.description ?? ""}`,
+  });
+
+  if (!matches.length) return null;
+
+  return (
+    <section className="mt-12">
+      <h2 className="text-xl">Places and practices that offer this</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Services in the same locality. Some can be asked, some are booked elsewhere, and some are
+        only listed. Nothing is arranged for you.
+      </p>
+      <ul className="mt-4 space-y-3">
+        {matches.map((entry) => {
+          const step = nextStepFor(entry);
+          return (
+            <li key={entry.id} className="card-paper p-4">
+              <h3 className="text-base leading-snug">{entry.title}</h3>
+              <p className="mt-1 text-sm text-foreground/80">{providerLine(entry)}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {entry.place} · {entry.neighbourhood} · {entry.when}
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {step.label} — {step.note}
+              </p>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

@@ -8,6 +8,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { asBookingState } from "./services";
 import type { DiscoveryContext, Page } from "./data/contract";
 import {
   type DataQuality,
@@ -58,6 +59,14 @@ export interface ListingRow {
   imported_at?: string | null;
   last_checked_at?: string | null;
   origin?: string;
+  /** True only for clearly-labelled trial records. */
+  demonstration?: boolean;
+  // Service facts. Empty on anything that is not offered as a service.
+  organisation?: string;
+  provider_note?: string;
+  qualification_note?: string;
+  booking_state?: string;
+  booking_url?: string;
 }
 
 /** What someone can make happen. Each maps onto one map layer by default. */
@@ -190,6 +199,12 @@ export function rowToEntry(
     ...(row.cancellation === "cancelled" || row.cancellation === "postponed"
       ? { cancellation: row.cancellation }
       : {}),
+    ...(row.demonstration ? { demonstration: true } : {}),
+    ...(row.organisation ? { organisation: row.organisation } : {}),
+    ...(row.provider_note ? { providerNote: row.provider_note } : {}),
+    ...(row.qualification_note ? { qualificationNote: row.qualification_note } : {}),
+    ...(row.booking_state ? { bookingState: asBookingState(row.booking_state) } : {}),
+    ...(row.booking_url ? { bookingUrl: row.booking_url } : {}),
   };
 }
 

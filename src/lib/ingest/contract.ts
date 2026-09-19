@@ -32,6 +32,10 @@ export interface SourceRow {
   last_run_at: string | null;
   last_outcome: string;
   consecutive_failures: number;
+  /** Health, kept plainly: when it last worked, last failed, and why. */
+  last_success_at?: string | null;
+  last_failure_at?: string | null;
+  last_error_category?: string;
 }
 
 /** One picture an outside source offers, with the rights it came with. */

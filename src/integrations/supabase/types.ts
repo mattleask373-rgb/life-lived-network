@@ -425,6 +425,8 @@ export type Database = {
         Row: {
           accessibility: string | null
           band: string
+          booking_state: string
+          booking_url: string
           cancellation: string
           contact_note: string | null
           cost: number
@@ -432,6 +434,7 @@ export type Database = {
           creator_id: string | null
           currency: string
           data_quality: string
+          demonstration: boolean
           details: string[]
           ends_at: string | null
           give: string | null
@@ -444,12 +447,15 @@ export type Database = {
           lng: number | null
           minutes: number
           neighbourhood: string
+          organisation: string
           organiser: string
           origin: string
           outdoors: boolean
           people_needed: number | null
           place: string
           place_id: string | null
+          provider_note: string
+          qualification_note: string
           recurrence: string
           skills: string[]
           social: string
@@ -467,6 +473,8 @@ export type Database = {
         Insert: {
           accessibility?: string | null
           band?: string
+          booking_state?: string
+          booking_url?: string
           cancellation?: string
           contact_note?: string | null
           cost?: number
@@ -474,6 +482,7 @@ export type Database = {
           creator_id?: string | null
           currency?: string
           data_quality?: string
+          demonstration?: boolean
           details?: string[]
           ends_at?: string | null
           give?: string | null
@@ -486,12 +495,15 @@ export type Database = {
           lng?: number | null
           minutes?: number
           neighbourhood?: string
+          organisation?: string
           organiser?: string
           origin?: string
           outdoors?: boolean
           people_needed?: number | null
           place?: string
           place_id?: string | null
+          provider_note?: string
+          qualification_note?: string
           recurrence?: string
           skills?: string[]
           social?: string
@@ -509,6 +521,8 @@ export type Database = {
         Update: {
           accessibility?: string | null
           band?: string
+          booking_state?: string
+          booking_url?: string
           cancellation?: string
           contact_note?: string | null
           cost?: number
@@ -516,6 +530,7 @@ export type Database = {
           creator_id?: string | null
           currency?: string
           data_quality?: string
+          demonstration?: boolean
           details?: string[]
           ends_at?: string | null
           give?: string | null
@@ -528,12 +543,15 @@ export type Database = {
           lng?: number | null
           minutes?: number
           neighbourhood?: string
+          organisation?: string
           organiser?: string
           origin?: string
           outdoors?: boolean
           people_needed?: number | null
           place?: string
           place_id?: string | null
+          provider_note?: string
+          qualification_note?: string
           recurrence?: string
           skills?: string[]
           social?: string
@@ -1029,8 +1047,11 @@ export type Database = {
           homepage_url: string
           id: string
           kind: string
+          last_error_category: string
+          last_failure_at: string | null
           last_outcome: string
           last_run_at: string | null
+          last_success_at: string | null
           name: string
           place_ids: string[]
           refresh_minutes: number
@@ -1048,8 +1069,11 @@ export type Database = {
           homepage_url?: string
           id?: string
           kind: string
+          last_error_category?: string
+          last_failure_at?: string | null
           last_outcome?: string
           last_run_at?: string | null
+          last_success_at?: string | null
           name: string
           place_ids?: string[]
           refresh_minutes?: number
@@ -1067,8 +1091,11 @@ export type Database = {
           homepage_url?: string
           id?: string
           kind?: string
+          last_error_category?: string
+          last_failure_at?: string | null
           last_outcome?: string
           last_run_at?: string | null
+          last_success_at?: string | null
           name?: string
           place_ids?: string[]
           refresh_minutes?: number

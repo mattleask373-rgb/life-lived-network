@@ -26,6 +26,11 @@ export interface SourcePanelRow {
   lastRunAt: string | null;
   lastOutcome: string;
   consecutiveFailures: number;
+  lastSuccessAt: string | null;
+  lastFailureAt: string | null;
+  lastErrorCategory: string;
+  /** Whether this source needs a credential at all. */
+  credentialRequired: boolean;
   /** Whether a credential is present. Never the credential. */
   credentialPresent: boolean;
 }
@@ -67,7 +72,9 @@ export const listSources = createServerFn({ method: "GET" })
       .order("name", { ascending: true })
       .limit(50);
     if (error) throw error;
-    const credentialPresent = Boolean(process.env["TICKETMASTER_API_KEY"]);
+    const ticketmasterKey = Boolean(process.env["TICKETMASTER_API_KEY"]);
+    const { sourceKeyFor } = await import("./ingest/refresh.server");
+    const { TICKETMASTER_KEY } = await import("./ingest/registry");
     return ((data ?? []) as unknown as SourceRow[]).map((row) => ({
       id: row.id,
       name: row.name,
@@ -81,7 +88,11 @@ export const listSources = createServerFn({ method: "GET" })
       lastRunAt: row.last_run_at,
       lastOutcome: row.last_outcome,
       consecutiveFailures: row.consecutive_failures,
-      credentialPresent,
+      lastSuccessAt: row.last_success_at ?? null,
+      lastFailureAt: row.last_failure_at ?? null,
+      lastErrorCategory: row.last_error_category ?? "",
+      credentialRequired: sourceKeyFor(row.name) === TICKETMASTER_KEY,
+      credentialPresent: sourceKeyFor(row.name) === TICKETMASTER_KEY ? ticketmasterKey : true,
     }));
   });
 
@@ -106,7 +117,7 @@ export const refreshSource = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: place, error } = await supabaseAdmin
       .from("places")
-      .select("id, slug, country_code, lat, lng, kind")
+      .select("id, slug, name, country_code, lat, lng, kind, timezone")
       .eq("slug", data.placeSlug)
       .maybeSingle();
     if (error) throw error;
@@ -127,6 +138,8 @@ export const refreshSource = createServerFn({ method: "POST" })
       radiusKm: place.kind === "neighbourhood" ? 5 : place.kind === "city" ? 20 : 30,
       startsAfter,
       endsBefore,
+      localityName: place.name ?? "",
+      timezone: place.timezone || "Europe/London",
       ...(data.force ? { force: true } : {}),
     });
   });

@@ -92,6 +92,18 @@ export interface WorldEntry {
   timezone?: string;
   /** Said plainly rather than quietly vanishing. */
   cancellation?: "" | "cancelled" | "postponed";
+
+  // ---- When the activity is a service somebody provides ---------------------
+  /** The practice, clinic, studio, venue or business offering it. */
+  organisation?: string;
+  /** What is known about the practitioner or provider. Never invented. */
+  providerNote?: string;
+  /** Only what has actually been recorded. A skill is never a qualification. */
+  qualificationNote?: string;
+  /** Whether, and how, this can genuinely be booked. */
+  bookingState?: "bookable" | "enquire" | "external" | "not_bookable";
+  /** Where booking actually happens, when it happens outside the Living World. */
+  bookingUrl?: string;
 }
 
 export type DataQuality =

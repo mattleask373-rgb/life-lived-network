@@ -1,4 +1,5 @@
 import { LAYERS, type WorldEntry } from "@/lib/world-data";
+import { asBookingState, BOOKING_LABEL, isService, providerLine } from "@/lib/services";
 import { duration, eventDate, layerText, money } from "./layer-colour";
 import { LayerIcon } from "./layer-icon";
 
@@ -12,6 +13,7 @@ export function EntryCard({
   note?: string;
 }) {
   const layer = LAYERS.find((l) => l.id === entry.layer);
+  const service = isService(entry);
   const body = (
     <>
       <div className="flex items-center gap-2">
@@ -27,6 +29,8 @@ export function EntryCard({
         </p>
       ) : null}
       <h3 className="mt-1 text-base leading-snug">{entry.title}</h3>
+      {/* A service leads with who provides it; everything else leads with where. */}
+      {service ? <p className="mt-1 text-sm text-foreground/80">{providerLine(entry)}</p> : null}
       <p className="mt-1 text-sm text-muted-foreground">
         {entry.place} · {entry.neighbourhood}
       </p>
@@ -35,6 +39,11 @@ export function EntryCard({
         {duration(entry.minutes)} · {money(entry.cost, entry.currency)}
       </p>
       <div className="mt-2 flex flex-wrap gap-1.5">
+        {service ? (
+          <span className="inline-flex rounded-full border border-border px-2 py-0.5 text-[0.7rem] text-muted-foreground">
+            {BOOKING_LABEL[asBookingState(entry.bookingState)]}
+          </span>
+        ) : null}
         {entry.demonstration ? (
           <span className="inline-flex rounded-full border border-border px-2 py-0.5 text-[0.7rem] uppercase tracking-widest text-muted-foreground">
             Demonstration
