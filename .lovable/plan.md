@@ -1,180 +1,102 @@
-# The Living World — World-Capable Trial Architecture Plan
+# The Living World — UK-First Trial: Three Slices
 
-Audit and plan only. No product code or database state has been changed. Findings come from the current repository, live backend, and preview diagnostics. Anything not established is marked **UNKNOWN — REQUIRES VERIFICATION**.
+The architecture already exists. This plan activates it in Britain. Nothing here is a redesign: every slice extends the existing geography, discovery, matching, journey, connection and design systems.
 
-## Executive conclusion
+Portugal and Lisbon stay valid places. They simply stop being the default world.
 
-The permanent human-network kernel already exists: accounts, private-by-default profiles, structured capabilities, Needs, service areas, availability, deterministic Supply Engine, explicit connections, conversations, blocks/reports, Life List, real-world listings, persisted journey context, and one normalization seam into `WorldEntry`.
+## What already exists (and is reused, not rebuilt)
 
-The blocker is not a missing second architecture. It is that the existing architecture still resolves the world through one default place and one illustrative coordinate plane. The first change must therefore be an **additive world-context and geographic-query layer around the existing `places` spine**, while Lisbon remains the first supported locality and fallback.
+- One generic place hierarchy: country, region, area, city, town, village, neighbourhood — with parent links, slug, country code, timezone, currency and approximate centre. Only Portugal and Lisbon are populated today.
+- One person model plus separate, private-by-default records for capabilities, qualifications, experience, service areas, availability, opportunity preferences and contributions.
+- Needs as a first-class thing, covering paid work, help, community projects, volunteering and swaps.
+- One deterministic possibility engine that explains every result, keeps unknown availability unknown, and says plainly when there is nothing honest to show.
+- Explicit connection requests, participant-only conversations, blocking and reporting.
+- Persisted journeys with stops and times, private unless the owner opts in.
+- The hand-drawn map, warm design language, honest freshness labels, source-attributed photos and neutral avatars.
+- The live backend currently has no accounts and no content. Everything visible today is development-only demonstration material.
 
-The live backend currently has Portugal and Lisbon only, and zero accounts, profiles, listings, Needs, capabilities, journeys, connections, blocks, or reports. The preview currently builds successfully.
+## Current default assumptions to change (UK-first)
 
-## Current architecture audit
+Default place is Lisbon; loading fallback text is Lisbon/Portugal; home and journey copy name Lisbon; the create-something screen has a fixed list of Lisbon districts; the give-an-hour example is a Lisbon district; the map artwork is Lisbon-shaped; discovery matches one exact locality with no parent/child or travel-time reasoning. Only these assumptions are removed — the generic model stays.
 
-```text
-people + capabilities + availability + service areas
-                         ↘
-Needs → bounded retrieval → existing deterministic Supply Engine → explicit connection → messages
-  ↘ places / time / privacy          ↑ listings + hour offers + journey context
+---
 
-listings → rowToEntry() → WorldEntry → Living Map / cards / Life List / Journey arranger
-```
+## SLICE 1 — The UK world, genuinely populated
 
-- **Application:** TanStack Start/React, flat routes, React Query, server functions for shared reads and authenticated domain actions, plus some RLS-protected browser writes.
-- **Geography:** one `places` table with self-parenting kinds: country, region, area, city, town, village, neighbourhood. It stores slug, country code, timezone, currency and approximate centroid.
-- **Human world:** one profile model plus separate capability, service-area, availability, preference and contribution tables. Needs remain first-class and distinct from listings.
-- **Discovery:** `DiscoveryContext` already carries place, approximate coordinates/radius, time, entity types, cursor and mode. Most geographic/time fields are not yet applied by retrieval.
-- **Matching:** `supply-engine.ts` is the single deterministic Need→possibility evaluator. Reciprocal discovery exists separately and shares some, but not all, semantics.
-- **Connections:** request snapshots, status transitions and messages are participant-only; backend policies prevent blocked pairs from interacting.
-- **Journeys:** `journeys` and `journey_places` persist privacy-safe, opt-in context. `journey-context.ts` checks place/time overlap. The visible Journey page instead uses the separate pure itinerary arranger; persisted journey context has no UI yet.
-- **Media:** optional source-attributed listing photos are normalized and shown, capped at six. There is no upload flow. Profile photos can render but cannot be set in the product.
-- **Providers:** no provider registry, external ingestion, external listing API, map SDK, cache or deduplication store exists. Future-provider comments and provenance types are seams, not an implemented provider system.
-- **Graph:** relationships exist relationally through foreign keys and domain tables; there is no generic graph store. None is needed for this phase.
+**User-visible outcome.** Opening the app lands in Britain, not Portugal. You can choose where you are — Birmingham, Bristol or Herefordshire to begin with, and any other supported British locality as it is added — and everything on screen follows that choice: the map, what's around you, what's on today, tonight and this weekend, and the things people have posted. Rural Herefordshire and metropolitan Birmingham behave identically, because there is no city-specific code. Anything that is demonstration material is labelled as such, plainly, on the card itself.
 
-## Every Lisbon / single-locality assumption found
+**Existing architecture reused.** The place hierarchy; the single listing-to-card conversion seam; the server-side world read with its context, paging and limits; the map component's existing interface; the existing time bands and honesty labels; the existing development-only demonstration policy.
 
-1. `DEFAULT_PLACE_SLUG` and loading fallback are Lisbon/Portugal.
-2. The home title/description and Journey copy name Lisbon directly.
-3. Only Portugal and Lisbon are seeded and live.
-4. `/make` contains a fixed list of Lisbon neighbourhood names and hand-selected 0–100 positions.
-5. `/need` and `/make` silently use the default place; neither asks for world context.
-6. `/give` uses a Graça example; fixtures use Lisbon districts and stories.
-7. The Living Map is a fixed illustrated Lisbon-like SVG; pins use unrelated percentage `x/y`, not latitude/longitude.
-8. World and Supply retrieval use exact `place_id`; they do not traverse ancestors/descendants, use radius, or apply viewport bounds.
-9. `fetchPlaceBySlug` resolves only one parent; `fetchPlaces` stops at 500 rows with no paging/search.
-10. `placeLabel` falls back to “Lisbon” when resolution is absent, which can mislabel another locality after a failed lookup.
-11. Free-text `place`, `place_text`, `location`, and `neighbourhood` coexist with canonical `place_id`; neighbourhood text is not connected to the hierarchy.
-12. Euros and English time strings remain hard-coded in Journey and money presentation despite place currency/timezone fields.
-13. Home reads one place; Journey and Life List read unscoped world data.
-14. Fixtures are correctly disabled in production by policy, but development visibly mixes Lisbon fixtures into page one.
+**Files and components affected.** Place helpers (default becomes the UK, fallback copy stops naming Lisbon, label no longer falls back to a wrong city, add ancestor/descendant lookup and bounded place search); the shared world read (accept a locality and its child localities, apply the time and radius fields the contract already defines); the world card shape (carry real coordinates, currency and timezone alongside the existing illustrative position); the home screen (locality chooser, UK copy, today/tonight/weekend views); create-a-listing and give-an-hour screens (choose a real place instead of a fixed district list); the map component (draw from real coordinates, with the existing illustrated view kept as fallback); demonstration content moved to Britain and clearly marked.
 
-## Existing geography structure
+**Database changes.** Add British places: United Kingdom; England, Scotland, Wales, Northern Ireland; the counties/areas needed for the named cities and towns; Birmingham, Bristol and Herefordshire with their towns and a modest set of real neighbourhoods; and the secondary cities listed (London, Manchester, Liverpool, Leeds, Sheffield, Nottingham, Leicester, Coventry, Oxford, Cambridge, Newcastle, Edinburgh, Glasgow, Cardiff, Belfast) as valid, empty localities. Add locality identity that tolerates repeated British place names, coordinate sanity checks, and indexes for locality, time and status discovery. Portugal and Lisbon rows are untouched.
 
-**Keep:** `places.id`, `parent_id`, kind, canonical labels, country code, timezone, currency, centroid, public-read/service-write policy, and existing foreign keys from profiles/listings/hours/Needs/journey stops.
+**Data required.** Real place names, hierarchy, timezone (Europe/London), currency (GBP) and approximate centres for the British localities. Real listing content only where it is genuinely known; otherwise a small, coherent, clearly-labelled trial set for Birmingham, Bristol and Herefordshire.
 
-**Gaps:** globally unique slug cannot represent repeated locality names safely; there is no canonical path, ancestry query, boundary/bounding box, spatial index, coordinate validation, search/pagination, alias handling, or hierarchy-aware locality resolution. Coordinates are nullable plain numeric values. PostGIS availability is **UNKNOWN — REQUIRES VERIFICATION** before selecting the spatial implementation.
+**Real versus demonstration data.** Geography is real. Activity content in the three trial areas is a deliberately small trial set, visibly marked as demonstration, never presented as a real named person or a real named local event that does not exist. No fabricated people, no invented photographs, no AI faces, no stock imagery standing in for a real local event. Empty localities stay honestly empty.
 
-## Existing map structure
+**Security implications.** No change to who can see what. Geography stays publicly readable and service-managed. Locality names and approximate centres only — never an address, never a live position.
 
-`LivingMap` is a clean component boundary but its renderer is a fixed SVG with 0–100 pins. It has no projection, pan/zoom, viewport, clustering, geographic bounds or provider. Keep its public interaction contract and visual language; replace the coordinate implementation inside that boundary, not by adding a second map feature.
+**Testing.** Deep hierarchy resolves (neighbourhood up to United Kingdom); repeated British place names resolve unambiguously; a city-level view includes its neighbourhoods; Herefordshire and Birmingham both return their own world; Lisbon still works; empty localities read as quiet rather than inventing content; demonstration labelling is present; map renders on phone and desktop; existing tests and build stay green.
 
-## Existing journey structure
+**Complexity and cost.** Medium. The geography data is the bulk of the work. A real map provider is deliberately **not** introduced here — the existing illustrated map continues, driven by real coordinates, so this slice adds no metered external usage.
 
-- The itinerary arranger is pure and only arranges supplied real/fixture entries; it invents nothing.
-- Persisted journey context is separate, private by default, and public only after explicit visibility + opportunity opt-in + active status.
-- Overlap currently requires exact stop `place_id` and known temporal overlap where times exist.
-- The Journey page is not connected to persisted journey CRUD, origin/destination, hierarchy, route corridors or world context.
-- Legacy `travellingThroughPlaceIds` can produce a journey candidate without the full persisted-journey consent checks; this must be retired from discovery, not expanded.
+**Not touched.** Matching, Needs, capabilities, connections, conversations, journeys, Life List, the design system, authentication, privacy rules, or anything about Portugal beyond it no longer being the default.
 
-## Existing entity / discovery structure
+---
 
-- `listings` is the canonical internal real-world listing store; `rowToEntry()` is the protected normalization seam and `WorldEntry` is the stable presentation contract.
-- Needs, people/capabilities, hour offers and journey context remain deliberately distinct domain entities.
-- The Supply Engine already exposes direct, latent, journey, community, skills exchange, contribution and related bands with evidence, caveats, trust/freshness and diagnostics.
-- Retrieval is bounded, but world paging is offset-based; Supply candidate reads use fixed caps (people 200, listings/hours 150) and repeated in-memory joins. Truncation is not diagnosed.
-- `DiscoveryContext` promises radius/time/entity filtering that current queries do not honour. Related-entry proximity still uses illustrative `x/y`.
+## SLICE 2 — The real human possibility and connection loop
 
-## Exact changes required for global scale
+**User-visible outcome.** A person in Birmingham can say what they need help with; a person in Herefordshire can say what they can genuinely offer. Each sees explained possibilities — why this person, where they are, what they said they were free for, and what has not been checked — and chooses whether to make contact. Nothing happens automatically. Blocked people disappear from everything, not just conversations. You can add a real photograph of yourself, or keep a neutral one.
 
-| Existing | Change | Reason | Risk | Test |
-|---|---|---|---|---|
-| `places` hierarchy with global unique slug | Add canonical path/parent-scoped identity, hierarchy traversal, coordinate checks and bounded place search; preserve IDs and Lisbon rows | Repeated names and deep locality trees must resolve safely | Broken old Lisbon links or ambiguous paths | Migration compatibility; duplicate-name fixtures; ancestor/descendant and Lisbon regression tests |
-| One default Lisbon context | Add one URL/session-driven `WorldContext` resolved from `places`; `/` keeps Lisbon as pilot fallback, never as failed-fetch label | Every screen must agree which world is being viewed | Context drift between map/forms/lists | Change locality and verify map, create flows, currency, timezone and queries all follow it |
-| Exact `place_id` filters | Extend existing server reads to accept descendant place IDs and bounded viewport/radius; apply time/entity filters already present in `DiscoveryContext` | City, neighbourhood and nearby discovery must work across boundaries | Privacy leakage or expensive scans | RLS tests; city→neighbourhood inclusion; radius edge cases; query-plan/index checks |
-| Plain lat/lng, no spatial index | Verify spatial support; then add one indexed geographic representation or a bounded lat/lng fallback, using only public approximate/entity coordinates | World map and nearby search need indexed bounds | Extension portability and accidentally precise coordinates | Coordinate range checks; viewport correctness; no private point returned |
-| Static SVG `LivingMap` | Evolve the same component into a real geographic renderer with `center`, `bounds`, zoom and bounds-change callback; retain illustrated Lisbon fallback until parity | One map must support local and world scales | Provider cost, blank maps, visual regression | Desktop/mobile rendering, pan/zoom, clustering, empty/error fallback, Lisbon parity |
-| `WorldEntry` x/y only | Add optional lat/lng, currency, timezone, structured time and provenance fields while retaining x/y during migration | Existing cards survive while geographic screens become real | Two coordinate systems linger too long | Mapper tests for legacy and geographic rows; remove x/y use only after parity |
-| Offset pages and fixed candidate caps | Move to stable keyset/viewport cursors, grouped joins, explicit truncation diagnostics and composite/spatial indexes | Predictable performance beyond one city | Changed ordering and missed boundary rows | Pagination no-duplicate/no-gap tests; load/query-plan tests; diagnostic assertions |
-| Separate Journey UI and persisted context | Connect the existing page to existing journey functions; resolve stops through hierarchy and route/time context; remove legacy ungated travel matching | Journeys become useful without implying live location/work availability | Consent regression | Private/friends/public/opt-in matrix; overlap, expiry and hierarchy tests |
-| Partial authenticated block filtering | Use authenticated reads for signed-in personalized discovery and consistently exclude blocks before matching; retain RLS enforcement on requests/messages | Blocked people must not reappear as suggestions | Public browsing cannot know viewer blocks | Two-account tests across browse, match, invite, thread and unblock |
-| Source-photo schema with no product upload | Add controlled profile photo upload first; keep listing photos source-attributed and add creator upload only with consent/credit rules | Real people need authentic presence for a trial | PII, unsafe media, orphan files | File/type/size checks, owner access, deletion, neutral fallback and six-photo cap |
-| Console-only data observations | Add privacy-safe operation metrics for query duration, counts, truncation and failures; never log free text or journey detail | Pilot issues need diagnosis | Sensitive logging | Redaction tests and forced-failure diagnostics |
-| Static route metadata | Add real-data locality routes and unique complete metadata only for supported places; noindex private/personal pages | Shareable local discovery without fabricated SEO | Thin/empty pages | SSR metadata tests; zero-data places not indexed; canonical-path tests |
+**Existing architecture reused.** The deterministic possibility engine, unchanged as the source of truth; the existing reciprocal "what could I give" path; capabilities, availability, service areas and preferences exactly as modelled; existing connection requests, conversations, blocking and reporting; the existing explanation and freshness labels.
 
-## Database changes required
+**Files and components affected.** The possibility retrieval layer (use locality hierarchy and stated service areas rather than one exact place; apply time; group candidates efficiently; report when results were cut short); the possibility engine (retire the older ungated travelling shortcut so only explicitly opted-in journeys can ever suggest someone); safety filtering applied consistently before results are shown in both directions; the need, help and conversation screens (clearer evidence, quiet states and safety actions); profile (add a photograph, remove it, neutral fallback kept); the person-facing capability and availability panel; report submission made explicit.
 
-1. Add canonical place path/parent-scoped uniqueness and ancestry support without replacing `places`.
-2. Add coordinate range constraints; verify PostGIS, then choose a GiST point index or documented bounded numeric fallback.
-3. Add composite discovery indexes aligned to real predicates, including published/open status + place + freshness/time + stable cursor keys.
-4. Add/repair user foreign keys with cascade on `needs.creator_id`, `person_capabilities.user_id`, `service_areas.user_id`, `availability_windows.user_id`, and `opportunity_preferences.user_id`; live constraints confirm these are currently missing while later tables have them.
-5. Add no new universal entity, profile, journey, matching or provider tables in the first slices. Add storage policy/migration only when the photo slice is approved.
-6. Do not seed a fake world. Add only verified pilot place hierarchy rows needed for the controlled trial.
+**Database changes.** A private photo store with owner-only writes and controlled reading; missing account links with proper cleanup on the older capability, service-area, availability, preference and Need tables; indexes supporting the hierarchy-and-time candidate reads.
 
-## RLS / privacy changes required
+**Data required.** Real trial participants creating their own capabilities, availability and Needs. A small number of clearly-labelled demonstration people for the three trial areas so the loop is demonstrable before real sign-ups exist — always identified as demonstration, never as a real named individual.
 
-- Preserve current owner policies, discoverability default false, per-fact visibility, approximate-location language, journey opt-in and participant-only conversations.
-- Apply mutual-block exclusion to authenticated browsing and both matching directions; backend connection/message policies already enforce blocks.
-- Keep public geography readable but service-managed.
-- Return place centroids/approved approximate entity points only; never store or expose home, live, or journey-tracking coordinates.
-- Add a genuine review path before treating reports as operational moderation. Current reporting records submissions but has no reviewer UI/role workflow.
-- **UNKNOWN — REQUIRES VERIFICATION:** retention policy, terms/consent copy, emergency escalation procedure, pilot moderator ownership, and legal review by launch jurisdiction.
+**Security implications.** This is the safety slice. Blocking must hold across browsing, matching, invitations and messaging. Private facts stay private; stale availability stops appearing; regulated things (childcare, gas, electrical, medical and similar) keep their "nobody has checked this" warning. Photographs are owner-controlled, size- and type-limited, and deletable. Reports gain an explicit review path and a named person responsible during the trial.
 
-## Performance / indexing changes required
+**Testing.** A full two-account run: sign up, profile, capability, availability, preference, Need, possibilities, contact, reply, block, report, unblock. Blocked-person tests in every direction. Private and stale facts excluded. Regulated warning present. Rural and urban both return sensible, different results. Photo upload, replacement, deletion and fallback.
 
-- Hierarchy-aware place lookup, spatial/bounds index, stable keyset cursors, map clustering and a hard viewport result ceiling.
-- Group candidate rows by user once instead of repeated filters; report total considered/truncated.
-- Apply `DiscoveryContext` filters in the database before the Supply Engine, while keeping ranking pure and deterministic.
-- Add short server caching only for public place metadata and public viewport results; never cache personalized/private matches across users.
-- Keep progressive disclosure: locality first, viewport second, details on selection; never load the world.
+**Complexity and cost.** Medium-high, mostly careful work rather than new architecture. No AI, no realtime, no notifications platform.
 
-## UI changes required
+**Not touched.** The map, the design system, journeys, Life List, the way possibilities are explained or ordered, or the deterministic nature of matching.
 
-- A quiet world/locality selector and clear current-place label shared by map, Need, listing, hour and Journey flows.
-- Real geographic map behavior inside `LivingMap`, with list fallback, clustered pins, restrained density and no live-person markers.
-- Place selection instead of Lisbon defaults in creation forms; display timezone/currency from context.
-- Persisted journey editing with explicit visibility and opportunity opt-in wording.
-- Authentic user-supplied photos only; keep neutral placeholders and mature Lucide iconography.
-- Preserve current design tokens, cards/sheets, language, explore-first flow and the principle that a successful session ends off-screen.
+---
 
-## Real-world trial readiness gaps
+## SLICE 3 — Journeys, local discovery and the investor front door
 
-- No real accounts or content exist in the live backend, so no live end-to-end human loop has occurred.
-- No controlled invite/onboarding sequence or pilot place dataset.
-- No two-account browser test of capability → Need → match → connection → reply → block/report.
-- Blocks are not consistently filtered from discovery before results are shown.
-- Reports have no moderation/reviewer workflow.
-- Profile/listing photo upload is absent.
-- Persisted journeys have no UI.
-- No geographic world map, place search, viewport query or clustering.
-- Some critical creation paths still write directly from the browser; RLS protects them, but server-boundary validation/observability is inconsistent.
-- Policy flags are English keyword heuristics, not jurisdiction-aware legal decisions.
-- No notifications; for a small facilitated pilot this can be manual and deferred.
+**User-visible outcome.** The front door asks what you want to do — look around you, find something to do, find somewhere to go, find people, find help, offer what you can do, or explore a journey — and each answer resolves into the one existing discovery system. "My Living World" gathers where you are, what you want, what you can offer, what you need and where you're going, in one quiet place. You can build a real British journey (for example Bristol to Birmingham to Manchester) and see what is genuinely along it. "What's within about thirty minutes?" works, and says clearly whether that is a travel time or a straight-line estimate. The signature moment works end to end: "I have Saturday free and I'm interested in photography" returns explainable real possibilities across place, time, interest, people, events and communities.
 
-## What remains unchanged
+**Existing architecture reused.** One discovery path with named intents — no second search engine; the persisted journey records and their overlap rules; the pure journey arranger; the same possibility engine and explanations; existing cards, sheets and map.
 
-Accounts/authentication; the single profile model; existing RLS posture; `places`; listings and `rowToEntry()`; Needs; capability facts; service areas; availability; the Supply Engine; connection snapshots and status model; conversations; Life List; journey tables and pure Journey arranger; `WorldEntry` compatibility; fixtures restricted to development/tests; honest freshness/trust labels; source-attributed photography rules; design system and navigation language.
+**Files and components affected.** The home screen becomes the intent front door; a "My Living World" view assembled from existing data; the journey screen connected to the existing saved-journey functions, with stops, dates, visibility and opportunity opt-in; along-the-journey and nearby-in-time discovery added to the existing retrieval; a travel-time helper that labels its own certainty; polish across every screen — dead controls, placeholder copy, empty and error states, loading, mobile and desktop layout, consistent wording, and unique page information for each locality page worth sharing.
 
-## What is deferred
+**Database changes.** Minimal: indexes for journey-stop and time discovery, if needed. No new entity model.
 
-External provider ingestion/registry, scraping, generic graph infrastructure, AI guide/ranking, payments, ratings/reviews, realtime chat indicators, push/email automation, route optimization, global place import, full multilingual policy engine, public SEO pages for empty localities, and opening multiple cities at once.
+**Data required.** Journey stops from the real UK place hierarchy. Travel time only where a routing source is genuinely available; otherwise clearly-labelled approximate distance.
 
-## Phased implementation plan
+**Real versus demonstration data.** Every journey and weekend result must trace back to a real record or a labelled trial record. No result is invented to fill a gap, and empty is shown as empty.
 
-### Phase 0 — Pilot safety closure
-Close block filtering across authenticated discovery/matching, make report writes explicit, add moderator-operating requirements, and build two-account end-to-end tests. No visual redesign.
+**Security implications.** Journeys stay private unless the owner chooses public and opts into opportunities; a journey never implies a live location or that someone is available for work. If a routing service is used, calls stay on the server, behind sign-in, bounded and cached to avoid runaway cost.
 
-### Phase 1 — World context and geography
-Extend the existing `places` model with canonical paths, hierarchy traversal, bounded search and indexed geographic queries. Add one shared World Context; keep Lisbon as the first supported fallback and verify all existing Lisbon flows.
+**Testing.** Intent front door resolves each intent to real results or an honest quiet state. Saturday-photography flow in Birmingham, Bristol and Herefordshire. Journey visibility matrix. Along-the-route correctness. Travel-time labelling. Full walkthrough of every screen on phone and desktop for dead ends, broken links and placeholder text.
 
-### Phase 2 — One real map
-Upgrade `LivingMap` behind its existing boundary to consume geographic entries and emit viewport changes. Add clustering, bounded retrieval and graceful fallback. Selecting the map provider/connection occurs at implementation time after cost/domain constraints are confirmed.
+**Complexity and cost.** Medium. Any routing or map provider is the only metered cost, is optional, and is introduced with limits and caching. Its selection is confirmed before use.
 
-### Phase 3 — Global-aware human loop
-Make profile, capability/service-area, Need, listing and hour creation use the shared world context. Apply hierarchy/radius/time filters before the unchanged deterministic Supply Engine. Add keyset paging and diagnostics.
+**Not touched.** The matching engine's logic, privacy model, payments, booking, bookings, ratings, followers, feeds, realtime, machine learning, external provider ingestion, or a separate graph database.
 
-### Phase 4 — Living journeys
-Expose existing journey persistence, stop selection, dates, visibility and opt-in. Feed hierarchy-aware stop/time context into Supply; remove legacy travel inference.
+---
 
-### Phase 5 — Controlled real-world trial
-Seed only verified pilot geography; invite a small cohort; add authentic profile photos; exercise the complete two-person flow; establish report review and support procedures; monitor quiet states, match reasons, failures and response times without vanity metrics.
+## Open questions (flagging, not blocking)
 
-### Phase 6 — Locality publishing
-Add canonical locality URLs and complete metadata for places with sufficient real content. Keep empty or fixture-only localities unindexed.
+- A real interactive map and any travel-time routing need a paid mapping service. Slice 1 works without one; confirm before Slice 3 whether to enable it.
+- Named trial participants for Birmingham, Bristol and Herefordshire: real invitees, or labelled demonstration people until real ones sign up?
+- Who reviews safety reports during the trial?
 
-### Phase 7 — External world, later
-Only after the human loop works, introduce provider → adapter → normalization → deduplication → provenance/freshness/policy → existing internal entities. No request-time external dependency and no fabricated records.
+## Note
 
-## Approval boundary
-
-Approve **Phase 0 and Phase 1 only** as the next implementation slice. They make the system safe for trial and world-context capable without replacing the map, entities, journeys, matching, design or Lisbon experience. Phase 2 should receive its own short audit/plan because it introduces a usage-metered map provider and visible interaction changes.
+The project task list cannot be updated from plan mode; the three slices above will be recorded there as soon as building begins.
