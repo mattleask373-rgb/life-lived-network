@@ -15,6 +15,10 @@ export const FIXTURE_NOW = "2026-03-05T09:00:00.000Z";
 const BRIGHTON = "place-brighton";
 const BRISTOL = "place-bristol";
 const LISBON = "place-lisbon";
+const BIRMINGHAM = "place-birmingham";
+const KINGS_HEATH = "place-kings-heath";
+const HEREFORDSHIRE = "place-herefordshire";
+const HEREFORD = "place-hereford";
 
 function capability(userId: string, label: string, over: Partial<Capability> = {}): Capability {
   return {
@@ -130,7 +134,76 @@ export const PRIVATE_PERSON = person("private", "Someone", BRIGHTON, "Brighton",
   preferences: ["paid_work"] as OpportunityPreference[],
 });
 
-export const FIXTURE_PEOPLE: FixturePerson[] = [SARAH, ALEX, MARIA, DANIEL, STALE, PRIVATE_PERSON];
+/**
+ * Birmingham & Herefordshire — clearly labelled demonstration people.
+ *
+ * They exist to prove the geography rules across a real hierarchy: a
+ * neighbourhood inside a city, and a city inside a county.
+ */
+
+/** Priya lives in King's Heath, which is inside Birmingham. */
+export const PRIYA = person("priya", "Priya (demonstration)", KINGS_HEATH, "King's Heath", {
+  capabilities: [capability("priya", "bicycle repair")],
+  availability: [{ startsAt: "2026-03-14T09:00:00.000Z", endsAt: "2026-03-14T17:00:00.000Z" }],
+  preferences: ["one_off_work", "helping_people"] as OpportunityPreference[],
+  contributions: ["skills", "tools"],
+  earningPreference: "either",
+});
+
+/** Owen is in Birmingham and says he covers the whole city. */
+export const OWEN = person("owen", "Owen (demonstration)", BIRMINGHAM, "Birmingham", {
+  capabilities: [capability("owen", "bicycle repair", { kind: "role", level: "years_of_it" })],
+  serviceAreaPlaceIds: [BIRMINGHAM],
+  availability: [{ startsAt: "2026-03-14T09:00:00.000Z", endsAt: "2026-03-14T17:00:00.000Z" }],
+  preferences: ["paid_work", "one_off_work"] as OpportunityPreference[],
+  contributions: ["skills"],
+  earningPreference: "wants_paid",
+});
+
+/** Ruth lives in Herefordshire but has never said she covers Hereford itself. */
+export const RUTH = person("ruth", "Ruth (demonstration)", HEREFORDSHIRE, "Herefordshire", {
+  capabilities: [capability("ruth", "hedge laying")],
+  serviceAreaPlaceIds: [],
+  preferences: ["one_off_work"] as OpportunityPreference[],
+  contributions: ["labour"],
+  earningPreference: "either",
+});
+
+/** A bicycle to fix in King's Heath. */
+export const KINGS_HEATH_BIKE_NEED = need("need-kings-heath-bike", {
+  creatorId: "demo-asker-bham",
+  category: "repair",
+  title: "A bicycle that needs the gears sorting",
+  intent: "help",
+  placeId: KINGS_HEATH,
+  placeText: "King's Heath, Birmingham",
+  requiredSkills: ["bicycle repair"],
+  startsAt: "2026-03-14T10:00:00.000Z",
+  endsAt: "2026-03-14T12:00:00.000Z",
+});
+
+/** A hedge in Hereford, the city inside the county Ruth lives in. */
+export const HEREFORD_HEDGE_NEED = need("need-hereford-hedge", {
+  creatorId: "demo-asker-hereford",
+  category: "gardening",
+  title: "An old hedge that wants laying properly",
+  intent: "help",
+  placeId: HEREFORD,
+  placeText: "Hereford",
+  requiredSkills: ["hedge laying"],
+});
+
+export const FIXTURE_PEOPLE: FixturePerson[] = [
+  SARAH,
+  ALEX,
+  MARIA,
+  DANIEL,
+  STALE,
+  PRIVATE_PERSON,
+  PRIYA,
+  OWEN,
+  RUTH,
+];
 
 function need(id: string, over: Partial<Need>): Need {
   return {
@@ -259,4 +332,6 @@ export const FIXTURE_NEEDS: Need[] = [
   SWAP_NEED,
   PRIVATE_NEED,
   THERAPY_NEED,
+  KINGS_HEATH_BIKE_NEED,
+  HEREFORD_HEDGE_NEED,
 ];
