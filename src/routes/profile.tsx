@@ -5,6 +5,7 @@ import { useSession } from "@/hooks/use-session";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPlaces } from "@/lib/places";
 import { CapabilityPanel } from "@/components/capability-panel";
+import { ProfilePhoto } from "@/components/profile-photo";
 
 const title = "Who you are — The Living World";
 const description =
@@ -101,6 +102,7 @@ function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [photoPath, setPhotoPath] = useState<string | null>(null);
   const [form, setForm] = useState({
     display_name: "",
     intro: "",
@@ -139,6 +141,7 @@ function ProfilePage() {
           wants_to_learn: (data.wants_to_learn ?? []).join(", "),
           discoverable: data.discoverable ?? false,
         });
+        setPhotoPath(data.photo_url ?? null);
       }
       setLoading(false);
     })();
@@ -254,10 +257,19 @@ function ProfilePage() {
                 className="focus-ink mt-1 w-full rounded-lg border border-border bg-background px-3 py-2"
               />
             </label>
-            <p className="text-xs text-muted-foreground">
-              A photograph goes here when you have one you actually took. We'd rather have an
-              empty space than an invented face.
-            </p>
+            {user ? (
+              <ProfilePhoto
+                userId={user.id}
+                displayName={form.display_name}
+                path={photoPath}
+                onChange={async (next) => {
+                  setPhotoPath(next);
+                  await supabase
+                    .from("profiles")
+                    .upsert({ id: user.id, photo_url: next, display_name: form.display_name });
+                }}
+              />
+            ) : null}
           </div>
 
           <div className="card-paper space-y-5 p-5">

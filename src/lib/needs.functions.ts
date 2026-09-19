@@ -24,6 +24,7 @@ import { rowToNeed, type Need, type NeedRow } from "./needs";
 import { rowToEntry, type ListingRow } from "./listings";
 import { findSupply, type PersonCandidate, type SupplyAnswer } from "./supply-engine";
 import { freshness } from "./capability-freshness";
+import { needGeography } from "./geo-scope";
 import type { JourneyContext, JourneyVisibility, JourneyStatus } from "./journey-context";
 
 export interface NeedDraft {
@@ -113,17 +114,41 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
     if (!needRow) return null;
     const need = rowToNeed(needRow as unknown as NeedRow);
 
-    // Cheap geographic prefilter: people whose home place or service area
-    // touches this need's place.
-    const placeIds = need.placeId ? [need.placeId] : [];
+    // The real geography of this need: the place itself, everywhere inside it,
+    // and the larger places it sits in (which only count for someone who has
+    // said they cover that area).
+    const { loadPlaceIndex } = await import("./place-index.server");
+    const geo = needGeography(await loadPlaceIndex(supabase), need.placeId);
+
+    // People whose home place is in or under the need's place, or whose stated
+    // service area covers it. Bounded on both sides.
+    const localIds = geo.localPlaceIds.slice(0, 400);
+    const scopeIds = geo.serviceScopeIds.slice(0, 400);
     const userIds = new Set<string>();
-    if (placeIds.length) {
+    if (localIds.length) {
       const [{ data: locals }, { data: areas }] = await Promise.all([
-        supabase.from("profiles").select("id").eq("discoverable", true).in("place_id", placeIds),
-        supabase.from("service_areas").select("user_id").in("place_id", placeIds),
+        supabase.from("profiles").select("id").eq("discoverable", true).in("place_id", localIds),
+        supabase
+          .from("service_areas")
+          .select("user_id")
+          .neq("relation", "travelling_through")
+          .in("place_id", scopeIds)
+          .limit(400),
       ]);
       for (const p of locals ?? []) userIds.add(p.id);
       for (const a of areas ?? []) userIds.add(a.user_id);
+    }
+
+    // Anyone either side of a block never appears to the other.
+    if (userIds.size) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: blocks } = await supabaseAdmin
+        .from("user_blocks")
+        .select("blocker_id, blocked_id")
+        .or(`blocker_id.eq.${need.creatorId},blocked_id.eq.${need.creatorId}`);
+      for (const block of blocks ?? []) {
+        userIds.delete(block.blocker_id === need.creatorId ? block.blocked_id : block.blocker_id);
+      }
     }
 
     const people: PersonCandidate[] = [];
@@ -259,7 +284,7 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
       .eq("status", "published")
       .neq("data_quality", "expired")
       .limit(150);
-    if (need.placeId) listingQuery = listingQuery.eq("place_id", need.placeId);
+    if (localIds.length) listingQuery = listingQuery.in("place_id", localIds);
     const { data: listingRows } = await listingQuery;
     const entries = ((listingRows ?? []) as unknown as ListingRow[]).map((r) => rowToEntry(r));
 
@@ -295,8 +320,30 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
       });
     }
 
-    return findSupply({ need, people, entries });
+    // Profile photographs live in private storage, so a short-lived link is
+    // made for the few people actually being shown.
+    await signPhotos(supabase, people);
+
+    return findSupply({ need, people, entries, geography: geo });
   });
+
+/** Turn stored photo paths into short-lived links. Full URLs are left alone. */
+async function signPhotos(
+  supabase: ReturnType<typeof import("./supabase-public.server").publicServerClient>,
+  people: PersonCandidate[],
+): Promise<void> {
+  const paths = people
+    .map((person) => person.photoUrl)
+    .filter((value): value is string => Boolean(value) && !value!.startsWith("http"));
+  if (!paths.length) return;
+  const { data } = await supabase.storage.from("profile-photos").createSignedUrls(paths, 3600);
+  const signed = new Map((data ?? []).map((item) => [item.path ?? "", item.signedUrl]));
+  for (const person of people) {
+    if (person.photoUrl && !person.photoUrl.startsWith("http")) {
+      person.photoUrl = signed.get(person.photoUrl) ?? null;
+    }
+  }
+}
 
 /**
  * The same evidence, read the other way round: what could I help with?
@@ -328,18 +375,29 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
       .filter((a) => a.relation === "travelling_through")
       .map((a) => a.place_id);
 
-    const placeIds = [
+    const stated = [
       ...new Set(
         [profile?.place_id, ...serviceAreaPlaceIds, ...travellingThroughPlaceIds].filter(Boolean),
       ),
     ] as string[];
-    if (!placeIds.length) return [];
+    if (!stated.length) return [];
 
+    // Somewhere you said you are or cover includes everywhere inside it, so a
+    // need in a village inside your county is still yours to see.
+    const { loadPlaceIndex } = await import("./place-index.server");
+    const { descendantIdsOf } = await import("./places");
+    const index = await loadPlaceIndex(supabase);
+    const placeIds = [...new Set(stated.flatMap((id) => descendantIdsOf(index, id)))].slice(0, 400);
+    const geographies = new Map<string, ReturnType<typeof needGeography>>();
+
+    // A block works both ways, whoever set it.
     const { data: blockRows } = await supabase
       .from("user_blocks")
-      .select("blocked_id")
-      .eq("blocker_id", userId);
-    const blockedIds = new Set((blockRows ?? []).map((row) => row.blocked_id));
+      .select("blocker_id, blocked_id")
+      .or(`blocker_id.eq.${userId},blocked_id.eq.${userId}`);
+    const blockedIds = new Set(
+      (blockRows ?? []).map((row) => (row.blocker_id === userId ? row.blocked_id : row.blocker_id)),
+    );
 
     const { data: needRows, error } = await supabase
       .from("needs")
@@ -352,7 +410,47 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
       .limit(60);
     if (error) throw error;
 
+    const { data: journeyRows } = await supabase
+      .from("journeys")
+      .select("*, journey_places(*)")
+      .eq("owner_id", userId)
+      .eq("status", "active")
+      .limit(20);
+    const journeys: JourneyContext[] = (journeyRows ?? []).map((journey) => ({
+      id: journey.id,
+      ownerId: journey.owner_id,
+      title: journey.title,
+      startsAt: journey.starts_at,
+      endsAt: journey.ends_at,
+      timezone: journey.timezone,
+      visibility: journey.visibility as JourneyVisibility,
+      opportunityOptIn: journey.opportunity_opt_in,
+      status: journey.status as JourneyStatus,
+      lastConfirmedAt: journey.last_confirmed_at,
+      expiresAt: journey.expires_at,
+      freshness: freshness({
+        lastConfirmedAt: journey.last_confirmed_at,
+        expiresAt: journey.expires_at,
+        kind: "availability",
+        now: new Date(),
+      }),
+      places: (journey.journey_places ?? []).map((place) => ({
+        placeId: place.place_id,
+        position: place.position,
+        arrivesAt: place.arrives_at,
+        departsAt: place.departs_at,
+      })),
+    }));
+
     return findOpportunitiesForPerson({
+      geographyFor: (need) => {
+        const key = need.placeId ?? "";
+        const existing = geographies.get(key);
+        if (existing) return existing;
+        const built = needGeography(index, need.placeId);
+        geographies.set(key, built);
+        return built;
+      },
       person: {
         id: userId,
         displayName: profile?.display_name || "You",
@@ -363,6 +461,7 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
         travellingThroughPlaceIds,
         availability: (windows ?? []).map((w) => ({ startsAt: w.starts_at, endsAt: w.ends_at })),
         preferences: (prefs ?? []).map((p) => p.preference as OpportunityPreference),
+        journeys,
         wantsToLearn: profile?.wants_to_learn ?? [],
         ...(profile?.photo_url ? { photoUrl: profile.photo_url } : {}),
       },
