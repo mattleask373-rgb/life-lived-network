@@ -76,8 +76,9 @@ function pick(
   priority: LayerId[],
   brief: JourneyBrief,
   used: Set<string>,
+  world: WorldEntry[],
 ): WorldEntry | undefined {
-  const pool = ENTRIES.filter((e) => e.band === band && !used.has(e.id));
+  const pool = world.filter((e) => e.band === band && !used.has(e.id));
   const scored = pool
     .map((e) => {
       let score = 0;
@@ -97,13 +98,14 @@ function pick(
 function buildShape(
   shape: (typeof SHAPES)[number],
   brief: JourneyBrief,
+  world: WorldEntry[],
 ): Journey {
   const used = new Set<string>();
   const steps: JourneyStep[] = [];
   const bands = BAND_ORDER.slice(0, Math.max(3, Math.min(5, brief.days + 2)));
 
   for (const { band, label } of bands) {
-    const entry = pick(band, shape.priority, brief, used);
+    const entry = pick(band, shape.priority, brief, used, world);
     if (!entry) continue;
     used.add(entry.id);
     steps.push({
@@ -133,8 +135,16 @@ function reason(entry: WorldEntry, brief: JourneyBrief): string {
   return "It fits the time and the place.";
 }
 
-export function planJourney(brief: JourneyBrief): Journey[] {
-  return SHAPES.map((shape) => buildShape(shape, brief))
+/**
+ * Journeys from whatever world is passed in — real listings included. Falls
+ * back to the demo place only when nothing else has loaded yet.
+ */
+export function planJourney(
+  brief: JourneyBrief,
+  world: WorldEntry[] = ENTRIES,
+): Journey[] {
+  const pool = world.length ? world : ENTRIES;
+  return SHAPES.map((shape) => buildShape(shape, brief, pool))
     .filter((j) => j.steps.length >= 2)
     .sort((a, b) => {
       const aFit = a.steps.filter((s) => brief.interests.includes(s.entry.layer)).length;
@@ -152,8 +162,13 @@ export interface HoursBrief {
 }
 
 /** "I have three hours." Returns a small handful, never a wall of options. */
-export function whatIsPossible(brief: HoursBrief): WorldEntry[] {
-  return ENTRIES.filter((e) => e.minutes > 0)
+export function whatIsPossible(
+  brief: HoursBrief,
+  world: WorldEntry[] = ENTRIES,
+): WorldEntry[] {
+  const pool = world.length ? world : ENTRIES;
+  return pool
+    .filter((e) => e.minutes > 0)
     .filter((e) => e.minutes <= brief.minutes + 30)
     .filter((e) => Math.max(0, e.cost) <= brief.spend)
     .filter((e) => (brief.outdoors ? e.outdoors : true))
