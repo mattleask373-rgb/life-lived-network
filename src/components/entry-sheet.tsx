@@ -4,12 +4,15 @@ import { duration, layerText, money } from "./layer-colour";
 
 export function EntrySheet({
   entry,
+  world = [],
   saved,
   onSave,
   onClose,
   onOpenEntry,
 }: {
   entry: WorldEntry;
+  /** The entries this screen is already showing; related things come from here. */
+  world?: WorldEntry[];
   saved: boolean;
   onSave: (id: string) => void;
   onClose: () => void;
