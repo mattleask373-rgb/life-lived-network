@@ -429,7 +429,7 @@ export type Database = {
           contact_note: string | null
           cost: number
           created_at: string
-          creator_id: string
+          creator_id: string | null
           currency: string
           data_quality: string
           details: string[]
@@ -471,7 +471,7 @@ export type Database = {
           contact_note?: string | null
           cost?: number
           created_at?: string
-          creator_id: string
+          creator_id?: string | null
           currency?: string
           data_quality?: string
           details?: string[]
@@ -513,7 +513,7 @@ export type Database = {
           contact_note?: string | null
           cost?: number
           created_at?: string
-          creator_id?: string
+          creator_id?: string | null
           currency?: string
           data_quality?: string
           details?: string[]
