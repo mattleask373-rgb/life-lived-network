@@ -10,15 +10,22 @@ import { DoSomethingToday } from "@/components/do-something-today";
 import { LayerIcon } from "@/components/layer-icon";
 import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { fetchWorldEntries } from "@/lib/listings";
+import { getOpenNeeds } from "@/lib/needs.functions";
 import { PLACE_FALLBACK } from "@/lib/places";
 import { useWorldContext } from "@/lib/world-context";
+import { LocalityQuestions } from "@/components/locality-questions";
+import { WhatsHappening } from "@/components/whats-happening";
+import { WhatsHere } from "@/components/whats-here";
+import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
 import {
   activitySnapshot,
   meaningfulVariety,
   type LayerId,
   type WorldEntry,
 } from "@/lib/world-data";
+
 
 const title = "The Living World — what's actually happening near you";
 const description =
