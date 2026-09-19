@@ -20,6 +20,7 @@ import { Route as MakeRouteImport } from './routes/make'
 import { Route as ModerationRouteImport } from './routes/moderation'
 import { Route as NeedRouteImport } from './routes/need'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as RoadTripRouteImport } from './routes/road-trip'
 import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as NeedIdRouteImport } from './routes/need.$id'
 
@@ -78,6 +79,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoadTripRoute = RoadTripRouteImport.update({
+  id: '/road-trip',
+  path: '/road-trip',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SourcesRoute = SourcesRouteImport.update({
   id: '/sources',
   path: '/sources',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/moderation': typeof ModerationRoute
   '/need': typeof NeedRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/road-trip': typeof RoadTripRoute
   '/sources': typeof SourcesRoute
   '/need/$id': typeof NeedIdRoute
 }
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/moderation': typeof ModerationRoute
   '/need': typeof NeedRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/road-trip': typeof RoadTripRoute
   '/sources': typeof SourcesRoute
   '/need/$id': typeof NeedIdRoute
 }
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/moderation': typeof ModerationRoute
   '/need': typeof NeedRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/road-trip': typeof RoadTripRoute
   '/sources': typeof SourcesRoute
   '/need/$id': typeof NeedIdRoute
 }
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/moderation'
     | '/need'
     | '/profile'
+    | '/road-trip'
     | '/sources'
     | '/need/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/moderation'
     | '/need'
     | '/profile'
+    | '/road-trip'
     | '/sources'
     | '/need/$id'
   id:
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/moderation'
     | '/need'
     | '/profile'
+    | '/road-trip'
     | '/sources'
     | '/need/$id'
   fileRoutesById: FileRoutesById
@@ -195,6 +207,7 @@ export interface RootRouteChildren {
   ModerationRoute: typeof ModerationRoute
   NeedRoute: typeof NeedRouteWithChildren
   ProfileRoute: typeof ProfileRoute
+  RoadTripRoute: typeof RoadTripRoute
   SourcesRoute: typeof SourcesRoute
 }
 
@@ -277,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/road-trip': {
+      id: '/road-trip'
+      path: '/road-trip'
+      fullPath: '/road-trip'
+      preLoaderRoute: typeof RoadTripRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sources': {
       id: '/sources'
       path: '/sources'
@@ -316,6 +336,7 @@ const rootRouteChildren: RootRouteChildren = {
   ModerationRoute: ModerationRoute,
   NeedRoute: NeedRouteWithChildren,
   ProfileRoute: ProfileRoute,
+  RoadTripRoute: RoadTripRoute,
   SourcesRoute: SourcesRoute,
 }
 export const routeTree = rootRouteImport

@@ -34,3 +34,24 @@
 - Reusable for any locality; no place-specific logic. Tests: src/lib/locality.test.ts.
 
 Blockers unchanged: Ticketmaster key absent; genuine Guildhall details not supplied.
+
+## Map exploration + road trips (Slices 1 and 2 of the map/journey plan — done)
+- The map now has a real viewport: zoom, drag, pinch-friendly, scale label,
+  "back to where you are", and grid clustering so a wide view says how much is
+  somewhere instead of stacking pins. `src/lib/map-view.ts` is pure and tested.
+- Viewport and locality are kept apart: moving the map never moves the person.
+  When the view settles over a known place, the map offers "Make this my area".
+- `/road-trip`: choose origin, destination, travel mode, date and interests;
+  corridor localities are worked out from the place index and answered by the
+  existing bounded world read. Grouped as before you set off / along your route /
+  a small detour / where you are heading, each card showing only reasons it can
+  prove. Tests: `src/lib/road-trip.test.ts`.
+- Routing is honest: no provider is connected, so straight-line distance is shown
+  and detour times are labelled unavailable rather than estimated.
+
+### Open (blocked, needs a decision or credentials)
+- Route provider (real distance, duration, polyline, detours): needs a chosen
+  provider and key. Slice 3 of the plan.
+- Public transport provider and journey legs: Slice 6, needs a key.
+- Adding stops to a saved journey, and car sharing from people's own journeys:
+  Slices 5 and 7, not started.

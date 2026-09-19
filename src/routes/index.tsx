@@ -14,6 +14,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { fetchWorldEntries } from "@/lib/listings";
 import { getOpenNeeds } from "@/lib/needs.functions";
 import { PLACE_FALLBACK } from "@/lib/places";
+import { placeInView, type MapView } from "@/lib/map-view";
 import { useWorldContext } from "@/lib/world-context";
 import { LocalityQuestions } from "@/components/locality-questions";
 import { WhatsHappening } from "@/components/whats-happening";
@@ -48,7 +49,10 @@ function Home() {
   const { has, toggle, ids } = useLifeList();
 
   // Where we are is shared application context, not a constant in this file.
-  const { place, ancestors, setPlaceSlug, loading } = useWorldContext();
+  const { place, ancestors, setPlaceSlug, loading, index } = useWorldContext();
+  // What the map is looking at. Separate from where we are: moving the map never
+  // moves the person, it only offers somewhere they could choose instead.
+  const [view, setView] = useState<MapView | null>(null);
 
   // The page asks for possibilities in a context; it never knows the source.
   const { data: world, isLoading: worldLoading } = useQuery({
@@ -174,6 +178,17 @@ function Home() {
               activeId={open?.id}
               onSelect={setOpen}
               centre={place ? { lat: place.lat, lng: place.lng } : null}
+              centreName={place?.name}
+              area={
+                index && view
+                  ? (() => {
+                      const found = placeInView(index, view, place?.id ?? null);
+                      return found ? { name: found.name, slug: found.slug } : null;
+                    })()
+                  : null
+              }
+              onExploreArea={setPlaceSlug}
+              onViewChange={setView}
             />
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
