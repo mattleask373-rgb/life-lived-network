@@ -16,7 +16,12 @@ import {
   publicJourneyGardener,
   privateJourneyGardener,
   unrelatedEntry,
+  passingThroughOnly,
+  PLACE_BIRMINGHAM,
+  PLACE_KINGS_HEATH,
 } from "./fixtures/supply";
+import { buildPlaceIndex } from "./places";
+import { needGeography } from "./geo-scope";
 import { BAND_ORDER, findSupply, type SupplyBand } from "./supply-engine";
 
 const bands = (results: { band: SupplyBand }[]) => results.map((r) => r.band);
@@ -157,5 +162,93 @@ describe("supply engine", () => {
     expect(answer.results).toHaveLength(0);
     expect(answer.diagnostics.excludedByFreshness).toBe(1);
     expect(answer.diagnostics.excludedByQualification).toBe(1);
+  });
+});
+
+describe("real geography, not exact place ids", () => {
+  const INDEX = buildPlaceIndex([
+    {
+      id: "uk",
+      parent_id: null,
+      kind: "country",
+      name: "uk",
+      slug: "uk",
+      country_code: "GB",
+      timezone: "Europe/London",
+      currency: "GBP",
+      lat: null,
+      lng: null,
+      blurb: "",
+    },
+    {
+      id: PLACE_BIRMINGHAM,
+      parent_id: "uk",
+      kind: "city",
+      name: "Birmingham",
+      slug: "birmingham",
+      country_code: "GB",
+      timezone: "Europe/London",
+      currency: "GBP",
+      lat: null,
+      lng: null,
+      blurb: "",
+    },
+    {
+      id: PLACE_KINGS_HEATH,
+      parent_id: PLACE_BIRMINGHAM,
+      kind: "neighbourhood",
+      name: "King's Heath",
+      slug: "kings-heath",
+      country_code: "GB",
+      timezone: "Europe/London",
+      currency: "GBP",
+      lat: null,
+      lng: null,
+      blurb: "",
+    },
+  ]);
+  const geography = needGeography(INDEX, PLACE_KINGS_HEATH);
+
+  it("includes someone who says they cover the whole city", () => {
+    const cityWide = {
+      ...openGardener,
+      id: "city-wide",
+      placeId: PLACE_BIRMINGHAM,
+      serviceAreaPlaceIds: [PLACE_BIRMINGHAM],
+    };
+    const answer = findSupply({
+      need: gardenerNeed,
+      people: [cityWide],
+      entries: [],
+      geography,
+    });
+    expect(answer.results.length).toBe(1);
+    expect(answer.results[0]?.why.join(" ")).toMatch(/area they said they cover/i);
+  });
+
+  it("does not assume someone living in the wider city works in the neighbourhood", () => {
+    const merelyNearby = {
+      ...openGardener,
+      id: "merely-nearby",
+      placeId: PLACE_BIRMINGHAM,
+      serviceAreaPlaceIds: [],
+    };
+    const answer = findSupply({
+      need: gardenerNeed,
+      people: [merelyNearby],
+      entries: [],
+      geography,
+    });
+    expect(answer.results).toEqual([]);
+  });
+
+  it("never treats ticking a place as passing through as a journey", () => {
+    const answer = findSupply({
+      need: gardenerNeed,
+      people: [passingThroughOnly],
+      entries: [],
+      geography,
+    });
+    expect(bands(answer.results)).not.toContain("journey");
   });
 });
