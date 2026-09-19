@@ -137,7 +137,11 @@ function SiteHeader() {
           The Living World
         </Link>
         <div className="flex items-center gap-5 overflow-x-auto whitespace-nowrap pb-1 text-sm sm:shrink-0 sm:pb-0">
-          <Link to="/" activeProps={{ className: "text-foreground" }} className="text-muted-foreground hover:text-foreground">
+          <Link
+            to="/"
+            activeProps={{ className: "text-foreground" }}
+            className="text-muted-foreground hover:text-foreground"
+          >
             Map
           </Link>
           <Link
