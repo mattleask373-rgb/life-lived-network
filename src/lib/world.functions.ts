@@ -176,7 +176,7 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
     // looked at, and only ever labelled as a demonstration. A locality with no
     // trial records stays quiet rather than borrowing someone else's.
     if (offset === 0) {
-      const slugs = new Set(context.placeSlugs ?? []);
+      const slugs = new Set(insideSlugs);
       if (slugs.size || fixturesAllowed()) {
         const { DEMO_ENTRIES } = await import("./fixtures/world-entries");
         const matching = slugs.size
