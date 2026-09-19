@@ -6,6 +6,7 @@ import { EntrySheet } from "@/components/entry-sheet";
 import { EntryCard } from "@/components/entry-card";
 import { ThreeHours } from "@/components/three-hours";
 import { DoSomethingToday } from "@/components/do-something-today";
+import { LayerIcon } from "@/components/layer-icon";
 import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWorldEntries } from "@/lib/listings";
@@ -93,10 +94,8 @@ function Home() {
           <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {snapshot.map(({ layer, count }) => (
               <li key={layer.id} className="rounded-lg border border-border bg-background p-3">
-                <p className="text-2xl">
-                  <span aria-hidden="true" className="mr-1">
-                    {layer.glyph}
-                  </span>
+                <p className="flex items-center gap-2 text-2xl">
+                  <LayerIcon icon={layer.icon} size={20} strokeWidth={1.6} />
                   {count}
                 </p>
                 <p className="text-sm text-muted-foreground">{layer.blurb}</p>

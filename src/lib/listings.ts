@@ -14,6 +14,7 @@ import {
   type LayerId,
   type TimeBand,
   type WorldEntry,
+  type SourcePhoto,
 } from "./world-data";
 
 export interface ListingRow {
@@ -87,7 +88,7 @@ function asSocial(v: string): WorldEntry["social"] {
   return v === "quiet" || v === "lively" ? v : "friendly";
 }
 
-export function rowToEntry(row: ListingRow, hostName?: string): WorldEntry {
+export function rowToEntry(row: ListingRow, hostName?: string, photos: SourcePhoto[] = []): WorldEntry {
   const quality = row.data_quality as DataQuality;
   return {
     id: row.id,
@@ -117,6 +118,7 @@ export function rowToEntry(row: ListingRow, hostName?: string): WorldEntry {
     quality,
     kind: row.kind,
     skills: row.skills,
+    ...(photos.length ? { photos: photos.slice(0, 6) } : {}),
   };
 }
 

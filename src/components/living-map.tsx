@@ -1,5 +1,6 @@
-import { LAYERS, type LayerId, type WorldEntry } from "@/lib/world-data";
+import { LAYERS, type WorldEntry } from "@/lib/world-data";
 import { layerBg } from "./layer-colour";
+import { LayerIcon } from "./layer-icon";
 
 interface Props {
   entries: WorldEntry[];
@@ -70,7 +71,10 @@ export function LivingMap({ entries, activeId, onSelect }: Props) {
                   layerBg[entry.layer]
                 } ${active ? "h-9 w-9 scale-110" : "h-7 w-7 hover:scale-110"}`}
               >
-                {glyph(entry.layer)}
+                 {(() => {
+                   const layer = LAYERS.find((item) => item.id === entry.layer);
+                   return layer ? <LayerIcon icon={layer.icon} size={active ? 17 : 14} strokeWidth={1.8} /> : null;
+                 })()}
               </span>
               <span className="h-2 w-px bg-ink/40" />
             </span>
@@ -79,8 +83,4 @@ export function LivingMap({ entries, activeId, onSelect }: Props) {
       })}
     </div>
   );
-}
-
-function glyph(layer: LayerId): string {
-  return LAYERS.find((l) => l.id === layer)?.glyph ?? "•";
 }
