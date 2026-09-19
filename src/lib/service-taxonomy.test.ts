@@ -34,6 +34,12 @@ function entry(overrides: Partial<WorldEntry> = {}): WorldEntry {
   };
 }
 
+/** The same record, offered by nobody — not a service at all. */
+function notAService(overrides: Partial<WorldEntry> = {}): WorldEntry {
+  const { organisation: _unused, ...rest } = entry(overrides);
+  return rest as WorldEntry;
+}
+
 describe("service taxonomy", () => {
   it("has unique, url-safe category slugs", () => {
     const slugs = SERVICE_CATEGORIES.map((c) => c.slug);
@@ -79,7 +85,7 @@ describe("service taxonomy", () => {
       entry({ id: "b", title: "Osteopathic check-up" }),
       entry({ id: "c", title: "Yoga class", quality: "expired" }),
       entry({ id: "d", title: "Plumbing callout", cancellation: "cancelled" }),
-      { ...entry({ id: "e", title: "Gardening hour" }), organisation: undefined },
+      notAService({ id: "e", title: "Gardening hour" }),
     ]);
     const slugs = present.map((p) => p.category.slug);
     expect(slugs).toContain("osteopathy");
