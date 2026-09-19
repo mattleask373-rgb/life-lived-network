@@ -255,23 +255,28 @@ function MakePage() {
                 <input
                   value={form.place}
                   onChange={(e) => setForm({ ...form, place: e.target.value })}
-                  placeholder="Tasca do Mário"
+                  placeholder="The name of the café, hall, farm or park"
                   className={input}
                 />
               </label>
               <label className="block text-sm">
-                <span className="text-muted-foreground">Which part of the city</span>
+                <span className="text-muted-foreground">
+                  Which locality{path ? ` (inside ${path})` : ""}
+                </span>
                 <select
-                  value={form.area}
-                  onChange={(e) => setForm({ ...form, area: e.target.value })}
+                  value={areaId || (place?.id ?? "")}
+                  onChange={(e) => setAreaId(e.target.value)}
                   className={input}
                 >
-                  {AREAS.map((a) => (
-                    <option key={a.name} value={a.name}>
-                      {a.name}
+                  {options.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.name}
                     </option>
                   ))}
                 </select>
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Somewhere else? Change where you are at the top of this page.
+                </span>
               </label>
               <label className="block text-sm">
                 <span className="text-muted-foreground">When, in words</span>

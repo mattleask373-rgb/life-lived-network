@@ -40,8 +40,8 @@ function JourneyPage() {
       <div className="mx-auto max-w-3xl px-4 pt-8 pb-20 sm:px-6">
         <h1 className="text-3xl sm:text-4xl">What could your journey become?</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Nothing here is invented. Every step below is something a real person in Lisbon has
-          actually offered, and anything unchecked is marked as such.
+          Nothing here is invented. Every step below is something someone has actually offered
+          where you are, anything unchecked is marked as such, and demonstration records say so.
         </p>
 
         <section className="card-paper mt-6 p-5">
