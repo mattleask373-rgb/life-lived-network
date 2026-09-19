@@ -3,6 +3,7 @@ import {
   isModerationDecision,
   isValidResolution,
   restrictsPerson,
+  storedStatusFor,
   rowToReport,
   type ReportRow,
 } from "./moderation";
@@ -16,7 +17,7 @@ function row(extra: Partial<ReportRow> = {}): ReportRow {
     subject_id: "request-1",
     reason: "safety",
     note: "Asked me to meet somewhere odd.",
-    status: "open",
+    status: "submitted",
     created_at: "2026-09-19T10:00:00.000Z",
     reviewed_at: null,
     reviewed_by: null,
@@ -60,13 +61,18 @@ describe("a report is not a verdict", () => {
   it("restricts someone only on that specific recorded outcome", () => {
     const report = rowToReport(
       row({
-        status: "dismissed",
+        status: "resolved",
         reviewed_at: "2026-09-19T12:00:00.000Z",
         reviewed_by: "moderator",
         resolution: "account_restricted",
       }),
     );
     expect(restrictsPerson(report)).toBe(true);
+  });
+
+  it("files a decision in the right stored state", () => {
+    expect(storedStatusFor("no_action")).toBe("dismissed");
+    expect(storedStatusFor("content_removed")).toBe("resolved");
   });
 
   it("accepts only the resolutions it knows about", () => {
