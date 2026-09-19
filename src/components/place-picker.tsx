@@ -106,8 +106,14 @@ export function PlacePicker() {
                   <Chip key={c.id} onClick={() => choose(c)} label={c.name} />
                 ))}
               </div>
+              {children.length > 40 ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {children.length - 40} more inside here — search by name to reach them.
+                </p>
+              ) : null}
             </div>
           ) : null}
+
         </div>
       ) : null}
     </div>
