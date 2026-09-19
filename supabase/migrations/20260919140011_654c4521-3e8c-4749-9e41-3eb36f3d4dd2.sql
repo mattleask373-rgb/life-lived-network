@@ -1,0 +1,2 @@
+ALTER TABLE public.listings ADD COLUMN IF NOT EXISTS service_category text;
+CREATE INDEX IF NOT EXISTS listings_service_category_idx ON public.listings (service_category) WHERE service_category IS NOT NULL;

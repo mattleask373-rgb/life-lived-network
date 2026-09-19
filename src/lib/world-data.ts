@@ -94,6 +94,12 @@ export interface WorldEntry {
   cancellation?: "" | "cancelled" | "postponed";
 
   // ---- When the activity is a service somebody provides ---------------------
+  /**
+   * A shared service category slug, when whoever owns the record declared one.
+   * Absent is normal: the record's own words can still place it. See
+   * `service-taxonomy.ts`.
+   */
+  serviceCategory?: string;
   /** The practice, clinic, studio, venue or business offering it. */
   organisation?: string;
   /** What is known about the practitioner or provider. Never invented. */

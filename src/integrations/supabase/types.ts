@@ -457,6 +457,7 @@ export type Database = {
           provider_note: string
           qualification_note: string
           recurrence: string
+          service_category: string | null
           skills: string[]
           social: string
           starts_at: string | null
@@ -505,6 +506,7 @@ export type Database = {
           provider_note?: string
           qualification_note?: string
           recurrence?: string
+          service_category?: string | null
           skills?: string[]
           social?: string
           starts_at?: string | null
@@ -553,6 +555,7 @@ export type Database = {
           provider_note?: string
           qualification_note?: string
           recurrence?: string
+          service_category?: string | null
           skills?: string[]
           social?: string
           starts_at?: string | null
