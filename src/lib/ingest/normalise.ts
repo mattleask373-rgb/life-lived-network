@@ -28,8 +28,13 @@ export function plainText(value: unknown, max = MAX_TEXT): string {
     .replace(/&#39;/gi, "'")
     .replace(/&lt;/gi, "<")
     .replace(/&gt;/gi, ">");
-  // eslint-disable-next-line no-control-regex
-  const clean = decoded.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+
+  const clean = decoded
+    // Outside text can carry control characters. Stripping them is the point.
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   return clean.slice(0, max);
 }
 
@@ -111,7 +116,11 @@ function dayKey(date: Date, timeZone: string): string {
 }
 
 /** How a person would say when this is, in the place's own clock. */
-export function whenWording(startsAt: string, endsAt: string | null | undefined, timezone: string): string {
+export function whenWording(
+  startsAt: string,
+  endsAt: string | null | undefined,
+  timezone: string,
+): string {
   const start = new Date(startsAt);
   const options: Intl.DateTimeFormatOptions = {
     timeZone: timezone || "Europe/London",
@@ -145,7 +154,10 @@ export function whenWording(startsAt: string, endsAt: string | null | undefined,
 }
 
 /** Pictures we are actually allowed to show, with their credit kept. */
-export function usableImages(images: SourceImage[] | undefined, storeImages: boolean): SourceImage[] {
+export function usableImages(
+  images: SourceImage[] | undefined,
+  storeImages: boolean,
+): SourceImage[] {
   if (!images?.length) return [];
   return images
     .filter((image) => image.mayDisplay && storeImages)
@@ -195,7 +207,7 @@ export function normaliseEvent(raw: SourceEvent): SourceEvent | null {
     sourceUrl,
     ...(raw.ticketUrl ? { ticketUrl: safeUrl(raw.ticketUrl) } : {}),
     cost: typeof raw.cost === "number" && Number.isFinite(raw.cost) ? Math.max(raw.cost, 0) : null,
-    currency: /^[A-Z]{3}$/.test(raw.currency ?? "") ? raw.currency : "GBP",
+    currency: /^[A-Z]{3}$/.test(raw.currency ?? "") ? (raw.currency as string) : "GBP",
     ...(raw.images ? { images: raw.images } : {}),
     state:
       raw.state === "cancelled" || raw.state === "postponed" || raw.state === "removed"

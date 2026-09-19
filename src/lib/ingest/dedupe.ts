@@ -67,7 +67,9 @@ export function sameEvent(
   }
 
   const samePlace =
-    a.placeId && b.placeId ? a.placeId === b.placeId : placeKey(a) !== "" && placeKey(a) === placeKey(b);
+    a.placeId && b.placeId
+      ? a.placeId === b.placeId
+      : placeKey(a) !== "" && placeKey(a) === placeKey(b);
   if (!samePlace) return { same: false, reason: "Different venue or locality" };
 
   const keyA = titleKey(a.title);
@@ -105,7 +107,7 @@ export function payloadHash(value: unknown): string {
   let h2 = 0x01000193;
   for (let i = 0; i < text.length; i += 1) {
     const code = text.charCodeAt(i);
-    h1 = (h1 ^ code) * 16777619 >>> 0;
+    h1 = ((h1 ^ code) * 16777619) >>> 0;
     h2 = (h2 + code * (i + 1)) >>> 0;
   }
   return `${h1.toString(16)}${h2.toString(16)}`;

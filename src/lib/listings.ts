@@ -19,7 +19,8 @@ import {
 
 export interface ListingRow {
   id: string;
-  creator_id: string;
+  /** Null only for activity that came from an outside source; nobody here owns it. */
+  creator_id: string | null;
   kind: string;
   layer: string;
   title: string;
@@ -46,6 +47,17 @@ export interface ListingRow {
   accessibility: string | null;
   status: string;
   data_quality: string;
+  // Event facts. Empty or null on anything that is not an event.
+  starts_at?: string | null;
+  ends_at?: string | null;
+  timezone?: string;
+  recurrence?: string;
+  organiser?: string;
+  ticket_url?: string;
+  cancellation?: string;
+  imported_at?: string | null;
+  last_checked_at?: string | null;
+  origin?: string;
 }
 
 /** What someone can make happen. Each maps onto one map layer by default. */
@@ -122,8 +134,13 @@ export function rowToEntry(
   row: ListingRow,
   hostName?: string,
   photos: SourcePhoto[] = [],
+  provenance?: { sourceName: string; sourceUrl: string },
 ): WorldEntry {
   const quality = row.data_quality as DataQuality;
+  const origin = (
+    row.origin === "source" || row.origin === "confirmed" ? row.origin : "resident"
+  ) as "resident" | "source" | "confirmed";
+  const fromSource = origin !== "resident";
   return {
     id: row.id,
     placeId: row.place_id,
@@ -148,15 +165,31 @@ export function rowToEntry(
       ...(row.contact_note ? [row.contact_note] : []),
     ],
     ...(row.give ? { give: row.give } : {}),
-    host: hostName ? `${hostName}, posted this themselves` : "Posted by someone here",
+    host: fromSource
+      ? `Listed by ${provenance?.sourceName || "an outside source"}`
+      : hostName
+        ? `${hostName}, posted this themselves`
+        : "Posted by someone here",
     verified: quality === "verified",
     social: asSocial(row.social),
     outdoors: row.outdoors,
-    community: true,
+    // Only a real person's posting counts as community activity.
+    community: !fromSource,
     quality,
     kind: row.kind,
     skills: row.skills,
     ...(photos.length ? { photos: photos.slice(0, 6) } : {}),
+    origin,
+    ...(provenance?.sourceName ? { sourceName: provenance.sourceName } : {}),
+    ...(provenance?.sourceUrl ? { sourceUrl: provenance.sourceUrl } : {}),
+    ...(row.ticket_url ? { ticketUrl: row.ticket_url } : {}),
+    ...(row.organiser ? { organiser: row.organiser } : {}),
+    ...(row.starts_at ? { startsAt: row.starts_at } : {}),
+    ...(row.ends_at ? { endsAt: row.ends_at } : {}),
+    ...(row.timezone ? { timezone: row.timezone } : {}),
+    ...(row.cancellation === "cancelled" || row.cancellation === "postponed"
+      ? { cancellation: row.cancellation }
+      : {}),
   };
 }
 

@@ -46,7 +46,10 @@ export function CapabilityPanel() {
   const areas = useMutation({ mutationFn: useServerFn(setServiceAreas), onSuccess: refresh });
   const prefs = useMutation({ mutationFn: useServerFn(setPreferences), onSuccess: refresh });
   const addWindow = useMutation({ mutationFn: useServerFn(addAvailability), onSuccess: refresh });
-  const dropWindow = useMutation({ mutationFn: useServerFn(removeAvailability), onSuccess: refresh });
+  const dropWindow = useMutation({
+    mutationFn: useServerFn(removeAvailability),
+    onSuccess: refresh,
+  });
   const gives = useMutation({ mutationFn: useServerFn(setContributions), onSuccess: refresh });
   const stillTrue = useMutation({ mutationFn: useServerFn(confirmCapability), onSuccess: refresh });
   const visibility = useMutation({
@@ -92,9 +95,11 @@ export function CapabilityPanel() {
                   {VERIFICATION_LABEL[c.verification as VerificationState] ?? "Not checked"}
                 </span>
                 <span className="block text-xs text-muted-foreground">
-                  {FRESHNESS_LABEL[
-                    freshness({ lastConfirmedAt: c.lastConfirmedAt, kind: "capability", now })
-                  ]}
+                  {
+                    FRESHNESS_LABEL[
+                      freshness({ lastConfirmedAt: c.lastConfirmedAt, kind: "capability", now })
+                    ]
+                  }
                   {c.kind === "qualification" && c.issuingBody ? ` · ${c.issuingBody}` : ""}
                   {c.kind === "experience" && c.organisation ? ` · ${c.organisation}` : ""}
                   {c.kind === "experience" && c.yearsExperience

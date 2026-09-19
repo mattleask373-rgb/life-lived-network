@@ -101,8 +101,8 @@ export function ThreeHours({
           <div className="mt-5 rounded-lg border border-border bg-muted p-4 text-sm">
             <p className="font-medium">It's quiet in that shape today.</p>
             <p className="mt-1 text-muted-foreground">
-              Nothing here matches, and we won't invent something. Loosen the time or the
-              spend — or make something happen yourself.
+              Nothing here matches, and we won't invent something. Loosen the time or the spend — or
+              make something happen yourself.
             </p>
           </div>
         )
