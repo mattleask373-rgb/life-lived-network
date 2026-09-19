@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPlaces } from "@/lib/places";
+import { CapabilityPanel } from "@/components/capability-panel";
 
 const title = "Who you are — The Living World";
 const description =
