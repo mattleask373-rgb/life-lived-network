@@ -14,7 +14,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-import { isValidResolution, rowToReport, type Report, type ReportRow } from "./moderation";
+import {
+  isValidResolution,
+  rowToReport,
+  storedStatusFor,
+  type Report,
+  type ReportRow,
+} from "./moderation";
 
 const MAX_LIST = 100;
 const MAX_NOTE = 1000;
@@ -144,7 +150,7 @@ export const recordReportReview = createServerFn({ method: "POST" })
     const { data: row, error } = await context.supabase
       .from("content_reports")
       .update({
-        status: reviewed ? "reviewed" : "open",
+        status: reviewed ? storedStatusFor(data.resolution) : "submitted",
         resolution: reviewed ? data.resolution : "",
         review_note: (data.reviewNote ?? "").trim().slice(0, MAX_NOTE),
         reviewed_at: reviewed ? new Date().toISOString() : null,
