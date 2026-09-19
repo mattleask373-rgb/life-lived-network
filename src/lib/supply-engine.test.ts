@@ -8,10 +8,13 @@ import {
   freeHelpEntry,
   gardenerNeed,
   gardenerOfferEntry,
+  gardeningWorkshopEntry,
   latentGardener,
   openGardener,
   swappingGardener,
   travellingGardener,
+  publicJourneyGardener,
+  privateJourneyGardener,
   unrelatedEntry,
 } from "./fixtures/supply";
 import { BAND_ORDER, findSupply, type SupplyBand } from "./supply-engine";
@@ -42,6 +45,31 @@ describe("supply engine", () => {
     expect(bands(answer.results)).toContain("journey");
     const journey = answer.results.find((r) => r.band === "journey");
     expect(journey?.caveat).toMatch(/not their live location/);
+  });
+
+  it("requires public opted-in journey dates to overlap", () => {
+    const answer = findSupply({ need: gardenerNeed, people: [publicJourneyGardener, privateJourneyGardener], entries: [] });
+    expect(answer.results.filter((result) => result.supplyType === "JOURNEY")).toHaveLength(1);
+    expect(answer.results.find((result) => result.supplyType === "JOURNEY")?.signals.map((signal) => signal.reason)).toContain("journey time overlap");
+  });
+
+  it("suppresses reviewed-reported supply", () => {
+    const answer = findSupply({ need: gardenerNeed, people: [{ ...openGardener, discoveryStatus: "REPORTED" }], entries: [] });
+    expect(answer.results).toHaveLength(0);
+    expect(answer.diagnostics.excludedByStatus).toBe(1);
+  });
+
+  it("offers a genuinely related possibility in what else", () => {
+    const answer = findSupply({ need: gardenerNeed, people: [], entries: [gardeningWorkshopEntry] });
+    expect(answer.results.map((result) => result.supplyType)).toContain("RELATED");
+  });
+
+  it("returns canonical explainable metadata", () => {
+    const result = findSupply({ need: gardenerNeed, people: [openGardener], entries: [] }).results[0];
+    expect(result?.supplyType).toBe("LATENT");
+    expect(result?.confidence.basis.length).toBeGreaterThan(0);
+    expect(result?.trust.verification).toBe("self_stated");
+    expect(result?.provenance.origin).toBe("person");
   });
 
   it("offers a swap only when the person said they'd swap", () => {

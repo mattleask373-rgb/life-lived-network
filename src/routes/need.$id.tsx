@@ -261,6 +261,9 @@ function Band({
                   : "The stated constraints line up."}
               </p>
             ) : null}
+            <p className="mt-2 text-xs text-muted-foreground">
+              {r.trust.label} · {r.freshness === "unknown" ? "Freshness not known" : r.freshness.replaceAll("_", " ")}
+            </p>
             {canInvite && r.personId ? <Invite needId={needId} personId={r.personId} /> : null}
           </li>
         ))}
