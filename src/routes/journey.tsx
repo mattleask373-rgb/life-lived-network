@@ -35,11 +35,11 @@ function JourneyPage() {
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle } = useLifeList();
   // The journey is built from wherever the person is looking.
-  const { place, placeIds, placeSlugs } = useWorldContext();
+  const { place } = useWorldContext();
   const { data: world } = useQuery({
-    queryKey: ["world", place?.id ?? null, placeIds.length],
+    queryKey: ["world", place?.id ?? null],
     enabled: Boolean(place),
-    queryFn: () => fetchWorldEntries({ placeId: place?.id ?? null, placeIds, placeSlugs }),
+    queryFn: () => fetchWorldEntries({ placeId: place?.id ?? null }),
   });
 
   return (
@@ -47,8 +47,8 @@ function JourneyPage() {
       <div className="mx-auto max-w-3xl px-4 pt-8 pb-20 sm:px-6">
         <h1 className="text-3xl sm:text-4xl">What could your journey become?</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Nothing here is invented. Every step below is something someone has actually offered
-          where you are, anything unchecked is marked as such, and demonstration records say so.
+          Nothing here is invented. Every step below is something someone has actually offered where
+          you are, anything unchecked is marked as such, and demonstration records say so.
         </p>
 
         <section className="card-paper mt-6 p-5">
@@ -140,8 +140,7 @@ function JourneyPage() {
                           {s.entry.title}
                         </span>
                         <span className="block text-sm text-muted-foreground">
-                          {s.entry.place} · {duration(s.entry.minutes)} ·{" "}
-                          {money(s.entry.cost)}
+                          {s.entry.place} · {duration(s.entry.minutes)} · {money(s.entry.cost)}
                         </span>
                       </button>
                       <p className="mt-1 text-sm text-foreground/75 italic">{s.why}</p>

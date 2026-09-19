@@ -387,7 +387,13 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
     const { loadPlaceIndex } = await import("./place-index.server");
     const { descendantIdsOf } = await import("./places");
     const index = await loadPlaceIndex(supabase);
-    const placeIds = [...new Set(stated.flatMap((id) => descendantIdsOf(index, id)))].slice(0, 400);
+    const placeIds = [...new Set(stated.flatMap((id) => descendantIdsOf(index, id)))];
+    // Somebody who covers a whole nation names more localities than belong in
+    // one filter. Filtering by a slice of them would hide real needs inside the
+    // area they said they cover, so at that width the locality filter is
+    // dropped instead — the row limit below still bounds the read.
+    const wideArea = placeIds.length > 400;
+
     const geographies = new Map<string, ReturnType<typeof needGeography>>();
 
     // A block works both ways, whoever set it.
@@ -399,15 +405,16 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
       (blockRows ?? []).map((row) => (row.blocker_id === userId ? row.blocked_id : row.blocker_id)),
     );
 
-    const { data: needRows, error } = await supabase
+    let needQuery = supabase
       .from("needs")
       .select("*")
       .eq("status", "open")
       .in("visibility", ["public", "local_discovery"])
-      .in("place_id", placeIds)
       .neq("creator_id", userId)
       .order("created_at", { ascending: false })
       .limit(60);
+    if (!wideArea) needQuery = needQuery.in("place_id", placeIds);
+    const { data: needRows, error } = await needQuery;
     if (error) throw error;
 
     const { data: journeyRows } = await supabase

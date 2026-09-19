@@ -42,18 +42,15 @@ function Home() {
   const { has, toggle, ids } = useLifeList();
 
   // Where we are is shared application context, not a constant in this file.
-  const { place, ancestors, placeIds, placeSlugs, loading } = useWorldContext();
+  const { place, ancestors, setPlaceSlug, loading } = useWorldContext();
 
   // The page asks for possibilities in a context; it never knows the source.
   const { data: world, isLoading: worldLoading } = useQuery({
-    queryKey: ["world", place?.id ?? null, placeIds.length],
+    queryKey: ["world", place?.id ?? null],
     enabled: Boolean(place),
     queryFn: () =>
-      fetchWorldEntries({
-        placeId: place?.id ?? null,
-        placeIds,
-        placeSlugs,
-      }),
+      // Only where we are travels; the hierarchy is expanded behind the server.
+      fetchWorldEntries({ placeId: place?.id ?? null }),
   });
   const all = world ?? [];
   const placeName = place?.name ?? PLACE_FALLBACK.name;
@@ -118,6 +115,21 @@ function Home() {
               something. Look at somewhere wider — a county or a country — or put the first real
               thing here yourself.
             </p>
+            {ancestors.length ? (
+              <div className="mt-4 flex flex-wrap items-baseline gap-2">
+                <span className="text-sm text-muted-foreground">Step out to</span>
+                {ancestors.slice(0, 3).map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => setPlaceSlug(a.slug)}
+                    className="focus-ink rounded-full border border-border bg-background px-3 py-1 text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    {a.name}
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <Link
               to="/make"
               className="focus-ink mt-4 inline-flex rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"

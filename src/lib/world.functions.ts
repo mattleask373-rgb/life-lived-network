@@ -34,6 +34,21 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
     const { fixturesAllowed } = await import("./data/fixtures-policy.server");
     const supabase = publicServerClient();
 
+    // The hierarchy is expanded here, not in the browser. A nation can contain
+    // thousands of localities, and naming them all in the request would make
+    // the request itself the bottleneck; the browser only says where it is.
+    let insideIds = context.placeIds ?? [];
+    let insideSlugs = context.placeSlugs ?? [];
+    if (context.placeId && !insideIds.length) {
+      const { loadPlaceIndex } = await import("./place-index.server");
+      const { descendantIdsOf } = await import("./places");
+      const index = await loadPlaceIndex(supabase);
+      insideIds = descendantIdsOf(index, context.placeId);
+      insideSlugs = insideIds
+        .map((id) => index.byId.get(id)?.slug)
+        .filter((slug): slug is string => Boolean(slug));
+    }
+
     let query = supabase
       .from("listings")
       .select("*")
@@ -49,9 +64,19 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       .range(offset, offset + limit - 1);
     // A locality, or a locality and everywhere inside it. Either way the read
     // stays bounded by the same page limit.
-    const localities = (context.placeIds ?? []).slice(0, 400);
-    if (localities.length) query = query.in("place_id", localities);
-    else if (context.placeId) query = query.eq("place_id", context.placeId);
+    //
+    // A very wide selection — a nation, or the whole world region — can name
+    // more localities than it is sensible to put in one filter. Rather than
+    // quietly filtering by an arbitrary slice of them, which would hide real
+    // activity, the locality filter is dropped: at that width it excludes
+    // almost nothing anyway, and the page limit still bounds the read.
+    const LOCALITY_FILTER_CAP = 400;
+    if (insideIds.length && insideIds.length <= LOCALITY_FILTER_CAP) {
+      query = query.in("place_id", insideIds);
+    } else if (!insideIds.length && context.placeId) {
+      query = query.eq("place_id", context.placeId);
+    }
+
 
     // An event that has finished is never upcoming. Anything without a start
     // time is unaffected by time filtering.
@@ -151,7 +176,7 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
     // looked at, and only ever labelled as a demonstration. A locality with no
     // trial records stays quiet rather than borrowing someone else's.
     if (offset === 0) {
-      const slugs = new Set(context.placeSlugs ?? []);
+      const slugs = new Set(insideSlugs);
       if (slugs.size || fixturesAllowed()) {
         const { DEMO_ENTRIES } = await import("./fixtures/world-entries");
         const matching = slugs.size
