@@ -254,10 +254,19 @@ function ProfilePage() {
                 className="focus-ink mt-1 w-full rounded-lg border border-border bg-background px-3 py-2"
               />
             </label>
-            <p className="text-xs text-muted-foreground">
-              A photograph goes here when you have one you actually took. We'd rather have an
-              empty space than an invented face.
-            </p>
+            {user ? (
+              <ProfilePhoto
+                userId={user.id}
+                displayName={form.display_name}
+                path={photoPath}
+                onChange={async (next) => {
+                  setPhotoPath(next);
+                  await supabase
+                    .from("profiles")
+                    .upsert({ id: user.id, photo_url: next, display_name: form.display_name });
+                }}
+              />
+            ) : null}
           </div>
 
           <div className="card-paper space-y-5 p-5">
