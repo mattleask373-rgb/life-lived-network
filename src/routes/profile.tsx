@@ -340,6 +340,8 @@ function ProfilePage() {
             </button>
           </div>
         </form>
+
+        <CapabilityPanel />
       </div>
     </main>
   );
