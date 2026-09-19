@@ -225,6 +225,15 @@ function Band({
       <ul className="mt-3 space-y-3">
         {rows.map((r) => (
           <li key={r.id} className="card-paper p-4">
+            {r.personId ? (
+              r.photoUrl ? (
+                <img src={r.photoUrl} alt="" className="mb-3 h-12 w-12 rounded-full object-cover" loading="lazy" />
+              ) : (
+                <div aria-hidden="true" className="mb-3 grid h-12 w-12 place-items-center rounded-full border border-border bg-muted text-sm text-muted-foreground">
+                  {r.title.trim().charAt(0).toUpperCase() || "?"}
+                </div>
+              )
+            ) : null}
             <p className="text-lg leading-tight">{r.title}</p>
             <p className="mt-1 text-sm">{r.what}</p>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -236,6 +245,13 @@ function Band({
                   <li key={line}>· {line}</li>
                 ))}
               </ul>
+            ) : null}
+            {r.evidence ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {r.evidence.unknown.length
+                  ? `Not known: ${r.evidence.unknown.join(", ")}.`
+                  : "The stated constraints line up."}
+              </p>
             ) : null}
             {canInvite && r.personId ? <Invite needId={needId} personId={r.personId} /> : null}
           </li>

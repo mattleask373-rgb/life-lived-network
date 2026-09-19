@@ -93,6 +93,7 @@ export interface SupplyResult {
   actions: SupplyAction[];
   /** Set when this result is a person, so the asker can invite them. */
   personId?: string;
+  photoUrl?: string | null;
   evidence?: MatchEvidence;
 }
 
@@ -260,6 +261,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
       push({
         id: `person-open-${person.id}`,
       personId: person.id,
+        photoUrl: person.photoUrl,
         band: "open_to_opportunities",
         title: person.displayName,
         what: `Says they can: ${capability.label}`,
@@ -291,6 +293,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
     push({
       id: `person-cap-${person.id}`,
       personId: person.id,
+      photoUrl: person.photoUrl,
       band: "local_capability",
       title: person.displayName,
       what: `Says they can: ${capability.label}`,
@@ -348,6 +351,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
     push({
       id: `exchange-${person.id}`,
       personId: person.id,
+      photoUrl: person.photoUrl,
       band: "skills_exchange",
       title: person.displayName,
       what: `Would swap: ${capability.label}`,
@@ -373,6 +377,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
     push({
       id: `journey-${person.id}`,
       personId: person.id,
+      photoUrl: person.photoUrl,
       band: "journey",
       title: person.displayName,
       what: `Travelling, and can ${capability.label}`,

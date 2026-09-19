@@ -94,7 +94,7 @@ export const ALEX = person("alex", "Alex", BRIGHTON, "Brighton", {
 /** Maria — a therapist. She says she's qualified. Nobody has checked it. */
 export const MARIA = person("maria", "Maria", LISBON, "Lisbon", {
   capabilities: [
-    capability("maria", "therapy", {
+    capability("maria", "therapy and counselling registration", {
       kind: "qualification",
       level: "professional",
       verification: "self_stated",
