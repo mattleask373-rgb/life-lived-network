@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { LAYERS, QUALITY_LABEL, relatedEntries, type WorldEntry } from "@/lib/world-data";
-import { duration, layerText, money } from "./layer-colour";
-import { eventDate } from "./entry-card";
+import { duration, eventDate, layerText, money } from "./layer-colour";
 import { LayerIcon } from "./layer-icon";
 
 export function EntrySheet({

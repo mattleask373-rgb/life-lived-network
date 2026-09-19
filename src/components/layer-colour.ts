@@ -51,3 +51,17 @@ export function duration(minutes: number): string {
   const h = minutes / 60;
   return `${Number.isInteger(h) ? h : h.toFixed(1)} hr`;
 }
+
+/** A real date and time, in the time zone where it is actually happening. */
+export function eventDate(startsAt: string, timezone?: string): string {
+  const at = new Date(startsAt);
+  if (Number.isNaN(at.getTime())) return "";
+  return at.toLocaleString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    ...(timezone ? { timeZone: timezone } : {}),
+  });
+}

@@ -1,20 +1,7 @@
 import { LAYERS, type WorldEntry } from "@/lib/world-data";
-import { duration, layerText, money } from "./layer-colour";
+import { duration, eventDate, layerText, money } from "./layer-colour";
 import { LayerIcon } from "./layer-icon";
 
-/** A real date and time, in the time zone where it is actually happening. */
-export function eventDate(startsAt: string, timezone?: string): string {
-  const at = new Date(startsAt);
-  if (Number.isNaN(at.getTime())) return "";
-  return at.toLocaleString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    ...(timezone ? { timeZone: timezone } : {}),
-  });
-}
 
 export function EntryCard({
   entry,
