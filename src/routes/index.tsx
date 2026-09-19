@@ -10,9 +10,15 @@ import { DoSomethingToday } from "@/components/do-something-today";
 import { LayerIcon } from "@/components/layer-icon";
 import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { fetchWorldEntries } from "@/lib/listings";
+import { getOpenNeeds } from "@/lib/needs.functions";
 import { PLACE_FALLBACK } from "@/lib/places";
 import { useWorldContext } from "@/lib/world-context";
+import { LocalityQuestions } from "@/components/locality-questions";
+import { WhatsHappening } from "@/components/whats-happening";
+import { WhatsHere } from "@/components/whats-here";
+import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
 import {
   activitySnapshot,
   meaningfulVariety,
@@ -52,7 +58,15 @@ function Home() {
       // Only where we are travels; the hierarchy is expanded behind the server.
       fetchWorldEntries({ placeId: place?.id ?? null }),
   });
-  const all = world ?? [];
+  // What people here have asked for. Counted honestly, never invented.
+  const openNeedsFn = useServerFn(getOpenNeeds);
+  const { data: openNeeds } = useQuery({
+    queryKey: ["open-needs", place?.id ?? null],
+    enabled: Boolean(place),
+    queryFn: () => openNeedsFn({ data: { placeId: place?.id ?? null } }),
+  });
+
+  const all = useMemo(() => world ?? [], [world]);
   const placeName = place?.name ?? PLACE_FALLBACK.name;
   const regionName = ancestors[0]?.name ?? "";
   const placeBlurb = place?.blurb || PLACE_FALLBACK.blurb;
@@ -62,10 +76,12 @@ function Home() {
     return layers.length ? filtered : meaningfulVariety(filtered);
   }, [all, layers]);
   const snapshot = useMemo(() => activitySnapshot(all), [all]);
-  const tonight = useMemo(
-    () => entries.filter((e) => e.band === "tonight" || e.band === "today").slice(0, 3),
-    [entries],
-  );
+  // The locality read as one thing: dated events, providers, offered hours.
+  const events = useMemo(() => upcomingEvents(all), [all]);
+  const groups = useMemo(() => providerGroups(all), [all]);
+  const given = useMemo(() => contributions(all), [all]);
+  const needCount = openNeeds?.length ?? 0;
+  const questions = useMemo(() => localityQuestions(all, needCount), [all, needCount]);
   const quiet = !worldLoading && !loading && all.length === 0;
 
   return (
@@ -82,6 +98,8 @@ function Home() {
         <div className="mt-5">
           <PlacePicker />
         </div>
+
+        <LocalityQuestions questions={questions} placeName={placeName} />
 
         {/* Something's happening here */}
         {snapshot.length ? (
@@ -163,27 +181,52 @@ function Home() {
           </p>
         </section>
 
-        {/* Soon */}
-        {tonight.length ? (
-          <section aria-labelledby="soon-heading" className="mt-10">
-            <h2 id="soon-heading" className="text-xl">
-              Happening soon
-            </h2>
+        {/* What's happening — everything with a real date, by day */}
+        <WhatsHappening events={events} placeName={placeName} onOpen={setOpen} />
+
+        {/* What's here — providers and their practices and services */}
+        <WhatsHere groups={groups} placeName={placeName} onOpen={setOpen} />
+
+        {/* Who's here, and what people have asked for */}
+        <section aria-labelledby="who" id="who" className="mt-10 scroll-mt-6">
+          <h2 id="who-heading" className="text-2xl">
+            Who's here, and what's needed
+          </h2>
+          {given.length ? (
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              {tonight.map((e) => (
-                <EntryCard key={e.id} entry={e} onOpen={setOpen} />
+              {given.slice(0, 6).map((e) => (
+                <EntryCard key={e.id} entry={e} onOpen={setOpen} note={e.give ?? ""} />
               ))}
             </div>
-          </section>
-        ) : !quiet ? (
-          <section className="card-paper mt-10 p-5">
-            <h2 className="text-xl">Nothing in the next day or two.</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              There are things here, just not imminently. Try a wider area, or put something on for
-              a day that's empty.
+          ) : (
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+              Nobody in {placeName} has offered an hour or a skill yet. You could be the first, and
+              it takes a minute.
             </p>
-          </section>
-        ) : null}
+          )}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link
+              to="/need"
+              className="focus-ink rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
+            >
+              {needCount
+                ? `${needCount} ${needCount === 1 ? "thing" : "things"} people have asked for`
+                : "Ask for something yourself"}
+            </Link>
+            <Link
+              to="/give"
+              className="focus-ink rounded-full border border-border px-5 py-2.5 text-sm"
+            >
+              I have one hour
+            </Link>
+            <Link
+              to="/help"
+              className="focus-ink rounded-full border border-border px-5 py-2.5 text-sm"
+            >
+              Say what you can do
+            </Link>
+          </div>
+        </section>
 
         {/* Do something today */}
         <div className="mt-10">

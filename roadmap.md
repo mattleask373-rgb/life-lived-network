@@ -26,3 +26,11 @@
 ### Still honestly missing
 - Ticketmaster live events: waiting on TICKETMASTER_API_KEY.
 - The Guildhall's real hours, practitioners and booking pathway: waiting on the organisation.
+
+## Kings Heath hub (done)
+- Locality reads as one thing: five honest questions with true counts (including noughts).
+- What's happening (dated things by day), What's here (providers grouped with their services and booking truth), Who's here and what's needed (offered hours + open needs count).
+- Open needs are now read across a locality's descendants, server-side.
+- Reusable for any locality; no place-specific logic. Tests: src/lib/locality.test.ts.
+
+Blockers unchanged: Ticketmaster key absent; genuine Guildhall details not supplied.
