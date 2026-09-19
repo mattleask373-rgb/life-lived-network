@@ -142,7 +142,10 @@ function NeedAnswer() {
         <details className="mt-6 text-xs text-muted-foreground">
           <summary className="cursor-pointer">Why these possibilities appeared</summary>
           <p className="mt-2">
-            Considered {data.diagnostics.peopleConsidered} people; excluded {data.diagnostics.excludedByPlace} by place, {data.diagnostics.excludedByFreshness} by freshness, {data.diagnostics.excludedByQualification} by qualification, and {data.diagnostics.excludedByStatus} by reviewed status.
+            Considered {data.diagnostics.peopleConsidered} people; excluded{" "}
+            {data.diagnostics.excludedByPlace} by place, {data.diagnostics.excludedByFreshness} by
+            freshness, {data.diagnostics.excludedByQualification} by qualification, and{" "}
+            {data.diagnostics.excludedByStatus} by reviewed status.
           </p>
         </details>
       ) : null}
