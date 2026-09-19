@@ -195,7 +195,7 @@ function Home() {
           {given.length ? (
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               {given.slice(0, 6).map((e) => (
-                <EntryCard key={e.id} entry={e} onOpen={setOpen} note={e.give} />
+                <EntryCard key={e.id} entry={e} onOpen={setOpen} note={e.give ?? ""} />
               ))}
             </div>
           ) : (
