@@ -70,6 +70,28 @@ export interface WorldEntry {
   skills?: string[];
   /** Real, source-attributed photographs only. Never inferred or generated. */
   photos?: SourcePhoto[];
+
+  // ---- Where this came from, and when it actually happens -------------------
+  /**
+   * "resident" — a person here posted it.
+   * "source" — it came from an outside source, credited below.
+   * "confirmed" — it came from a source and someone here has since confirmed it.
+   * Source-derived activity is never dressed up as somebody's own posting.
+   */
+  origin?: "resident" | "source" | "confirmed";
+  /** The outside source's name, shown wherever the activity is shown. */
+  sourceName?: string;
+  /** The source's own page for this. Where "find out more" goes. */
+  sourceUrl?: string;
+  /** Where tickets are actually sold, when the source says. */
+  ticketUrl?: string;
+  organiser?: string;
+  /** Real instants, so a finished event can never read as upcoming. */
+  startsAt?: string | null;
+  endsAt?: string | null;
+  timezone?: string;
+  /** Said plainly rather than quietly vanishing. */
+  cancellation?: "" | "cancelled" | "postponed";
 }
 
 export type DataQuality =

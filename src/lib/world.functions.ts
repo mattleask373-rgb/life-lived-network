@@ -39,6 +39,12 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       .select("*")
       .eq("status", "published")
       .neq("data_quality", "expired")
+      // Something cancelled or postponed is not something to go to. The record
+      // and its provenance stay; it simply stops being an answer.
+      .eq("cancellation", "")
+      // Things with a real start time come first, soonest first; everything
+      // else keeps its existing most-recent-first order.
+      .order("starts_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
     // A locality, or a locality and everywhere inside it. Either way the read
@@ -47,13 +53,21 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
     if (localities.length) query = query.in("place_id", localities);
     else if (context.placeId) query = query.eq("place_id", context.placeId);
 
+    // An event that has finished is never upcoming. Anything without a start
+    // time is unaffected by time filtering.
+    const settled = new Date(Date.now() - 3 * 3600000).toISOString();
+    query = query.or(`starts_at.is.null,starts_at.gte.${context.startTime ?? settled}`);
+    if (context.endTime) query = query.or(`starts_at.is.null,starts_at.lte.${context.endTime}`);
+
     const { data: rows, error } = await query;
     if (error) throw error;
 
     const listings = (rows ?? []) as unknown as ListingRow[];
     // One extra query for all creators, never one per listing.
     const names = new Map<string, string>();
-    const creatorIds = [...new Set(listings.map((r) => r.creator_id))];
+    const creatorIds = [
+      ...new Set(listings.map((r) => r.creator_id).filter((id): id is string => Boolean(id))),
+    ];
     const photos = new Map<string, SourcePhoto[]>();
     if (creatorIds.length) {
       const { data: profiles } = await supabase
@@ -88,8 +102,47 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       }
     }
 
+    // Where source-derived activity came from: one query for the page, never
+    // one per card, and only the fields needed to credit and link back.
+    const provenance = new Map<string, { sourceName: string; sourceUrl: string }>();
+    const imported = listings.filter((r) => r.origin === "source" || r.origin === "confirmed");
+    if (imported.length) {
+      const { data: records } = await supabase
+        .from("source_records")
+        .select("listing_id, source_id, source_url")
+        .in(
+          "listing_id",
+          imported.map((r) => r.id),
+        );
+      const sourceIds = [...new Set((records ?? []).map((r) => r.source_id))];
+      const sourceNames = new Map<string, string>();
+      if (sourceIds.length) {
+        const { data: sources } = await supabase
+          .from("sources")
+          .select("id, name, attribution")
+          .in("id", sourceIds);
+        for (const source of sources ?? []) {
+          sourceNames.set(source.id, source.attribution || source.name);
+        }
+      }
+      for (const record of records ?? []) {
+        if (!record.listing_id) continue;
+        provenance.set(record.listing_id, {
+          sourceName: sourceNames.get(record.source_id) ?? "An outside source",
+          sourceUrl: record.source_url ?? "",
+        });
+      }
+    }
+
     const page = toPage(
-      listings.map((r) => rowToEntry(r, names.get(r.creator_id), photos.get(r.id) ?? [])),
+      listings.map((r) =>
+        rowToEntry(
+          r,
+          r.creator_id ? names.get(r.creator_id) : undefined,
+          photos.get(r.id) ?? [],
+          provenance.get(r.id),
+        ),
+      ),
       offset,
       limit,
     );

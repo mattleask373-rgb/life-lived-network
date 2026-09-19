@@ -20,6 +20,7 @@ import { Route as MakeRouteImport } from './routes/make'
 import { Route as ModerationRouteImport } from './routes/moderation'
 import { Route as NeedRouteImport } from './routes/need'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as NeedIdRouteImport } from './routes/need.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -77,6 +78,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SourcesRoute = SourcesRouteImport.update({
+  id: '/sources',
+  path: '/sources',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NeedIdRoute = NeedIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/moderation': typeof ModerationRoute
   '/need': typeof NeedRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/sources': typeof SourcesRoute
   '/need/$id': typeof NeedIdRoute
 }
 export interface FileRoutesByTo {
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/moderation': typeof ModerationRoute
   '/need': typeof NeedRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/sources': typeof SourcesRoute
   '/need/$id': typeof NeedIdRoute
 }
 export interface FileRoutesById {
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/moderation': typeof ModerationRoute
   '/need': typeof NeedRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/sources': typeof SourcesRoute
   '/need/$id': typeof NeedIdRoute
 }
 export interface FileRouteTypes {
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/moderation'
     | '/need'
     | '/profile'
+    | '/sources'
     | '/need/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/moderation'
     | '/need'
     | '/profile'
+    | '/sources'
     | '/need/$id'
   id:
     | '__root__'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/moderation'
     | '/need'
     | '/profile'
+    | '/sources'
     | '/need/$id'
   fileRoutesById: FileRoutesById
 }
@@ -183,6 +195,7 @@ export interface RootRouteChildren {
   ModerationRoute: typeof ModerationRoute
   NeedRoute: typeof NeedRouteWithChildren
   ProfileRoute: typeof ProfileRoute
+  SourcesRoute: typeof SourcesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -264,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sources': {
+      id: '/sources'
+      path: '/sources'
+      fullPath: '/sources'
+      preLoaderRoute: typeof SourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/need/$id': {
       id: '/need/$id'
       path: '/$id'
@@ -296,6 +316,7 @@ const rootRouteChildren: RootRouteChildren = {
   ModerationRoute: ModerationRoute,
   NeedRoute: NeedRouteWithChildren,
   ProfileRoute: ProfileRoute,
+  SourcesRoute: SourcesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
