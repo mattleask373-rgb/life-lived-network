@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { createListing, KINDS, type NewListing } from "@/lib/listings";
+import { fetchDefaultPlace } from "@/lib/places";
+import { useQuery } from "@tanstack/react-query";
 import { LAYERS, type LayerId, type TimeBand } from "@/lib/world-data";
 
 const title = "Make something happen — The Living World";
@@ -50,6 +52,11 @@ const BANDS: { id: TimeBand; label: string }[] = [
 function MakePage() {
   const { user, ready } = useSession();
   const navigate = useNavigate();
+  // What someone posts belongs to a real place, not to a hard-coded city.
+  const { data: resolved } = useQuery({
+    queryKey: ["place", "default"],
+    queryFn: fetchDefaultPlace,
+  });
   const [kind, setKind] = useState<string | null>(null);
   const [mine, setMine] = useState<{ id: string; title: string; kind: string }[]>([]);
   const [busy, setBusy] = useState(false);
@@ -125,6 +132,10 @@ function MakePage() {
           people_needed: form.people_needed ? Number(form.people_needed) : null,
           accessibility: form.accessibility.trim() || null,
           contact_note: form.contact_note.trim() || null,
+          place_id: resolved?.place.id ?? null,
+          // Place-level coordinates only. Never an address, never a home.
+          lat: resolved?.place.lat ?? null,
+          lng: resolved?.place.lng ?? null,
         },
         user.id,
       );
