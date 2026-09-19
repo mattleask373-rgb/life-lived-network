@@ -208,7 +208,7 @@ export const gardeningWorkshopEntry = entry({
   summary: "Learn seasonal planting and garden care.",
   layer: "experience",
   kind: "workshop",
-  skills: ["garden care"],
+  skills: ["gardening basics"],
   cost: 8,
 });
 
@@ -235,5 +235,9 @@ export const publicJourneyGardener: PersonCandidate = {
 export const privateJourneyGardener: PersonCandidate = {
   ...publicJourneyGardener,
   id: "private-journey-gardener",
-  journeys: publicJourneyGardener.journeys?.map((journey) => ({ ...journey, id: "journey-private", visibility: "private" as const })),
+  journeys: (publicJourneyGardener.journeys ?? []).map((journey) => ({
+    ...journey,
+    id: "journey-private",
+    visibility: "private" as const,
+  })),
 };

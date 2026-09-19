@@ -9,7 +9,6 @@
  * into a score, and always says what kind of possibility something is.
  */
 
-import { freshness, isCurrent } from "./capability-freshness";
 import type { PersonCandidate } from "./supply-engine";
 import type { Need } from "./needs";
 import { regulatedFlags } from "./policy";
