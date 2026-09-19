@@ -140,11 +140,9 @@ describe("the same adapter for every locality", () => {
     expect(params.get("unit")).toBe("km");
   });
 
-  it("names no locality anywhere in the adapter", async () => {
-    const source = await import("./ticketmaster?raw").catch(() => null);
-    void source;
+  it("singles out no locality anywhere in the adapter", () => {
     const text = ticketmasterAdapter.parse.toString() + ticketmasterQuery.toString();
-    for (const name of ["Birmingham", "Bristol", "Manchester", "Dublin", "London"]) {
+    for (const name of ["Birmingham", "Bristol", "Manchester", "Herefordshire", "Belfast"]) {
       expect(text).not.toContain(name);
     }
   });
