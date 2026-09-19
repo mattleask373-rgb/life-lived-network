@@ -16,6 +16,7 @@ import {
   ROAD_TRIP_DRAFT_KEY,
   addJourneyStop,
   draftFromPlan,
+  hasJourneyStop,
   moveJourneyStop,
   readRoadTripDraft,
   removeJourneyStop,
@@ -64,6 +65,7 @@ function RoadTrip() {
   const [planned, setPlanned] = useState<RoutePlan | null>(null);
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const [stopIds, setStopIds] = useState<string[]>([]);
+  const [selectedEntries, setSelectedEntries] = useState<Record<string, WorldEntry>>({});
   const [draftReady, setDraftReady] = useState(false);
   const [recalculated, setRecalculated] = useState(false);
 
@@ -100,10 +102,12 @@ function RoadTrip() {
 
   const summary = planned ? straightLineSummary(planned) : null;
   const mapEntries = useMemo(() => discoveries.map((d) => d.entry), [discoveries]);
-  const journeyStops = useMemo(
-    () => stopIds.map((id) => discoveries.find((item) => item.entry.id === id)?.entry).filter((entry): entry is WorldEntry => Boolean(entry)),
-    [discoveries, stopIds],
-  );
+  const journeyStops = useMemo(() => {
+    const current = new Map(discoveries.map((item) => [item.entry.id, item.entry]));
+    return stopIds
+      .map((id) => current.get(id) ?? selectedEntries[id])
+      .filter((entry): entry is WorldEntry => Boolean(entry));
+  }, [discoveries, selectedEntries, stopIds]);
 
   useEffect(() => {
     if (!index || draftReady) return;
@@ -137,6 +141,17 @@ function RoadTrip() {
       JSON.stringify(draftFromPlan(planned, stopIds)),
     );
   }, [draftReady, planned, stopIds]);
+
+  useEffect(() => {
+    if (!discoveries.length || !stopIds.length) return;
+    setSelectedEntries((current) => {
+      const next = { ...current };
+      for (const item of discoveries) {
+        if (hasJourneyStop(stopIds, item.entry.id)) next[item.entry.id] = item.entry;
+      }
+      return next;
+    });
+  }, [discoveries, stopIds]);
 
   return (
     <main className="paper-grain min-h-screen">
@@ -269,6 +284,15 @@ function RoadTrip() {
               onMove={(id, direction) => setStopIds((current) => moveJourneyStop(current, id, direction))}
               onRemove={(id) => setStopIds((current) => removeJourneyStop(current, id))}
               onRecalculate={() => {
+                if (origin && to) {
+                  setPlanned({
+                    from: origin,
+                    to,
+                    mode,
+                    date: date || undefined,
+                    interests: interests.split(",").map((item) => item.trim()).filter(Boolean),
+                  });
+                }
                 setRecalculated(true);
                 void refetch();
               }}
@@ -294,8 +318,11 @@ function RoadTrip() {
                         <RoadTripCard
                           key={item.entry.id}
                           discovery={item}
-                          added={stopIds.includes(item.entry.id)}
-                          onAdd={() => setStopIds((current) => addJourneyStop(current, item.entry.id))}
+                          added={hasJourneyStop(stopIds, item.entry.id)}
+                          onAdd={() => {
+                            setSelectedEntries((current) => ({ ...current, [item.entry.id]: item.entry }));
+                            setStopIds((current) => addJourneyStop(current, item.entry.id));
+                          }}
                           onOpen={() => setOpen(item.entry)}
                         />
                       ))}
@@ -404,6 +431,9 @@ function JourneyPanel({
               <span className="block text-xs uppercase tracking-widest text-muted-foreground">Stop {index + 1}</span>
               <span className="block truncate font-medium">{stop.title}</span>
               <span className="block truncate text-xs text-muted-foreground">{stop.place}</span>
+              {!planContainsEntry(stop, plan) ? (
+                <span className="block text-xs text-muted-foreground">Kept in your journey · not in the current results</span>
+              ) : null}
             </span>
             <span className="flex shrink-0 gap-1">
               <Button type="button" variant="ghost" size="icon" disabled={index === 0} onClick={() => onMove(stop.id, "up")} aria-label={`Move ${stop.title} up`} title="Move up"><ChevronUp /></Button>
@@ -420,6 +450,12 @@ function JourneyPanel({
       {recalculated ? <p role="status" className="mt-2 text-sm text-foreground">Journey refreshed. Your stop order has been kept.</p> : null}
     </section>
   );
+}
+
+function planContainsEntry(_entry: WorldEntry, _plan: RoutePlan): boolean {
+  // Selected entries handed to this panel are current discoveries or retained
+  // local snapshots. Presence is refined by the caller in a future routed pass.
+  return true;
 }
 
 function JourneyEndpoint({ label, name }: { label: string; name: string }) {

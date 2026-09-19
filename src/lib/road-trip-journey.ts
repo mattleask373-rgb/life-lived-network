@@ -51,6 +51,10 @@ export function addJourneyStop(stopIds: string[], id: string): string[] {
   return stopIds.includes(id) ? stopIds : [...stopIds, id];
 }
 
+export function hasJourneyStop(stopIds: string[], id: string): boolean {
+  return stopIds.includes(id);
+}
+
 export function removeJourneyStop(stopIds: string[], id: string): string[] {
   return stopIds.filter((stopId) => stopId !== id);
 }
