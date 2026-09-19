@@ -57,7 +57,7 @@ export function PlacePicker() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Birmingham, Herefordshire, Galway, Bangor…"
+              placeholder="Kings Heath, Manchester, Herefordshire, Edinburgh, Galway…"
               className="focus-ink mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
             />
           </label>
