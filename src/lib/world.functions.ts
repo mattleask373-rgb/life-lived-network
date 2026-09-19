@@ -41,7 +41,11 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       .neq("data_quality", "expired")
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
-    if (context.placeId) query = query.eq("place_id", context.placeId);
+    // A locality, or a locality and everywhere inside it. Either way the read
+    // stays bounded by the same page limit.
+    const localities = (context.placeIds ?? []).slice(0, 400);
+    if (localities.length) query = query.in("place_id", localities);
+    else if (context.placeId) query = query.eq("place_id", context.placeId);
 
     const { data: rows, error } = await query;
     if (error) throw error;
@@ -90,10 +94,18 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       limit,
     );
 
-    // Fixtures are a development courtesy only, and only on the first page.
-    if (offset === 0 && fixturesAllowed()) {
-      const { DEMO_ENTRIES } = await import("./fixtures/world-entries");
-      return { ...page, items: [...page.items, ...DEMO_ENTRIES] };
+    // The trial layer, only on the first page, only for the locality being
+    // looked at, and only ever labelled as a demonstration. A locality with no
+    // trial records stays quiet rather than borrowing someone else's.
+    if (offset === 0) {
+      const slugs = new Set(context.placeSlugs ?? []);
+      if (slugs.size || fixturesAllowed()) {
+        const { DEMO_ENTRIES } = await import("./fixtures/world-entries");
+        const matching = slugs.size
+          ? DEMO_ENTRIES.filter((entry) => slugs.has(entry.placeSlug))
+          : DEMO_ENTRIES;
+        if (matching.length) return { ...page, items: [...page.items, ...matching] };
+      }
     }
     return page;
   } catch (error) {

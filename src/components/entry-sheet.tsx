@@ -99,6 +99,13 @@ export function EntrySheet({
             {layer?.label}
           </p>
           <h2 className="mt-1 text-2xl leading-tight">{entry.title}</h2>
+          {entry.demonstration ? (
+            <p className="mt-2 rounded-lg border border-border bg-background p-3 text-xs text-muted-foreground">
+              <span className="uppercase tracking-widest">Demonstration record</span> — this is
+              trial data showing how the Living World works here. It is not a real listing, and no
+              real person or place is being described.
+            </p>
+          ) : null}
           <p className="mt-1 text-sm text-muted-foreground">
             {entry.place} · {entry.neighbourhood}
           </p>
@@ -114,7 +121,7 @@ export function EntrySheet({
             </div>
             <div className="card-paper p-3">
               <dt className="text-xs text-muted-foreground">Money</dt>
-              <dd className="mt-0.5">{money(entry.cost)}</dd>
+              <dd className="mt-0.5">{money(entry.cost, entry.currency)}</dd>
             </div>
           </dl>
 

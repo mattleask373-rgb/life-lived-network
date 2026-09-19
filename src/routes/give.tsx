@@ -22,7 +22,7 @@ export const Route = createFileRoute("/give")({
 
 const SUGGESTIONS = [
   "I can help paint",
-  "I can teach beginner Portuguese",
+  "I can teach the basics of a language I speak",
   "I can photograph your event",
   "I can help in your garden",
   "I can teach guitar",
@@ -265,7 +265,7 @@ function NewHour({ userId, onDone }: { userId: string; onDone: () => void }) {
           <input
             value={neighbourhood}
             onChange={(e) => setNeighbourhood(e.target.value)}
-            placeholder="Graça"
+            placeholder="The part of town you'd travel to"
             className="focus-ink mt-1 w-full rounded-lg border border-border bg-background px-3 py-2"
           />
         </label>

@@ -7,6 +7,7 @@ import { duration, layerText, money } from "@/components/layer-colour";
 import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWorldEntries } from "@/lib/listings";
+import { useWorldContext } from "@/lib/world-context";
 
 const title = "What could your journey become? — The Living World";
 const description =
@@ -33,15 +34,21 @@ function JourneyPage() {
   const [journeys, setJourneys] = useState<Journey[] | null>(null);
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle } = useLifeList();
-  const { data: world } = useQuery({ queryKey: ["world"], queryFn: () => fetchWorldEntries() });
+  // The journey is built from wherever the person is looking.
+  const { place, placeIds, placeSlugs } = useWorldContext();
+  const { data: world } = useQuery({
+    queryKey: ["world", place?.id ?? null, placeIds.length],
+    enabled: Boolean(place),
+    queryFn: () => fetchWorldEntries({ placeId: place?.id ?? null, placeIds, placeSlugs }),
+  });
 
   return (
     <main className="paper-grain min-h-screen">
       <div className="mx-auto max-w-3xl px-4 pt-8 pb-20 sm:px-6">
         <h1 className="text-3xl sm:text-4xl">What could your journey become?</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Nothing here is invented. Every step below is something a real person in Lisbon has
-          actually offered, and anything unchecked is marked as such.
+          Nothing here is invented. Every step below is something someone has actually offered
+          where you are, anything unchecked is marked as such, and demonstration records say so.
         </p>
 
         <section className="card-paper mt-6 p-5">
@@ -56,7 +63,7 @@ function JourneyPage() {
           <Field label="What you can spend a day">
             {[0, 15, 30, 60].map((b) => (
               <Chip key={b} on={budget === b} onClick={() => setBudget(b)}>
-                {b === 0 ? "Almost nothing" : `€${b}`}
+                {b === 0 ? "Almost nothing" : `£${b}`}
               </Chip>
             ))}
           </Field>

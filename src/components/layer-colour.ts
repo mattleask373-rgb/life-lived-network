@@ -36,10 +36,13 @@ export const layerBorder: Record<LayerId, string> = {
   food: "border-food",
 };
 
-export function money(cost: number): string {
-  if (cost < 0) return `Pays €${Math.abs(cost)}`;
+const SYMBOL: Record<string, string> = { GBP: "£", EUR: "€", USD: "$" };
+
+export function money(cost: number, currency = "GBP"): string {
+  const symbol = SYMBOL[currency] ?? `${currency} `;
+  if (cost < 0) return `Pays ${symbol}${Math.abs(cost)}`;
   if (cost === 0) return "Free";
-  return `€${cost}`;
+  return `${symbol}${cost}`;
 }
 
 export function duration(minutes: number): string {

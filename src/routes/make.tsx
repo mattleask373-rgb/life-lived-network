@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { createListing, KINDS, type NewListing } from "@/lib/listings";
-import { fetchDefaultPlace } from "@/lib/places";
-import { useQuery } from "@tanstack/react-query";
+import { useWorldContext } from "@/lib/world-context";
+import { PlacePicker } from "@/components/place-picker";
 import { LAYERS, type LayerId, type TimeBand } from "@/lib/world-data";
 
 const title = "Make something happen — The Living World";
@@ -23,23 +23,16 @@ export const Route = createFileRoute("/make")({
   component: MakePage,
 });
 
-/** Approximate areas only — a person's exact address never goes on the map. */
-const AREAS: { name: string; x: number; y: number }[] = [
-  { name: "Alfama", x: 74, y: 44 },
-  { name: "Graça", x: 70, y: 30 },
-  { name: "Mouraria", x: 68, y: 41 },
-  { name: "Arroios", x: 61, y: 38 },
-  { name: "Anjos", x: 63, y: 34 },
-  { name: "Baixa", x: 58, y: 45 },
-  { name: "Príncipe Real", x: 47, y: 47 },
-  { name: "Estrela", x: 36, y: 57 },
-  { name: "Campo de Ourique", x: 33, y: 52 },
-  { name: "Alcântara", x: 22, y: 62 },
-  { name: "Marvila", x: 86, y: 34 },
-  { name: "Penha de França", x: 76, y: 30 },
-  { name: "Monsanto & west", x: 15, y: 44 },
-  { name: "West of the city", x: 8, y: 62 },
-];
+/**
+ * Somewhere on the drawn map, derived from the title so two things posted in
+ * the same locality don't sit on top of each other. Real coordinates come from
+ * the chosen place; this is only the illustrative fallback position.
+ */
+function illustrativePosition(seed: string): { x: number; y: number } {
+  let hash = 0;
+  for (const char of seed) hash = (hash * 31 + char.charCodeAt(0)) % 100000;
+  return { x: 20 + (hash % 60), y: 20 + ((hash >> 3) % 60) };
+}
 
 const BANDS: { id: TimeBand; label: string }[] = [
   { id: "now", label: "Happening now / most days" },
@@ -52,11 +45,12 @@ const BANDS: { id: TimeBand; label: string }[] = [
 function MakePage() {
   const { user, ready } = useSession();
   const navigate = useNavigate();
-  // What someone posts belongs to a real place, not to a hard-coded city.
-  const { data: resolved } = useQuery({
-    queryKey: ["place", "default"],
-    queryFn: fetchDefaultPlace,
-  });
+  // What someone posts belongs to a real place from the shared hierarchy.
+  const { place, children, path } = useWorldContext();
+  // Either exactly here, or somewhere inside here.
+  const options = useMemo(() => (place ? [place, ...children] : []), [place, children]);
+  const [areaId, setAreaId] = useState<string>("");
+  const chosen = options.find((p) => p.id === areaId) ?? place ?? null;
   const [kind, setKind] = useState<string | null>(null);
   const [mine, setMine] = useState<{ id: string; title: string; kind: string }[]>([]);
   const [busy, setBusy] = useState(false);
@@ -68,7 +62,6 @@ function MakePage() {
     summary: "",
     details: "",
     place: "",
-    area: AREAS[0]!.name,
     layer: "experience" as LayerId,
     when_text: "",
     band: "today" as TimeBand,
@@ -105,8 +98,8 @@ function MakePage() {
     if (!user || !kind) return;
     setBusy(true);
     setError(null);
-    const area = AREAS.find((a) => a.name === form.area) ?? AREAS[0]!;
     const amount = Math.abs(Number(form.cost) || 0);
+    const drawn = illustrativePosition(form.title || kind);
     try {
       await createListing(
         {
@@ -118,10 +111,10 @@ function MakePage() {
             .split("\n")
             .map((d) => d.trim())
             .filter(Boolean),
-          place: form.place,
-          neighbourhood: area.name,
-          x: area.x,
-          y: area.y,
+          place: form.place || (chosen?.name ?? ""),
+          neighbourhood: chosen?.name ?? "",
+          x: drawn.x,
+          y: drawn.y,
           when_text: form.when_text,
           band: form.band,
           minutes: Math.round((Number(form.hours) || 1) * 60),
@@ -132,10 +125,10 @@ function MakePage() {
           people_needed: form.people_needed ? Number(form.people_needed) : null,
           accessibility: form.accessibility.trim() || null,
           contact_note: form.contact_note.trim() || null,
-          place_id: resolved?.place.id ?? null,
+          place_id: chosen?.id ?? null,
           // Place-level coordinates only. Never an address, never a home.
-          lat: resolved?.place.lat ?? null,
-          lng: resolved?.place.lng ?? null,
+          lat: chosen?.lat ?? null,
+          lng: chosen?.lng ?? null,
         },
         user.id,
       );
@@ -182,6 +175,11 @@ function MakePage() {
           Only post things that genuinely exist. Anything unchecked is shown to other people as
           unchecked — that's fine, it just has to be honest.
         </p>
+
+        <div className="mt-5">
+          <PlacePicker />
+        </div>
+
 
         {done ? (
           <div className="card-paper mt-6 p-5">
@@ -262,23 +260,28 @@ function MakePage() {
                 <input
                   value={form.place}
                   onChange={(e) => setForm({ ...form, place: e.target.value })}
-                  placeholder="Tasca do Mário"
+                  placeholder="The name of the café, hall, farm or park"
                   className={input}
                 />
               </label>
               <label className="block text-sm">
-                <span className="text-muted-foreground">Which part of the city</span>
+                <span className="text-muted-foreground">
+                  Which locality{path ? ` (inside ${path})` : ""}
+                </span>
                 <select
-                  value={form.area}
-                  onChange={(e) => setForm({ ...form, area: e.target.value })}
+                  value={areaId || (place?.id ?? "")}
+                  onChange={(e) => setAreaId(e.target.value)}
                   className={input}
                 >
-                  {AREAS.map((a) => (
-                    <option key={a.name} value={a.name}>
-                      {a.name}
+                  {options.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.name}
                     </option>
                   ))}
                 </select>
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Somewhere else? Change where you are at the top of this page.
+                </span>
               </label>
               <label className="block text-sm">
                 <span className="text-muted-foreground">When, in words</span>

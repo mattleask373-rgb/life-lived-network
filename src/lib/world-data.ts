@@ -34,6 +34,16 @@ export interface WorldEntry {
   /** Position on the stylised map, 0-100 in each axis. Approximate by design. */
   x: number;
   y: number;
+  /** Real approximate coordinates, place-level only. Never an address. */
+  lat?: number | null;
+  lng?: number | null;
+  /** Currency of `cost`, so a price is never shown in the wrong money. */
+  currency?: string;
+  /**
+   * True for clearly-labelled demonstration records. Real activity never sets
+   * this, and the interface always says so where it appears.
+   */
+  demonstration?: boolean;
   when: string;
   band: TimeBand;
   /** Minutes a person would realistically give to this. */

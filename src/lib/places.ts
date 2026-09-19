@@ -1,14 +1,17 @@
 /**
  * Places — the geography spine.
  *
- * Until now the world was one hard-coded city. A place is now a real record
- * with a hierarchy (country → region → city → town → village → neighbourhood),
- * a slug, real coordinates, a timezone and a currency. Everything the app
- * eventually needs — "near me", "within 30 minutes", along a route, locality
- * pages — hangs off this.
+ * A place is a real record in a hierarchy (world region → country → region →
+ * county/area → city → town → village → neighbourhood), with a slug, real
+ * approximate coordinates, a timezone and a currency. Everything the app needs
+ * — "near me", locality pages, along a route — hangs off this.
  *
- * Coordinates here are place-level and approximate by design. Nobody's home
- * address ever becomes a coordinate.
+ * Nothing in here is country-specific. The default world is the UK & Ireland
+ * because that is where the first trial happens; Portugal, Lisbon and anywhere
+ * added later resolve through exactly the same helpers.
+ *
+ * Coordinates are place-level and approximate by design. Nobody's home address
+ * ever becomes a coordinate.
  */
 
 import { supabase } from "@/integrations/supabase/client";
@@ -36,14 +39,14 @@ export interface Place {
   blurb: string;
 }
 
-/** Where the world currently has enough density to be worth opening on. */
-export const DEFAULT_PLACE_SLUG = "lisbon";
+/** The world the app opens on. A place record like any other, not a constant. */
+export const DEFAULT_PLACE_SLUG = "uk-and-ireland";
 
 /** Used only while the real place record is still loading. */
 export const PLACE_FALLBACK = {
-  name: "Lisbon",
-  region: "Portugal",
-  blurb: "Seven hills, a wide river, and a lot of people making things.",
+  name: "The United Kingdom & Ireland",
+  region: "",
+  blurb: "Choose somewhere and see what is actually there.",
 };
 
 const KINDS: PlaceKind[] = [
@@ -55,6 +58,27 @@ const KINDS: PlaceKind[] = [
   "village",
   "neighbourhood",
 ];
+
+/** How specific a kind is, smallest number = widest. Useful for sorting. */
+export const KIND_ORDER: Record<PlaceKind, number> = {
+  region: 1,
+  country: 2,
+  area: 3,
+  city: 4,
+  town: 5,
+  village: 6,
+  neighbourhood: 7,
+};
+
+export const KIND_LABEL: Record<PlaceKind, string> = {
+  region: "Region",
+  country: "Country",
+  area: "County or area",
+  city: "City",
+  town: "Town",
+  village: "Village",
+  neighbourhood: "Neighbourhood",
+};
 
 interface PlaceRow {
   id: string;
@@ -117,7 +141,7 @@ export async function fetchPlaceBySlug(slug: string): Promise<ResolvedPlace | nu
   return { place, parent };
 }
 
-/** The place the app opens on, until people can choose their own. */
+/** The world the app opens on, until someone chooses their own. */
 export function fetchDefaultPlace(): Promise<ResolvedPlace | null> {
   return fetchPlaceBySlug(DEFAULT_PLACE_SLUG);
 }
@@ -126,12 +150,148 @@ export function fetchDefaultPlace(): Promise<ResolvedPlace | null> {
 export async function fetchPlaces(kinds?: PlaceKind[]): Promise<Place[]> {
   let query = supabase.from("places").select(SELECT).order("name");
   if (kinds?.length) query = query.in("kind", kinds);
-  const { data, error } = await query.limit(500);
+  const { data, error } = await query.limit(2000);
   if (error) throw error;
   return ((data ?? []) as unknown as PlaceRow[]).map(toPlace);
 }
 
-/** "Lisbon, Portugal" — whatever depth we actually know. */
+/**
+ * The whole geography, once, cached by the query client.
+ *
+ * Geography is small, public and slow-changing — a few thousand rows at most —
+ * so hierarchy walking happens in memory rather than through a query per hop.
+ * Activity is never loaded this way; that stays bounded and server-side.
+ */
+export function fetchPlaceIndex(): Promise<Place[]> {
+  return fetchPlaces();
+}
+
+// ---------------------------------------------------------------------------
+// Pure hierarchy helpers. Given a list of places, they answer questions about
+// it without touching the network, which makes them straightforward to test.
+// ---------------------------------------------------------------------------
+
+export interface PlaceIndex {
+  places: Place[];
+  byId: Map<string, Place>;
+  bySlug: Map<string, Place>;
+  children: Map<string, Place[]>;
+  roots: Place[];
+}
+
+export function buildPlaceIndex(places: Place[]): PlaceIndex {
+  const byId = new Map<string, Place>();
+  const bySlug = new Map<string, Place>();
+  const children = new Map<string, Place[]>();
+  const roots: Place[] = [];
+
+  for (const place of places) {
+    byId.set(place.id, place);
+    bySlug.set(place.slug, place);
+  }
+  for (const place of places) {
+    if (place.parent_id && byId.has(place.parent_id)) {
+      const siblings = children.get(place.parent_id) ?? [];
+      siblings.push(place);
+      children.set(place.parent_id, siblings);
+    } else {
+      roots.push(place);
+    }
+  }
+  const byName = (a: Place, b: Place) =>
+    KIND_ORDER[a.kind] - KIND_ORDER[b.kind] || a.name.localeCompare(b.name);
+  for (const [key, list] of children) children.set(key, [...list].sort(byName));
+
+  return { places, byId, bySlug, children, roots: [...roots].sort(byName) };
+}
+
+export function placeBySlug(index: PlaceIndex, slug: string): Place | null {
+  return index.bySlug.get(slug) ?? null;
+}
+
+/** Everywhere directly inside a place. */
+export function childrenOf(index: PlaceIndex, placeId: string): Place[] {
+  return index.children.get(placeId) ?? [];
+}
+
+/** The chain upwards, nearest parent first. Cycle-safe. */
+export function ancestorsOf(index: PlaceIndex, placeId: string): Place[] {
+  const chain: Place[] = [];
+  const seen = new Set<string>([placeId]);
+  let current = index.byId.get(placeId)?.parent_id ?? null;
+  while (current && !seen.has(current)) {
+    const parent = index.byId.get(current);
+    if (!parent) break;
+    chain.push(parent);
+    seen.add(parent.id);
+    current = parent.parent_id;
+  }
+  return chain;
+}
+
+/** A place and everywhere inside it, at any depth. Cycle-safe. */
+export function descendantIdsOf(index: PlaceIndex, placeId: string): string[] {
+  const ids: string[] = [];
+  const queue: string[] = [placeId];
+  const seen = new Set<string>();
+  while (queue.length) {
+    const id = queue.shift()!;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    ids.push(id);
+    for (const child of childrenOf(index, id)) queue.push(child.id);
+  }
+  return ids;
+}
+
+/** Slugs for a place and everywhere inside it. */
+export function descendantSlugsOf(index: PlaceIndex, placeId: string): string[] {
+  return descendantIdsOf(index, placeId)
+    .map((id) => index.byId.get(id)?.slug)
+    .filter((slug): slug is string => Boolean(slug));
+}
+
+/** True when `placeId` sits inside `ancestorId`, or is it. */
+export function isWithin(index: PlaceIndex, placeId: string, ancestorId: string): boolean {
+  if (placeId === ancestorId) return true;
+  return ancestorsOf(index, placeId).some((p) => p.id === ancestorId);
+}
+
+/**
+ * "Digbeth, Birmingham, West Midlands" — as much of the chain as is useful.
+ * Repeated place names stay unambiguous because the path carries the parents.
+ */
+export function placePath(index: PlaceIndex, placeId: string, depth = 2): string {
+  const place = index.byId.get(placeId);
+  if (!place) return "";
+  const up = ancestorsOf(index, placeId).slice(0, depth);
+  return [place.name, ...up.map((p) => p.name)].join(", ");
+}
+
+/** The country a place belongs to, if the chain reaches one. */
+export function countryOf(index: PlaceIndex, placeId: string): Place | null {
+  const place = index.byId.get(placeId);
+  if (place?.kind === "country") return place;
+  return ancestorsOf(index, placeId).find((p) => p.kind === "country") ?? null;
+}
+
+/** Name search across the whole hierarchy, ordered widest-first then A-Z. */
+export function searchPlaces(index: PlaceIndex, query: string, limit = 12): Place[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const starts: Place[] = [];
+  const contains: Place[] = [];
+  for (const place of index.places) {
+    const name = place.name.toLowerCase();
+    if (name.startsWith(q)) starts.push(place);
+    else if (name.includes(q)) contains.push(place);
+  }
+  const order = (a: Place, b: Place) =>
+    KIND_ORDER[a.kind] - KIND_ORDER[b.kind] || a.name.localeCompare(b.name);
+  return [...starts.sort(order), ...contains.sort(order)].slice(0, limit);
+}
+
+/** "Lisbon, Portugal" / "Birmingham, West Midlands" — whatever depth we know. */
 export function placeLabel(resolved: ResolvedPlace | null | undefined): string {
   if (!resolved) return PLACE_FALLBACK.name;
   return resolved.parent
