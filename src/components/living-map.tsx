@@ -48,7 +48,14 @@ export function LivingMap({
   onExploreArea,
   onViewChange,
 }: Props) {
-  const home = useMemo(() => fitView(entries, centre ?? null), [entries, centre]);
+  // Depend on the coordinates themselves, not on a freshly-built object, so a
+  // re-render of the page never re-fits the view underneath the person.
+  const centreLat = centre?.lat ?? null;
+  const centreLng = centre?.lng ?? null;
+  const home = useMemo(
+    () => fitView(entries, { lat: centreLat, lng: centreLng }),
+    [entries, centreLat, centreLng],
+  );
   const [view, setView] = useState<MapView>(home);
   const frame = useRef<HTMLDivElement | null>(null);
   const drag = useRef<{ x: number; y: number } | null>(null);
