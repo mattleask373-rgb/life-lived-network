@@ -131,14 +131,12 @@ function reason(entry: WorldEntry, brief: JourneyBrief): string {
 }
 
 /**
- * Journeys from whatever world is passed in — real listings included. Falls
- * back to the demo place only when nothing else has loaded yet.
+ * Journeys arranged from the entities handed in — nothing else. No data source,
+ * no demo constants: real listings, fixtures, cached or future provider records
+ * all work here unchanged. An empty world honestly yields no journeys.
  */
-export function planJourney(
-  brief: JourneyBrief,
-  world: WorldEntry[] = ENTRIES,
-): Journey[] {
-  const pool = world.length ? world : ENTRIES;
+export function planJourney(brief: JourneyBrief, world: WorldEntry[]): Journey[] {
+  const pool = world;
   return SHAPES.map((shape) => buildShape(shape, brief, pool))
     .filter((j) => j.steps.length >= 2)
     .sort((a, b) => {
