@@ -195,7 +195,7 @@ export function normaliseEvent(raw: SourceEvent): SourceEvent | null {
     sourceUrl,
     ...(raw.ticketUrl ? { ticketUrl: safeUrl(raw.ticketUrl) } : {}),
     cost: typeof raw.cost === "number" && Number.isFinite(raw.cost) ? Math.max(raw.cost, 0) : null,
-    currency: /^[A-Z]{3}$/.test(raw.currency ?? "") ? raw.currency : "GBP",
+    currency: /^[A-Z]{3}$/.test(raw.currency ?? "") ? (raw.currency as string) : "GBP",
     ...(raw.images ? { images: raw.images } : {}),
     state:
       raw.state === "cancelled" || raw.state === "postponed" || raw.state === "removed"
