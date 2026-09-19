@@ -1,3 +1,4 @@
+import { privatePage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -15,17 +16,7 @@ const description =
   "Real things people near you have asked for, matched only against what you've actually said you can do, where you'd go and when you're free.";
 
 export const Route = createFileRoute("/help")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
+  head: () => privatePage({ path: "", title, description }),
   component: HelpPage,
 });
 

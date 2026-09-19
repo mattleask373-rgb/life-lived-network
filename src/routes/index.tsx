@@ -1,3 +1,4 @@
+import { publicPage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { LivingMap } from "@/components/living-map";
@@ -32,14 +33,7 @@ const description =
   "A living map of real work, music, food, nature, community projects and people open to meeting, across the UK and Ireland. Find something, then go and live it.";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-    ],
-  }),
+  head: () => publicPage({ path: "/", title, description }),
   component: Home,
 });
 

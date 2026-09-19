@@ -1,3 +1,4 @@
+import { privatePage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -21,17 +22,7 @@ const description =
   "Quiet, contextual conversations about real things: what someone needed, where, and when. No inbox to keep up with, no contact details handed over.";
 
 export const Route = createFileRoute("/conversations")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
+  head: () => privatePage({ path: "", title, description }),
   component: Conversations,
 });
 

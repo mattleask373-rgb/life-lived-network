@@ -1,3 +1,4 @@
+import { publicPage } from "@/lib/seo";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,14 +13,7 @@ const description =
   "Offer work, host an experience, put on an event, share a project, open a table or offer an hour of what you're good at.";
 
 export const Route = createFileRoute("/make")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-    ],
-  }),
+  head: () => publicPage({ path: "/make", title, description }),
   component: MakePage,
 });
 

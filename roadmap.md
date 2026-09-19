@@ -55,3 +55,21 @@ Blockers unchanged: Ticketmaster key absent; genuine Guildhall details not suppl
 - Public transport provider and journey legs: Slice 6, needs a key.
 - Adding stops to a saved journey, and car sharing from people's own journeys:
   Slices 5 and 7, not started.
+
+## SEO slice 1 — technical foundation (done)
+- `src/lib/seo.ts`: one place decides what a page tells a search engine. Canonical
+  address (tracking parameters and fragments stripped), public vs private
+  metadata, sitemap XML builders. Tested in `src/lib/seo.test.ts`.
+- Every page now uses it: the six public screens are indexable with a canonical
+  URL; auth, profile, conversations, needs, help, moderation and sources say
+  noindex, nofollow.
+- `robots.txt` disallows the private screens and names the sitemap.
+- `/api/public/sitemap.xml` (index) and `/api/public/sitemap-pages.xml`, ready for
+  locality, service, provider and event sitemaps to join without churn.
+- Site address comes from `VITE_SITE_ORIGIN` when set, otherwise the published
+  Lovable address — set it when a custom domain is connected.
+
+### Next SEO slices (not started)
+2 service taxonomy + locality landing pages · 3 service + locality pages with the
+indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
+6 enquiry pathway · 7 cross-navigation, analytics, commercial foundation.

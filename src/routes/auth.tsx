@@ -1,3 +1,4 @@
+import { privatePage } from "@/lib/seo";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,15 +9,7 @@ const description =
   "Explore the map without an account. Make one when you want to save something, post something real, or meet someone.";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
+  head: () => privatePage({ path: "", title, description }),
   component: AuthPage,
 });
 

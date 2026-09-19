@@ -1,3 +1,4 @@
+import { privatePage } from "@/lib/seo";
 /**
  * An internal safety tool, not a product feature.
  *
@@ -24,17 +25,7 @@ const title = "Report review — internal";
 const description = "Internal safety review of reports. Not a public page.";
 
 export const Route = createFileRoute("/moderation")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
+  head: () => privatePage({ path: "", title, description }),
   component: Moderation,
 });
 

@@ -1,3 +1,4 @@
+import { privatePage } from "@/lib/seo";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,15 +13,7 @@ const description =
   "A profile that reads like a person: what you're interested in, what you could offer, and what you'd love to do. No followers, no scores.";
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
+  head: () => privatePage({ path: "", title, description }),
   component: ProfilePage,
 });
 

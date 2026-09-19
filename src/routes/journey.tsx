@@ -1,3 +1,4 @@
+import { publicPage } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { planJourney, type Journey } from "@/lib/journey-engine";
@@ -14,14 +15,7 @@ const description =
   "Say how long you're staying, what you can spend and what you'd like to find. We arrange real opportunities, music, food and community projects into a few possible journeys.";
 
 export const Route = createFileRoute("/journey")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-    ],
-  }),
+  head: () => publicPage({ path: "/journey", title, description }),
   component: JourneyPage,
 });
 

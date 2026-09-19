@@ -1,3 +1,4 @@
+import { privatePage } from "@/lib/seo";
 /**
  * An internal tool for bringing the outside world in.
  *
@@ -21,17 +22,7 @@ const title = "Sources — internal";
 const description = "Internal panel for refreshing outside sources of activity. Not a public page.";
 
 export const Route = createFileRoute("/sources")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
+  head: () => privatePage({ path: "", title, description }),
   component: Sources,
 });
 

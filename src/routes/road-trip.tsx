@@ -1,3 +1,4 @@
+import { publicPage } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -30,16 +31,7 @@ const description =
   "Say where you are going and what interests you, and see what is genuinely happening along the way — events, practices, services and people's offered hours, each with its source.";
 
 export const Route = createFileRoute("/road-trip")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () => publicPage({ path: "/road-trip", title, description }),
   component: RoadTrip,
 });
 
