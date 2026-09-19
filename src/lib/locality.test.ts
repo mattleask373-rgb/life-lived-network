@@ -72,13 +72,7 @@ describe("a locality read as one thing", () => {
     const questions = localityQuestions([], 0, NOW);
     expect(questions).toHaveLength(5);
     expect(questions.every((q) => q.count === 0)).toBe(true);
-    expect(questions.map((q) => q.id)).toEqual([
-      "happening",
-      "here",
-      "who",
-      "needed",
-      "possible",
-    ]);
+    expect(questions.map((q) => q.id)).toEqual(["happening", "here", "who", "needed", "possible"]);
   });
 
   it("reports what people asked for from the number given, not from guesses", () => {
