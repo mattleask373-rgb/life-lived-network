@@ -24,6 +24,8 @@ export interface SourcePhoto {
 
 export interface WorldEntry {
   id: string;
+  /** Canonical locality when known. Human labels remain for display. */
+  placeId?: string | null;
   layer: LayerId;
   title: string;
   /** Human place name, never an exact private address. */
