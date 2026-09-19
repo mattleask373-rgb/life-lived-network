@@ -136,6 +136,11 @@ export function rowToNeed(row: NeedRow): Need {
     budget: row.budget === null ? null : Number(row.budget),
     currency: row.currency,
     paymentType: row.payment_type as PaymentType,
+    paymentModel: (row.payment_model || "unknown") as PaymentModel,
+    budgetMax:
+      row.budget_max === null || row.budget_max === undefined ? null : Number(row.budget_max),
+    requiredRoles: row.required_roles ?? [],
+    lastConfirmedAt: row.last_confirmed_at ?? row.updated_at,
     requiredSkills: row.required_skills ?? [],
     requiredQualifications: row.required_qualifications ?? [],
     preferredExperience: row.preferred_experience,
