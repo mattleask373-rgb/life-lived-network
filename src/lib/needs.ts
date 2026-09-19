@@ -27,15 +27,7 @@ export type PaymentType = "paid" | "exchange" | "contribution" | "unsure";
  * the whole job, the hourly rate, or a hopeful guess.
  */
 export type PaymentModel =
-  | "free"
-  | "fixed"
-  | "from"
-  | "range"
-  | "donation"
-  | "exchange"
-  | "unpaid"
-  | "ask_them"
-  | "unknown";
+  "free" | "fixed" | "from" | "range" | "donation" | "exchange" | "unpaid" | "ask_them" | "unknown";
 export type Flexibility = "fixed" | "some" | "very";
 export type Urgency = "today" | "soon" | "whenever";
 export type NeedVisibility = "private" | "local_discovery" | "public";
@@ -161,7 +153,11 @@ export const NEED_INTENTS: { id: NeedIntent; label: string; blurb: string }[] = 
   { id: "recurring_work", label: "Something regular", blurb: "Every week or month" },
   { id: "professional_service", label: "A professional", blurb: "Qualified, insured, registered" },
   { id: "help", label: "A hand", blurb: "Someone to help you out" },
-  { id: "community_project", label: "Help with a community project", blurb: "Shared, local, not for profit" },
+  {
+    id: "community_project",
+    label: "Help with a community project",
+    blurb: "Shared, local, not for profit",
+  },
   { id: "volunteering", label: "Volunteers", blurb: "Given time" },
   { id: "skills_exchange", label: "A swap", blurb: "You'd give something back in kind" },
 ];

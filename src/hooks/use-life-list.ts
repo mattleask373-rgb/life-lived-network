@@ -26,12 +26,10 @@ export function useLifeList() {
     (async () => {
       const local = readLifeList();
       if (local.length) {
-        await supabase
-          .from("saved_items")
-          .upsert(
-            local.map((i) => ({ user_id: user.id, ref: i.ref, category: i.category })),
-            { onConflict: "user_id,ref" },
-          );
+        await supabase.from("saved_items").upsert(
+          local.map((i) => ({ user_id: user.id, ref: i.ref, category: i.category })),
+          { onConflict: "user_id,ref" },
+        );
         writeLifeList([]);
       }
       const { data } = await supabase.from("saved_items").select("ref, category");
@@ -53,9 +51,7 @@ export function useLifeList() {
     (ref: string, category: LifeListCategory = "want to do") => {
       setItems((prev) => {
         const saved = prev.some((i) => i.ref === ref);
-        const next = saved
-          ? prev.filter((i) => i.ref !== ref)
-          : [...prev, { ref, category }];
+        const next = saved ? prev.filter((i) => i.ref !== ref) : [...prev, { ref, category }];
         if (user) {
           if (saved) {
             void supabase.from("saved_items").delete().eq("ref", ref).eq("user_id", user.id);

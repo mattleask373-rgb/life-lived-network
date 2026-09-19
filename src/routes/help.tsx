@@ -10,6 +10,7 @@ import { useSession } from "@/hooks/use-session";
 import { getMyOpportunities } from "@/lib/needs.functions";
 import { OPPORTUNITY_HEADING, OPPORTUNITY_ORDER } from "@/lib/reciprocal";
 import { PAYMENT_MODELS } from "@/lib/needs";
+import { DataErrorState } from "@/components/data-state";
 
 const title = "What could you help with? — The Living World";
 const description =
@@ -88,7 +89,7 @@ function Offer({ needId, askerId }: { needId: string; askerId: string }) {
 function HelpPage() {
   const { user, ready } = useSession();
   const load = useServerFn(getMyOpportunities);
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["opportunities", "mine"],
     queryFn: () => load(),
     enabled: Boolean(user),
@@ -112,6 +113,7 @@ function HelpPage() {
       ) : null}
 
       {user && isLoading ? <p className="mt-6 text-sm text-muted-foreground">Looking…</p> : null}
+      {user && isError ? <DataErrorState retry={() => void refetch()} /> : null}
 
       {user && data && data.length === 0 ? (
         <div className="card-paper mt-6 p-5 text-sm">

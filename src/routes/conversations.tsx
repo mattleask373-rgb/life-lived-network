@@ -16,6 +16,7 @@ import {
 } from "@/lib/connection.functions";
 import { GROUP_HEADING, STATUS_LABEL, isOpen } from "@/lib/connection";
 import { REPORT_REASONS, type ReportReason } from "@/lib/safety";
+import { DataErrorState } from "@/components/data-state";
 
 const title = "Your conversations — The Living World";
 const description =
@@ -29,7 +30,7 @@ export const Route = createFileRoute("/conversations")({
 function Conversations() {
   const { user, ready } = useSession();
   const load = useServerFn(getMyConnections);
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["connections"],
     queryFn: () => load(),
     enabled: Boolean(user),
@@ -58,6 +59,7 @@ function Conversations() {
       ) : null}
 
       {user && isLoading ? <p className="mt-6 text-sm text-muted-foreground">Looking…</p> : null}
+      {user && isError ? <DataErrorState retry={() => void refetch()} /> : null}
 
       {user && data && data.length === 0 ? (
         <div className="card-paper mt-6 p-5 text-sm">

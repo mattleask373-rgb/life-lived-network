@@ -155,7 +155,7 @@ function ReviewPanel({ report, onClose }: { report: ReviewerReport; onClose: () 
       await queryClient.invalidateQueries({ queryKey: ["reports"] });
       onClose();
     },
-    onError: (e: unknown) => setError(e instanceof Error ? e.message : "That didn't save."),
+    onError: () => setError("We couldn't save this review right now. Please try again."),
   });
 
   return (

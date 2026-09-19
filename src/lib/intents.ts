@@ -26,13 +26,46 @@ export interface Intent {
 }
 
 export const INTENTS: Intent[] = [
-  { id: "meet", label: "Meet people", blurb: "Rooms and tables with room in them", layers: ["people", "food", "community"] },
-  { id: "help", label: "Help someone", blurb: "Hands needed nearby", layers: ["community", "nature"], give: true },
-  { id: "learn", label: "Learn something", blurb: "Someone who knows how", layers: ["experience", "art"] },
-  { id: "nature", label: "Be outside", blurb: "Water, trees, air", layers: ["nature"], outdoors: true },
+  {
+    id: "meet",
+    label: "Meet people",
+    blurb: "Rooms and tables with room in them",
+    layers: ["people", "food", "community"],
+  },
+  {
+    id: "help",
+    label: "Help someone",
+    blurb: "Hands needed nearby",
+    layers: ["community", "nature"],
+    give: true,
+  },
+  {
+    id: "learn",
+    label: "Learn something",
+    blurb: "Someone who knows how",
+    layers: ["experience", "art"],
+  },
+  {
+    id: "nature",
+    label: "Be outside",
+    blurb: "Water, trees, air",
+    layers: ["nature"],
+    outdoors: true,
+  },
   { id: "music", label: "Hear music", blurb: "A room with sound in it", layers: ["music"] },
-  { id: "work", label: "Find work", blurb: "Paid hours you could take", layers: ["work"], pays: true },
-  { id: "make", label: "Create something", blurb: "People making things", layers: ["art", "experience"] },
+  {
+    id: "work",
+    label: "Find work",
+    blurb: "Paid hours you could take",
+    layers: ["work"],
+    pays: true,
+  },
+  {
+    id: "make",
+    label: "Create something",
+    blurb: "People making things",
+    layers: ["art", "experience"],
+  },
   { id: "eat", label: "Eat well", blurb: "Where people actually go", layers: ["food"] },
   { id: "free", label: "Spend nothing", blurb: "Good and free", layers: [], free: true },
   { id: "surprise", label: "Surprise me", blurb: "Something outside your usual", layers: [] },
@@ -82,14 +115,8 @@ export function doSomethingToday(all: WorldEntry[], intent: Intent): WorldEntry[
  * "Why not?" — one real thing outside someone's usual shape.
  * Deliberately not random noise: cheap, soon, and in a layer they haven't saved.
  */
-export function whyNot(
-  all: WorldEntry[],
-  savedIds: string[],
-  nudge = 0,
-): WorldEntry | undefined {
-  const savedLayers = new Set(
-    all.filter((e) => savedIds.includes(e.id)).map((e) => e.layer),
-  );
+export function whyNot(all: WorldEntry[], savedIds: string[], nudge = 0): WorldEntry | undefined {
+  const savedLayers = new Set(all.filter((e) => savedIds.includes(e.id)).map((e) => e.layer));
   const candidates = all
     .filter((e) => e.quality !== "expired" && !savedIds.includes(e.id))
     .filter((e) => e.cost <= 20)

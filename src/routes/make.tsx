@@ -130,8 +130,8 @@ function MakePage() {
       setDone(true);
       setKind(null);
       setForm((f) => ({ ...f, title: "", summary: "", details: "", when_text: "" }));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "That didn't save. Try again?");
+    } catch {
+      setError("We couldn't save that right now. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -145,8 +145,8 @@ function MakePage() {
         <div className="mx-auto max-w-xl px-4 pt-10 pb-20 sm:px-6">
           <h1 className="text-3xl sm:text-4xl">Make something happen</h1>
           <p className="mt-2 text-muted-foreground">
-            This is the part where a real person puts something real into the world, so we need
-            to know who you are first. Looking around never needs an account.
+            This is the part where a real person puts something real into the world, so we need to
+            know who you are first. Looking around never needs an account.
           </p>
           <Link
             to="/auth"
@@ -174,7 +174,6 @@ function MakePage() {
         <div className="mt-5">
           <PlacePicker />
         </div>
-
 
         {done ? (
           <div className="card-paper mt-6 p-5">
@@ -236,9 +235,7 @@ function MakePage() {
                 />
               </label>
               <label className="block text-sm">
-                <span className="text-muted-foreground">
-                  Things worth knowing — one per line
-                </span>
+                <span className="text-muted-foreground">Things worth knowing — one per line</span>
                 <textarea
                   rows={3}
                   value={form.details}

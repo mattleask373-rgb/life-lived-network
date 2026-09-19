@@ -227,12 +227,18 @@ describe("route discoveries", () => {
   });
 
   it("only exposes evidence and freshness labels backed by stored facts", () => {
-    expect(evidenceLabelFor(entry("source", "bristol", {
-      sourceName: "Town listings",
-      startsAt: "2026-05-02T19:00:00Z",
-    }))).toBe("Event information · Town listings");
+    expect(
+      evidenceLabelFor(
+        entry("source", "bristol", {
+          sourceName: "Town listings",
+          startsAt: "2026-05-02T19:00:00Z",
+        }),
+      ),
+    ).toBe("Event information · Town listings");
     expect(evidenceLabelFor(entry("unknown", "bristol"))).toBeNull();
-    expect(freshnessLabelFor(entry("fresh", "bristol", { quality: "recently updated" }))).toBe("Updated recently");
+    expect(freshnessLabelFor(entry("fresh", "bristol", { quality: "recently updated" }))).toBe(
+      "Updated recently",
+    );
     expect(freshnessLabelFor(entry("unchecked", "bristol", { quality: "unverified" }))).toBeNull();
   });
 

@@ -173,7 +173,7 @@ function ProfilePage() {
       wants_to_learn: list(form.wants_to_learn),
       discoverable: form.discoverable,
     });
-    if (err) setError(err.message);
+    if (err) setError("We couldn't save your profile right now. Please try again.");
     else setSaved(true);
   };
 

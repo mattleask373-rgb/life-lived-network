@@ -184,7 +184,11 @@ export function clusterPlaced(placed: Placed[], cell = 8): Cluster[] {
  * The place the map is currently looking at, if geography knows one. Used to
  * offer — never to impose — a change of locality.
  */
-export function placeInView(index: PlaceIndex, view: MapView, exclude?: string | null): Place | null {
+export function placeInView(
+  index: PlaceIndex,
+  view: MapView,
+  exclude?: string | null,
+): Place | null {
   const b = boundsOf(view);
   let best: { place: Place; distance: number } | null = null;
   for (const place of index.byId.values()) {

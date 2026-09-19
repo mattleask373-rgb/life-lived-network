@@ -7,6 +7,7 @@ import {
   moveJourneyStop,
   readRoadTripDraft,
   removeJourneyStop,
+  writeRoadTripDraft,
 } from "./road-trip-journey";
 import type { Place } from "./places";
 
@@ -51,29 +52,53 @@ describe("road-trip journey draft", () => {
   });
 
   it("serialises and restores the complete ordered draft", () => {
-    const draft = draftFromPlan({
-      from: place("birmingham"),
-      to: place("bristol"),
-      mode: "cycling",
-      date: "2026-09-19",
-      interests: ["history", "food"],
-    }, ["museum", "market", "abbey"]);
+    const draft = draftFromPlan(
+      {
+        from: place("birmingham"),
+        to: place("bristol"),
+        mode: "cycling",
+        date: "2026-09-19",
+        interests: ["history", "food"],
+      },
+      ["museum", "market", "abbey"],
+    );
     expect(readRoadTripDraft(JSON.stringify(draft))).toEqual(draft);
     expect(draft.stopIds).toEqual(["museum", "market", "abbey"]);
   });
 
   it("rejects malformed stored data and deduplicates valid stop ids", () => {
     expect(readRoadTripDraft("not json")).toBeNull();
-    expect(readRoadTripDraft(JSON.stringify({ version: 2 }))).toBeNull();
+    expect(readRoadTripDraft(JSON.stringify({ version: 3 }))).toBeNull();
     expect(readRoadTripDraft(JSON.stringify({ version: 1 }))).toBeNull();
-    expect(readRoadTripDraft(JSON.stringify({
-      version: 1,
-      fromId: "birmingham",
-      toId: "bristol",
-      mode: "driving",
-      date: "2026-09-19",
-      interests: ["history"],
-      stopIds: ["museum", "museum"],
-    }))?.stopIds).toEqual(["museum"]);
+    expect(
+      readRoadTripDraft(
+        JSON.stringify({
+          version: 2,
+          fromId: "birmingham",
+          toId: "bristol",
+          mode: "driving",
+          date: "2026-09-19",
+          interests: ["history"],
+          stopIds: ["museum", "museum"],
+          stopEntries: [],
+        }),
+      )?.stopIds,
+    ).toEqual(["museum"]);
+  });
+
+  it("does not break when browser storage is unavailable", () => {
+    expect(
+      writeRoadTripDraft(
+        {
+          setItem: () => {
+            throw new Error("blocked");
+          },
+        },
+        draftFromPlan(
+          { from: place("birmingham"), to: place("bristol"), mode: "driving", interests: [] },
+          [],
+        ),
+      ),
+    ).toBe(false);
   });
 });

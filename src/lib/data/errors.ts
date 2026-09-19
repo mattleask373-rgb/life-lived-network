@@ -37,7 +37,10 @@ export class DataError extends Error {
 }
 
 /** Turns anything thrown below the boundary into one predictable shape. */
-export function asDataError(error: unknown, fallback: DataErrorCode = "DATA_UNAVAILABLE"): DataError {
+export function asDataError(
+  error: unknown,
+  fallback: DataErrorCode = "DATA_UNAVAILABLE",
+): DataError {
   if (error instanceof DataError) return error;
   const message = error instanceof Error ? error.message : String(error);
   if (/jwt|unauthor/i.test(message)) return new DataError("UNAUTHENTICATED", message);

@@ -7,13 +7,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 
-import {
-  decodeCursor,
-  pageLimit,
-  toPage,
-  type DiscoveryContext,
-  type Page,
-} from "./data/contract";
+import { decodeCursor, pageLimit, toPage, type DiscoveryContext, type Page } from "./data/contract";
 import { asDataError } from "./data/errors";
 import type { HourOffer } from "./hours";
 

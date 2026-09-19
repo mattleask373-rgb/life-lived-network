@@ -7,8 +7,8 @@
  */
 
 export function fixturesAllowed(): boolean {
-  const explicit = process.env['WORLD_FIXTURES'];
-  if (explicit === 'true') return true;
-  if (explicit === 'false') return false;
-  return process.env['NODE_ENV'] !== 'production';
+  const explicit = process.env["WORLD_FIXTURES"];
+  if (explicit === "true") return true;
+  if (explicit === "false") return false;
+  return process.env["NODE_ENV"] !== "production";
 }

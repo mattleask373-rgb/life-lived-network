@@ -216,16 +216,20 @@ export function routeDiscoveries(input: DiscoveryInput, limit = 60): Discovery[]
     if (inDestination) reasons.push("At your destination");
     else if (offRouteKm <= 3) reasons.push("Along your route");
     else reasons.push(`About ${offRouteKm} km off your route, as the crow flies`);
-    if (!routed) reasons.push("Detour driving time unavailable until a route provider is connected");
+    if (!routed)
+      reasons.push("Detour driving time unavailable until a route provider is connected");
     if (plan.date && entry.startsAt && entry.startsAt.slice(0, 10) === plan.date) {
       reasons.push("Happening on your travel date");
     }
     if (entry.sourceName) reasons.push(`Listed by ${entry.sourceName}`);
     if (entry.demonstration) reasons.push("Demonstration record, not live information");
-    const text = `${entry.title} ${entry.summary} ${(entry.skills ?? []).join(" ")} ${entry.layer}`.toLowerCase();
+    const text =
+      `${entry.title} ${entry.summary} ${(entry.skills ?? []).join(" ")} ${entry.layer}`.toLowerCase();
     const matchedInterests = plan.interests.filter((interest, index) => {
       const normalised = interest.trim().toLowerCase();
-      return Boolean(normalised) && interests.indexOf(normalised) === index && text.includes(normalised);
+      return (
+        Boolean(normalised) && interests.indexOf(normalised) === index && text.includes(normalised)
+      );
     });
     if (matchedInterests.length) {
       reasons.push(`Matches ${matchedInterests.join(" + ")}`);
@@ -255,7 +259,10 @@ export function routeDiscoveries(input: DiscoveryInput, limit = 60): Discovery[]
 export function evidenceLabelFor(entry: WorldEntry): string | null {
   if (entry.demonstration) return "Demonstration record";
   if (entry.verified || entry.quality === "verified") return "Verified listing";
-  if (entry.sourceName) return entry.startsAt ? `Event information · ${entry.sourceName}` : `Listed by ${entry.sourceName}`;
+  if (entry.sourceName)
+    return entry.startsAt
+      ? `Event information · ${entry.sourceName}`
+      : `Listed by ${entry.sourceName}`;
   if (entry.origin === "resident" || entry.community) return "Local discovery";
   return null;
 }

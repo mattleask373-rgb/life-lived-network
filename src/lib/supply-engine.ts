@@ -40,12 +40,7 @@ import type {
 import type { JourneyContext } from "./journey-context";
 import { journeyOverlaps } from "./journey-context";
 import { regulatedFlags } from "./policy";
-import {
-  entryInScope,
-  exactGeography,
-  geographicReach,
-  type NeedGeography,
-} from "./geo-scope";
+import { entryInScope, exactGeography, geographicReach, type NeedGeography } from "./geo-scope";
 
 export type SupplyBand =
   | "direct"
@@ -191,7 +186,6 @@ function overlapsNeedTime(
     ) ?? null
   );
 }
-
 
 function whenText(need: Need): string {
   if (!need.startsAt) return "Time still to agree";

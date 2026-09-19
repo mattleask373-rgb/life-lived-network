@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { WorldProvider } from "../lib/world-context";
+import { useSession } from "../hooks/use-session";
 
 function NotFoundComponent() {
   return (
@@ -135,52 +136,54 @@ function RootShell({ children }: { children: ReactNode }) {
  * does (their hour, their skills, their saved things, their conversations) sits
  * quietly underneath the door it belongs to, rather than competing with it.
  */
-const DOORS: { to: string; label: string; blurb: string; under: { to: string; label: string }[] }[] =
-  [
-    {
-      to: "/",
-      label: "Explore",
-      blurb: "What's around you",
-      under: [
-        { to: "/make", label: "Add something real" },
-        { to: "/life-list", label: "Your life list" },
-      ],
-    },
-    {
-      to: "/need",
-      label: "Find",
-      blurb: "What you need, or can give",
-      under: [
-        { to: "/give", label: "I have an hour" },
-        { to: "/help", label: "What you can do" },
-        { to: "/conversations", label: "Conversations" },
-      ],
-    },
-    {
-      to: "/road-trip",
-      label: "Journey",
-      blurb: "What's along your way",
-      under: [{ to: "/journey", label: "Shape a longer stay" }],
-    },
-  ];
+const DOORS: {
+  to: string;
+  label: string;
+  blurb: string;
+  under: { to: string; label: string }[];
+}[] = [
+  {
+    to: "/",
+    label: "Explore",
+    blurb: "What's around you",
+    under: [
+      { to: "/make", label: "Add something real" },
+      { to: "/life-list", label: "Your life list" },
+    ],
+  },
+  {
+    to: "/need",
+    label: "Find",
+    blurb: "What you need, or can give",
+    under: [
+      { to: "/give", label: "I have an hour" },
+      { to: "/help", label: "What you can do" },
+      { to: "/conversations", label: "Conversations" },
+    ],
+  },
+  {
+    to: "/road-trip",
+    label: "Journey",
+    blurb: "What's along your way",
+    under: [{ to: "/journey", label: "Shape a longer stay" }],
+  },
+];
 
 function SiteHeader() {
+  const { user, ready } = useSession();
   return (
     <header className="border-b border-border bg-card/80 backdrop-blur-sm">
-      <nav
-        aria-label="Main"
-        className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6"
-      >
+      <nav aria-label="Main" className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6">
         <div className="flex items-baseline justify-between gap-4">
           <Link to="/" className="min-w-0 truncate font-semibold tracking-tight">
             The Living World
           </Link>
           <Link
-            to="/profile"
+            to={user ? "/profile" : "/auth"}
             activeProps={{ className: "text-foreground" }}
-            className="shrink-0 text-sm text-muted-foreground hover:text-foreground"
+            className="focus-ink shrink-0 rounded-md px-2 py-1 text-sm text-muted-foreground hover:text-foreground"
           >
-            You
+            {!ready ? "Account" : user ? "Your account" : "Sign in"}
           </Link>
         </div>
         <div className="flex items-stretch gap-2 overflow-x-auto pb-1">
