@@ -152,9 +152,16 @@ export function categoriesOf(entry: WorldEntry): CategoryMatch[] {
     const evidence = category.words.filter((word) => text.includes(word));
     if (evidence.length) matches.push({ category, basis: "matched", evidence });
   }
-  // Most specific first: the category with the most of its own words present.
+  // Most specific first. Specificity is the longest phrase actually matched:
+  // "wedding photography" is a more precise reading of a record than
+  // "photographer", regardless of how many words either category happens to own.
+  const precision = (match: CategoryMatch) =>
+    Math.max(...match.evidence.map((word) => word.length), 0);
   return matches.sort(
-    (a, b) => b.evidence.length - a.evidence.length || a.category.label.localeCompare(b.category.label),
+    (a, b) =>
+      precision(b) - precision(a) ||
+      b.evidence.length - a.evidence.length ||
+      a.category.label.localeCompare(b.category.label),
   );
 }
 
