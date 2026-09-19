@@ -62,7 +62,8 @@ export function ProfilePhoto({
       return;
     }
     setBusy(true);
-    const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+    const extension =
+      file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
     const next = `${userId}/photo-${Date.now()}.${extension}`;
     const { error } = await supabase.storage
       .from("profile-photos")
@@ -125,8 +126,8 @@ export function ProfilePhoto({
           ) : null}
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          A real photograph of you, if you have one. An empty space is better than an invented
-          face, so there are none here.
+          A real photograph of you, if you have one. An empty space is better than an invented face,
+          so there are none here.
         </p>
         {problem ? <p className="mt-2 text-xs text-destructive">{problem}</p> : null}
       </div>
