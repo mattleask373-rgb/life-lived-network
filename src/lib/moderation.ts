@@ -9,6 +9,17 @@
 
 export type ReportStatus = "open" | "reviewed";
 
+/**
+ * The stored states a report can be in. "submitted" and "reviewing" both mean
+ * nobody has decided anything yet; only the last two carry a decision.
+ */
+export const REVIEWED_STATES = ["resolved", "dismissed"];
+
+/** Which stored state a recorded decision belongs in. */
+export function storedStatusFor(resolution: string): "resolved" | "dismissed" {
+  return resolution === "no_action" ? "dismissed" : "resolved";
+}
+
 export type ReportResolution =
   "" | "no_action" | "guidance_given" | "content_removed" | "account_restricted";
 
@@ -74,7 +85,7 @@ export function rowToReport(row: ReportRow): Report {
     subjectId: row.subject_id,
     reason: row.reason,
     note: row.note ?? "",
-    status: row.status === "reviewed" ? "reviewed" : "open",
+    status: REVIEWED_STATES.includes(row.status) ? "reviewed" : "open",
     createdAt: row.created_at,
     reviewedAt: row.reviewed_at,
     reviewedBy: row.reviewed_by,
