@@ -25,8 +25,13 @@ export function EntryCard({
         {entry.place} · {entry.neighbourhood}
       </p>
       <p className="mt-2 text-sm text-muted-foreground">
-        {entry.when} · {duration(entry.minutes)} · {money(entry.cost)}
+        {entry.when} · {duration(entry.minutes)} · {money(entry.cost, entry.currency)}
       </p>
+      {entry.demonstration ? (
+        <p className="mt-2 inline-flex rounded-full border border-border px-2 py-0.5 text-[0.7rem] uppercase tracking-widest text-muted-foreground">
+          Demonstration
+        </p>
+      ) : null}
       {note ? <p className="mt-2 text-sm text-foreground/80 italic">{note}</p> : null}
     </>
   );
