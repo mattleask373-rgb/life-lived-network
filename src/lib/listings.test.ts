@@ -57,4 +57,16 @@ describe("rowToEntry is the single normalisation seam", () => {
   it("keeps declared capacity visible in the details", () => {
     expect(rowToEntry(row).details).toContain("Room for 2 people");
   });
+
+  it("keeps only the first six real source-attributed photos", () => {
+    const photos = Array.from({ length: 7 }, (_, index) => ({
+      url: `https://images.example/${index}.jpg`,
+      sourceUrl: "https://events.example/real-event",
+      credit: "Event organiser",
+      alt: `The event in progress ${index + 1}`,
+    }));
+    const entry = rowToEntry(row, undefined, photos);
+    expect(entry.photos).toHaveLength(6);
+    expect(entry.photos?.[0]?.sourceUrl).toBe("https://events.example/real-event");
+  });
 });

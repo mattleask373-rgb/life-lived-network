@@ -24,6 +24,7 @@ import {
   type ConnectionStatus,
 } from "./connection";
 import { rowToNeed, type NeedRow } from "./needs";
+import { otherPerson, type ReportReason } from "./safety";
 
 const MAX_NOTE = 600;
 const MAX_LIST = 100;
@@ -134,9 +135,7 @@ export const getMyConnections = createServerFn({ method: "GET" })
     if (!requests.length) return [];
 
     const otherIds = [
-      ...new Set(
-        requests.map((r) => (r.senderId === context.userId ? r.recipientId : r.senderId)),
-      ),
+      ...new Set(requests.map((r) => (r.senderId === context.userId ? r.recipientId : r.senderId))),
     ];
     const [{ data: profiles }, { data: messages }] = await Promise.all([
       context.supabase
@@ -249,4 +248,68 @@ export const sendConnectionMessage = createServerFn({ method: "POST" })
       .single();
     if (error) throw error;
     return rowToMessage(message as unknown as ConnectionMessageRow);
+  });
+
+/** Stop any further contact. The other person is not told who blocked them. */
+export const blockConnectionPerson = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { requestId: string }) => input)
+  .handler(async ({ data, context }): Promise<{ blocked: true }> => {
+    const { data: row, error } = await context.supabase
+      .from("connection_requests")
+      .select("sender_id, recipient_id")
+      .eq("id", data.requestId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!row) throw new Error("That conversation isn't here any more.");
+    const blockedId = otherPerson(
+      { senderId: row.sender_id, recipientId: row.recipient_id },
+      context.userId,
+    );
+    if (!blockedId) throw new Error("That isn't yours.");
+
+    const { error: blockError } = await context.supabase
+      .from("user_blocks")
+      .upsert(
+        { blocker_id: context.userId, blocked_id: blockedId },
+        { onConflict: "blocker_id,blocked_id" },
+      );
+    if (blockError) throw blockError;
+    return { blocked: true };
+  });
+
+/** Quietly record a concern without publishing an accusation or reputation score. */
+export const reportConnection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { requestId: string; reason: ReportReason; note?: string }) => input)
+  .handler(async ({ data, context }): Promise<{ reported: true }> => {
+    const allowed: ReportReason[] = ["safety", "harassment", "spam", "misleading", "other"];
+    if (!allowed.includes(data.reason)) throw new Error("Choose a reason for the report.");
+
+    const { data: row, error } = await context.supabase
+      .from("connection_requests")
+      .select("sender_id, recipient_id")
+      .eq("id", data.requestId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!row) throw new Error("That conversation isn't here any more.");
+    const reportedUserId = otherPerson(
+      { senderId: row.sender_id, recipientId: row.recipient_id },
+      context.userId,
+    );
+    if (!reportedUserId) throw new Error("That isn't yours.");
+
+    const { error: reportError } = await context.supabase.from("content_reports").upsert(
+      {
+        reporter_id: context.userId,
+        reported_user_id: reportedUserId,
+        subject_type: "connection_request",
+        subject_id: data.requestId,
+        reason: data.reason,
+        note: (data.note ?? "").trim().slice(0, 1000),
+      },
+      { onConflict: "reporter_id,subject_type,subject_id", ignoreDuplicates: true },
+    );
+    if (reportError) throw reportError;
+    return { reported: true };
   });

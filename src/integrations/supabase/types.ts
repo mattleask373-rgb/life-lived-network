@@ -147,6 +147,45 @@ export type Database = {
           },
         ]
       }
+      content_reports: {
+        Row: {
+          created_at: string
+          id: string
+          note: string
+          reason: string
+          reported_user_id: string | null
+          reporter_id: string
+          status: string
+          subject_id: string
+          subject_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string
+          reason: string
+          reported_user_id?: string | null
+          reporter_id: string
+          status?: string
+          subject_id: string
+          subject_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string
+          reason?: string
+          reported_user_id?: string | null
+          reporter_id?: string
+          status?: string
+          subject_id?: string
+          subject_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contribution_preferences: {
         Row: {
           contribution: string
@@ -229,6 +268,47 @@ export type Database = {
             columns: ["place_id"]
             isOneToOne: false
             referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_photos: {
+        Row: {
+          alt_text: string
+          created_at: string
+          credit: string
+          id: string
+          image_url: string
+          listing_id: string
+          position: number
+          source_url: string
+        }
+        Insert: {
+          alt_text?: string
+          created_at?: string
+          credit?: string
+          id?: string
+          image_url: string
+          listing_id: string
+          position?: number
+          source_url: string
+        }
+        Update: {
+          alt_text?: string
+          created_at?: string
+          credit?: string
+          id?: string
+          image_url?: string
+          listing_id?: string
+          position?: number
+          source_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_photos_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
             referencedColumns: ["id"]
           },
         ]
@@ -740,6 +820,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

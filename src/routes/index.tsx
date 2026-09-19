@@ -6,6 +6,7 @@ import { EntrySheet } from "@/components/entry-sheet";
 import { EntryCard } from "@/components/entry-card";
 import { ThreeHours } from "@/components/three-hours";
 import { DoSomethingToday } from "@/components/do-something-today";
+import { LayerIcon } from "@/components/layer-icon";
 import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWorldEntries } from "@/lib/listings";
@@ -69,9 +70,7 @@ function Home() {
     <main className="paper-grain min-h-screen">
       <div className="mx-auto max-w-5xl px-4 pt-8 pb-20 sm:px-6">
         <header>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            Where are you?
-          </p>
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Where are you?</p>
           <h1 className="mt-1 text-4xl leading-none sm:text-5xl">
             {placeName}
             <span className="text-muted-foreground">, {regionName}</span>
@@ -80,10 +79,7 @@ function Home() {
         </header>
 
         {/* Something's happening here */}
-        <section
-          aria-labelledby="happening-heading"
-          className="card-paper mt-6 p-5"
-        >
+        <section aria-labelledby="happening-heading" className="card-paper mt-6 p-5">
           <h2 id="happening-heading" className="text-xl">
             Something's happening here
           </h2>
@@ -93,10 +89,8 @@ function Home() {
           <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {snapshot.map(({ layer, count }) => (
               <li key={layer.id} className="rounded-lg border border-border bg-background p-3">
-                <p className="text-2xl">
-                  <span aria-hidden="true" className="mr-1">
-                    {layer.glyph}
-                  </span>
+                <p className="flex items-center gap-2 text-2xl">
+                  <LayerIcon icon={layer.icon} size={20} strokeWidth={1.6} />
                   {count}
                 </p>
                 <p className="text-sm text-muted-foreground">{layer.blurb}</p>
@@ -111,9 +105,7 @@ function Home() {
             <h2 id="map-heading" className="truncate text-xl">
               What's around you
             </h2>
-            <p className="shrink-0 text-sm text-muted-foreground">
-              {entries.length} things
-            </p>
+            <p className="shrink-0 text-sm text-muted-foreground">{entries.length} things</p>
           </div>
           <div className="mt-3">
             <LayerFilter active={layers} onChange={setLayers} />
@@ -161,8 +153,8 @@ function Home() {
         <section className="card-paper mt-10 p-5">
           <h2 className="text-xl">What can you give?</h2>
           <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-            An hour of something useful — teaching, painting, photography, a language, a pair
-            of hands. Nothing here is scored or counted.
+            An hour of something useful — teaching, painting, photography, a language, a pair of
+            hands. Nothing here is scored or counted.
           </p>
           <Link
             to="/give"
@@ -176,8 +168,8 @@ function Home() {
         <section className="card-paper mt-10 p-5">
           <h2 className="text-xl">What could your journey become?</h2>
           <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-            Tell us the shape of your time here — days, money, what you'd like to find — and
-            we'll arrange real things that already exist into a few possible weeks.
+            Tell us the shape of your time here — days, money, what you'd like to find — and we'll
+            arrange real things that already exist into a few possible weeks.
           </p>
           <Link
             to="/journey"

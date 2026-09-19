@@ -131,13 +131,17 @@ function SiteHeader() {
     <header className="border-b border-border bg-card/80 backdrop-blur-sm">
       <nav
         aria-label="Main"
-        className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:flex sm:justify-between sm:px-6"
+        className="mx-auto max-w-5xl px-4 py-3 sm:flex sm:items-center sm:justify-between sm:gap-5 sm:px-6"
       >
-        <Link to="/" className="min-w-0 truncate font-semibold tracking-tight">
+        <Link to="/" className="hidden min-w-0 truncate font-semibold tracking-tight sm:block">
           The Living World
         </Link>
-        <div className="flex shrink-0 items-center gap-4 text-sm">
-          <Link to="/" activeProps={{ className: "text-foreground" }} className="text-muted-foreground hover:text-foreground">
+        <div className="flex items-center gap-5 overflow-x-auto whitespace-nowrap pb-1 text-sm sm:shrink-0 sm:pb-0">
+          <Link
+            to="/"
+            activeProps={{ className: "text-foreground" }}
+            className="text-muted-foreground hover:text-foreground"
+          >
             Map
           </Link>
           <Link

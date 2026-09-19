@@ -65,7 +65,11 @@ describe("supply engine", () => {
   });
 
   it("goes quiet rather than inventing", () => {
-    const answer = findSupply({ need: cleanerNeed, people: [latentGardener], entries: [unrelatedEntry] });
+    const answer = findSupply({
+      need: cleanerNeed,
+      people: [latentGardener],
+      entries: [unrelatedEntry],
+    });
     expect(answer.results).toHaveLength(0);
     expect(answer.quiet).toBe(true);
   });
@@ -88,5 +92,25 @@ describe("supply engine", () => {
       entries: [gardenerOfferEntry],
     };
     expect(findSupply(input)).toEqual(findSupply(input));
+  });
+
+  it("explains why stale and unqualified people were excluded", () => {
+    const stale = {
+      ...openGardener,
+      id: "stale",
+      capabilities: openGardener.capabilities.map((capability) => ({
+        ...capability,
+        lastConfirmedAt: "2020-01-01T00:00:00.000Z",
+      })),
+    };
+    const answer = findSupply({
+      need: { ...gardenerNeed, requiredQualifications: ["horticulture licence"] },
+      people: [stale, openGardener],
+      entries: [],
+      now: "2026-09-19T10:00:00.000Z",
+    });
+    expect(answer.results).toHaveLength(0);
+    expect(answer.diagnostics.excludedByFreshness).toBe(1);
+    expect(answer.diagnostics.excludedByQualification).toBe(1);
   });
 });

@@ -7,12 +7,7 @@ import { useSession } from "@/hooks/use-session";
 import { sendConnectionRequest } from "@/lib/connection.functions";
 
 import { findSupplyForNeed } from "@/lib/needs.functions";
-import {
-  BAND_HEADING,
-  BAND_ORDER,
-  type SupplyBand,
-  type SupplyResult,
-} from "@/lib/supply-engine";
+import { BAND_HEADING, BAND_ORDER, type SupplyBand, type SupplyResult } from "@/lib/supply-engine";
 
 const title = "Who could help — The Living World";
 const description =
@@ -48,7 +43,10 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main className="paper-grain min-h-screen">
       <div className="mx-auto max-w-3xl px-4 pt-8 pb-20 sm:px-6">
-        <Link to="/need" className="focus-ink text-xs uppercase tracking-[0.2em] text-muted-foreground">
+        <Link
+          to="/need"
+          className="focus-ink text-xs uppercase tracking-[0.2em] text-muted-foreground"
+        >
           ← Needs
         </Link>
         {children}
@@ -109,8 +107,8 @@ function NeedAnswer() {
           <h2 className="text-xl">It's quiet here</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             We don't have anyone or anything reliable to point you at for this, in this place, at
-            this time. We'd rather say that than make something up. If you post what you can give
-            on the hours page, or ask again in a day or two, the picture changes as people join.
+            this time. We'd rather say that than make something up. If you post what you can give on
+            the hours page, or ask again in a day or two, the picture changes as people join.
           </p>
           <Link
             to="/give"
@@ -198,7 +196,9 @@ function Invite({ needId, personId }: { needId: string; personId: string }) {
         Send it
       </button>
       {send.isError ? (
-        <p className="mt-2 text-xs text-muted-foreground">That didn't send. Try again in a moment.</p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          That didn't send. Try again in a moment.
+        </p>
       ) : null}
       <p className="mt-2 text-xs text-muted-foreground">
         No contact details are shared. You'll both be able to reply here.
@@ -225,6 +225,23 @@ function Band({
       <ul className="mt-3 space-y-3">
         {rows.map((r) => (
           <li key={r.id} className="card-paper p-4">
+            {r.personId ? (
+              r.photoUrl ? (
+                <img
+                  src={r.photoUrl}
+                  alt=""
+                  className="mb-3 h-12 w-12 rounded-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div
+                  aria-hidden="true"
+                  className="mb-3 grid h-12 w-12 place-items-center rounded-full border border-border bg-muted text-sm text-muted-foreground"
+                >
+                  {r.title.trim().charAt(0).toUpperCase() || "?"}
+                </div>
+              )
+            ) : null}
             <p className="text-lg leading-tight">{r.title}</p>
             <p className="mt-1 text-sm">{r.what}</p>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -236,6 +253,13 @@ function Band({
                   <li key={line}>· {line}</li>
                 ))}
               </ul>
+            ) : null}
+            {r.evidence ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {r.evidence.unknown.length
+                  ? `Not known: ${r.evidence.unknown.join(", ")}.`
+                  : "The stated constraints line up."}
+              </p>
             ) : null}
             {canInvite && r.personId ? <Invite needId={needId} personId={r.personId} /> : null}
           </li>

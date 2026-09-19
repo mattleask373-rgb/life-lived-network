@@ -14,6 +14,7 @@ import {
   type LayerId,
   type TimeBand,
   type WorldEntry,
+  type SourcePhoto,
 } from "./world-data";
 
 export interface ListingRow {
@@ -54,15 +55,45 @@ export const KINDS: {
   blurb: string;
   layer: LayerId;
 }[] = [
-  { id: "work", label: "Offer work", blurb: "Paid hours someone could take tomorrow", layer: "work" },
-  { id: "experience", label: "Host an experience", blurb: "Something you know how to do", layer: "experience" },
+  {
+    id: "work",
+    label: "Offer work",
+    blurb: "Paid hours someone could take tomorrow",
+    layer: "work",
+  },
+  {
+    id: "experience",
+    label: "Host an experience",
+    blurb: "Something you know how to do",
+    layer: "experience",
+  },
   { id: "event", label: "Create an event", blurb: "Music, a talk, a gathering", layer: "music" },
-  { id: "project", label: "Share a project", blurb: "Something being built that needs help", layer: "community" },
+  {
+    id: "project",
+    label: "Share a project",
+    blurb: "Something being built that needs help",
+    layer: "community",
+  },
   { id: "skill", label: "Offer a skill", blurb: "An hour of what you're good at", layer: "art" },
-  { id: "community", label: "Offer a community activity", blurb: "Hands needed, locally", layer: "community" },
-  { id: "recommendation", label: "Share a local recommendation", blurb: "Somewhere your friends actually go", layer: "food" },
+  {
+    id: "community",
+    label: "Offer a community activity",
+    blurb: "Hands needed, locally",
+    layer: "community",
+  },
+  {
+    id: "recommendation",
+    label: "Share a local recommendation",
+    blurb: "Somewhere your friends actually go",
+    layer: "food",
+  },
   { id: "table", label: "Open a table", blurb: "You're eating, and there's room", layer: "food" },
-  { id: "collaboration", label: "Look for collaborators", blurb: "You need a third pair of hands", layer: "art" },
+  {
+    id: "collaboration",
+    label: "Look for collaborators",
+    blurb: "You need a third pair of hands",
+    layer: "art",
+  },
 ];
 
 const LAYER_IDS: LayerId[] = [
@@ -87,7 +118,11 @@ function asSocial(v: string): WorldEntry["social"] {
   return v === "quiet" || v === "lively" ? v : "friendly";
 }
 
-export function rowToEntry(row: ListingRow, hostName?: string): WorldEntry {
+export function rowToEntry(
+  row: ListingRow,
+  hostName?: string,
+  photos: SourcePhoto[] = [],
+): WorldEntry {
   const quality = row.data_quality as DataQuality;
   return {
     id: row.id,
@@ -117,6 +152,7 @@ export function rowToEntry(row: ListingRow, hostName?: string): WorldEntry {
     quality,
     kind: row.kind,
     skills: row.skills,
+    ...(photos.length ? { photos: photos.slice(0, 6) } : {}),
   };
 }
 
@@ -126,17 +162,13 @@ export function rowToEntry(row: ListingRow, hostName?: string): WorldEntry {
  * The caller says where and how much; paging, limits, batching, fixtures policy
  * and future providers all live below this line.
  */
-export async function fetchWorld(
-  context: DiscoveryContext = {},
-): Promise<Page<WorldEntry>> {
+export async function fetchWorld(context: DiscoveryContext = {}): Promise<Page<WorldEntry>> {
   const { getWorld } = await import("./world.functions");
   return getWorld({ data: context });
 }
 
 /** Convenience for screens that just want the current page of entries. */
-export async function fetchWorldEntries(
-  context: DiscoveryContext = {},
-): Promise<WorldEntry[]> {
+export async function fetchWorldEntries(context: DiscoveryContext = {}): Promise<WorldEntry[]> {
   return (await fetchWorld(context)).items;
 }
 

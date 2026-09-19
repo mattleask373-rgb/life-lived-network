@@ -6,21 +6,21 @@
  * came from (database, fixtures, a future provider). Demo entries now live in
  * `fixtures/world-entries.ts`.
  *
- * No AI-generated imagery is used anywhere. Entries carry no photographs; the
- * UI renders neutral, hand-made placeholders instead.
+ * No AI-generated imagery is used. Photographs are optional and must preserve
+ * their real source and credit; otherwise the UI keeps a neutral placeholder.
  */
 
 export type LayerId =
-  | "work"
-  | "experience"
-  | "music"
-  | "art"
-  | "community"
-  | "people"
-  | "nature"
-  | "food";
+  "work" | "experience" | "music" | "art" | "community" | "people" | "nature" | "food";
 
 export type TimeBand = "now" | "today" | "tonight" | "tomorrow" | "weekend";
+
+export interface SourcePhoto {
+  url: string;
+  sourceUrl: string;
+  credit: string;
+  alt: string;
+}
 
 export interface WorldEntry {
   id: string;
@@ -56,6 +56,8 @@ export interface WorldEntry {
   kind?: string;
   /** What the person could give, in their own words. */
   skills?: string[];
+  /** Real, source-attributed photographs only. Never inferred or generated. */
+  photos?: SourcePhoto[];
 }
 
 export type DataQuality =
@@ -78,19 +80,22 @@ export const QUALITY_LABEL: Record<DataQuality, string> = {
 export interface Layer {
   id: LayerId;
   label: string;
-  glyph: string;
+  icon: LayerIconKey;
   blurb: string;
 }
 
+export type LayerIconKey =
+  "hammer" | "compass" | "music" | "palette" | "users" | "person" | "tree" | "utensils";
+
 export const LAYERS: Layer[] = [
-  { id: "work", label: "Work", glyph: "🛠", blurb: "Paid hours, near you" },
-  { id: "experience", label: "Experiences", glyph: "🧭", blurb: "Learn something real" },
-  { id: "music", label: "Music", glyph: "🎵", blurb: "Rooms with sound in them" },
-  { id: "art", label: "Artists", glyph: "🎨", blurb: "People making things" },
-  { id: "community", label: "Community", glyph: "🤝", blurb: "Places that need hands" },
-  { id: "people", label: "People", glyph: "👋", blurb: "Open to meeting someone" },
-  { id: "nature", label: "Nature", glyph: "🌲", blurb: "Go outside" },
-  { id: "food", label: "Food", glyph: "🥘", blurb: "Tables with room at them" },
+  { id: "work", label: "Work", icon: "hammer", blurb: "Paid hours, near you" },
+  { id: "experience", label: "Experiences", icon: "compass", blurb: "Learn something real" },
+  { id: "music", label: "Music", icon: "music", blurb: "Rooms with sound in them" },
+  { id: "art", label: "Artists", icon: "palette", blurb: "People making things" },
+  { id: "community", label: "Community", icon: "users", blurb: "Places that need hands" },
+  { id: "people", label: "People", icon: "person", blurb: "Open to meeting someone" },
+  { id: "nature", label: "Nature", icon: "tree", blurb: "Go outside" },
+  { id: "food", label: "Food", icon: "utensils", blurb: "Tables with room at them" },
 ];
 
 export function entriesByLayer(entries: WorldEntry[], layers: LayerId[]): WorldEntry[] {
@@ -111,11 +116,7 @@ export function activitySnapshot(entries: WorldEntry[]): { layer: Layer; count: 
 }
 
 /** Things nearby that relate to a given entry, without any ranking magic. */
-export function relatedEntries(
-  entries: WorldEntry[],
-  entry: WorldEntry,
-  limit = 3,
-): WorldEntry[] {
+export function relatedEntries(entries: WorldEntry[], entry: WorldEntry, limit = 3): WorldEntry[] {
   return entries
     .filter((e) => e.id !== entry.id)
     .map((e) => {

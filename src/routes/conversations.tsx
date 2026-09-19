@@ -7,11 +7,14 @@ import { useSession } from "@/hooks/use-session";
 import {
   getConnection,
   getMyConnections,
+  blockConnectionPerson,
+  reportConnection,
   moveConnectionRequest,
   sendConnectionMessage,
   type ConnectionSummary,
 } from "@/lib/connection.functions";
 import { GROUP_HEADING, STATUS_LABEL, isOpen } from "@/lib/connection";
+import { REPORT_REASONS, type ReportReason } from "@/lib/safety";
 
 const title = "Your conversations — The Living World";
 const description =
@@ -106,6 +109,9 @@ function Group({ heading, rows }: { heading: string; rows: ConnectionSummary[] }
 function Conversation({ summary }: { summary: ConnectionSummary }) {
   const [open, setOpen] = useState(false);
   const [body, setBody] = useState("");
+  const [showSafety, setShowSafety] = useState(false);
+  const [reportReason, setReportReason] = useState<ReportReason>("safety");
+  const [reportNote, setReportNote] = useState("");
   const qc = useQueryClient();
   const loadOne = useServerFn(getConnection);
   const { data } = useQuery({
@@ -120,6 +126,11 @@ function Conversation({ summary }: { summary: ConnectionSummary }) {
   };
   const reply = useMutation({ mutationFn: useServerFn(sendConnectionMessage), onSuccess: refresh });
   const move = useMutation({ mutationFn: useServerFn(moveConnectionRequest), onSuccess: refresh });
+  const block = useMutation({
+    mutationFn: useServerFn(blockConnectionPerson),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["connections"] }),
+  });
+  const report = useMutation({ mutationFn: useServerFn(reportConnection) });
 
   const youAre = data?.youAre;
   const live = isOpen(summary.status);
@@ -224,6 +235,68 @@ function Conversation({ summary }: { summary: ConnectionSummary }) {
               This one is closed. {STATUS_LABEL[summary.status]}.
             </p>
           )}
+          <div className="mt-4 border-t border-border pt-3">
+            <button
+              type="button"
+              onClick={() => setShowSafety((value) => !value)}
+              className="focus-ink text-xs text-muted-foreground underline"
+            >
+              Safety options
+            </button>
+            {showSafety ? (
+              <div className="mt-3 grid gap-3 text-sm">
+                <p className="text-xs text-muted-foreground">
+                  Blocking stops both people sending or reading anything further here.
+                </p>
+                <button
+                  type="button"
+                  disabled={block.isPending}
+                  onClick={() => block.mutate({ data: { requestId: summary.id } })}
+                  className="focus-ink w-fit rounded-full border border-border px-4 py-1.5 text-sm"
+                >
+                  Block this person
+                </button>
+                <label className="grid gap-1">
+                  Report a concern
+                  <select
+                    value={reportReason}
+                    onChange={(event) => setReportReason(event.target.value as ReportReason)}
+                    className="focus-ink rounded-lg border border-border bg-background px-3 py-2"
+                  >
+                    {REPORT_REASONS.map((reason) => (
+                      <option key={reason.id} value={reason.id}>
+                        {reason.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <textarea
+                  value={reportNote}
+                  onChange={(event) => setReportNote(event.target.value)}
+                  rows={2}
+                  placeholder="Optional details"
+                  className="focus-ink rounded-lg border border-border bg-background px-3 py-2"
+                />
+                <button
+                  type="button"
+                  disabled={report.isPending || report.isSuccess}
+                  onClick={() =>
+                    report.mutate({
+                      data: { requestId: summary.id, reason: reportReason, note: reportNote },
+                    })
+                  }
+                  className="focus-ink w-fit rounded-full border border-border px-4 py-1.5 text-sm"
+                >
+                  {report.isSuccess ? "Reported" : "Send report"}
+                </button>
+                {block.isError || report.isError ? (
+                  <p className="text-xs text-muted-foreground">
+                    That didn't work. Try again in a moment.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </div>

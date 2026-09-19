@@ -16,11 +16,7 @@ const BRIGHTON = "place-brighton";
 const BRISTOL = "place-bristol";
 const LISBON = "place-lisbon";
 
-function capability(
-  userId: string,
-  label: string,
-  over: Partial<Capability> = {},
-): Capability {
+function capability(userId: string, label: string, over: Partial<Capability> = {}): Capability {
   return {
     id: `${userId}-${label.toLowerCase().replace(/\s+/g, "-")}`,
     userId,
@@ -94,7 +90,7 @@ export const ALEX = person("alex", "Alex", BRIGHTON, "Brighton", {
 /** Maria — a therapist. She says she's qualified. Nobody has checked it. */
 export const MARIA = person("maria", "Maria", LISBON, "Lisbon", {
   capabilities: [
-    capability("maria", "therapy", {
+    capability("maria", "therapy and counselling registration", {
       kind: "qualification",
       level: "professional",
       verification: "self_stated",
@@ -123,9 +119,7 @@ export const DANIEL = person("daniel", "Daniel", LISBON, "Lisbon", {
 
 /** A profile nobody has touched in over a year, with expired availability. */
 export const STALE = person("stale", "Tom", BRIGHTON, "Brighton", {
-  capabilities: [
-    capability("stale", "gardening", { lastConfirmedAt: "2024-01-05T09:00:00.000Z" }),
-  ],
+  capabilities: [capability("stale", "gardening", { lastConfirmedAt: "2024-01-05T09:00:00.000Z" })],
   availability: [{ startsAt: "2024-02-01T09:00:00.000Z", endsAt: "2024-02-01T17:00:00.000Z" }],
   preferences: ["paid_work"] as OpportunityPreference[],
 });
@@ -136,14 +130,7 @@ export const PRIVATE_PERSON = person("private", "Someone", BRIGHTON, "Brighton",
   preferences: ["paid_work"] as OpportunityPreference[],
 });
 
-export const FIXTURE_PEOPLE: FixturePerson[] = [
-  SARAH,
-  ALEX,
-  MARIA,
-  DANIEL,
-  STALE,
-  PRIVATE_PERSON,
-];
+export const FIXTURE_PEOPLE: FixturePerson[] = [SARAH, ALEX, MARIA, DANIEL, STALE, PRIVATE_PERSON];
 
 function need(id: string, over: Partial<Need>): Need {
   return {

@@ -15,11 +15,7 @@ import type { Need } from "./needs";
 import { regulatedFlags } from "./policy";
 
 export type OpportunityKind =
-  | "exact_match"
-  | "possible_match"
-  | "community_possibility"
-  | "travelling_possibility"
-  | "swap";
+  "exact_match" | "possible_match" | "community_possibility" | "travelling_possibility" | "swap";
 
 export const OPPORTUNITY_ORDER: OpportunityKind[] = [
   "exact_match",
@@ -115,16 +111,25 @@ export function findOpportunitiesForPerson(input: ReciprocalInput): PersonOpport
     const capability = currentCapabilities.find((c) =>
       asked.some((w) => c.label.toLowerCase().includes(w)),
     );
+    const requiredQualification = need.requiredQualifications.length
+      ? currentCapabilities.find(
+          (candidate) =>
+            candidate.kind === "qualification" &&
+            need.requiredQualifications.some((required) =>
+              words(required).some((word) => candidate.label.toLowerCase().includes(word)),
+            ),
+        )
+      : null;
+    if (need.requiredQualifications.length && !requiredQualification) continue;
 
     const here = reachable(person, need);
     const free = overlaps(person, need);
-    const notes = regulatedFlags(`${need.category} ${need.title} ${need.requiredSkills.join(" ")}`)
-      .map((f) => f.note);
+    const notes = regulatedFlags(
+      `${need.category} ${need.title} ${need.requiredSkills.join(" ")}`,
+    ).map((f) => f.note);
 
-    const wantsSwap =
-      need.paymentType === "exchange" || need.intent === "skills_exchange";
-    const community =
-      need.intent === "community_project" || need.intent === "volunteering";
+    const wantsSwap = need.paymentType === "exchange" || need.intent === "skills_exchange";
+    const community = need.intent === "community_project" || need.intent === "volunteering";
 
     if (capability && here && community && person.preferences.includes("community_projects")) {
       found.push({
@@ -203,10 +208,7 @@ export function findOpportunitiesForPerson(input: ReciprocalInput): PersonOpport
         id: `travelling-${need.id}`,
         kind: "travelling_possibility",
         need,
-        why: [
-          `They asked for ${capability.label}`,
-          "You said you'd be passing through there",
-        ],
+        why: [`They asked for ${capability.label}`, "You said you'd be passing through there"],
         caveat: OPPORTUNITY_CAVEAT.travelling_possibility,
         notes,
       });

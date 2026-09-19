@@ -1,5 +1,6 @@
 import { LAYERS, type WorldEntry } from "@/lib/world-data";
 import { duration, layerText, money } from "./layer-colour";
+import { LayerIcon } from "./layer-icon";
 
 export function EntryCard({
   entry,
@@ -13,8 +14,8 @@ export function EntryCard({
   const layer = LAYERS.find((l) => l.id === entry.layer);
   const body = (
     <>
-      <div className="flex items-baseline gap-2">
-        <span aria-hidden="true">{layer?.glyph}</span>
+      <div className="flex items-center gap-2">
+        {layer ? <LayerIcon icon={layer.icon} size={15} strokeWidth={1.7} /> : null}
         <span className={`text-xs uppercase tracking-widest ${layerText[entry.layer]}`}>
           {layer?.label}
         </span>
