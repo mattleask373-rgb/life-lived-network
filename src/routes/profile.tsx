@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchPlaces } from "@/lib/places";
 import { CapabilityPanel } from "@/components/capability-panel";
 import { ProfilePhoto } from "@/components/profile-photo";
+import { DataErrorState, DataLoadingState } from "@/components/data-state";
 
 const title = "Who you are — The Living World";
 const description =
@@ -90,9 +91,10 @@ function Chips({
 }
 
 function ProfilePage() {
-  const { user, ready } = useSession();
+  const { user, ready, error: sessionError, retry: retrySession } = useSession();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [photoPath, setPhotoPath] = useState<string | null>(null);
@@ -118,8 +120,18 @@ function ProfilePage() {
     if (!user) return;
     let alive = true;
     (async () => {
-      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+      setLoadError(false);
+      const { data, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
       if (!alive) return;
+      if (profileError) {
+        setLoadError(true);
+        setLoading(false);
+        return;
+      }
       if (data) {
         setForm({
           display_name: data.display_name ?? "",
@@ -177,7 +189,26 @@ function ProfilePage() {
     else setSaved(true);
   };
 
-  if (!ready || loading) return <main className="paper-grain min-h-screen" />;
+  if (!ready || (user && loading)) {
+    return (
+      <main className="paper-grain min-h-screen px-5 py-10">
+        <div className="mx-auto max-w-2xl">
+          <DataLoadingState label="Opening your account…" />
+        </div>
+      </main>
+    );
+  }
+  if (sessionError || loadError) {
+    return (
+      <main className="paper-grain min-h-screen px-5 py-10">
+        <div className="mx-auto max-w-2xl">
+          <h1 className="text-3xl">Your account</h1>
+          <DataErrorState retry={sessionError ? retrySession : () => window.location.reload()} />
+        </div>
+      </main>
+    );
+  }
+  if (!user) return <main className="paper-grain min-h-screen" />;
 
   return (
     <main className="paper-grain min-h-screen">

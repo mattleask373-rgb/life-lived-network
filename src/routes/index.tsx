@@ -88,7 +88,7 @@ function Home() {
   const given = useMemo(() => contributions(all), [all]);
   const needCount = openNeeds?.length ?? 0;
   const questions = useMemo(() => localityQuestions(all, needCount), [all, needCount]);
-  const quiet = !worldLoading && !loading && all.length === 0;
+  const quiet = !worldLoading && !loading && !worldError && all.length === 0;
 
   return (
     <main className="paper-grain min-h-screen">

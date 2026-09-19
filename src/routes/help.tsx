@@ -11,6 +11,7 @@ import { getMyOpportunities } from "@/lib/needs.functions";
 import { OPPORTUNITY_HEADING, OPPORTUNITY_ORDER } from "@/lib/reciprocal";
 import { PAYMENT_MODELS } from "@/lib/needs";
 import { DataErrorState } from "@/components/data-state";
+import { eventDate, money } from "@/components/layer-colour";
 
 const title = "What could you help with? — The Living World";
 const description =
@@ -147,11 +148,11 @@ function HelpPage() {
                   <p className="mt-1 text-sm text-muted-foreground">
                     {o.need.placeText} ·{" "}
                     {o.need.startsAt
-                      ? new Date(o.need.startsAt).toLocaleString()
+                      ? eventDate(o.need.startsAt, o.need.timezone)
                       : "Time still to agree"}{" "}
                     ·{" "}
                     {PAYMENT_MODELS.find((p) => p.id === o.need.paymentModel)?.label ?? "Not said"}
-                    {o.need.budget ? ` (${o.need.budget} ${o.need.currency})` : ""}
+                    {o.need.budget ? ` (${money(o.need.budget, o.need.currency)})` : ""}
                   </p>
                   <ul className="mt-3 space-y-1 text-sm">
                     {o.why.map((w) => (

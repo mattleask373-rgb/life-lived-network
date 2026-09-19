@@ -704,6 +704,7 @@ export type Database = {
           preference: string
           updated_at: string
           user_id: string
+          visibility: string
         }
         Insert: {
           created_at?: string
@@ -713,6 +714,7 @@ export type Database = {
           preference: string
           updated_at?: string
           user_id: string
+          visibility?: string
         }
         Update: {
           created_at?: string
@@ -722,6 +724,7 @@ export type Database = {
           preference?: string
           updated_at?: string
           user_id?: string
+          visibility?: string
         }
         Relationships: []
       }

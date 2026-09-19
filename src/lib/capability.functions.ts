@@ -44,6 +44,10 @@ export const getMyCapabilityProfile = createServerFn({ method: "GET" })
       supabase.from("opportunity_preferences").select("*").eq("user_id", userId),
       supabase.from("contribution_preferences").select("*").eq("user_id", userId),
     ]);
+    const readError = [caps, areas, windows, prefs, contributions].find(
+      (result) => result.error,
+    )?.error;
+    if (readError) throw readError;
     const prefRows = (prefs.data ?? []) as { preference: string; earning_preference?: string }[];
     return {
       capabilities: ((caps.data ?? []) as unknown as CapabilityRow[]).map(rowToCapability),
