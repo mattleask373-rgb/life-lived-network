@@ -176,6 +176,11 @@ function MakePage() {
           unchecked — that's fine, it just has to be honest.
         </p>
 
+        <div className="mt-5">
+          <PlacePicker />
+        </div>
+
+
         {done ? (
           <div className="card-paper mt-6 p-5">
             <p>It's on the map.</p>

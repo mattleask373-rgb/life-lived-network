@@ -56,7 +56,7 @@ function JourneyPage() {
           <Field label="What you can spend a day">
             {[0, 15, 30, 60].map((b) => (
               <Chip key={b} on={budget === b} onClick={() => setBudget(b)}>
-                {b === 0 ? "Almost nothing" : `€${b}`}
+                {b === 0 ? "Almost nothing" : `£${b}`}
               </Chip>
             ))}
           </Field>
