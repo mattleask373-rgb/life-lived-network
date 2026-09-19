@@ -473,7 +473,9 @@ function JourneyPanel({
                 {stop.demonstration ? (
                   <span className="block text-xs text-muted-foreground">Demonstration record</span>
                 ) : stop.sourceName ? (
-                  <span className="block text-xs text-muted-foreground">Listed by {stop.sourceName}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Listed by {stop.sourceName}
+                  </span>
                 ) : null}
                 {!currentDiscoveryIds.has(stop.id) ? (
                   <span className="block text-xs text-muted-foreground">

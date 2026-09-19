@@ -192,7 +192,9 @@ function ProfilePage() {
   if (!ready || (user && loading)) {
     return (
       <main className="paper-grain min-h-screen px-5 py-10">
-        <div className="mx-auto max-w-2xl"><DataLoadingState label="Opening your account…" /></div>
+        <div className="mx-auto max-w-2xl">
+          <DataLoadingState label="Opening your account…" />
+        </div>
       </main>
     );
   }
