@@ -36,7 +36,7 @@ describe("a report is not a verdict", () => {
 
   it("still holds nothing decided if it is marked reviewed with no resolution", () => {
     const report = rowToReport(
-      row({ status: "reviewed", reviewed_at: "2026-09-19T12:00:00.000Z", resolution: "" }),
+      row({ status: "reviewing", reviewed_at: "2026-09-19T12:00:00.000Z", resolution: "" }),
     );
     expect(isModerationDecision(report)).toBe(false);
     expect(restrictsPerson(report)).toBe(false);
@@ -45,7 +45,7 @@ describe("a report is not a verdict", () => {
   it("counts a decision only once someone has looked and written it down", () => {
     const report = rowToReport(
       row({
-        status: "reviewed",
+        status: "dismissed",
         reviewed_at: "2026-09-19T12:00:00.000Z",
         reviewed_by: "moderator",
         resolution: "no_action",
@@ -60,7 +60,7 @@ describe("a report is not a verdict", () => {
   it("restricts someone only on that specific recorded outcome", () => {
     const report = rowToReport(
       row({
-        status: "reviewed",
+        status: "dismissed",
         reviewed_at: "2026-09-19T12:00:00.000Z",
         reviewed_by: "moderator",
         resolution: "account_restricted",

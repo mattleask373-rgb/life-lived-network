@@ -67,7 +67,7 @@ export const listReports = createServerFn({ method: "GET" })
     const { data: rows, error } = await context.supabase
       .from("content_reports")
       .select("*")
-      .order("status", { ascending: true })
+      .order("reviewed_at", { ascending: true, nullsFirst: true })
       .order("created_at", { ascending: false })
       .limit(MAX_LIST);
     if (error) throw error;
