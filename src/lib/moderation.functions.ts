@@ -50,7 +50,13 @@ export const amISafetyReviewer = createServerFn({ method: "GET" })
 export const listReports = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<ReviewerReport[]> => {
-    await requireReviewer(context);
+    const { data: roles, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .in("role", ["admin", "moderator"]);
+    if (roleError) throw roleError;
+    requireReviewer(roles);
 
     const { data: rows, error } = await context.supabase
       .from("content_reports")
@@ -122,7 +128,13 @@ export const recordReportReview = createServerFn({ method: "POST" })
     (input: { id: string; resolution: string; reviewNote?: string; reviewed?: boolean }) => input,
   )
   .handler(async ({ data, context }): Promise<Report> => {
-    await requireReviewer(context);
+    const { data: roles, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .in("role", ["admin", "moderator"]);
+    if (roleError) throw roleError;
+    requireReviewer(roles);
 
     const reviewed = data.reviewed !== false;
     if (reviewed && !isValidResolution(data.resolution)) {
