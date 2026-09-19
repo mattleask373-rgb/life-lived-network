@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      availability_windows: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          note: string
+          recurrence: string
+          starts_at: string
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          note?: string
+          recurrence?: string
+          starts_at: string
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          note?: string
+          recurrence?: string
+          starts_at?: string
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       hour_offers: {
         Row: {
           created_at: string
@@ -177,6 +213,173 @@ export type Database = {
           },
         ]
       }
+      needs: {
+        Row: {
+          budget: number | null
+          category: string
+          contact_preference: string
+          created_at: string
+          creator_id: string
+          currency: string
+          description: string
+          duration_minutes: number | null
+          ends_at: string | null
+          expires_at: string | null
+          flexibility: string
+          id: string
+          intent: string
+          lat: number | null
+          lng: number | null
+          payment_type: string
+          place_id: string | null
+          place_text: string
+          preferred_experience: string
+          recurring: boolean
+          required_qualifications: string[]
+          required_skills: string[]
+          starts_at: string | null
+          status: string
+          timezone: string
+          title: string
+          updated_at: string
+          urgency: string
+          visibility: string
+        }
+        Insert: {
+          budget?: number | null
+          category: string
+          contact_preference?: string
+          created_at?: string
+          creator_id: string
+          currency?: string
+          description?: string
+          duration_minutes?: number | null
+          ends_at?: string | null
+          expires_at?: string | null
+          flexibility?: string
+          id?: string
+          intent?: string
+          lat?: number | null
+          lng?: number | null
+          payment_type?: string
+          place_id?: string | null
+          place_text?: string
+          preferred_experience?: string
+          recurring?: boolean
+          required_qualifications?: string[]
+          required_skills?: string[]
+          starts_at?: string | null
+          status?: string
+          timezone?: string
+          title: string
+          updated_at?: string
+          urgency?: string
+          visibility?: string
+        }
+        Update: {
+          budget?: number | null
+          category?: string
+          contact_preference?: string
+          created_at?: string
+          creator_id?: string
+          currency?: string
+          description?: string
+          duration_minutes?: number | null
+          ends_at?: string | null
+          expires_at?: string | null
+          flexibility?: string
+          id?: string
+          intent?: string
+          lat?: number | null
+          lng?: number | null
+          payment_type?: string
+          place_id?: string | null
+          place_text?: string
+          preferred_experience?: string
+          recurring?: boolean
+          required_qualifications?: string[]
+          required_skills?: string[]
+          starts_at?: string | null
+          status?: string
+          timezone?: string
+          title?: string
+          updated_at?: string
+          urgency?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "needs_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opportunity_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          note: string
+          preference: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string
+          preference: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string
+          preference?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      person_capabilities: {
+        Row: {
+          created_at: string
+          evidence: string
+          id: string
+          kind: string
+          label: string
+          level: string
+          updated_at: string
+          user_id: string
+          verification: string
+        }
+        Insert: {
+          created_at?: string
+          evidence?: string
+          id?: string
+          kind: string
+          label: string
+          level?: string
+          updated_at?: string
+          user_id: string
+          verification?: string
+        }
+        Update: {
+          created_at?: string
+          evidence?: string
+          id?: string
+          kind?: string
+          label?: string
+          level?: string
+          updated_at?: string
+          user_id?: string
+          verification?: string
+        }
+        Relationships: []
+      }
       places: {
         Row: {
           blurb: string
@@ -321,6 +524,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      service_areas: {
+        Row: {
+          created_at: string
+          id: string
+          note: string
+          place_id: string
+          radius_km: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string
+          place_id: string
+          radius_km?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string
+          place_id?: string
+          radius_km?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_areas_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

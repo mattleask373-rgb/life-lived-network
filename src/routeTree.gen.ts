@@ -15,7 +15,9 @@ import { Route as GiveRouteImport } from './routes/give'
 import { Route as JourneyRouteImport } from './routes/journey'
 import { Route as LifeListRouteImport } from './routes/life-list'
 import { Route as MakeRouteImport } from './routes/make'
+import { Route as NeedRouteImport } from './routes/need'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as NeedIdRouteImport } from './routes/need.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -47,10 +49,20 @@ const MakeRoute = MakeRouteImport.update({
   path: '/make',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NeedRoute = NeedRouteImport.update({
+  id: '/need',
+  path: '/need',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => rootRouteImport,
+} as any)
+const NeedIdRoute = NeedIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => NeedRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -60,7 +72,9 @@ export interface FileRoutesByFullPath {
   '/journey': typeof JourneyRoute
   '/life-list': typeof LifeListRoute
   '/make': typeof MakeRoute
+  '/need': typeof NeedRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/need/$id': typeof NeedIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -69,7 +83,9 @@ export interface FileRoutesByTo {
   '/journey': typeof JourneyRoute
   '/life-list': typeof LifeListRoute
   '/make': typeof MakeRoute
+  '/need': typeof NeedRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/need/$id': typeof NeedIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -79,14 +95,33 @@ export interface FileRoutesById {
   '/journey': typeof JourneyRoute
   '/life-list': typeof LifeListRoute
   '/make': typeof MakeRoute
+  '/need': typeof NeedRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/need/$id': typeof NeedIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/give' | '/journey' | '/life-list' | '/make' | '/profile'
+    | '/'
+    | '/auth'
+    | '/give'
+    | '/journey'
+    | '/life-list'
+    | '/make'
+    | '/need'
+    | '/profile'
+    | '/need/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/give' | '/journey' | '/life-list' | '/make' | '/profile'
+  to:
+    | '/'
+    | '/auth'
+    | '/give'
+    | '/journey'
+    | '/life-list'
+    | '/make'
+    | '/need'
+    | '/profile'
+    | '/need/$id'
   id:
     | '__root__'
     | '/'
@@ -95,7 +130,9 @@ export interface FileRouteTypes {
     | '/journey'
     | '/life-list'
     | '/make'
+    | '/need'
     | '/profile'
+    | '/need/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -105,6 +142,7 @@ export interface RootRouteChildren {
   JourneyRoute: typeof JourneyRoute
   LifeListRoute: typeof LifeListRoute
   MakeRoute: typeof MakeRoute
+  NeedRoute: typeof NeedRouteWithChildren
   ProfileRoute: typeof ProfileRoute
 }
 
@@ -152,6 +190,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MakeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/need': {
+      id: '/need'
+      path: '/need'
+      fullPath: '/need'
+      preLoaderRoute: typeof NeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -159,8 +204,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/need/$id': {
+      id: '/need/$id'
+      path: '/$id'
+      fullPath: '/need/$id'
+      preLoaderRoute: typeof NeedIdRouteImport
+      parentRoute: typeof NeedRoute
+    }
   }
 }
+
+interface NeedRouteChildren {
+  NeedIdRoute: typeof NeedIdRoute
+}
+
+const NeedRouteChildren: NeedRouteChildren = {
+  NeedIdRoute: NeedIdRoute,
+}
+
+const NeedRouteWithChildren = NeedRoute._addFileChildren(NeedRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -169,6 +231,7 @@ const rootRouteChildren: RootRouteChildren = {
   JourneyRoute: JourneyRoute,
   LifeListRoute: LifeListRoute,
   MakeRoute: MakeRoute,
+  NeedRoute: NeedRouteWithChildren,
   ProfileRoute: ProfileRoute,
 }
 export const routeTree = rootRouteImport
