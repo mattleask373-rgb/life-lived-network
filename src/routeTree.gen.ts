@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as GiveRouteImport } from './routes/give'
+import { Route as HelpRouteImport } from './routes/help'
 import { Route as JourneyRouteImport } from './routes/journey'
 import { Route as LifeListRouteImport } from './routes/life-list'
 import { Route as MakeRouteImport } from './routes/make'
@@ -32,6 +33,11 @@ const AuthRoute = AuthRouteImport.update({
 const GiveRoute = GiveRouteImport.update({
   id: '/give',
   path: '/give',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JourneyRoute = JourneyRouteImport.update({
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/give': typeof GiveRoute
+  '/help': typeof HelpRoute
   '/journey': typeof JourneyRoute
   '/life-list': typeof LifeListRoute
   '/make': typeof MakeRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/give': typeof GiveRoute
+  '/help': typeof HelpRoute
   '/journey': typeof JourneyRoute
   '/life-list': typeof LifeListRoute
   '/make': typeof MakeRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/give': typeof GiveRoute
+  '/help': typeof HelpRoute
   '/journey': typeof JourneyRoute
   '/life-list': typeof LifeListRoute
   '/make': typeof MakeRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/give'
+    | '/help'
     | '/journey'
     | '/life-list'
     | '/make'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/give'
+    | '/help'
     | '/journey'
     | '/life-list'
     | '/make'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/give'
+    | '/help'
     | '/journey'
     | '/life-list'
     | '/make'
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   GiveRoute: typeof GiveRoute
+  HelpRoute: typeof HelpRoute
   JourneyRoute: typeof JourneyRoute
   LifeListRoute: typeof LifeListRoute
   MakeRoute: typeof MakeRoute
@@ -167,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: '/give'
       fullPath: '/give'
       preLoaderRoute: typeof GiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/journey': {
@@ -228,6 +248,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   GiveRoute: GiveRoute,
+  HelpRoute: HelpRoute,
   JourneyRoute: JourneyRoute,
   LifeListRoute: LifeListRoute,
   MakeRoute: MakeRoute,
