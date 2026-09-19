@@ -145,13 +145,22 @@ export async function fetchCommunityEntries(): Promise<WorldEntry[]> {
   return rows.map((r) => rowToEntry(r, names.get(r.creator_id)));
 }
 
-/** The whole world: what real people posted, plus the demo place. */
+/**
+ * The whole world. Read through the server now, so paging, indexes and later
+ * caching live in one place. Falls back to the demo place if the server read
+ * fails, rather than showing an empty world.
+ */
 export async function fetchWorld(): Promise<WorldEntry[]> {
   try {
-    const community = await fetchCommunityEntries();
-    return [...community, ...ENTRIES];
+    const { getWorld } = await import("./world.functions");
+    return await getWorld({ data: {} });
   } catch {
-    return ENTRIES;
+    try {
+      const community = await fetchCommunityEntries();
+      return [...community, ...ENTRIES];
+    } catch {
+      return ENTRIES;
+    }
   }
 }
 
