@@ -62,11 +62,17 @@ function Home() {
     return layers.length ? filtered : meaningfulVariety(filtered);
   }, [all, layers]);
   const snapshot = useMemo(() => activitySnapshot(all), [all]);
-  const tonight = useMemo(
-    () => entries.filter((e) => e.band === "tonight" || e.band === "today").slice(0, 3),
-    [entries],
+  // The locality read as one thing: dated events, providers, offered hours.
+  const events = useMemo(() => upcomingEvents(all), [all]);
+  const groups = useMemo(() => providerGroups(all), [all]);
+  const given = useMemo(() => contributions(all), [all]);
+  const needCount = openNeeds?.length ?? 0;
+  const questions = useMemo(
+    () => localityQuestions(all, needCount),
+    [all, needCount],
   );
   const quiet = !worldLoading && !loading && all.length === 0;
+
 
   return (
     <main className="paper-grain min-h-screen">
