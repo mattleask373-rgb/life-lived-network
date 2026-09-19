@@ -129,3 +129,101 @@ Missing / blocking the UK & Ireland demonstration:
 ## Note
 
 Slices are built one at a time, each approved deliberately. The project task list will be updated with these three slices as soon as building begins (it cannot be edited from plan mode).
+
+---
+
+# AMENDMENT — Birmingham live event fabric (added to Slice 3)
+
+Goal: stop the world looking invented. Birmingham becomes the first place whose activity comes from real outside sources, through machinery that is in no way Birmingham-specific.
+
+## A. What already exists (verified in the repository)
+
+- One canonical activity record used by every screen: title, summary, details, place name, neighbourhood, locality id, approximate coordinates, illustrative map position, time wording, time band, minutes, cost, currency, host, kind, skills, honesty label, optional source-attributed photographs (capped at six), and a `demonstration` flag.
+- One conversion point from stored row to that record (`rowToEntry`), documented as the seam a future outside source would feed.
+- One server-side world read that takes a context (a locality plus everywhere inside it, time window, entity types, limit, opaque cursor), pages safely, batches related lookups, and adds the demonstration layer only on the first page, only for the locality being viewed, and never in production.
+- Honesty labels already include "updated recently", "may have changed" and "has probably passed"; expired records are already excluded from the world read.
+- Photograph records already carry image, source URL, credit and alt text.
+- The real place hierarchy (country → region → county → city → town → neighbourhood) with timezone, currency and approximate centre, plus ancestor/descendant resolution.
+
+Genuinely missing: any record of a source or its health; any second identity for the same thing arriving twice; any import timestamp or "last checked at source"; any recurrence; any separate start/end time (times are wording plus a band); any cancellation state; any refresh mechanism; any venue resolution.
+
+## B. Canonical model — smallest safe change
+
+Keep the one activity record and the one conversion seam. Add:
+
+- A **sources** table: source name, kind (platform, venue, civic, community, resident), access method, attribution text, whether images may be stored, refresh interval, last run, last outcome, consecutive failures, enabled flag. Service-managed; publicly readable only for the attribution the interface must show.
+- A **source records** table: which source, that source's own identifier for the thing, source URL, raw payload hash, first imported at, last seen at source, source-reported last update, source-reported state (live/cancelled/postponed), and the canonical activity it resolved to. Many source records may point at one canonical activity — that is how the same night arriving from two sources keeps both attributions.
+- On the activity record: start and end timestamps, timezone, recurrence wording, organiser, ticket/source link, cancellation state, imported-at, last-checked-at, and origin (resident-submitted / source-derived / confirmed). Existing rows keep working; all new fields optional.
+
+No event-only table, no second entity type, no parallel discovery path.
+
+## C. Pipeline
+
+```text
+source  ->  adapter (per source, only place that knows its shape)
+        ->  normalise (validate URLs, text, dates, coordinates; strip markup)
+        ->  place resolution (existing hierarchy; venue matched, not duplicated)
+        ->  identity resolution + duplicate check (deterministic)
+        ->  provenance recorded
+        ->  freshness + cancellation state
+        ->  policy (visibility, category rules, image rights)
+        ->  canonical activity
+        ->  existing world read  ->  existing cards, map, sheets
+```
+
+Duplicate rule, deterministic and explainable: same source and same source identifier is the same record. Across sources, treat as the same thing only when the date and start time match within a stated tolerance AND the venue resolves to the same place AND the normalised titles agree closely. Anything short of that stays separate. No confidence score, no model judgement.
+
+Freshness: time-based from real timestamps — recently updated, current, aging, may have changed, expired. Anything whose end time has passed leaves upcoming discovery but keeps its provenance. Cancelled or postponed at source leaves discovery immediately and says why.
+
+## D. Sources — status honest, nothing assumed
+
+Every entry must be re-verified against current terms before any key is used; nothing here is claimed as usable yet.
+
+| Source | Access | Status |
+| --- | --- | --- |
+| Ticketmaster Discovery | Documented API, free developer key, city/geo and date filters, images provided, attribution and caching rules to confirm | REQUIRES CREDENTIALS + TERMS REVIEW |
+| Skiddle (strong UK/Birmingham grassroots music coverage) | Documented API, key on request, locality and date filters | REQUIRES CREDENTIALS + TERMS REVIEW |
+| Eventbrite | Third-party public search was withdrawn; only an organiser's own events | NOT SUITABLE for discovery |
+| Independent venues, theatres, galleries, community organisations | Many publish machine-readable calendars (structured page data or calendar feeds); some grant permission directly | REQUIRES REVIEW per source; strongest community fit |
+| Visit Birmingham / civic and cultural listings | No documented public API found; would need permission | REQUIRES REVIEW |
+| Residents posting through the app | Already built | READY |
+
+Deliberate ordering: one commercial platform at most, alongside several independent and community sources, so the first live fabric is not a ticket-platform mirror. No popularity ranking anywhere.
+
+## E. Birmingham without hard-coding
+
+Birmingham appears only as data: source rows scoped to localities, and a per-locality enable flag. Turning Bristol, Dublin or Lisbon on later is adding rows, not code. No locality name appears in any rule.
+
+## F. Refresh and failure
+
+Scheduled refresh per source (hourly to daily, whatever its terms allow), plus a manual run from the existing protected internal screen. Incremental where a source supports it. No sockets, no streaming. A failing source is recorded, skipped, and never crashes discovery; other sources continue; if nothing real is available the place says so plainly.
+
+## G. Intent front door
+
+The Slice 3 front door turns a sentence ("I'm free Saturday", "live music in Birmingham") into the existing discovery context — locality, date window, category. The deterministic read answers. Wording may be interpreted; an event may never be invented or embellished.
+
+## H. Interface — minimum
+
+Source and attribution line on the card and detail view; a clear three-way distinction between resident-submitted, source-derived and confirmed; real start/end times and cancellation state; imagery only where rights allow, otherwise the neutral placeholder; "what else could I do around this" links into existing possibilities only where real data supports them; a source health panel on the internal screen. No redesign.
+
+## I. Tests
+
+Adapter parsing per source; malformed, missing and hostile payloads; markup and URL sanitising; duplicate within and across sources; deliberate near-misses that must stay separate; British Summer Time boundaries and all-day events; cancelled, postponed and past events; venue matched to an existing place versus a new place; provenance retained across repeat imports; every freshness state; image-rights states; source outage; quiet locality; no locality bleed; privacy and access rules unchanged; full Slice 1 and 2 regression.
+
+## J. Security, privacy, terms
+
+Outside data is untrusted: validated, sanitised, length-capped, stored through service-role writes only, publicly readable as read-only. No stored image where terms forbid it, no image call from the browser to a source, attribution always kept, robots and rate limits respected, no scraping to work around an API. Nothing imported can alter access rules or expose private person data.
+
+## K. Not built yet
+
+Credentials, migrations, live connections, any scraping, realtime, booking, ticket sales, payments, reviews, ratings, feeds, promotion, model-based recommendation, graph store, routing, journey planning. Model use is limited to reading an intent sentence, never to producing an event.
+
+## L. Order of building
+
+1. Source and source-record tables, provenance and freshness fields; no outside calls.
+2. Adapter contract, normaliser, sanitiser, deterministic duplicate and venue resolution, all fixture-driven and tested.
+3. First adapter against recorded sample payloads only, behind an off switch, with a labelled development fixture set kept separate from real data.
+4. Interface: source line, origin distinction, real times, cancellation, honest quiet states.
+5. Scheduled and manual refresh, source health, failure handling.
+6. Terms review, then live credentials for the approved sources, Birmingham first.
+7. Second locality enabled with data alone, proving nothing is Birmingham-specific.
