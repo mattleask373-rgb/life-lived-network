@@ -272,6 +272,102 @@ export type Database = {
           },
         ]
       }
+      journey_places: {
+        Row: {
+          arrives_at: string | null
+          created_at: string
+          departs_at: string | null
+          id: string
+          journey_id: string
+          place_id: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          arrives_at?: string | null
+          created_at?: string
+          departs_at?: string | null
+          id?: string
+          journey_id: string
+          place_id: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          arrives_at?: string | null
+          created_at?: string
+          departs_at?: string | null
+          id?: string
+          journey_id?: string
+          place_id?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_places_journey_id_fkey"
+            columns: ["journey_id"]
+            isOneToOne: false
+            referencedRelation: "journeys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journey_places_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journeys: {
+        Row: {
+          created_at: string
+          ends_at: string | null
+          expires_at: string | null
+          id: string
+          last_confirmed_at: string
+          opportunity_opt_in: boolean
+          owner_id: string
+          starts_at: string | null
+          status: string
+          timezone: string
+          title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at?: string | null
+          expires_at?: string | null
+          id?: string
+          last_confirmed_at?: string
+          opportunity_opt_in?: boolean
+          owner_id: string
+          starts_at?: string | null
+          status?: string
+          timezone?: string
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string | null
+          expires_at?: string | null
+          id?: string
+          last_confirmed_at?: string
+          opportunity_opt_in?: boolean
+          owner_id?: string
+          starts_at?: string | null
+          status?: string
+          timezone?: string
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
       listing_photos: {
         Row: {
           alt_text: string
