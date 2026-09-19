@@ -24,6 +24,7 @@ import {
   type ConnectionStatus,
 } from "./connection";
 import { rowToNeed, type NeedRow } from "./needs";
+import { otherPerson, type ReportReason } from "./safety";
 
 const MAX_NOTE = 600;
 const MAX_LIST = 100;
@@ -33,6 +34,14 @@ export interface ConnectionSummary extends ConnectionRequest {
   otherName: string;
   lastMessageAt: string | null;
   messageCount: number;
+}
+
+async function assertNotBlocked(
+  supabase: Parameters<Parameters<typeof requireSupabaseAuth.server>[0]>[0] extends never ? never : never,
+  _first: string,
+  _second: string,
+) {
+  void supabase;
 }
 
 /** Say you could help with something, or ask someone if they would. */

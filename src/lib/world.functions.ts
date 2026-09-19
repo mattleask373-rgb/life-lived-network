@@ -18,7 +18,7 @@ import {
 } from "./data/contract";
 import { asDataError } from "./data/errors";
 import { rowToEntry, type ListingRow } from "./listings";
-import type { WorldEntry } from "./world-data";
+import type { SourcePhoto, WorldEntry } from "./world-data";
 
 export const getWorld = createServerFn({ method: "GET" })
   .inputValidator((input: DiscoveryContext | undefined) => input ?? {})
@@ -56,6 +56,7 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
     // One extra query for all creators, never one per listing.
     const names = new Map<string, string>();
     const creatorIds = [...new Set(listings.map((r) => r.creator_id))];
+    const photos = new Map<string, SourcePhoto[]>();
     if (creatorIds.length) {
       const { data: profiles } = await supabase
         .from("profiles")
@@ -67,8 +68,27 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       }
     }
 
+    if (listings.length) {
+      const { data: photoRows, error: photoError } = await supabase
+        .from("listing_photos")
+        .select("listing_id, image_url, source_url, credit, alt_text, position")
+        .in("listing_id", listings.map((listing) => listing.id))
+        .order("position", { ascending: true });
+      if (photoError) throw photoError;
+      for (const photo of photoRows ?? []) {
+        const current = photos.get(photo.listing_id) ?? [];
+        current.push({
+          url: photo.image_url,
+          sourceUrl: photo.source_url,
+          credit: photo.credit,
+          alt: photo.alt_text,
+        });
+        photos.set(photo.listing_id, current);
+      }
+    }
+
     const page = toPage(
-      listings.map((r) => rowToEntry(r, names.get(r.creator_id))),
+      listings.map((r) => rowToEntry(r, names.get(r.creator_id), photos.get(r.id) ?? [])),
       offset,
       limit,
     );
