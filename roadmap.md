@@ -6,6 +6,7 @@
 - [x] Harden account restoration, async error states, detail-sheet accessibility and locality presentation.
 - [x] Make Road Trip stop restoration resilient and storage-safe.
 - [x] Clear test, typecheck, lint, build, security and desktop/mobile release gates.
+- [ ] Remove `.env` from repository tracking; it is ignored now, but repository-index changes are platform-managed.
 
 ## Done
 
