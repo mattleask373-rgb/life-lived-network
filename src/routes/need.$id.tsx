@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
 import { useSession } from "@/hooks/use-session";
+import { PersonAvatar } from "@/components/person-avatar";
 import { sendConnectionRequest } from "@/lib/connection.functions";
 
 import { findSupplyForNeed } from "@/lib/needs.functions";
