@@ -6,6 +6,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import type { DiscoveryContext } from "./data/contract";
 
 export type HourDirection = "offering" | "asking";
 
