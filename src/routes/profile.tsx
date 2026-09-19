@@ -102,6 +102,7 @@ function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [photoPath, setPhotoPath] = useState<string | null>(null);
   const [form, setForm] = useState({
     display_name: "",
     intro: "",
@@ -140,6 +141,7 @@ function ProfilePage() {
           wants_to_learn: (data.wants_to_learn ?? []).join(", "),
           discoverable: data.discoverable ?? false,
         });
+        setPhotoPath(data.photo_url ?? null);
       }
       setLoading(false);
     })();
