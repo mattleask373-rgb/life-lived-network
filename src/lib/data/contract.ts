@@ -12,6 +12,14 @@
 export interface DiscoveryContext {
   /** A real place record, once one is resolved. */
   placeId?: string | null;
+  /**
+   * A locality and the localities inside it. Choosing a county, a region or a
+   * country therefore works exactly like choosing a neighbourhood — the caller
+   * resolves the hierarchy, the read stays bounded.
+   */
+  placeIds?: string[];
+  /** The same set as slugs, for sources keyed by slug rather than by id. */
+  placeSlugs?: string[];
   /** Place-level coordinates. Never a person's address. */
   lat?: number | null;
   lng?: number | null;
