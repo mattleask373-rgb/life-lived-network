@@ -7,20 +7,14 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchWorldEntries } from "@/lib/listings";
 import { LIFE_LIST_SEEDS } from "@/lib/fixtures/world-entries";
 import type { WorldEntry } from "@/lib/world-data";
+import { publicPage } from "@/lib/seo";
 
 const title = "Your life list — The Living World";
 const description =
   "The things you said why not to: places to go, people to meet, skills to learn and projects to help with. A private list, not a public performance.";
 
 export const Route = createFileRoute("/life-list")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-    ],
-  }),
+  head: () => publicPage({ path: "/life-list", title, description }),
   component: LifeListPage,
 });
 

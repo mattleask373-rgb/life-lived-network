@@ -8,20 +8,14 @@ import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWorldEntries } from "@/lib/listings";
 import { useWorldContext } from "@/lib/world-context";
+import { publicPage } from "@/lib/seo";
 
 const title = "What could your journey become? — The Living World";
 const description =
   "Say how long you're staying, what you can spend and what you'd like to find. We arrange real opportunities, music, food and community projects into a few possible journeys.";
 
 export const Route = createFileRoute("/journey")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-    ],
-  }),
+  head: () => publicPage({ path: "/journey", title, description }),
   component: JourneyPage,
 });
 

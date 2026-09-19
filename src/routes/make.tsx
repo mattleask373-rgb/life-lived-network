@@ -6,20 +6,14 @@ import { createListing, KINDS, type NewListing } from "@/lib/listings";
 import { useWorldContext } from "@/lib/world-context";
 import { PlacePicker } from "@/components/place-picker";
 import { LAYERS, type LayerId, type TimeBand } from "@/lib/world-data";
+import { publicPage } from "@/lib/seo";
 
 const title = "Make something happen — The Living World";
 const description =
   "Offer work, host an experience, put on an event, share a project, open a table or offer an hour of what you're good at.";
 
 export const Route = createFileRoute("/make")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-    ],
-  }),
+  head: () => publicPage({ path: "/make", title, description }),
   component: MakePage,
 });
 

@@ -11,22 +11,14 @@ import { findSupplyForNeed } from "@/lib/needs.functions";
 import { getWorld } from "@/lib/world.functions";
 import { nextStepFor, providerLine, servicePossibilities } from "@/lib/services";
 import { BAND_HEADING, BAND_ORDER, type SupplyBand, type SupplyResult } from "@/lib/supply-engine";
+import { privatePage } from "@/lib/seo";
 
 const title = "Who could help — The Living World";
 const description =
   "Real possibilities for a real need: people who've said they can help, community projects, freely offered hours, swaps, and travellers passing through — each one plainly labelled.";
 
 export const Route = createFileRoute("/need/$id")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "article" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: () => privatePage({ path: "", title, description }),
   errorComponent: () => (
     <Shell>
       <p className="text-sm text-muted-foreground">

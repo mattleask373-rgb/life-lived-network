@@ -16,22 +16,13 @@ import { useWorldContext } from "@/lib/world-context";
 import { amISafetyReviewer } from "@/lib/moderation.functions";
 import { listSources, refreshSource, type SourcePanelRow } from "@/lib/ingest.functions";
 import type { IngestOutcome } from "@/lib/ingest/contract";
+import { privatePage } from "@/lib/seo";
 
 const title = "Sources — internal";
 const description = "Internal panel for refreshing outside sources of activity. Not a public page.";
 
 export const Route = createFileRoute("/sources")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
+  head: () => privatePage({ path: "", title, description }),
   component: Sources,
 });
 

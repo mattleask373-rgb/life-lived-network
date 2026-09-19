@@ -9,23 +9,14 @@ import { useSession } from "@/hooks/use-session";
 import { getMyOpportunities } from "@/lib/needs.functions";
 import { OPPORTUNITY_HEADING, OPPORTUNITY_ORDER } from "@/lib/reciprocal";
 import { PAYMENT_MODELS } from "@/lib/needs";
+import { privatePage } from "@/lib/seo";
 
 const title = "What could you help with? — The Living World";
 const description =
   "Real things people near you have asked for, matched only against what you've actually said you can do, where you'd go and when you're free.";
 
 export const Route = createFileRoute("/help")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
+  head: () => privatePage({ path: "", title, description }),
   component: HelpPage,
 });
 

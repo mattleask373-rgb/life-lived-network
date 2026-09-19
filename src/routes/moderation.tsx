@@ -19,22 +19,13 @@ import {
   type ReviewerReport,
 } from "@/lib/moderation.functions";
 import { REASON_LABEL, RESOLUTIONS, SUBJECT_LABEL } from "@/lib/moderation";
+import { privatePage } from "@/lib/seo";
 
 const title = "Report review — internal";
 const description = "Internal safety review of reports. Not a public page.";
 
 export const Route = createFileRoute("/moderation")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
+  head: () => privatePage({ path: "", title, description }),
   component: Moderation,
 });
 

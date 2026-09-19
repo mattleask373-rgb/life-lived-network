@@ -15,23 +15,14 @@ import {
 } from "@/lib/connection.functions";
 import { GROUP_HEADING, STATUS_LABEL, isOpen } from "@/lib/connection";
 import { REPORT_REASONS, type ReportReason } from "@/lib/safety";
+import { privatePage } from "@/lib/seo";
 
 const title = "Your conversations — The Living World";
 const description =
   "Quiet, contextual conversations about real things: what someone needed, where, and when. No inbox to keep up with, no contact details handed over.";
 
 export const Route = createFileRoute("/conversations")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
+  head: () => privatePage({ path: "", title, description }),
   component: Conversations,
 });
 

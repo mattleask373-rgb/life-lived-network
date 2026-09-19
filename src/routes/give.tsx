@@ -3,20 +3,14 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "@/hooks/use-session";
 import { closeHour, createHour, fetchHours, type HourDirection } from "@/lib/hours";
+import { publicPage } from "@/lib/seo";
 
 const title = "What can you give? — The Living World";
 const description =
   "An hour of something useful: teaching, painting, photography, a garden, a language. Real people offering real hours, and people who'd love to learn.";
 
 export const Route = createFileRoute("/give")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-    ],
-  }),
+  head: () => publicPage({ path: "/give", title, description }),
   component: Give,
 });
 

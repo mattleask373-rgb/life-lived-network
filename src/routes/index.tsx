@@ -21,6 +21,7 @@ import { WhatsHappening } from "@/components/whats-happening";
 import { WhatsHere } from "@/components/whats-here";
 import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
 import {
+import { publicPage } from "@/lib/seo";
   activitySnapshot,
   meaningfulVariety,
   type LayerId,
@@ -32,14 +33,7 @@ const description =
   "A living map of real work, music, food, nature, community projects and people open to meeting, across the UK and Ireland. Find something, then go and live it.";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-    ],
-  }),
+  head: () => publicPage({ path: "/", title, description }),
   component: Home,
 });
 

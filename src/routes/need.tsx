@@ -7,22 +7,14 @@ import { useSession } from "@/hooks/use-session";
 import { createNeed, getMyNeeds, getOpenNeeds } from "@/lib/needs.functions";
 import { FLEXIBILITIES, NEED_INTENTS, URGENCIES, type Need } from "@/lib/needs";
 import { fetchDefaultPlace } from "@/lib/places";
+import { privatePage } from "@/lib/seo";
 
 const title = "What do you need? — The Living World";
 const description =
   "Say what you actually need — a gardener on Thursday, a hand with a community garden, someone to swap skills with — and see who nearby could genuinely help.";
 
 export const Route = createFileRoute("/need")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: () => privatePage({ path: "", title, description }),
   component: NeedPage,
 });
 

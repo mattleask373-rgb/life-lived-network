@@ -6,21 +6,14 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchPlaces } from "@/lib/places";
 import { CapabilityPanel } from "@/components/capability-panel";
 import { ProfilePhoto } from "@/components/profile-photo";
+import { privatePage } from "@/lib/seo";
 
 const title = "Who you are — The Living World";
 const description =
   "A profile that reads like a person: what you're interested in, what you could offer, and what you'd love to do. No followers, no scores.";
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
+  head: () => privatePage({ path: "", title, description }),
   component: ProfilePage,
 });
 
