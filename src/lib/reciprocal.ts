@@ -86,7 +86,9 @@ export function findOpportunitiesForPerson(input: ReciprocalInput): PersonOpport
 
   // Only statements that are still current are used to put work in front of
   // someone. Stale statements are not evidence of anything.
-  const currentCapabilities = person.capabilities.filter((capability) => usableCapability(capability, now));
+  const currentCapabilities = person.capabilities.filter((capability) =>
+    usableCapability(capability, now),
+  );
 
   for (const need of needs) {
     if (need.status !== "open") continue;
@@ -100,7 +102,13 @@ export function findOpportunitiesForPerson(input: ReciprocalInput): PersonOpport
           (candidate) =>
             candidate.kind === "qualification" &&
             need.requiredQualifications.some((required) =>
-              matchTerms(candidate.label, required.toLowerCase().split(/[^a-zà-ÿ]+/).filter((word) => word.length > 3)),
+              matchTerms(
+                candidate.label,
+                required
+                  .toLowerCase()
+                  .split(/[^a-zà-ÿ]+/)
+                  .filter((word) => word.length > 3),
+              ),
             ),
         )
       : null;
@@ -186,8 +194,11 @@ export function findOpportunitiesForPerson(input: ReciprocalInput): PersonOpport
       capability &&
       person.preferences.includes("travelling_opportunities") &&
       need.placeId &&
-      ((person.journeys?.some((journey) => journeyOverlaps(journey, need.placeId, need.startsAt, need.endsAt))) ||
-        (!person.journeys?.length && (person.travellingThroughPlaceIds ?? []).includes(need.placeId)))
+      (person.journeys?.some((journey) =>
+        journeyOverlaps(journey, need.placeId, need.startsAt, need.endsAt),
+      ) ||
+        (!person.journeys?.length &&
+          (person.travellingThroughPlaceIds ?? []).includes(need.placeId)))
     ) {
       found.push({
         id: `travelling-${need.id}`,

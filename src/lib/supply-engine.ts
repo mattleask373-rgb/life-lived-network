@@ -22,7 +22,14 @@ import type {
 import type { Need } from "./needs";
 import type { WorldEntry } from "./world-data";
 import { freshness, isCurrent, type FreshnessState } from "./capability-freshness";
-import { confidence, constraints, matchTerms, needTerms, trust, usableCapability } from "./match-signals";
+import {
+  confidence,
+  constraints,
+  matchTerms,
+  needTerms,
+  trust,
+  usableCapability,
+} from "./match-signals";
 import type {
   MatchSignal,
   PossibilitySupply,
@@ -205,21 +212,34 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
   const trace: SupplyDiagnostic[] = [];
 
   type ResultDraft = Omit<SupplyResult, keyof PossibilitySupply> & Partial<PossibilitySupply>;
-  const typeFor = (band: SupplyBand): SupplyType => ({
-    direct: "DIRECT",
-    local_capability: "LATENT",
-    open_to_opportunities: "LATENT",
-    journey: "JOURNEY",
-    community: "COMMUNITY",
-    contribution: "CONTRIBUTION",
-    skills_exchange: "SKILLS_EXCHANGE",
-    related: "RELATED",
-  })[band] as SupplyType;
+  const typeFor = (band: SupplyBand): SupplyType =>
+    ({
+      direct: "DIRECT",
+      local_capability: "LATENT",
+      open_to_opportunities: "LATENT",
+      journey: "JOURNEY",
+      community: "COMMUNITY",
+      contribution: "CONTRIBUTION",
+      skills_exchange: "SKILLS_EXCHANGE",
+      related: "RELATED",
+    })[band] as SupplyType;
   const push = (draft: ResultDraft) => {
     const evidence = draft.evidence;
     const signals: MatchSignal[] = draft.signals ?? [
-      ...(evidence?.passed ?? []).map((reason) => ({ kind: reason.includes("area") ? "service_area" as const : reason.includes("availability") ? "availability" as const : "skill" as const, strength: "required" as const, reason })),
-      ...(evidence?.unknown ?? []).map((reason) => ({ kind: reason.includes("availability") ? "availability" as const : "trust" as const, strength: "unknown" as const, reason: `${reason} is unknown` })),
+      ...(evidence?.passed ?? []).map((reason) => ({
+        kind: reason.includes("area")
+          ? ("service_area" as const)
+          : reason.includes("availability")
+            ? ("availability" as const)
+            : ("skill" as const),
+        strength: "required" as const,
+        reason,
+      })),
+      ...(evidence?.unknown ?? []).map((reason) => ({
+        kind: reason.includes("availability") ? ("availability" as const) : ("trust" as const),
+        strength: "unknown" as const,
+        reason: `${reason} is unknown`,
+      })),
     ];
     const r: SupplyResult = {
       ...draft,
@@ -230,20 +250,30 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
       confidence: draft.confidence ?? confidence(signals),
       freshness: draft.freshness ?? evidence?.freshness ?? "unknown",
       trust: draft.trust ?? trust(evidence?.verification ?? "not_applicable"),
-      provenance: draft.provenance ?? { origin: draft.personId ? "person" : draft.band === "community" ? "community" : "internal_listing", label: draft.personId ? "Stated by this person" : "Published in The Living World", sourceId: draft.id },
-      constraints: draft.constraints ?? constraints(evidence?.passed ?? [], evidence?.unknown ?? []),
+      provenance: draft.provenance ?? {
+        origin: draft.personId
+          ? "person"
+          : draft.band === "community"
+            ? "community"
+            : "internal_listing",
+        label: draft.personId ? "Stated by this person" : "Published in The Living World",
+        sourceId: draft.id,
+      },
+      constraints:
+        draft.constraints ?? constraints(evidence?.passed ?? [], evidence?.unknown ?? []),
     };
     if (results.filter((x) => x.band === r.band).length >= perBand) return;
     results.push(r);
-    trace.push({ candidateId: r.id, outcome: "included", reasonCodes: r.signals.map((signal) => signal.kind) });
+    trace.push({
+      candidateId: r.id,
+      outcome: "included",
+      reasonCodes: r.signals.map((signal) => signal.kind),
+    });
   };
 
   // 1 & 2 — what someone has actually posted, offering this.
   for (const entry of entries) {
-    const hit = matchTerms(
-      [entry.title, entry.summary, ...(entry.skills ?? [])].join(" "),
-      words,
-    );
+    const hit = matchTerms([entry.title, entry.summary, ...(entry.skills ?? [])].join(" "), words);
     if (!hit) continue;
     const isOffer = entry.layer === "work" || entry.kind === "skill" || entry.cost < 0;
     if (!isOffer) continue;
@@ -269,14 +299,20 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
   for (const person of people) {
     if (person.discoveryStatus === "REPORTED" || person.discoveryStatus === "EXPIRED") {
       diagnostics.excludedByStatus += 1;
-      trace.push({ candidateId: person.id, outcome: "excluded", reasonCodes: [person.discoveryStatus.toLowerCase()] });
+      trace.push({
+        candidateId: person.id,
+        outcome: "excluded",
+        reasonCodes: [person.discoveryStatus.toLowerCase()],
+      });
       continue;
     }
     if (!inArea(person, need)) {
       diagnostics.excludedByPlace += 1;
       continue;
     }
-    const visibleCurrent = person.capabilities.filter((candidate) => usableCapability(candidate, now));
+    const visibleCurrent = person.capabilities.filter((candidate) =>
+      usableCapability(candidate, now),
+    );
     if (person.capabilities.length && !visibleCurrent.length) {
       diagnostics.excludedByFreshness += 1;
       continue;
@@ -287,7 +323,9 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
             candidate.kind === "qualification" &&
             matchTerms(
               candidate.label,
-              need.requiredQualifications.flatMap((item) => needTerms({ ...need, category: item, title: "", requiredSkills: [] })),
+              need.requiredQualifications.flatMap((item) =>
+                needTerms({ ...need, category: item, title: "", requiredSkills: [] }),
+              ),
             ),
         )
       : null;
@@ -313,7 +351,9 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
         : ["helping_people", "volunteering", "community_projects", "skills_exchange"].includes(p),
     );
     const window = overlapsNeedTime(person, need);
-    const fixedConflict = Boolean(need.startsAt && person.availability.length > 0 && !window && need.flexibility === "fixed");
+    const fixedConflict = Boolean(
+      need.startsAt && person.availability.length > 0 && !window && need.flexibility === "fixed",
+    );
     if (fixedConflict && openTo) diagnostics.excludedByTime += 1;
 
     if (openTo && !fixedConflict) {
@@ -423,7 +463,9 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
   // 7 — a swap, where the other person actually wants something back.
   for (const person of people) {
     if (usedPeople.has(person.id)) continue;
-    const capability = person.capabilities.find((c) => usableCapability(c, now) && matchTerms(c.label, words));
+    const capability = person.capabilities.find(
+      (c) => usableCapability(c, now) && matchTerms(c.label, words),
+    );
     if (!capability) continue;
     if (!person.preferences.includes("skills_exchange")) continue;
     push({
@@ -450,15 +492,34 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
   for (const person of people) {
     if (person.discoveryStatus === "REPORTED" || person.discoveryStatus === "EXPIRED") continue;
     if (!person.preferences.includes("travelling_opportunities")) continue;
-    const visibleCurrent = person.capabilities.filter((candidate) => usableCapability(candidate, now));
+    const visibleCurrent = person.capabilities.filter((candidate) =>
+      usableCapability(candidate, now),
+    );
     const capability = visibleCurrent.find((c) => matchTerms(c.label, words));
     if (!capability) continue;
     const qualification = need.requiredQualifications.length
-      ? visibleCurrent.find((candidate) => candidate.kind === "qualification" && matchTerms(candidate.label, need.requiredQualifications.flatMap((item) => item.toLowerCase().split(/[^a-zà-ÿ]+/).filter((word) => word.length > 3))))
+      ? visibleCurrent.find(
+          (candidate) =>
+            candidate.kind === "qualification" &&
+            matchTerms(
+              candidate.label,
+              need.requiredQualifications.flatMap((item) =>
+                item
+                  .toLowerCase()
+                  .split(/[^a-zà-ÿ]+/)
+                  .filter((word) => word.length > 3),
+              ),
+            ),
+        )
       : null;
     if (need.requiredQualifications.length && !qualification) continue;
-    const journey = person.journeys?.find((candidate) => journeyOverlaps(candidate, need.placeId, need.startsAt, need.endsAt));
-    const legacyRoute = !person.journeys?.length && need.placeId && (person.travellingThroughPlaceIds ?? []).includes(need.placeId);
+    const journey = person.journeys?.find((candidate) =>
+      journeyOverlaps(candidate, need.placeId, need.startsAt, need.endsAt),
+    );
+    const legacyRoute =
+      !person.journeys?.length &&
+      need.placeId &&
+      (person.travellingThroughPlaceIds ?? []).includes(need.placeId);
     if (!journey && !legacyRoute) continue;
     push({
       id: `journey-${person.id}`,
@@ -468,14 +529,32 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
       title: person.displayName,
       what: `Travelling, and can ${capability.label}`,
       where: `Passing through ${person.placeName}`,
-      when: journey && need.startsAt ? "Their shared journey window overlaps this time" : "Depends entirely on their plans",
-      why: [`Says they can ${capability.label}`, "Has opted into opportunities while travelling", ...(journey ? ["Their public journey overlaps this place and time"] : [])],
+      when:
+        journey && need.startsAt
+          ? "Their shared journey window overlaps this time"
+          : "Depends entirely on their plans",
+      why: [
+        `Says they can ${capability.label}`,
+        "Has opted into opportunities while travelling",
+        ...(journey ? ["Their public journey overlaps this place and time"] : []),
+      ],
       caveat: BAND_CAVEAT.journey,
       actions: ["contact"],
       evidence: {
-        passed: ["current capability", "journey opt-in", "route overlap", ...(journey ? ["journey time overlap"] : []), ...(qualification ? ["required qualification"] : [])],
+        passed: [
+          "current capability",
+          "journey opt-in",
+          "route overlap",
+          ...(journey ? ["journey time overlap"] : []),
+          ...(qualification ? ["required qualification"] : []),
+        ],
         unknown: journey ? ["availability"] : ["journey dates", "availability"],
-        freshness: freshness({ lastConfirmedAt: capability.lastConfirmedAt, expiresAt: capability.expiresOn, kind: "capability", now }),
+        freshness: freshness({
+          lastConfirmedAt: capability.lastConfirmedAt,
+          expiresAt: capability.expiresOn,
+          kind: "capability",
+          now,
+        }),
         verification: capability.verification,
       },
     });
@@ -484,10 +563,26 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
   // A real adjacent possibility, never filler: related words or category must be present.
   for (const entry of entries) {
     if (results.some((result) => result.id === entry.id || result.id.endsWith(entry.id))) continue;
-    const categoryHit = need.requiredSkills.some((skill) => (entry.skills ?? []).some((candidate) => candidate.toLowerCase().includes(skill.toLowerCase()) || skill.toLowerCase().includes(candidate.toLowerCase())));
+    const categoryHit = need.requiredSkills.some((skill) =>
+      (entry.skills ?? []).some(
+        (candidate) =>
+          candidate.toLowerCase().includes(skill.toLowerCase()) ||
+          skill.toLowerCase().includes(candidate.toLowerCase()),
+      ),
+    );
     const nearby = !need.placeId || !entry.placeId || need.placeId === entry.placeId;
     if (!categoryHit || !nearby) continue;
-    push({ id: `related-${entry.id}`, band: "related", title: entry.title, what: "A related possibility", where: `${entry.place}, ${entry.neighbourhood}`, when: entry.when, why: ["Shares a skill with what you asked for"], caveat: BAND_CAVEAT.related, actions: ["view", "save"] });
+    push({
+      id: `related-${entry.id}`,
+      band: "related",
+      title: entry.title,
+      what: "A related possibility",
+      where: `${entry.place}, ${entry.neighbourhood}`,
+      when: entry.when,
+      why: ["Shares a skill with what you asked for"],
+      caveat: BAND_CAVEAT.related,
+      actions: ["view", "save"],
+    });
   }
 
   const ordered = BAND_ORDER.flatMap((band) => results.filter((r) => r.band === band));

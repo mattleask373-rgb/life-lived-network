@@ -215,21 +215,30 @@ export const gardeningWorkshopEntry = entry({
 export const publicJourneyGardener: PersonCandidate = {
   ...travellingGardener,
   id: "public-journey-gardener",
-  journeys: [{
-    id: "journey-public",
-    ownerId: "public-journey-gardener",
-    title: "North Lincolnshire visit",
-    startsAt: "2026-09-23T08:00:00.000Z",
-    endsAt: "2026-09-25T20:00:00.000Z",
-    timezone: "Europe/London",
-    visibility: "public",
-    opportunityOptIn: true,
-    status: "active",
-    lastConfirmedAt: "2026-09-19T09:00:00.000Z",
-    expiresAt: "2026-09-25T20:00:00.000Z",
-    freshness: "fresh",
-    places: [{ placeId: PLACE_KINGS_HEATH, position: 0, arrivesAt: "2026-09-24T08:00:00.000Z", departsAt: "2026-09-24T18:00:00.000Z" }],
-  }],
+  journeys: [
+    {
+      id: "journey-public",
+      ownerId: "public-journey-gardener",
+      title: "North Lincolnshire visit",
+      startsAt: "2026-09-23T08:00:00.000Z",
+      endsAt: "2026-09-25T20:00:00.000Z",
+      timezone: "Europe/London",
+      visibility: "public",
+      opportunityOptIn: true,
+      status: "active",
+      lastConfirmedAt: "2026-09-19T09:00:00.000Z",
+      expiresAt: "2026-09-25T20:00:00.000Z",
+      freshness: "fresh",
+      places: [
+        {
+          placeId: PLACE_KINGS_HEATH,
+          position: 0,
+          arrivesAt: "2026-09-24T08:00:00.000Z",
+          departsAt: "2026-09-24T18:00:00.000Z",
+        },
+      ],
+    },
+  ],
 };
 
 export const privateJourneyGardener: PersonCandidate = {

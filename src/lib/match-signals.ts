@@ -1,7 +1,12 @@
 import { freshness, isCurrent, type FreshnessState } from "./capability-freshness";
 import type { Capability, VerificationState } from "./capability";
 import type { Need } from "./needs";
-import type { MatchSignal, SupplyConfidence, SupplyConstraint, SupplyTrust } from "./possibility-supply";
+import type {
+  MatchSignal,
+  SupplyConfidence,
+  SupplyConstraint,
+  SupplyTrust,
+} from "./possibility-supply";
 
 export function matchTerms(text: string, terms: string[]): string | null {
   const value = text.toLowerCase();
@@ -9,11 +14,27 @@ export function matchTerms(text: string, terms: string[]): string | null {
 }
 
 export function needTerms(need: Need): string[] {
-  return [...new Set([need.category, need.title, ...need.requiredSkills, ...need.requiredRoles].join(" ").toLowerCase().split(/[^a-zà-ÿ]+/).filter((word) => word.length > 3))];
+  return [
+    ...new Set(
+      [need.category, need.title, ...need.requiredSkills, ...need.requiredRoles]
+        .join(" ")
+        .toLowerCase()
+        .split(/[^a-zà-ÿ]+/)
+        .filter((word) => word.length > 3),
+    ),
+  ];
 }
 
-export function capabilityState(capability: Capability, now: string | number | Date): FreshnessState {
-  return freshness({ lastConfirmedAt: capability.lastConfirmedAt, expiresAt: capability.expiresOn, kind: "capability", now });
+export function capabilityState(
+  capability: Capability,
+  now: string | number | Date,
+): FreshnessState {
+  return freshness({
+    lastConfirmedAt: capability.lastConfirmedAt,
+    expiresAt: capability.expiresOn,
+    kind: "capability",
+    now,
+  });
 }
 
 export function usableCapability(capability: Capability, now: string | number | Date): boolean {
@@ -27,9 +48,21 @@ export function confidence(signals: MatchSignal[]): SupplyConfidence {
 }
 
 export function trust(verification: VerificationState | "not_applicable"): SupplyTrust {
-  return { verification, label: verification === "qualification_checked" || verification === "checked" ? "Checked evidence" : verification === "not_applicable" ? "No personal claim" : "Not independently checked", reviewed: verification === "qualification_checked" || verification === "checked" };
+  return {
+    verification,
+    label:
+      verification === "qualification_checked" || verification === "checked"
+        ? "Checked evidence"
+        : verification === "not_applicable"
+          ? "No personal claim"
+          : "Not independently checked",
+    reviewed: verification === "qualification_checked" || verification === "checked",
+  };
 }
 
 export function constraints(passed: string[], unknown: string[]): SupplyConstraint[] {
-  return [...passed.map((reason) => ({ kind: reason, state: "passed" as const, reason })), ...unknown.map((reason) => ({ kind: reason, state: "unknown" as const, reason }))];
+  return [
+    ...passed.map((reason) => ({ kind: reason, state: "passed" as const, reason })),
+    ...unknown.map((reason) => ({ kind: reason, state: "unknown" as const, reason })),
+  ];
 }

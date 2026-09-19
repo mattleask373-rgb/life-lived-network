@@ -145,13 +145,22 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
           .eq("discoverable", true),
         supabase.from("person_capabilities").select("*").in("user_id", ids),
         supabase.from("service_areas").select("*").in("user_id", ids),
+        supabase.from("availability_windows").select("*").in("user_id", ids),
         supabase
-          .from("availability_windows")
-          .select("*")
+          .from("opportunity_preferences")
+          .select("user_id, preference, earning_preference")
           .in("user_id", ids),
-        supabase.from("opportunity_preferences").select("user_id, preference, earning_preference").in("user_id", ids),
-        supabase.from("contribution_preferences").select("user_id, contribution, visibility").in("user_id", ids),
-        supabase.from("journeys").select("*, journey_places(*)").in("owner_id", ids).eq("visibility", "public").eq("opportunity_opt_in", true).eq("status", "active"),
+        supabase
+          .from("contribution_preferences")
+          .select("user_id, contribution, visibility")
+          .in("user_id", ids),
+        supabase
+          .from("journeys")
+          .select("*, journey_places(*)")
+          .in("owner_id", ids)
+          .eq("visibility", "public")
+          .eq("opportunity_opt_in", true)
+          .eq("status", "active"),
       ]);
 
       for (const profile of profiles ?? []) {
@@ -170,7 +179,16 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
             .map((a) => a.place_id),
           serviceAreas: (areas ?? [])
             .filter((a) => a.user_id === profile.id && a.relation !== "travelling_through")
-            .map((a) => ({ id: a.id, userId: a.user_id, placeId: a.place_id, radiusKm: a.radius_km, note: a.note, relation: a.relation as AreaRelation, travelWillingness: a.travel_willingness as TravelWillingness, visibility: a.visibility as Visibility })),
+            .map((a) => ({
+              id: a.id,
+              userId: a.user_id,
+              placeId: a.place_id,
+              radiusKm: a.radius_km,
+              note: a.note,
+              relation: a.relation as AreaRelation,
+              travelWillingness: a.travel_willingness as TravelWillingness,
+              visibility: a.visibility as Visibility,
+            })),
           travellingThroughPlaceIds: (areas ?? [])
             .filter((a) => a.user_id === profile.id && a.relation === "travelling_through")
             .map((a) => a.place_id),
@@ -179,28 +197,55 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
             .map((w) => ({ startsAt: w.starts_at, endsAt: w.ends_at })),
           availabilityDetails: (windows ?? [])
             .filter((w) => w.user_id === profile.id)
-            .map((w) => ({ id: w.id, userId: w.user_id, startsAt: w.starts_at, endsAt: w.ends_at, timezone: w.timezone, recurrence: w.recurrence, note: w.note, visibility: w.visibility as Visibility, expiresAt: w.expires_at, lastConfirmedAt: w.last_confirmed_at })),
+            .map((w) => ({
+              id: w.id,
+              userId: w.user_id,
+              startsAt: w.starts_at,
+              endsAt: w.ends_at,
+              timezone: w.timezone,
+              recurrence: w.recurrence,
+              note: w.note,
+              visibility: w.visibility as Visibility,
+              expiresAt: w.expires_at,
+              lastConfirmedAt: w.last_confirmed_at,
+            })),
           preferences: (prefs ?? [])
             .filter((p) => p.user_id === profile.id)
             .map((p) => p.preference as OpportunityPreference),
           wantsToLearn: profile.wants_to_learn ?? [],
-          contributions: (contributions ?? []).filter((item) => item.user_id === profile.id && item.visibility !== "private").map((item) => item.contribution as ContributionKind),
-          earningPreference: ((prefs ?? []).find((item) => item.user_id === profile.id && item.earning_preference !== "unstated")?.earning_preference ?? "unstated") as EarningPreference,
-          journeys: ((journeys ?? []).filter((journey) => journey.owner_id === profile.id)).map((journey): JourneyContext => ({
-            id: journey.id,
-            ownerId: journey.owner_id,
-            title: journey.title,
-            startsAt: journey.starts_at,
-            endsAt: journey.ends_at,
-            timezone: journey.timezone,
-            visibility: journey.visibility as JourneyVisibility,
-            opportunityOptIn: journey.opportunity_opt_in,
-            status: journey.status as JourneyStatus,
-            lastConfirmedAt: journey.last_confirmed_at,
-            expiresAt: journey.expires_at,
-            freshness: freshness({ lastConfirmedAt: journey.last_confirmed_at, expiresAt: journey.expires_at, kind: "availability", now: new Date() }),
-            places: (journey.journey_places ?? []).map((place) => ({ placeId: place.place_id, position: place.position, arrivesAt: place.arrives_at, departsAt: place.departs_at })),
-          })),
+          contributions: (contributions ?? [])
+            .filter((item) => item.user_id === profile.id && item.visibility !== "private")
+            .map((item) => item.contribution as ContributionKind),
+          earningPreference: ((prefs ?? []).find(
+            (item) => item.user_id === profile.id && item.earning_preference !== "unstated",
+          )?.earning_preference ?? "unstated") as EarningPreference,
+          journeys: (journeys ?? [])
+            .filter((journey) => journey.owner_id === profile.id)
+            .map((journey): JourneyContext => ({
+              id: journey.id,
+              ownerId: journey.owner_id,
+              title: journey.title,
+              startsAt: journey.starts_at,
+              endsAt: journey.ends_at,
+              timezone: journey.timezone,
+              visibility: journey.visibility as JourneyVisibility,
+              opportunityOptIn: journey.opportunity_opt_in,
+              status: journey.status as JourneyStatus,
+              lastConfirmedAt: journey.last_confirmed_at,
+              expiresAt: journey.expires_at,
+              freshness: freshness({
+                lastConfirmedAt: journey.last_confirmed_at,
+                expiresAt: journey.expires_at,
+                kind: "availability",
+                now: new Date(),
+              }),
+              places: (journey.journey_places ?? []).map((place) => ({
+                placeId: place.place_id,
+                position: place.position,
+                arrivesAt: place.arrives_at,
+                departsAt: place.departs_at,
+              })),
+            })),
           ...(profile.photo_url ? { photoUrl: profile.photo_url } : {}),
         });
       }

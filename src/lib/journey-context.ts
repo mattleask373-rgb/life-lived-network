@@ -32,13 +32,26 @@ export function journeyOverlaps(
   startsAt: string | null,
   endsAt: string | null,
 ): boolean {
-  if (!placeId || journey.visibility !== "public" || !journey.opportunityOptIn || journey.status !== "active") return false;
+  if (
+    !placeId ||
+    journey.visibility !== "public" ||
+    !journey.opportunityOptIn ||
+    journey.status !== "active"
+  )
+    return false;
   const stop = journey.places.find((item) => item.placeId === placeId);
   if (!stop) return false;
   if (!startsAt) return true;
   const needStart = Date.parse(startsAt);
   const needEnd = Date.parse(endsAt ?? startsAt);
   const routeStart = Date.parse(stop.arrivesAt ?? journey.startsAt ?? "");
-  const routeEnd = Date.parse(stop.departsAt ?? journey.endsAt ?? stop.arrivesAt ?? journey.startsAt ?? "");
-  return Number.isFinite(routeStart) && Number.isFinite(routeEnd) && routeStart <= needEnd && routeEnd >= needStart;
+  const routeEnd = Date.parse(
+    stop.departsAt ?? journey.endsAt ?? stop.arrivesAt ?? journey.startsAt ?? "",
+  );
+  return (
+    Number.isFinite(routeStart) &&
+    Number.isFinite(routeEnd) &&
+    routeStart <= needEnd &&
+    routeEnd >= needStart
+  );
 }
