@@ -18,35 +18,74 @@ export type Database = {
         Row: {
           created_at: string
           ends_at: string
+          expires_at: string | null
           id: string
+          last_confirmed_at: string
           note: string
           recurrence: string
           starts_at: string
           timezone: string
           updated_at: string
           user_id: string
+          visibility: string
         }
         Insert: {
           created_at?: string
           ends_at: string
+          expires_at?: string | null
           id?: string
+          last_confirmed_at?: string
           note?: string
           recurrence?: string
           starts_at: string
           timezone?: string
           updated_at?: string
           user_id: string
+          visibility?: string
         }
         Update: {
           created_at?: string
           ends_at?: string
+          expires_at?: string | null
           id?: string
+          last_confirmed_at?: string
           note?: string
           recurrence?: string
           starts_at?: string
           timezone?: string
           updated_at?: string
           user_id?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
+      contribution_preferences: {
+        Row: {
+          contribution: string
+          created_at: string
+          id: string
+          note: string
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          contribution: string
+          created_at?: string
+          id?: string
+          note?: string
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          contribution?: string
+          created_at?: string
+          id?: string
+          note?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: string
         }
         Relationships: []
       }
@@ -216,6 +255,7 @@ export type Database = {
       needs: {
         Row: {
           budget: number | null
+          budget_max: number | null
           category: string
           contact_preference: string
           created_at: string
@@ -228,14 +268,17 @@ export type Database = {
           flexibility: string
           id: string
           intent: string
+          last_confirmed_at: string
           lat: number | null
           lng: number | null
+          payment_model: string
           payment_type: string
           place_id: string | null
           place_text: string
           preferred_experience: string
           recurring: boolean
           required_qualifications: string[]
+          required_roles: string[]
           required_skills: string[]
           starts_at: string | null
           status: string
@@ -247,6 +290,7 @@ export type Database = {
         }
         Insert: {
           budget?: number | null
+          budget_max?: number | null
           category: string
           contact_preference?: string
           created_at?: string
@@ -259,14 +303,17 @@ export type Database = {
           flexibility?: string
           id?: string
           intent?: string
+          last_confirmed_at?: string
           lat?: number | null
           lng?: number | null
+          payment_model?: string
           payment_type?: string
           place_id?: string | null
           place_text?: string
           preferred_experience?: string
           recurring?: boolean
           required_qualifications?: string[]
+          required_roles?: string[]
           required_skills?: string[]
           starts_at?: string | null
           status?: string
@@ -278,6 +325,7 @@ export type Database = {
         }
         Update: {
           budget?: number | null
+          budget_max?: number | null
           category?: string
           contact_preference?: string
           created_at?: string
@@ -290,14 +338,17 @@ export type Database = {
           flexibility?: string
           id?: string
           intent?: string
+          last_confirmed_at?: string
           lat?: number | null
           lng?: number | null
+          payment_model?: string
           payment_type?: string
           place_id?: string | null
           place_text?: string
           preferred_experience?: string
           recurring?: boolean
           required_qualifications?: string[]
+          required_roles?: string[]
           required_skills?: string[]
           starts_at?: string | null
           status?: string
@@ -320,6 +371,7 @@ export type Database = {
       opportunity_preferences: {
         Row: {
           created_at: string
+          earning_preference: string
           id: string
           note: string
           preference: string
@@ -328,6 +380,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          earning_preference?: string
           id?: string
           note?: string
           preference: string
@@ -336,6 +389,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          earning_preference?: string
           id?: string
           note?: string
           preference?: string
@@ -347,36 +401,63 @@ export type Database = {
       person_capabilities: {
         Row: {
           created_at: string
+          ended_on: string | null
           evidence: string
+          expires_on: string | null
           id: string
+          issuing_body: string
           kind: string
           label: string
+          last_confirmed_at: string
           level: string
+          obtained_on: string | null
+          organisation: string
+          started_on: string | null
           updated_at: string
           user_id: string
           verification: string
+          visibility: string
+          years_experience: number | null
         }
         Insert: {
           created_at?: string
+          ended_on?: string | null
           evidence?: string
+          expires_on?: string | null
           id?: string
+          issuing_body?: string
           kind: string
           label: string
+          last_confirmed_at?: string
           level?: string
+          obtained_on?: string | null
+          organisation?: string
+          started_on?: string | null
           updated_at?: string
           user_id: string
           verification?: string
+          visibility?: string
+          years_experience?: number | null
         }
         Update: {
           created_at?: string
+          ended_on?: string | null
           evidence?: string
+          expires_on?: string | null
           id?: string
+          issuing_body?: string
           kind?: string
           label?: string
+          last_confirmed_at?: string
           level?: string
+          obtained_on?: string | null
+          organisation?: string
+          started_on?: string | null
           updated_at?: string
           user_id?: string
           verification?: string
+          visibility?: string
+          years_experience?: number | null
         }
         Relationships: []
       }
@@ -532,8 +613,11 @@ export type Database = {
           note: string
           place_id: string
           radius_km: number
+          relation: string
+          travel_willingness: string
           updated_at: string
           user_id: string
+          visibility: string
         }
         Insert: {
           created_at?: string
@@ -541,8 +625,11 @@ export type Database = {
           note?: string
           place_id: string
           radius_km?: number
+          relation?: string
+          travel_willingness?: string
           updated_at?: string
           user_id: string
+          visibility?: string
         }
         Update: {
           created_at?: string
@@ -550,8 +637,11 @@ export type Database = {
           note?: string
           place_id?: string
           radius_km?: number
+          relation?: string
+          travel_willingness?: string
           updated_at?: string
           user_id?: string
+          visibility?: string
         }
         Relationships: [
           {

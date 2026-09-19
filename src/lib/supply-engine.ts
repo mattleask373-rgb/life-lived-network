@@ -69,6 +69,8 @@ export interface PersonCandidate {
   placeName: string;
   capabilities: Capability[];
   serviceAreaPlaceIds: string[];
+  /** Places they said they're only passing through. Never a live location. */
+  travellingThroughPlaceIds?: string[];
   /** Explicit windows only. Absence means unknown, never "unavailable". */
   availability: { startsAt: string; endsAt: string }[];
   preferences: OpportunityPreference[];

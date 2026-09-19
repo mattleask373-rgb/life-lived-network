@@ -21,6 +21,21 @@ export type NeedIntent =
   | "skills_exchange";
 
 export type PaymentType = "paid" | "exchange" | "contribution" | "unsure";
+
+/**
+ * What the money actually means. A bare number says nothing: "£40" could be
+ * the whole job, the hourly rate, or a hopeful guess.
+ */
+export type PaymentModel =
+  | "free"
+  | "fixed"
+  | "from"
+  | "range"
+  | "donation"
+  | "exchange"
+  | "unpaid"
+  | "ask_them"
+  | "unknown";
 export type Flexibility = "fixed" | "some" | "very";
 export type Urgency = "today" | "soon" | "whenever";
 export type NeedVisibility = "private" | "local_discovery" | "public";
@@ -45,9 +60,15 @@ export interface Need {
   budget: number | null;
   currency: string;
   paymentType: PaymentType;
+  budgetMax: number | null;
+  paymentModel: PaymentModel;
   requiredSkills: string[];
+  /** A role is not a skill: "a plumber" and "can fix a tap" differ. */
+  requiredRoles: string[];
   requiredQualifications: string[];
   preferredExperience: string;
+  /** When the person last said this is still needed. */
+  lastConfirmedAt: string;
   recurring: boolean;
   urgency: Urgency;
   contactPreference: string;
@@ -77,6 +98,10 @@ export interface NeedRow {
   budget: number | string | null;
   currency: string;
   payment_type: string;
+  payment_model?: string | null;
+  budget_max?: number | string | null;
+  last_confirmed_at?: string | null;
+  required_roles?: string[] | null;
   required_skills: string[];
   required_qualifications: string[];
   preferred_experience: string;
@@ -111,6 +136,11 @@ export function rowToNeed(row: NeedRow): Need {
     budget: row.budget === null ? null : Number(row.budget),
     currency: row.currency,
     paymentType: row.payment_type as PaymentType,
+    paymentModel: (row.payment_model || "unknown") as PaymentModel,
+    budgetMax:
+      row.budget_max === null || row.budget_max === undefined ? null : Number(row.budget_max),
+    requiredRoles: row.required_roles ?? [],
+    lastConfirmedAt: row.last_confirmed_at ?? row.updated_at,
     requiredSkills: row.required_skills ?? [],
     requiredQualifications: row.required_qualifications ?? [],
     preferredExperience: row.preferred_experience,
@@ -146,4 +176,16 @@ export const FLEXIBILITIES: { id: Flexibility; label: string }[] = [
   { id: "fixed", label: "It has to be that time" },
   { id: "some", label: "There's some give in it" },
   { id: "very", label: "Almost any time works" },
+];
+
+export const PAYMENT_MODELS: { id: PaymentModel; label: string }[] = [
+  { id: "free", label: "Nothing to pay" },
+  { id: "fixed", label: "A set amount" },
+  { id: "from", label: "From this amount" },
+  { id: "range", label: "Somewhere in this range" },
+  { id: "donation", label: "Whatever feels right" },
+  { id: "exchange", label: "Swapped, not paid" },
+  { id: "unpaid", label: "Given time" },
+  { id: "ask_them", label: "Ask them" },
+  { id: "unknown", label: "Not said" },
 ];
