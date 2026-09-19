@@ -35,9 +35,9 @@ function JourneyPage() {
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle } = useLifeList();
   // The journey is built from wherever the person is looking.
-  const { place, placeIds, placeSlugs } = useWorldContext();
+  const { place } = useWorldContext();
   const { data: world } = useQuery({
-    queryKey: ["world", place?.id ?? null, placeIds.length],
+    queryKey: ["world", place?.id ?? null],
     enabled: Boolean(place),
     queryFn: () => fetchWorldEntries({ placeId: place?.id ?? null }),
   });

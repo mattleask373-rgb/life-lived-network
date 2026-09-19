@@ -42,11 +42,11 @@ function Home() {
   const { has, toggle, ids } = useLifeList();
 
   // Where we are is shared application context, not a constant in this file.
-  const { place, ancestors, placeIds, placeSlugs, setPlaceSlug, loading } = useWorldContext();
+  const { place, ancestors, setPlaceSlug, loading } = useWorldContext();
 
   // The page asks for possibilities in a context; it never knows the source.
   const { data: world, isLoading: worldLoading } = useQuery({
-    queryKey: ["world", place?.id ?? null, placeIds.length],
+    queryKey: ["world", place?.id ?? null],
     enabled: Boolean(place),
     queryFn: () =>
       // Only where we are travels; the hierarchy is expanded behind the server.
