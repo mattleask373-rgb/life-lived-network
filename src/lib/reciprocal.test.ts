@@ -51,9 +51,41 @@ describe("what could this person help with", () => {
     expect(swap?.why.join(" ")).toMatch(/swap/i);
   });
 
-  it("uses places someone is passing through as exactly that", () => {
+  it("only counts travelling when a journey was actually shared", () => {
+    const away = { ...DANIEL, placeId: "place-lisbon", serviceAreaPlaceIds: [] };
+    expect(
+      findOpportunitiesForPerson({ person: away, needs: [COMMUNITY_GARDEN_NEED], now }),
+    ).toEqual([]);
+
+    const withJourney = {
+      ...away,
+      journeys: [
+        {
+          id: "j1",
+          ownerId: away.id,
+          title: "Trip",
+          startsAt: null,
+          endsAt: null,
+          timezone: "Europe/London",
+          visibility: "public" as const,
+          opportunityOptIn: true,
+          status: "active" as const,
+          lastConfirmedAt: now,
+          expiresAt: null,
+          freshness: "fresh" as const,
+          places: [
+            {
+              placeId: COMMUNITY_GARDEN_NEED.placeId!,
+              position: 0,
+              arrivesAt: null,
+              departsAt: null,
+            },
+          ],
+        },
+      ],
+    };
     const found = findOpportunitiesForPerson({
-      person: { ...DANIEL, placeId: "place-lisbon", capabilities: DANIEL.capabilities },
+      person: withJourney,
       needs: [COMMUNITY_GARDEN_NEED],
       now,
     });
