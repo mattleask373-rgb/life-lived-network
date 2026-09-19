@@ -2,7 +2,6 @@ import { LAYERS, type WorldEntry } from "@/lib/world-data";
 import { duration, eventDate, layerText, money } from "./layer-colour";
 import { LayerIcon } from "./layer-icon";
 
-
 export function EntryCard({
   entry,
   onOpen,
