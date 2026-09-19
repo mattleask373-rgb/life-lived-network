@@ -11,7 +11,7 @@ export function PersonAvatar({
   size = 44,
 }: {
   name: string;
-  photoUrl?: string | null;
+  photoUrl?: string | null | undefined;
   size?: number;
 }) {
   const initials = name
