@@ -28,7 +28,7 @@ export const SITE_ORIGIN: string = (() => {
 
 /** A path made absolute and stripped of query strings, fragments and duplicate slashes. */
 export function absoluteUrl(path: string): string {
-  const clean = path.split("#")[0].split("?")[0];
+  const clean = (path.split("#")[0] ?? "").split("?")[0] ?? "";
   const withSlash = clean.startsWith("/") ? clean : `/${clean}`;
   const collapsed = withSlash.replace(/\/{2,}/g, "/");
   const trimmed = collapsed.length > 1 ? collapsed.replace(/\/+$/, "") : "/";
