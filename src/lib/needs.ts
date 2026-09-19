@@ -177,3 +177,15 @@ export const FLEXIBILITIES: { id: Flexibility; label: string }[] = [
   { id: "some", label: "There's some give in it" },
   { id: "very", label: "Almost any time works" },
 ];
+
+export const PAYMENT_MODELS: { id: PaymentModel; label: string }[] = [
+  { id: "free", label: "Nothing to pay" },
+  { id: "fixed", label: "A set amount" },
+  { id: "from", label: "From this amount" },
+  { id: "range", label: "Somewhere in this range" },
+  { id: "donation", label: "Whatever feels right" },
+  { id: "exchange", label: "Swapped, not paid" },
+  { id: "unpaid", label: "Given time" },
+  { id: "ask_them", label: "Ask them" },
+  { id: "unknown", label: "Not said" },
+];
