@@ -1,9 +1,10 @@
 /**
  * The real half of the world.
  *
- * Demo entries live in world-data.ts. Everything a real person posts lives in
- * the `listings` table and is mapped into the very same `WorldEntry` shape, so
- * the map, the sheets and the journey engine don't care where a thing came from.
+ * Everything a real person posts lives in the `listings` table and is mapped
+ * into the `WorldEntry` domain shape by rowToEntry() — the one normalisation
+ * seam. Demo entries are fixtures (`fixtures/world-entries.ts`) and only the
+ * server decides whether they belong in an answer.
  */
 
 import { supabase } from "@/integrations/supabase/client";
@@ -117,32 +118,6 @@ export function rowToEntry(row: ListingRow, hostName?: string): WorldEntry {
     kind: row.kind,
     skills: row.skills,
   };
-}
-
-/** Everything real people have posted, newest first. */
-export async function fetchCommunityEntries(): Promise<WorldEntry[]> {
-  const { data, error } = await supabase
-    .from("listings")
-    .select("*")
-    .eq("status", "published")
-    .neq("data_quality", "expired")
-    .order("created_at", { ascending: false })
-    .limit(200);
-  if (error) throw error;
-
-  const rows = (data ?? []) as unknown as ListingRow[];
-  const creatorIds = [...new Set(rows.map((r) => r.creator_id))];
-  const names = new Map<string, string>();
-  if (creatorIds.length) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, display_name")
-      .in("id", creatorIds);
-    for (const p of profiles ?? []) {
-      if (p.display_name) names.set(p.id, p.display_name);
-    }
-  }
-  return rows.map((r) => rowToEntry(r, names.get(r.creator_id)));
 }
 
 /**
