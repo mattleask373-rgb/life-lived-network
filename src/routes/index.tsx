@@ -38,14 +38,19 @@ function Home() {
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle, ids } = useLifeList();
 
-  const { data: world } = useQuery({ queryKey: ["world"], queryFn: fetchWorld });
-  const all = world ?? [];
-
-  // The place we're looking at is a real record now, not a constant.
+  // The place we're looking at is a real record, not a constant.
   const { data: resolved } = useQuery({
     queryKey: ["place", "default"],
     queryFn: fetchDefaultPlace,
   });
+  const placeId = resolved?.place.id ?? null;
+
+  // The page asks for possibilities in a context; it never knows the source.
+  const { data: world } = useQuery({
+    queryKey: ["world", placeId],
+    queryFn: () => fetchWorldEntries(placeId ? { placeId } : {}),
+  });
+  const all = world ?? [];
   const placeName = resolved?.place.name ?? PLACE_FALLBACK.name;
   const regionName = resolved?.parent?.name ?? PLACE_FALLBACK.region;
   const placeBlurb = resolved?.place.blurb || PLACE_FALLBACK.blurb;
