@@ -146,22 +146,23 @@ export async function fetchCommunityEntries(): Promise<WorldEntry[]> {
 }
 
 /**
- * The whole world. Read through the server now, so paging, indexes and later
- * caching live in one place. Falls back to the demo place if the server read
- * fails, rather than showing an empty world.
+ * The world for a given context, through the server boundary.
+ *
+ * The caller says where and how much; paging, limits, batching, fixtures policy
+ * and future providers all live below this line.
  */
-export async function fetchWorld(): Promise<WorldEntry[]> {
-  try {
-    const { getWorld } = await import("./world.functions");
-    return await getWorld({ data: {} });
-  } catch {
-    try {
-      const community = await fetchCommunityEntries();
-      return [...community, ...ENTRIES];
-    } catch {
-      return ENTRIES;
-    }
-  }
+export async function fetchWorld(
+  context: DiscoveryContext = {},
+): Promise<Page<WorldEntry>> {
+  const { getWorld } = await import("./world.functions");
+  return getWorld({ data: context });
+}
+
+/** Convenience for screens that just want the current page of entries. */
+export async function fetchWorldEntries(
+  context: DiscoveryContext = {},
+): Promise<WorldEntry[]> {
+  return (await fetchWorld(context)).items;
 }
 
 export interface NewListing {
