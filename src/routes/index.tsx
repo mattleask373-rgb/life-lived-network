@@ -104,6 +104,10 @@ function Home() {
           <PlacePicker />
         </div>
 
+        <LocalityQuestions questions={questions} placeName={placeName} />
+
+
+
         {/* Something's happening here */}
         {snapshot.length ? (
           <section aria-labelledby="happening-heading" className="card-paper mt-6 p-5">
