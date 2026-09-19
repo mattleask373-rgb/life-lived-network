@@ -73,3 +73,28 @@ Blockers unchanged: Ticketmaster key absent; genuine Guildhall details not suppl
 2 service taxonomy + locality landing pages · 3 service + locality pages with the
 indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
 6 enquiry pathway · 7 cross-navigation, analytics, commercial foundation.
+
+## SEO slice 2 — service kinds + locality pages (done)
+- `src/lib/service-taxonomy.ts`: one shared list of service kinds (osteopathy,
+  sports massage, gardening, tutoring, venue hire and so on) in seven groups.
+  A listing joins a kind either because its owner declared it (new optional
+  `service_category` on listings) or because the words the listing itself uses
+  match — and the page always shows which. The most precise reading wins
+  ("wedding photography" over "photographer"). Nothing is inferred about a
+  provider and no qualification is ever implied. Tested.
+- Public locality pages at `/<country code>/<place>` — e.g. `/gb/kings-heath`,
+  `/gb/birmingham`, `/ie/dublin`, `/pt/lisbon`. One generic route for any place
+  at any depth; no city-specific code. Any other country segment redirects to the
+  one canonical address.
+- Each page is server-rendered so it can actually be read by a crawler: what's
+  happening, what's here by provider, kinds of service recorded, hours people
+  offered, places inside and nearby, breadcrumbs, and a way into the map.
+- Honest interim indexability rule: a locality page is only offered to search
+  engines once it holds at least three real (non-trial) records. Otherwise it is
+  noindex but still works for anyone who arrives. Slice 3 replaces this with the
+  full explainable gate.
+
+### Still ahead
+3 service + locality pages and the indexability gate · 4 provider profiles ·
+5 structured data + locality/service sitemaps · 6 enquiry pathway ·
+7 cross-navigation, analytics, commercial foundation.
