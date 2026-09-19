@@ -5,7 +5,6 @@
  * memory. Activity is never loaded this way — that stays bounded and filtered.
  */
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildPlaceIndex, type Place, type PlaceIndex } from "./places";
 
 const SELECT = "id, parent_id, kind, name, slug, country_code, timezone, currency, lat, lng, blurb";
