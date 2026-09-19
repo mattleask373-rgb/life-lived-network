@@ -126,6 +126,7 @@ export function rowToEntry(
   const quality = row.data_quality as DataQuality;
   return {
     id: row.id,
+    placeId: row.place_id,
     layer: asLayer(row.layer),
     title: row.title,
     place: row.place || "Shared once you say you're coming",

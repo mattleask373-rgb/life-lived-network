@@ -8,6 +8,7 @@ import type { WorldEntry } from "../world-data";
 
 export const PLACE_KINGS_HEATH = "11111111-1111-1111-1111-111111111111";
 export const PLACE_ELSEWHERE = "22222222-2222-2222-2222-222222222222";
+export const PLACE_SCUNTHORPE = "33333333-3333-3333-3333-333333333333";
 
 export const gardenerNeed: Need = {
   id: "need-1",
@@ -200,3 +201,52 @@ export const unrelatedEntry = entry({
   summary: "Bring a broken instrument.",
   layer: "music",
 });
+
+export const gardeningWorkshopEntry = entry({
+  id: "entry-workshop",
+  title: "Practical gardening workshop",
+  summary: "Learn seasonal planting and garden care.",
+  layer: "experience",
+  kind: "workshop",
+  skills: ["gardening basics"],
+  cost: 8,
+});
+
+export const publicJourneyGardener: PersonCandidate = {
+  ...travellingGardener,
+  id: "public-journey-gardener",
+  journeys: [
+    {
+      id: "journey-public",
+      ownerId: "public-journey-gardener",
+      title: "North Lincolnshire visit",
+      startsAt: "2026-09-23T08:00:00.000Z",
+      endsAt: "2026-09-25T20:00:00.000Z",
+      timezone: "Europe/London",
+      visibility: "public",
+      opportunityOptIn: true,
+      status: "active",
+      lastConfirmedAt: "2026-09-19T09:00:00.000Z",
+      expiresAt: "2026-09-25T20:00:00.000Z",
+      freshness: "fresh",
+      places: [
+        {
+          placeId: PLACE_KINGS_HEATH,
+          position: 0,
+          arrivesAt: "2026-09-24T08:00:00.000Z",
+          departsAt: "2026-09-24T18:00:00.000Z",
+        },
+      ],
+    },
+  ],
+};
+
+export const privateJourneyGardener: PersonCandidate = {
+  ...publicJourneyGardener,
+  id: "private-journey-gardener",
+  journeys: (publicJourneyGardener.journeys ?? []).map((journey) => ({
+    ...journey,
+    id: "journey-private",
+    visibility: "private" as const,
+  })),
+};

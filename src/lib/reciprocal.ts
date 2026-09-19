@@ -9,10 +9,11 @@
  * into a score, and always says what kind of possibility something is.
  */
 
-import { freshness, isCurrent } from "./capability-freshness";
 import type { PersonCandidate } from "./supply-engine";
 import type { Need } from "./needs";
 import { regulatedFlags } from "./policy";
+import { journeyOverlaps } from "./journey-context";
+import { matchTerms, needTerms, usableCapability } from "./match-signals";
 
 export type OpportunityKind =
   "exact_match" | "possible_match" | "community_possibility" | "travelling_possibility" | "swap";
@@ -62,17 +63,6 @@ export interface ReciprocalInput {
   availabilityConfirmedAt?: string | null;
 }
 
-function words(text: string): string[] {
-  return [
-    ...new Set(
-      text
-        .toLowerCase()
-        .split(/[^a-zà-ÿ]+/)
-        .filter((w) => w.length > 3),
-    ),
-  ];
-}
-
 function overlaps(person: PersonCandidate, need: Need): boolean {
   if (!need.startsAt) return false;
   const start = Date.parse(need.startsAt);
@@ -96,8 +86,8 @@ export function findOpportunitiesForPerson(input: ReciprocalInput): PersonOpport
 
   // Only statements that are still current are used to put work in front of
   // someone. Stale statements are not evidence of anything.
-  const currentCapabilities = person.capabilities.filter((c) =>
-    isCurrent(freshness({ lastConfirmedAt: c.lastConfirmedAt, kind: "capability", now })),
+  const currentCapabilities = person.capabilities.filter((capability) =>
+    usableCapability(capability, now),
   );
 
   for (const need of needs) {
@@ -105,18 +95,20 @@ export function findOpportunitiesForPerson(input: ReciprocalInput): PersonOpport
     if (need.visibility === "private") continue;
     if (need.creatorId === person.id) continue;
 
-    const asked = words(
-      [need.category, need.title, ...need.requiredSkills, ...need.requiredRoles].join(" "),
-    );
-    const capability = currentCapabilities.find((c) =>
-      asked.some((w) => c.label.toLowerCase().includes(w)),
-    );
+    const asked = needTerms(need);
+    const capability = currentCapabilities.find((candidate) => matchTerms(candidate.label, asked));
     const requiredQualification = need.requiredQualifications.length
       ? currentCapabilities.find(
           (candidate) =>
             candidate.kind === "qualification" &&
             need.requiredQualifications.some((required) =>
-              words(required).some((word) => candidate.label.toLowerCase().includes(word)),
+              matchTerms(
+                candidate.label,
+                required
+                  .toLowerCase()
+                  .split(/[^a-zà-ÿ]+/)
+                  .filter((word) => word.length > 3),
+              ),
             ),
         )
       : null;
@@ -202,7 +194,11 @@ export function findOpportunitiesForPerson(input: ReciprocalInput): PersonOpport
       capability &&
       person.preferences.includes("travelling_opportunities") &&
       need.placeId &&
-      (person.travellingThroughPlaceIds ?? []).includes(need.placeId)
+      (person.journeys?.some((journey) =>
+        journeyOverlaps(journey, need.placeId, need.startsAt, need.endsAt),
+      ) ||
+        (!person.journeys?.length &&
+          (person.travellingThroughPlaceIds ?? []).includes(need.placeId)))
     ) {
       found.push({
         id: `travelling-${need.id}`,

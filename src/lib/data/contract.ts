@@ -24,6 +24,8 @@ export interface DiscoveryContext {
   entityTypes?: string[];
   limit?: number;
   cursor?: string | null;
+  /** Optional named intent for a deterministic supply query. */
+  mode?: "DEFAULT" | "WHAT_ELSE" | "WHO_COULD_MAKE_THIS_HAPPEN";
 }
 
 /** One page of anything. The caller never sees offsets, ranges or row counts. */
