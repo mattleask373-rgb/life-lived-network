@@ -27,6 +27,9 @@ export interface ListingRow {
   neighbourhood: string;
   x: number;
   y: number;
+  place_id: string | null;
+  lat: number | null;
+  lng: number | null;
   when_text: string;
   band: string;
   minutes: number;
@@ -172,6 +175,11 @@ export interface NewListing {
   contact_note: string | null;
   x: number;
   y: number;
+  /** Which real place this belongs to. */
+  place_id: string | null;
+  /** Approximate, place-level coordinates — never an address. */
+  lat: number | null;
+  lng: number | null;
 }
 
 export async function createListing(input: NewListing, creatorId: string) {

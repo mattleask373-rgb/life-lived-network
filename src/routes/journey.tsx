@@ -5,6 +5,8 @@ import { LAYERS, type LayerId, type WorldEntry } from "@/lib/world-data";
 import { EntrySheet } from "@/components/entry-sheet";
 import { duration, layerText, money } from "@/components/layer-colour";
 import { useLifeList } from "@/hooks/use-life-list";
+import { useQuery } from "@tanstack/react-query";
+import { fetchWorld } from "@/lib/listings";
 
 const title = "What could your journey become? — The Living World";
 const description =
@@ -31,6 +33,7 @@ function JourneyPage() {
   const [journeys, setJourneys] = useState<Journey[] | null>(null);
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle } = useLifeList();
+  const { data: world } = useQuery({ queryKey: ["world"], queryFn: fetchWorld });
 
   return (
     <main className="paper-grain min-h-screen">
@@ -94,7 +97,9 @@ function JourneyPage() {
           <button
             type="button"
             onClick={() =>
-              setJourneys(planJourney({ days, budget, interests, wantsPaidWork, social }))
+              setJourneys(
+                planJourney({ days, budget, interests, wantsPaidWork, social }, world ?? []),
+              )
             }
             className="focus-ink mt-5 rounded-full bg-accent px-6 py-2.5 text-accent-foreground"
           >

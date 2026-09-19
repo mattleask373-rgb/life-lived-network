@@ -9,10 +9,10 @@ import { DoSomethingToday } from "@/components/do-something-today";
 import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWorld } from "@/lib/listings";
+import { fetchDefaultPlace, PLACE_FALLBACK } from "@/lib/places";
 import {
   activitySnapshot,
   meaningfulVariety,
-  PLACE,
   type LayerId,
   type WorldEntry,
 } from "@/lib/world-data";
@@ -41,6 +41,15 @@ function Home() {
   const { data: world } = useQuery({ queryKey: ["world"], queryFn: fetchWorld });
   const all = world ?? [];
 
+  // The place we're looking at is a real record now, not a constant.
+  const { data: resolved } = useQuery({
+    queryKey: ["place", "default"],
+    queryFn: fetchDefaultPlace,
+  });
+  const placeName = resolved?.place.name ?? PLACE_FALLBACK.name;
+  const regionName = resolved?.parent?.name ?? PLACE_FALLBACK.region;
+  const placeBlurb = resolved?.place.blurb || PLACE_FALLBACK.blurb;
+
   const entries = useMemo(() => {
     const filtered = layers.length ? all.filter((e) => layers.includes(e.layer)) : all;
     return layers.length ? filtered : meaningfulVariety(filtered);
@@ -59,10 +68,10 @@ function Home() {
             Where are you?
           </p>
           <h1 className="mt-1 text-4xl leading-none sm:text-5xl">
-            {PLACE.name}
-            <span className="text-muted-foreground">, {PLACE.region}</span>
+            {placeName}
+            <span className="text-muted-foreground">, {regionName}</span>
           </h1>
-          <p className="mt-2 max-w-xl text-sm text-muted-foreground">{PLACE.note}</p>
+          <p className="mt-2 max-w-xl text-sm text-muted-foreground">{placeBlurb}</p>
         </header>
 
         {/* Something's happening here */}
@@ -74,7 +83,7 @@ function Home() {
             Something's happening here
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Not a ranking. Just what's real in {PLACE.name} this week.
+            Not a ranking. Just what's real in {placeName} this week.
           </p>
           <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {snapshot.map(({ layer, count }) => (
@@ -140,7 +149,7 @@ function Home() {
 
         {/* I have three hours */}
         <div className="mt-10">
-          <ThreeHours onOpen={setOpen} />
+          <ThreeHours onOpen={setOpen} world={all} />
         </div>
 
         {/* What can you give */}

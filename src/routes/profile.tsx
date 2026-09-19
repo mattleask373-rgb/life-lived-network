@@ -2,6 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
+import { useQuery } from "@tanstack/react-query";
+import { fetchPlaces } from "@/lib/places";
 
 const title = "Who you are — The Living World";
 const description =
@@ -102,6 +104,7 @@ function ProfilePage() {
     display_name: "",
     intro: "",
     location: "",
+    place_id: "",
     languages: "",
     interests: "",
     can_offer: [] as string[],
@@ -126,6 +129,7 @@ function ProfilePage() {
           display_name: data.display_name ?? "",
           intro: data.intro ?? "",
           location: data.location ?? "",
+          place_id: data.place_id ?? "",
           languages: (data.languages ?? []).join(", "),
           interests: (data.interests ?? []).join(", "),
           can_offer: data.can_offer ?? [],
@@ -141,6 +145,11 @@ function ProfilePage() {
       alive = false;
     };
   }, [user]);
+
+  const { data: places } = useQuery({
+    queryKey: ["places", "settleable"],
+    queryFn: () => fetchPlaces(["city", "town", "village", "neighbourhood"]),
+  });
 
   const list = (s: string) =>
     s
@@ -158,6 +167,7 @@ function ProfilePage() {
       display_name: form.display_name,
       intro: form.intro,
       location: form.location,
+      place_id: form.place_id || null,
       languages: list(form.languages),
       interests: list(form.interests),
       can_offer: form.can_offer,
@@ -202,12 +212,29 @@ function ProfilePage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-sm">
                 <span className="text-muted-foreground">Where you are</span>
-                <input
-                  value={form.location}
-                  onChange={(e) => setForm({ ...form, location: e.target.value })}
-                  placeholder="Lisbon"
+                <select
+                  value={form.place_id}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    const found = places?.find((pl) => pl.id === id);
+                    setForm({
+                      ...form,
+                      place_id: id,
+                      location: found ? found.name : form.location,
+                    });
+                  }}
                   className="focus-ink mt-1 w-full rounded-lg border border-border bg-background px-3 py-2"
-                />
+                >
+                  <option value="">Somewhere else</option>
+                  {(places ?? []).map((pl) => (
+                    <option key={pl.id} value={pl.id}>
+                      {pl.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  A place, never an address.
+                </span>
               </label>
               <label className="block text-sm">
                 <span className="text-muted-foreground">Languages (comma separated)</span>

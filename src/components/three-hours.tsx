@@ -6,7 +6,14 @@ import { EntryCard } from "./entry-card";
 const HOURS = [1, 2, 3, 5];
 const SPENDS = [0, 10, 30, 60];
 
-export function ThreeHours({ onOpen }: { onOpen: (entry: WorldEntry) => void }) {
+export function ThreeHours({
+  onOpen,
+  world = [],
+}: {
+  onOpen: (entry: WorldEntry) => void;
+  /** The world as loaded — real listings included. */
+  world?: WorldEntry[];
+}) {
   const [minutes, setMinutes] = useState(180);
   const [spend, setSpend] = useState(30);
   const [outdoors, setOutdoors] = useState(false);
@@ -15,7 +22,7 @@ export function ThreeHours({ onOpen }: { onOpen: (entry: WorldEntry) => void }) 
   const [results, setResults] = useState<WorldEntry[] | null>(null);
 
   const go = () =>
-    setResults(whatIsPossible({ minutes, spend, outdoors, social, interests }));
+    setResults(whatIsPossible({ minutes, spend, outdoors, social, interests }, world));
 
   return (
     <section aria-labelledby="three-hours-heading" className="paper-grain card-paper p-5">

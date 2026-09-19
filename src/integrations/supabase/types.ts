@@ -22,6 +22,7 @@ export type Database = {
           id: string
           minutes: number
           neighbourhood: string
+          place_id: string | null
           skills: string[]
           status: string
           title: string
@@ -36,6 +37,7 @@ export type Database = {
           id?: string
           minutes?: number
           neighbourhood?: string
+          place_id?: string | null
           skills?: string[]
           status?: string
           title: string
@@ -50,6 +52,7 @@ export type Database = {
           id?: string
           minutes?: number
           neighbourhood?: string
+          place_id?: string | null
           skills?: string[]
           status?: string
           title?: string
@@ -57,7 +60,15 @@ export type Database = {
           user_id?: string
           when_text?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "hour_offers_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       listings: {
         Row: {
@@ -73,12 +84,15 @@ export type Database = {
           give: string | null
           id: string
           kind: string
+          lat: number | null
           layer: string
+          lng: number | null
           minutes: number
           neighbourhood: string
           outdoors: boolean
           people_needed: number | null
           place: string
+          place_id: string | null
           skills: string[]
           social: string
           status: string
@@ -102,12 +116,15 @@ export type Database = {
           give?: string | null
           id?: string
           kind: string
+          lat?: number | null
           layer: string
+          lng?: number | null
           minutes?: number
           neighbourhood?: string
           outdoors?: boolean
           people_needed?: number | null
           place?: string
+          place_id?: string | null
           skills?: string[]
           social?: string
           status?: string
@@ -131,12 +148,15 @@ export type Database = {
           give?: string | null
           id?: string
           kind?: string
+          lat?: number | null
           layer?: string
+          lng?: number | null
           minutes?: number
           neighbourhood?: string
           outdoors?: boolean
           people_needed?: number | null
           place?: string
+          place_id?: string | null
           skills?: string[]
           social?: string
           status?: string
@@ -147,7 +167,71 @@ export type Database = {
           x?: number
           y?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "listings_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      places: {
+        Row: {
+          blurb: string
+          country_code: string
+          created_at: string
+          currency: string
+          id: string
+          kind: string
+          lat: number | null
+          lng: number | null
+          name: string
+          parent_id: string | null
+          slug: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          blurb?: string
+          country_code?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          kind?: string
+          lat?: number | null
+          lng?: number | null
+          name: string
+          parent_id?: string | null
+          slug: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          blurb?: string
+          country_code?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          kind?: string
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "places_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -162,6 +246,7 @@ export type Database = {
           languages: string[]
           location: string
           photo_url: string | null
+          place_id: string | null
           updated_at: string
           wants_to_learn: string[]
           would_love_to: string[]
@@ -178,6 +263,7 @@ export type Database = {
           languages?: string[]
           location?: string
           photo_url?: string | null
+          place_id?: string | null
           updated_at?: string
           wants_to_learn?: string[]
           would_love_to?: string[]
@@ -194,11 +280,20 @@ export type Database = {
           languages?: string[]
           location?: string
           photo_url?: string | null
+          place_id?: string | null
           updated_at?: string
           wants_to_learn?: string[]
           would_love_to?: string[]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_items: {
         Row: {
