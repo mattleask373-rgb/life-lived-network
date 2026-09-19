@@ -81,17 +81,29 @@ export const getOpenNeeds = createServerFn({ method: "GET" })
   .inputValidator((input: { placeId?: string | null } | undefined) => input ?? {})
   .handler(async ({ data }): Promise<Need[]> => {
     const { publicServerClient } = await import("./supabase-public.server");
-    let query = publicServerClient()
+    const supabase = publicServerClient();
+    let query = supabase
       .from("needs")
       .select("*")
       .eq("status", "open")
       .order("created_at", { ascending: false })
       .limit(50);
-    if (data.placeId) query = query.eq("place_id", data.placeId);
+    if (data.placeId) {
+      // Asking about a city means asking about everywhere inside it. The
+      // hierarchy is expanded here, behind the boundary, so the browser only
+      // ever says where it is.
+      const { loadPlaceIndex } = await import("./place-index.server");
+      const { descendantIdsOf } = await import("./places");
+      const index = await loadPlaceIndex(supabase);
+      const inside = descendantIdsOf(index, data.placeId);
+      if (inside.length > 1 && inside.length <= 400) query = query.in("place_id", inside);
+      else if (inside.length <= 1) query = query.eq("place_id", data.placeId);
+    }
     const { data: rows, error } = await query;
     if (error) throw error;
     return ((rows ?? []) as unknown as NeedRow[]).map(rowToNeed);
   });
+
 
 /**
  * The answer to "who or what could meet this?".
