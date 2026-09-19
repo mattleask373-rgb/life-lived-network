@@ -7,8 +7,8 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import type { DiscoveryContext, Page } from "./data/contract";
 import {
-  ENTRIES,
   type DataQuality,
   type LayerId,
   type TimeBand,
