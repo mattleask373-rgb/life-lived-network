@@ -405,16 +405,18 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
       (blockRows ?? []).map((row) => (row.blocker_id === userId ? row.blocked_id : row.blocker_id)),
     );
 
-    const { data: needRows, error } = await supabase
+    let needQuery = supabase
       .from("needs")
       .select("*")
       .eq("status", "open")
       .in("visibility", ["public", "local_discovery"])
-      .in("place_id", placeIds)
       .neq("creator_id", userId)
       .order("created_at", { ascending: false })
       .limit(60);
+    if (!wideArea) needQuery = needQuery.in("place_id", placeIds);
+    const { data: needRows, error } = await needQuery;
     if (error) throw error;
+
 
     const { data: journeyRows } = await supabase
       .from("journeys")
