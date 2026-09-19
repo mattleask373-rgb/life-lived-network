@@ -110,10 +110,18 @@ export function EntrySheet({
             {entry.place} · {entry.neighbourhood}
           </p>
 
+          {entry.cancellation ? (
+            <p className="mt-2 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
+              The source says this is {entry.cancellation}. Check with them before setting off.
+            </p>
+          ) : null}
+
           <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
             <div className="card-paper p-3">
               <dt className="text-xs text-muted-foreground">When</dt>
-              <dd className="mt-0.5">{entry.when}</dd>
+              <dd className="mt-0.5">
+                {entry.startsAt ? eventDate(entry.startsAt, entry.timezone) : entry.when}
+              </dd>
             </div>
             <div className="card-paper p-3">
               <dt className="text-xs text-muted-foreground">Takes</dt>
@@ -126,6 +134,42 @@ export function EntrySheet({
           </dl>
 
           <p className="mt-4 leading-relaxed">{entry.summary}</p>
+
+          {/* Where this came from, said plainly, with the way back to them. */}
+          {entry.origin === "source" || entry.origin === "confirmed" ? (
+            <div className="mt-4 rounded-lg border border-border bg-background p-3 text-sm">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                Where this came from
+              </p>
+              <p className="mt-1">
+                Listed by {entry.sourceName || "an outside source"}
+                {entry.organiser ? `, organised by ${entry.organiser}` : ""}. Nobody here posted it,
+                so details are theirs, not ours.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-3">
+                {entry.sourceUrl ? (
+                  <a
+                    href={entry.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="focus-ink underline"
+                  >
+                    See their page
+                  </a>
+                ) : null}
+                {entry.ticketUrl && entry.ticketUrl !== entry.sourceUrl ? (
+                  <a
+                    href={entry.ticketUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="focus-ink underline"
+                  >
+                    Tickets
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
 
           <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
             {entry.details.map((d) => (
