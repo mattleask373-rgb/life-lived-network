@@ -7,6 +7,7 @@ import { duration, layerText, money } from "@/components/layer-colour";
 import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWorldEntries } from "@/lib/listings";
+import { useWorldContext } from "@/lib/world-context";
 
 const title = "What could your journey become? — The Living World";
 const description =
@@ -33,7 +34,13 @@ function JourneyPage() {
   const [journeys, setJourneys] = useState<Journey[] | null>(null);
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle } = useLifeList();
-  const { data: world } = useQuery({ queryKey: ["world"], queryFn: () => fetchWorldEntries() });
+  // The journey is built from wherever the person is looking.
+  const { place, placeIds, placeSlugs } = useWorldContext();
+  const { data: world } = useQuery({
+    queryKey: ["world", place?.id ?? null, placeIds.length],
+    enabled: Boolean(place),
+    queryFn: () => fetchWorldEntries({ placeId: place?.id ?? null, placeIds, placeSlugs }),
+  });
 
   return (
     <main className="paper-grain min-h-screen">
