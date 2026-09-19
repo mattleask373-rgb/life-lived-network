@@ -23,23 +23,16 @@ export const Route = createFileRoute("/make")({
   component: MakePage,
 });
 
-/** Approximate areas only — a person's exact address never goes on the map. */
-const AREAS: { name: string; x: number; y: number }[] = [
-  { name: "Alfama", x: 74, y: 44 },
-  { name: "Graça", x: 70, y: 30 },
-  { name: "Mouraria", x: 68, y: 41 },
-  { name: "Arroios", x: 61, y: 38 },
-  { name: "Anjos", x: 63, y: 34 },
-  { name: "Baixa", x: 58, y: 45 },
-  { name: "Príncipe Real", x: 47, y: 47 },
-  { name: "Estrela", x: 36, y: 57 },
-  { name: "Campo de Ourique", x: 33, y: 52 },
-  { name: "Alcântara", x: 22, y: 62 },
-  { name: "Marvila", x: 86, y: 34 },
-  { name: "Penha de França", x: 76, y: 30 },
-  { name: "Monsanto & west", x: 15, y: 44 },
-  { name: "West of the city", x: 8, y: 62 },
-];
+/**
+ * Somewhere on the drawn map, derived from the title so two things posted in
+ * the same locality don't sit on top of each other. Real coordinates come from
+ * the chosen place; this is only the illustrative fallback position.
+ */
+function illustrativePosition(seed: string): { x: number; y: number } {
+  let hash = 0;
+  for (const char of seed) hash = (hash * 31 + char.charCodeAt(0)) % 100000;
+  return { x: 20 + (hash % 60), y: 20 + ((hash >> 3) % 60) };
+}
 
 const BANDS: { id: TimeBand; label: string }[] = [
   { id: "now", label: "Happening now / most days" },
