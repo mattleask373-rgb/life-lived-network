@@ -83,7 +83,9 @@ function Offer({ needId, askerId }: { needId: string; askerId: string }) {
         Send it
       </button>
       {send.isError ? (
-        <p className="mt-2 text-xs text-muted-foreground">That didn't send. Try again in a moment.</p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          That didn't send. Try again in a moment.
+        </p>
       ) : null}
       <p className="mt-2 text-xs text-muted-foreground">
         They'll see what you wrote and the thing it's about. No contact details are shared.
@@ -142,7 +144,11 @@ function HelpPage() {
             <ul className="mt-3 space-y-3">
               {group.map((o) => (
                 <li key={o.id} className="card-paper p-5">
-                  <Link to="/need/$id" params={{ id: o.need.id }} className="focus-ink text-lg underline">
+                  <Link
+                    to="/need/$id"
+                    params={{ id: o.need.id }}
+                    className="focus-ink text-lg underline"
+                  >
                     {o.need.title}
                   </Link>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -150,7 +156,8 @@ function HelpPage() {
                     {o.need.startsAt
                       ? new Date(o.need.startsAt).toLocaleString()
                       : "Time still to agree"}{" "}
-                    · {PAYMENT_MODELS.find((p) => p.id === o.need.paymentModel)?.label ?? "Not said"}
+                    ·{" "}
+                    {PAYMENT_MODELS.find((p) => p.id === o.need.paymentModel)?.label ?? "Not said"}
                     {o.need.budget ? ` (${o.need.budget} ${o.need.currency})` : ""}
                   </p>
                   <ul className="mt-3 space-y-1 text-sm">

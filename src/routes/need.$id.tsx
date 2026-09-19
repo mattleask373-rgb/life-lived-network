@@ -138,6 +138,14 @@ function NeedAnswer() {
       <p className="mt-12 text-center text-sm text-muted-foreground">
         Nothing here is a promise. Everything here is a real person or a real posting.
       </p>
+      {import.meta.env.DEV ? (
+        <details className="mt-6 text-xs text-muted-foreground">
+          <summary className="cursor-pointer">Why these possibilities appeared</summary>
+          <p className="mt-2">
+            Considered {data.diagnostics.peopleConsidered} people; excluded {data.diagnostics.excludedByPlace} by place, {data.diagnostics.excludedByFreshness} by freshness, {data.diagnostics.excludedByQualification} by qualification, and {data.diagnostics.excludedByStatus} by reviewed status.
+          </p>
+        </details>
+      ) : null}
     </Shell>
   );
 }
