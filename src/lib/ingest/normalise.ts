@@ -30,6 +30,8 @@ export function plainText(value: unknown, max = MAX_TEXT): string {
     .replace(/&gt;/gi, ">");
 
   const clean = decoded
+    // Outside text can carry control characters. Stripping them is the point.
+    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u001f\u007f]/g, " ")
     .replace(/\s+/g, " ")
     .trim();

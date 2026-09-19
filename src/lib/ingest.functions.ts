@@ -30,10 +30,23 @@ export interface SourcePanelRow {
   credentialPresent: boolean;
 }
 
-async function assertReviewer(context: {
-  supabase: { from: (t: string) => any };
-  userId: string;
-}): Promise<void> {
+interface RoleReader {
+  from: (table: string) => {
+    select: (columns: string) => {
+      eq: (
+        column: string,
+        value: string,
+      ) => {
+        in: (
+          column: string,
+          values: string[],
+        ) => PromiseLike<{ data: { role: string }[] | null; error: unknown }>;
+      };
+    };
+  };
+}
+
+async function assertReviewer(context: { supabase: RoleReader; userId: string }): Promise<void> {
   const { data, error } = await context.supabase
     .from("user_roles")
     .select("role")
