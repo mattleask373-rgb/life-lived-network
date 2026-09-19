@@ -98,3 +98,11 @@ indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
 3 service + locality pages and the indexability gate · 4 provider profiles ·
 5 structured data + locality/service sitemaps · 6 enquiry pathway ·
 7 cross-navigation, analytics, commercial foundation.
+
+## Pre-meeting hardening (done)
+- Navigation reduced to three doors (Explore / Find / Journey) with secondary links.
+- Home locality links to its own public page.
+- Currency now follows the locality everywhere (no leftover euro labels).
+- Dated demonstration activity added for Kings Heath and Digbeth so "what's happening" is demonstrable.
+- Event dates formatted deterministically (no hydration mismatch).
+- Blockers unchanged: no Ticketmaster key; no genuine Guildhall details; no route/transport provider.
