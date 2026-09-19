@@ -281,6 +281,7 @@ function RoadTrip() {
             <JourneyPanel
               plan={planned}
               stops={journeyStops}
+              currentDiscoveryIds={new Set(discoveries.map((item) => item.entry.id))}
               onMove={(id, direction) => setStopIds((current) => moveJourneyStop(current, id, direction))}
               onRemove={(id) => setStopIds((current) => removeJourneyStop(current, id))}
               onRecalculate={() => {
@@ -394,6 +395,7 @@ function RoadTripCard({
 function JourneyPanel({
   plan,
   stops,
+  currentDiscoveryIds,
   onMove,
   onRemove,
   onRecalculate,
@@ -401,6 +403,7 @@ function JourneyPanel({
 }: {
   plan: RoutePlan;
   stops: WorldEntry[];
+  currentDiscoveryIds: Set<string>;
   onMove: (id: string, direction: "up" | "down") => void;
   onRemove: (id: string) => void;
   onRecalculate: () => void;
@@ -431,7 +434,7 @@ function JourneyPanel({
               <span className="block text-xs uppercase tracking-widest text-muted-foreground">Stop {index + 1}</span>
               <span className="block truncate font-medium">{stop.title}</span>
               <span className="block truncate text-xs text-muted-foreground">{stop.place}</span>
-              {!planContainsEntry(stop, plan) ? (
+              {!currentDiscoveryIds.has(stop.id) ? (
                 <span className="block text-xs text-muted-foreground">Kept in your journey · not in the current results</span>
               ) : null}
             </span>
@@ -450,12 +453,6 @@ function JourneyPanel({
       {recalculated ? <p role="status" className="mt-2 text-sm text-foreground">Journey refreshed. Your stop order has been kept.</p> : null}
     </section>
   );
-}
-
-function planContainsEntry(_entry: WorldEntry, _plan: RoutePlan): boolean {
-  // Selected entries handed to this panel are current discoveries or retained
-  // local snapshots. Presence is refined by the caller in a future routed pass.
-  return true;
 }
 
 function JourneyEndpoint({ label, name }: { label: string; name: string }) {
