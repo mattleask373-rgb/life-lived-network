@@ -214,6 +214,18 @@ describe("route discoveries", () => {
     expect(first!.matchedInterests).toEqual(["Food", "History"]);
   });
 
+  it("adds no interest evidence when none of the selected words are present", () => {
+    const [first] = routeDiscoveries({
+      entries: [entry("concert", "bristol", { title: "Evening chamber concert" })],
+      plan: { ...plan, interests: ["Food", "Nature"] },
+      corridor,
+      destinationIds,
+      routed: false,
+    });
+    expect(first!.matchedInterests).toEqual([]);
+    expect(first!.reasons.some((reason) => reason.startsWith("Matches"))).toBe(false);
+  });
+
   it("only exposes evidence and freshness labels backed by stored facts", () => {
     expect(evidenceLabelFor(entry("source", "bristol", {
       sourceName: "Town listings",
