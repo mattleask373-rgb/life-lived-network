@@ -88,6 +88,7 @@ function overlaps(person: PersonCandidate, need: Need): boolean {
 
 function reachable(person: PersonCandidate, need: Need): boolean {
   if (!need.placeId) return false;
+  // Passing through somewhere is deliberately not "working there".
   return person.placeId === need.placeId || person.serviceAreaPlaceIds.includes(need.placeId);
 }
 
@@ -125,6 +126,40 @@ export function findOpportunitiesForPerson(input: ReciprocalInput): PersonOpport
     const community =
       need.intent === "community_project" || need.intent === "volunteering";
 
+    if (capability && here && community && person.preferences.includes("community_projects")) {
+      found.push({
+        id: `community-${need.id}`,
+        kind: "community_possibility",
+        need,
+        why: [
+          `They asked for ${capability.label}`,
+          "You said you're up for community projects",
+          ...(free ? ["A time you said you're free overlaps theirs"] : []),
+        ],
+        caveat: OPPORTUNITY_CAVEAT.community_possibility,
+        notes,
+      });
+      continue;
+    }
+
+    if (capability && here && wantsSwap && person.preferences.includes("skills_exchange")) {
+      found.push({
+        id: `swap-${need.id}`,
+        kind: "swap",
+        need,
+        why: [
+          `They asked for ${capability.label}`,
+          "You both said you'd rather swap than pay",
+          ...(person.wantsToLearn.length
+            ? [`You'd like to learn: ${person.wantsToLearn.join(", ")}`]
+            : []),
+        ],
+        caveat: OPPORTUNITY_CAVEAT.swap,
+        notes,
+      });
+      continue;
+    }
+
     if (capability && here && free) {
       found.push({
         id: `exact-${need.id}`,
@@ -142,37 +177,6 @@ export function findOpportunitiesForPerson(input: ReciprocalInput): PersonOpport
     }
 
     if (capability && here) {
-      if (community && person.preferences.includes("community_projects")) {
-        found.push({
-          id: `community-${need.id}`,
-          kind: "community_possibility",
-          need,
-          why: [
-            `They asked for ${capability.label}`,
-            "You said you're up for community projects",
-          ],
-          caveat: OPPORTUNITY_CAVEAT.community_possibility,
-          notes,
-        });
-        continue;
-      }
-      if (wantsSwap && person.preferences.includes("skills_exchange")) {
-        found.push({
-          id: `swap-${need.id}`,
-          kind: "swap",
-          need,
-          why: [
-            `They asked for ${capability.label}`,
-            "You both said you'd rather swap than pay",
-            ...(person.wantsToLearn.length
-              ? [`You'd like to learn: ${person.wantsToLearn.join(", ")}`]
-              : []),
-          ],
-          caveat: OPPORTUNITY_CAVEAT.swap,
-          notes,
-        });
-        continue;
-      }
       found.push({
         id: `possible-${need.id}`,
         kind: "possible_match",
@@ -193,7 +197,7 @@ export function findOpportunitiesForPerson(input: ReciprocalInput): PersonOpport
       capability &&
       person.preferences.includes("travelling_opportunities") &&
       need.placeId &&
-      person.serviceAreaPlaceIds.includes(need.placeId)
+      (person.travellingThroughPlaceIds ?? []).includes(need.placeId)
     ) {
       found.push({
         id: `travelling-${need.id}`,
