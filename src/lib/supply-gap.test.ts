@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { classifySupplyGap } from "./supply-gap";
 import type { SupplyAnswer, SupplyResult } from "./supply-engine";
 import type { Need } from "./needs";
