@@ -42,6 +42,24 @@ export interface StructuredSearchIntent {
   suggestedPath: string;
 }
 
+/**
+ * Carries the resolved search context to the canonical locality surface.
+ * This is routing context only: it never performs discovery or matching.
+ */
+export function searchContextPath(
+  locality: ResolvedSearchLocality,
+  intentFamily: SearchIntentFamily,
+  subject: string | null,
+  timeframe: string | null,
+): string {
+  const path = `/${locality.place.country_code.toLowerCase()}/${locality.place.slug}`;
+  const params = new URLSearchParams();
+  params.set("intent", intentFamily);
+  if (subject) params.set("subject", subject);
+  if (timeframe) params.set("timeframe", timeframe);
+  return `${path}?${params.toString()}`;
+}
+
 const WHATS_ON_KEYWORDS = [
   "things to do",
   "what's on",
@@ -277,10 +295,8 @@ export function parseSearchIntent(
   }
 
   let suggestedPath = "/";
-  if (intentFamily === "local_service") {
-    suggestedPath = "/need";
-  } else if (locality) {
-    suggestedPath = `/${locality.place.country_code.toLowerCase()}/${locality.place.slug}`;
+  if (locality) {
+    suggestedPath = searchContextPath(locality, intentFamily, subject, timeframe);
   }
 
   return {
