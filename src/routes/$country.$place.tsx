@@ -143,7 +143,9 @@ function LocalityPage() {
 
       {search.intent ? (
         <section className="card-paper mt-5 max-w-2xl p-4" aria-label="Search context">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">You searched for</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">
+            You searched for
+          </p>
           <p className="mt-1 text-base">
             {search.subject || search.intent.replaceAll("_", " ")}
             {search.timeframe ? ` · ${search.timeframe.replaceAll("_", " ")}` : ""}
