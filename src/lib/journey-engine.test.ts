@@ -61,28 +61,20 @@ describe("journey eligibility", () => {
   it("rejects activities whose recorded end instant has passed", () => {
     const now = Date.parse("2026-10-06T12:00:00Z");
 
-    expect(
-      isJourneyEligible(
-        entry({ endsAt: "2026-10-06T11:59:59Z" }),
-        now,
-      ),
-    ).toBe(false);
+    expect(isJourneyEligible(entry({ endsAt: "2026-10-06T11:59:59Z" }), now)).toBe(false);
 
-    expect(
-      isJourneyEligible(
-        entry({ endsAt: "2026-10-06T12:00:01Z" }),
-        now,
-      ),
-    ).toBe(true);
+    expect(isJourneyEligible(entry({ endsAt: "2026-10-06T12:00:01Z" }), now)).toBe(true);
   });
 
   it("preserves ordinary records without an end instant", () => {
     expect(isJourneyEligible(entry())).toBe(true);
-    expect(journeyEligibleEntries([
-      entry({ id: "good" }),
-      entry({ id: "expired", quality: "expired" }),
-      entry({ id: "cancelled", cancellation: "cancelled" }),
-    ])).toHaveLength(1);
+    expect(
+      journeyEligibleEntries([
+        entry({ id: "good" }),
+        entry({ id: "expired", quality: "expired" }),
+        entry({ id: "cancelled", cancellation: "cancelled" }),
+      ]),
+    ).toHaveLength(1);
   });
 
   it("never puts stale or cancelled records into a journey", () => {
@@ -94,7 +86,9 @@ describe("journey eligibility", () => {
     ];
 
     const journeys = planJourney(journeyBrief, world);
-    const ids = journeys.flatMap((journey) => journey.steps.map((step) => step.entry.id));
+    const ids = journeys.flatMap((journey) =>
+      journey.steps.map((step) => step.entry.id),
+    );
 
     expect(ids).toContain("live-today");
     expect(ids).toContain("live-tonight");
