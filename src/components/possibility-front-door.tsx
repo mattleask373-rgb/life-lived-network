@@ -31,10 +31,7 @@ export function PossibilityFrontDoor() {
   }
 
   return (
-    <section
-      aria-labelledby="front-door-heading"
-      className="card-paper mt-6 p-5 sm:p-6"
-    >
+    <section aria-labelledby="front-door-heading" className="card-paper mt-6 p-5 sm:p-6">
       <h2 id="front-door-heading" className="text-xl sm:text-2xl">
         What are you looking for?
       </h2>
