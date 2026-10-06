@@ -32,6 +32,11 @@ export function localityPath(place: Pick<PlaceBrief, "slug" | "countrySegment">)
 }
 
 export const Route = createFileRoute("/$country/$place")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    intent: typeof search.intent === "string" ? search.intent : null,
+    subject: typeof search.subject === "string" ? search.subject : null,
+    timeframe: typeof search.timeframe === "string" ? search.timeframe : null,
+  }),
   loader: async ({ params }) => {
     const geography = await getLocality({ data: { slug: params.place } });
     if (!geography) throw notFound();
@@ -113,6 +118,7 @@ function PlaceLinks({ title, places }: { title: string; places: PlaceBrief[] }) 
 
 function LocalityPage() {
   const { geography, entries } = Route.useLoaderData();
+  const search = Route.useSearch();
   const { place, ancestors, children, siblings } = geography;
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle } = useLifeList();
@@ -134,6 +140,20 @@ function LocalityPage() {
         {ancestors[0] ? ` in ${ancestors[0].name}` : ""}
       </p>
       {place.blurb ? <p className="mt-3 max-w-2xl text-base">{place.blurb}</p> : null}
+
+      {search.intent ? (
+        <section className="card-paper mt-5 max-w-2xl p-4" aria-label="Search context">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">You searched for</p>
+          <p className="mt-1 text-base">
+            {search.subject || search.intent.replaceAll("_", " ")}
+            {search.timeframe ? ` · ${search.timeframe.replaceAll("_", " ")}` : ""}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            This keeps your search context visible while this locality page shows only recorded,
+            verified activity. It does not infer availability or create results.
+          </p>
+        </section>
+      ) : null}
 
       {entries.length === 0 ? (
         <p className="card-paper mt-6 max-w-2xl p-5 text-sm">
