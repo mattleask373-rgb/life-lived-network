@@ -156,7 +156,9 @@ function LocalityPage() {
       <section aria-labelledby="locality-map-heading" className="mt-8 scroll-mt-6">
         <div className="flex items-baseline justify-between gap-3">
           <div>
-            <h2 id="locality-map-heading" className="text-2xl">The living map</h2>
+            <h2 id="locality-map-heading" className="text-2xl">
+              The living map
+            </h2>
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">
               See the real things recorded in {place.name} together, then open one and decide what
               to do next.
