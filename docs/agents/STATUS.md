@@ -1,33 +1,64 @@
-# Agent System Status — 2026-10-06 (post front-door)
+# Agent System Status — 2026-10-06 (Commander cycle)
 
-## CURRENT QUEUE
-- **P0 BLOCKER:** `src/lib/supply-engine.ts` on main is still a temporary stub (throws). Full hardened engine exists locally / in artifacts — must be restored via normal git push before any discovery path works.
-- LW-20261006-003 — Possibility Front Door (this cycle) — landed on main
+## CURRENT QUEUE (ordered)
 
-## ACTIVE / COMPLETED THIS CYCLE
+1. **P0 — Ingestion Reconciliation (ADR 004)**  
+   Dual provider-neutral boundary (existing `ingest/*` vs PR #43 `external-world`) must become one.  
+   Branch: `agent/grok/ingestion-reconciliation-and-supply-gap`
+
+2. **P0 — PR #34 review** (Search Growth Front Door + Telemetry)  
+   READY_FOR_REVIEW claims; independent verification required before human merge.
+
+3. **P0 — PR #43 reconciliation**  
+   Must absorb into single ingest boundary (see ADR 004) before merge.
+
+4. **P1 — Supply Gap contract**  
+   `src/lib/supply-gap.ts` + tests landed on this branch. Classification only — never a matcher.
+
+5. **P1 — Local Supply Activation research**  
+   Gardeners / trades / service-area demand → acquisition opportunity pipeline.
+
+6. **Human gate**  
+   Issue #33 — persistent 24/7 executor activation remains human-only.
+
+## REAL (verified on main)
+- `findSupply()` full deterministic engine (not a stub)
+- PlaceIndex / geography foundations
+- Capability / needs / journeys / connection models
+- Ingest contract + Ticketmaster adapter (`src/lib/ingest/*`)
+- Agent control-plane docs (`docs/agents/*`)
+- Possibility Front Door pieces
+
+## PARTIAL
+- Possibility → Connection (PR #15)
+- Search Front Door + telemetry (PR #34)
+- External World / events (PR #43 — conflict with ingest)
+- SEO quality, map-first, measurement, internationalisation, trust/safety adversarial suite
+
+## MISSING
+- Mature local provider acquisition
+- Structured supply-gap → acquisition pipeline (contract now exists; pipeline still open)
+- Durable external-world store beyond fixtures
+- Live Level-4 autonomous executor
+
+## THIS CYCLE (Grok Commander)
 - Owner: Grok
-- Task: Possibility Front Door
-- Status: INTEGRATED on main (intent lib + UI + homepage + tests)
+- Branch: `agent/grok/ingestion-reconciliation-and-supply-gap`
+- Delivered:
+  - ADR 004 Ingestion Reconciliation (single boundary decision)
+  - `src/lib/supply-gap.ts` (SATISFIED / WEAK_SUPPLY / ZERO_SUPPLY / UNKNOWN_LOCALITY)
+  - `src/lib/supply-gap.test.ts` (invariants proven)
+  - STATUS refresh
 
-## WHAT LANDED ON MAIN
-- `src/lib/possibility-intent.ts` — deterministic NEED/HELP/GIVE/JOURNEY router
-- `src/lib/possibility-intent.test.ts`
-- `src/components/possibility-front-door.tsx`
-- `src/routes/index.tsx` — mounts front door after PlacePicker
-
-## WHAT DID NOT LAND
-- Full supply-engine restore (tool payload limit); local file ready at artifacts/supply-engine-restore.ts
-- Adversarial supply-engine.eval.test.ts (local only)
-- .env untrack (local staged only)
-
-## NEXT
-1. **P0** Restore full `supply-engine.ts` from commit `3d9896e` + hardening (selectCapability + regulated flags)
-2. Run vitest for possibility-intent + supply-engine
-3. ChatGPT review of front-door routing assumptions
-4. Structured intent progressive questioning (confirm before act)
-5. Possibility card explanation UX
-
-## METRICS
-- Front-door files on main: 4
+## INVARIANTS HELD
 - Second matching engine created: **no**
+- Capability ≠ availability: enforced in gap contract
+- Zero results ≠ proof of absence: explicit in ZERO_SUPPLY reason
 - Autonomous merge: **no**
+- Human authority on production / RLS / credentials: intact
+
+## NEXT SAFE STEPS
+1. Human review of this PR (ADR + supply-gap).
+2. Independent CI verification of PR #34.
+3. Rebase / rewrite PR #43 against the single ingest boundary (ADR 004).
+4. Claim Local Supply research task once this lands.
