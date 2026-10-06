@@ -1,0 +1,114 @@
+name: AI Worker Task
+description: Bounded, evidence-driven task for an external coding agent
+title: "[WORKER] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form only for bounded engineering work.
+        Production merges, security weakening, destructive history changes, and semantic invention remain human-gated.
+
+  - type: input
+    id: task
+    attributes:
+      label: TASK
+      description: One concrete outcome the worker must deliver.
+    validations:
+      required: true
+
+  - type: input
+    id: owner
+    attributes:
+      label: OWNER
+      description: Agent/provider responsible for execution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: SCOPE
+      description: Files, components, or bounded surfaces the worker may change.
+    validations:
+      required: true
+
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: NON-GOALS
+      description: Explicitly prohibited work and adjacent systems that must not change.
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: DEPENDENCIES
+      description: Required PRs, commits, contracts, migrations, or approvals.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: ACCEPTANCE CRITERIA
+      description: Observable conditions that make the task complete.
+    validations:
+      required: true
+
+  - type: textarea
+    id: tests
+    attributes:
+      label: TEST REQUIREMENTS
+      description: Required unit/evaluation/integration tests plus lint/build/CI expectations.
+    validations:
+      required: true
+
+  - type: textarea
+    id: security
+    attributes:
+      label: SECURITY CONSTRAINTS
+      description: Privacy, RLS, secret-handling, authorization, and human-gate requirements.
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: EXPECTED EVIDENCE
+      description: Required PR/handoff evidence: files, base commit, tests, CI, security/schema impact, limitations, unresolved questions.
+    validations:
+      required: true
+
+  - type: textarea
+    id: escalation
+    attributes:
+      label: ESCALATION CONDITIONS
+      description: Conditions requiring the worker to stop instead of guessing.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Worker contract
+
+        The worker must return:
+        - branch
+        - commits
+        - pull request
+        - test evidence
+        - CI evidence
+        - durable handoff evidence
+
+        The worker must not:
+        - merge protected production changes
+        - bypass CI
+        - weaken security/RLS
+        - expose secrets
+        - rewrite shared history destructively
+        - invent domain semantics
+        - create duplicate matching engines
+
+        Human review and merge remain required.
