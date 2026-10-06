@@ -1,4 +1,4 @@
-import { LivingWorldSignal } from "./living-world-signal";
+import { determineActivityTone, LivingWorldSignal } from "./living-world-signal";
 import { EntryCard } from "./entry-card";
 import type { WorldEntry } from "@/lib/world-data";
 
@@ -19,6 +19,16 @@ export function WhatsHappening({
   limit?: number;
 }) {
   const shown = events.slice(0, limit);
+  const nowMs = Date.now();
+  const hasLive = shown.some((e) => {
+    if (!e.startsAt) return false;
+    const start = new Date(e.startsAt).getTime();
+    const end = e.endsAt ? new Date(e.endsAt).getTime() : start + 3 * 3600 * 1000;
+    return nowMs >= start && nowMs <= end;
+  });
+
+  const tone = determineActivityTone(shown.length, hasLive);
+
   const days = new Map<string, WorldEntry[]>();
   for (const event of shown) {
     const key = new Date(event.startsAt ?? "").toLocaleDateString(undefined, {
@@ -38,16 +48,31 @@ export function WhatsHappening({
         What's happening
       </h2>
       {shown.length === 0 ? (
-        <LivingWorldSignal quiet eyebrow="It's quiet here">
-          <span>No dated activity is recorded in {placeName} yet.</span>
-          <p className="mt-2 font-sans text-sm font-normal leading-relaxed text-muted-foreground">
-            That describes the record, not the place. When a source or resident puts something
-            genuine on the map, it can appear here with its date, place and provenance.
-          </p>
-        </LivingWorldSignal>
+        <div className="mt-3">
+          <LivingWorldSignal
+            tone="quiet"
+            eyebrow="It's quiet here"
+            contributionLink={{
+              label: `Want to help make something happen in ${placeName}? Put something real on the map`,
+              to: "/make",
+            }}
+          >
+            <span>No dated activity is recorded in {placeName} yet.</span>
+            <p className="mt-2 font-sans text-sm font-normal leading-relaxed text-muted-foreground">
+              That describes the record, not the place. When a source or resident puts something
+              genuine on the map, it appears here with its date, place, and provenance.
+            </p>
+          </LivingWorldSignal>
+        </div>
       ) : (
         <div className="mt-3 space-y-6">
-          <LivingWorldSignal>
+          <LivingWorldSignal
+            tone={tone}
+            contributionLink={{
+              label: "Know something happening here? Add it to the map",
+              to: "/make",
+            }}
+          >
             {shown.length === 1
               ? `One dated thing is recorded in ${placeName}.`
               : `${shown.length} dated things are recorded in ${placeName}.`}
