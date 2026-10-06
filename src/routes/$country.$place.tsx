@@ -15,6 +15,8 @@ import { createFileRoute, Link, notFound, redirect } from "@tanstack/react-route
 import { useMemo, useState } from "react";
 
 import { EntrySheet } from "@/components/entry-sheet";
+import { LayerFilter } from "@/components/layer-filter";
+import { LivingMap } from "@/components/living-map";
 import { LocalityQuestions } from "@/components/locality-questions";
 import { WhatsHappening } from "@/components/whats-happening";
 import { WhatsHere } from "@/components/whats-here";
@@ -25,7 +27,7 @@ import { contributions, localityQuestions, providerGroups, upcomingEvents } from
 import { KIND_LABEL } from "@/lib/places";
 import { privatePage, publicPage } from "@/lib/seo";
 import { categoriesPresent } from "@/lib/service-taxonomy";
-import type { WorldEntry } from "@/lib/world-data";
+import { meaningfulVariety, type LayerId, type WorldEntry } from "@/lib/world-data";
 
 export function localityPath(place: Pick<PlaceBrief, "slug" | "countrySegment">): string {
   return `/${place.countrySegment || "gb"}/${place.slug}`;
@@ -115,6 +117,7 @@ function LocalityPage() {
   const { geography, entries } = Route.useLoaderData();
   const { place, ancestors, children, siblings } = geography;
   const [open, setOpen] = useState<WorldEntry | null>(null);
+  const [layers, setLayers] = useState<LayerId[]>([]);
   const { has, toggle } = useLifeList();
 
   const events = useMemo(() => upcomingEvents(entries), [entries]);
@@ -149,6 +152,38 @@ function LocalityPage() {
           <LocalityQuestions placeName={place.name} questions={questions} />
         </div>
       )}
+
+      <section aria-labelledby="locality-map-heading" className="mt-8 scroll-mt-6">
+        <div className="flex items-baseline justify-between gap-3">
+          <div>
+            <h2 id="locality-map-heading" className="text-2xl">The living map</h2>
+            <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+              See the real things recorded in {place.name} together, then open one and decide what
+              to do next.
+            </p>
+          </div>
+          <span className="shrink-0 text-sm text-muted-foreground">{entries.length} recorded</span>
+        </div>
+        <div className="mt-3">
+          <LayerFilter active={layers} onChange={setLayers} />
+        </div>
+        <div className="mt-3 h-[58vh] min-h-80 sm:h-[30rem]">
+          <LivingMap
+            entries={
+              layers.length
+                ? entries.filter((entry) => layers.includes(entry.layer))
+                : meaningfulVariety(entries)
+            }
+            activeId={open?.id}
+            onSelect={setOpen}
+            centre={{ lat: place.lat, lng: place.lng }}
+            centreName={place.name}
+          />
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Places are approximate. Nobody&apos;s exact location is shown.
+        </p>
+      </section>
 
       {demonstrations > 0 ? (
         <p className="mt-4 text-xs text-muted-foreground">
