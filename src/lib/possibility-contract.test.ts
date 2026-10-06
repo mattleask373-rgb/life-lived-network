@@ -20,7 +20,7 @@ describe("Possibility Contract", () => {
     expect(possibility.who.id).toBe(openGardener.id);
     expect(possibility.what.band).toBe("open_to_opportunities");
     expect(possibility.where.relation).toBe("service_area");
-    expect(possibility.when.evidence).toBe("known");
+    expect(possibility.when.evidence).toBe("unknown");
     expect(possibility.why.band).toBe("open_to_opportunities");
     expect(possibility.unknown).toContain("availability");
     expect(possibility.actions.map((action) => action.type)).toContain("contact");
