@@ -85,7 +85,7 @@ describe("Search Intent & Locality Resolution", () => {
     expect(res.locality?.place.name).toBe("Birmingham");
     expect(res.intentFamily).toBe("whats_on");
     expect(res.timeframe).toBe("tonight");
-    expect(res.suggestedPath).toBe("/gb/birmingham?intent=whats_on&subject=things%20to%20do&timeframe=tonight");
+    expect(res.suggestedPath).toBe("/gb/birmingham?intent=whats_on&timeframe=tonight");
   });
 
   it("extracts multi-token neighbourhood query: 'live music Kings Heath'", () => {
