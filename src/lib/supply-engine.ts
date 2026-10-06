@@ -115,12 +115,15 @@ export interface SupplyResult extends PossibilitySupply {
   id: string;
   band: SupplyBand;
   title: string;
+  /** What this actually is, in plain words. */
   what: string;
   where: string;
   when: string;
+  /** Only facts drawn from the data. */
   why: string[];
   caveat: string;
   actions: SupplyAction[];
+  /** Set when this result is a person, so the asker can invite them. */
   personId?: string;
   photoUrl?: string | null;
   evidence?: MatchEvidence;
@@ -138,6 +141,7 @@ export type SupplyAction = "contact" | "save" | "go" | "join" | "view";
 export interface SupplyAnswer {
   need: Need;
   results: SupplyResult[];
+  /** True when nothing real was found. The UI says so rather than inventing. */
   quiet: boolean;
   bandsSearched: SupplyBand[];
   diagnostics: MatchDiagnostics;
@@ -157,9 +161,15 @@ export interface MatchDiagnostics {
 export interface SupplyInput {
   need: Need;
   people: PersonCandidate[];
+  /** Listings and hour offers, already normalised to WorldEntry. */
   entries: WorldEntry[];
+  /** Per-band cap, so the answer stays small and useful. */
   perBand?: number;
   now?: string | number | Date;
+  /**
+   * How far the need's place reaches in the real geography. Without it the
+   * engine falls back to that one place exactly, which is correct but narrow.
+   */
   geography?: NeedGeography;
 }
 
@@ -183,17 +193,420 @@ function whenText(need: Need): string {
   return `${d.toUTCString().slice(0, 16)} (${need.timezone})`;
 }
 
-/** RESTORED — full body continues in follow-up commit. Temporary stub to unblock. */
+/** The whole search, in one deterministic pass. */
 export function findSupply(input: SupplyInput): SupplyAnswer {
-  throw new Error("supply-engine temporarily restored as stub — full restore in next commit");
+  const { need, people, entries } = input;
+  const perBand = input.perBand ?? 3;
+  const words = needTerms(need);
+  const now = input.now ?? new Date();
+  const geo = input.geography ?? exactGeography(need.placeId);
+  const results: SupplyResult[] = [];
+  const usedPeople = new Set<string>();
+  const diagnostics: MatchDiagnostics = {
+    peopleConsidered: people.length,
+    excludedByPlace: 0,
+    excludedByFreshness: 0,
+    excludedByQualification: 0,
+    excludedByCapability: 0,
+    excludedByStatus: 0,
+    excludedByTime: 0,
+  };
+  const trace: SupplyDiagnostic[] = [];
+
+  type ResultDraft = Omit<SupplyResult, keyof PossibilitySupply> & Partial<PossibilitySupply>;
+  const typeFor = (band: SupplyBand): SupplyType =>
+    ({
+      direct: "DIRECT",
+      local_capability: "LATENT",
+      open_to_opportunities: "LATENT",
+      journey: "JOURNEY",
+      community: "COMMUNITY",
+      contribution: "CONTRIBUTION",
+      skills_exchange: "SKILLS_EXCHANGE",
+      related: "RELATED",
+    })[band] as SupplyType;
+  const push = (draft: ResultDraft) => {
+    const evidence = draft.evidence;
+    const signals: MatchSignal[] = draft.signals ?? [
+      ...(evidence?.passed ?? []).map((reason) => ({
+        kind: reason.includes("area")
+          ? ("service_area" as const)
+          : reason.includes("availability")
+            ? ("availability" as const)
+            : ("skill" as const),
+        strength: "required" as const,
+        reason,
+      })),
+      ...(evidence?.unknown ?? []).map((reason) => ({
+        kind: reason.includes("availability") ? ("availability" as const) : ("trust" as const),
+        strength: "unknown" as const,
+        reason: `${reason} is unknown`,
+      })),
+    ];
+    const r: SupplyResult = {
+      ...draft,
+      supplyType: draft.supplyType ?? typeFor(draft.band),
+      status: draft.status ?? "ACTIVE",
+      signals,
+      reasons: draft.reasons ?? draft.why,
+      confidence: draft.confidence ?? confidence(signals),
+      freshness: draft.freshness ?? evidence?.freshness ?? "unknown",
+      trust: draft.trust ?? trust(evidence?.verification ?? "not_applicable"),
+      provenance: draft.provenance ?? {
+        origin: draft.personId
+          ? "person"
+          : draft.band === "community"
+            ? "community"
+            : "internal_listing",
+        label: draft.personId ? "Stated by this person" : "Published in The Living World",
+        sourceId: draft.id,
+      },
+      constraints:
+        draft.constraints ?? constraints(evidence?.passed ?? [], evidence?.unknown ?? []),
+    };
+    if (results.filter((x) => x.band === r.band).length >= perBand) return;
+    results.push(r);
+    trace.push({
+      candidateId: r.id,
+      outcome: "included",
+      reasonCodes: r.signals.map((signal) => signal.kind),
+    });
+  };
+
+  // 1 & 2 — what someone has actually posted, offering this.
+  for (const entry of entries) {
+    const hit = matchTerms([entry.title, entry.summary, ...(entry.skills ?? [])].join(" "), words);
+    if (!hit) continue;
+    const isOffer = entry.layer === "work" || entry.kind === "skill" || entry.cost < 0;
+    if (!isOffer) continue;
+    if (!entryInScope(entry.placeId ?? null, geo)) continue;
+    push({
+      id: entry.id,
+      band: "direct",
+      title: entry.title,
+      what: entry.kind === "skill" ? "An offer of a skill" : "A posted opportunity",
+      where: `${entry.place}, ${entry.neighbourhood}`,
+      when: entry.when,
+      why: [
+        `Mentions "${hit}"`,
+        entry.community ? "Posted by someone here themselves" : "From the demonstration world",
+      ],
+      caveat: BAND_CAVEAT.direct,
+      actions: ["view", "save", "contact"],
+    });
+  }
+
+  // 3 — people who say they can do it, and nothing more is claimed.
+  // 4 — people who additionally said they're open to this kind of thing.
+  for (const person of people) {
+    if (person.discoveryStatus === "REPORTED" || person.discoveryStatus === "EXPIRED") {
+      diagnostics.excludedByStatus += 1;
+      trace.push({
+        candidateId: person.id,
+        outcome: "excluded",
+        reasonCodes: [person.discoveryStatus.toLowerCase()],
+      });
+      continue;
+    }
+    const reach = geographicReach(person, geo);
+    if (!reach) {
+      diagnostics.excludedByPlace += 1;
+      continue;
+    }
+    const visibleCurrent = person.capabilities.filter((candidate) =>
+      usableCapability(candidate, now),
+    );
+    if (person.capabilities.length && !visibleCurrent.length) {
+      diagnostics.excludedByFreshness += 1;
+      continue;
+    }
+    const qualification = need.requiredQualifications.length
+      ? visibleCurrent.find(
+          (candidate) =>
+            candidate.kind === "qualification" &&
+            matchTerms(
+              candidate.label,
+              need.requiredQualifications.flatMap((item) =>
+                needTerms({ ...need, category: item, title: "", requiredSkills: [] }),
+              ),
+            ),
+        )
+      : null;
+    if (need.requiredQualifications.length && !qualification) {
+      diagnostics.excludedByQualification += 1;
+      continue;
+    }
+    const capability = visibleCurrent.find((c) => matchTerms(c.label, words));
+    if (!capability) {
+      diagnostics.excludedByCapability += 1;
+      continue;
+    }
+
+    const openTo = person.preferences.some((p) =>
+      need.paymentType === "paid"
+        ? [
+            "paid_work",
+            "one_off_work",
+            "recurring_work",
+            "casual_work",
+            "professional_services",
+          ].includes(p)
+        : ["helping_people", "volunteering", "community_projects", "skills_exchange"].includes(p),
+    );
+    const window = overlapsNeedTime(person, need);
+    const fixedConflict = Boolean(
+      need.startsAt && person.availability.length > 0 && !window && need.flexibility === "fixed",
+    );
+    if (fixedConflict && openTo) diagnostics.excludedByTime += 1;
+
+    if (openTo && !fixedConflict) {
+      usedPeople.add(person.id);
+      push({
+        id: `person-open-${person.id}`,
+        personId: person.id,
+        ...(person.photoUrl ? { photoUrl: person.photoUrl } : {}),
+        band: "open_to_opportunities",
+        title: person.displayName,
+        what: `Says they can: ${capability.label}`,
+        where: person.placeName,
+        when: window ? "Has said they're free around then" : "Hasn't said when they're free",
+        why: [
+          `${capability.kind === "qualification" ? "Qualified in" : "Says they can"} ${capability.label}`,
+          reach.reason,
+          "Has opted into being found for this kind of thing",
+          ...(window ? ["An availability window they set overlaps your time"] : []),
+        ],
+        caveat: BAND_CAVEAT.open_to_opportunities,
+        actions: ["contact", "view"],
+        evidence: {
+          passed: [
+            "capability",
+            "service area",
+            "opportunity preference",
+            ...(qualification ? ["required qualification"] : []),
+            ...(window ? ["availability overlap"] : []),
+          ],
+          unknown: window ? [] : ["availability"],
+          freshness: freshness({
+            lastConfirmedAt: capability.lastConfirmedAt,
+            expiresAt: capability.expiresOn,
+            kind: "capability",
+            now,
+          }),
+          verification: capability.verification,
+        },
+      });
+      continue;
+    }
+
+    // Someone who only said they'd swap belongs in the swap band, not here.
+    if (person.preferences.includes("skills_exchange")) continue;
+
+    usedPeople.add(person.id);
+    push({
+      id: `person-cap-${person.id}`,
+      personId: person.id,
+      ...(person.photoUrl ? { photoUrl: person.photoUrl } : {}),
+      band: "local_capability",
+      title: person.displayName,
+      what: `Says they can: ${capability.label}`,
+      where: person.placeName,
+      when: "Nothing said about availability",
+      why: [`Lists ${capability.label} on their profile`, reach.reason],
+      caveat: BAND_CAVEAT.local_capability,
+      actions: ["view"],
+      evidence: {
+        passed: [
+          "capability",
+          "service area",
+          ...(qualification ? ["required qualification"] : []),
+        ],
+        unknown: ["availability", "opportunity preference"],
+        freshness: freshness({
+          lastConfirmedAt: capability.lastConfirmedAt,
+          expiresAt: capability.expiresOn,
+          kind: "capability",
+          now,
+        }),
+        verification: capability.verification,
+      },
+    });
+  }
+
+  // 5 & 6 — community things, and freely offered help.
+  for (const entry of entries) {
+    const hit = matchTerms([entry.title, entry.summary, entry.give ?? ""].join(" "), words);
+    if (!hit) continue;
+    if (!entryInScope(entry.placeId ?? null, geo)) continue;
+    if (entry.layer === "community") {
+      push({
+        id: `community-${entry.id}`,
+        band: "community",
+        title: entry.title,
+        what: "Something community-run",
+        where: `${entry.place}, ${entry.neighbourhood}`,
+        when: entry.when,
+        why: [`Community listing mentioning "${hit}"`, ...(entry.give ? [entry.give] : [])],
+        caveat: BAND_CAVEAT.community,
+        actions: ["view", "join", "save"],
+      });
+    } else if (entry.cost === 0 && entry.give) {
+      push({
+        id: `contribution-${entry.id}`,
+        band: "contribution",
+        title: entry.title,
+        what: "An offer of help, freely given",
+        where: `${entry.place}, ${entry.neighbourhood}`,
+        when: entry.when,
+        why: [entry.give],
+        caveat: BAND_CAVEAT.contribution,
+        actions: ["view", "contact"],
+      });
+    }
+  }
+
+  // 7 — a swap, where the other person actually wants something back.
+  for (const person of people) {
+    if (usedPeople.has(person.id)) continue;
+    const capability = person.capabilities.find(
+      (c) => usableCapability(c, now) && matchTerms(c.label, words),
+    );
+    if (!capability) continue;
+    if (!person.preferences.includes("skills_exchange")) continue;
+    push({
+      id: `exchange-${person.id}`,
+      personId: person.id,
+      ...(person.photoUrl ? { photoUrl: person.photoUrl } : {}),
+      band: "skills_exchange",
+      title: person.displayName,
+      what: `Would swap: ${capability.label}`,
+      where: person.placeName,
+      when: "To be agreed between you",
+      why: [
+        `Says they can ${capability.label}`,
+        ...(person.wantsToLearn.length
+          ? [`Would like something back: ${person.wantsToLearn.join(", ")}`]
+          : []),
+      ],
+      caveat: BAND_CAVEAT.skills_exchange,
+      actions: ["contact", "view"],
+    });
+  }
+
+  // 8 — travellers who explicitly opted in. Never a live location.
+  for (const person of people) {
+    if (person.discoveryStatus === "REPORTED" || person.discoveryStatus === "EXPIRED") continue;
+    if (!person.preferences.includes("travelling_opportunities")) continue;
+    const visibleCurrent = person.capabilities.filter((candidate) =>
+      usableCapability(candidate, now),
+    );
+    const capability = visibleCurrent.find((c) => matchTerms(c.label, words));
+    if (!capability) continue;
+    const qualification = need.requiredQualifications.length
+      ? visibleCurrent.find(
+          (candidate) =>
+            candidate.kind === "qualification" &&
+            matchTerms(
+              candidate.label,
+              need.requiredQualifications.flatMap((item) =>
+                item
+                  .toLowerCase()
+                  .split(/[^a-zà-ÿ]+/)
+                  .filter((word) => word.length > 3),
+              ),
+            ),
+        )
+      : null;
+    if (need.requiredQualifications.length && !qualification) continue;
+    // A journey only counts when the person shared it, opted into
+    // opportunities, it is still active, and it actually covers this place at
+    // this time. Merely having ticked a place as "passing through" is not a
+    // journey and no longer produces a possibility.
+    const journey = person.journeys?.find((candidate) =>
+      journeyOverlaps(candidate, need.placeId, need.startsAt, need.endsAt),
+    );
+    if (!journey) continue;
+    push({
+      id: `journey-${person.id}`,
+      personId: person.id,
+      ...(person.photoUrl ? { photoUrl: person.photoUrl } : {}),
+      band: "journey",
+      title: person.displayName,
+      what: `Travelling, and can ${capability.label}`,
+      where: `Passing through ${person.placeName}`,
+      when: need.startsAt
+        ? "Their shared journey window overlaps this time"
+        : "Depends entirely on their plans",
+      why: [
+        `Says they can ${capability.label}`,
+        "Has opted into opportunities while travelling",
+        "Their shared journey covers this place and time",
+      ],
+      caveat: BAND_CAVEAT.journey,
+      actions: ["contact"],
+      evidence: {
+        passed: [
+          "current capability",
+          "journey opt-in",
+          "route overlap",
+          "journey time overlap",
+          ...(qualification ? ["required qualification"] : []),
+        ],
+        unknown: ["availability"],
+        freshness: freshness({
+          lastConfirmedAt: capability.lastConfirmedAt,
+          expiresAt: capability.expiresOn,
+          kind: "capability",
+          now,
+        }),
+        verification: capability.verification,
+      },
+    });
+  }
+
+  // A real adjacent possibility, never filler: related words or category must be present.
+  for (const entry of entries) {
+    if (results.some((result) => result.id === entry.id || result.id.endsWith(entry.id))) continue;
+    const categoryHit = need.requiredSkills.some((skill) =>
+      (entry.skills ?? []).some(
+        (candidate) =>
+          candidate.toLowerCase().includes(skill.toLowerCase()) ||
+          skill.toLowerCase().includes(candidate.toLowerCase()),
+      ),
+    );
+    if (!categoryHit || !entryInScope(entry.placeId ?? null, geo)) continue;
+    push({
+      id: `related-${entry.id}`,
+      band: "related",
+      title: entry.title,
+      what: "A related possibility",
+      where: `${entry.place}, ${entry.neighbourhood}`,
+      when: entry.when,
+      why: ["Shares a skill with what you asked for"],
+      caveat: BAND_CAVEAT.related,
+      actions: ["view", "save"],
+    });
+  }
+
+  const ordered = BAND_ORDER.flatMap((band) => results.filter((r) => r.band === band));
+  return {
+    need,
+    results: ordered,
+    quiet: ordered.length === 0,
+    bandsSearched: BAND_ORDER,
+    diagnostics,
+    trace,
+  };
 }
 
 export function whatElse(input: SupplyInput): SupplyAnswer {
-  return findSupply(input);
+  const answer = findSupply(input);
+  return { ...answer, results: answer.results.filter((result) => result.supplyType !== "DIRECT") };
 }
 
 export function whoCouldMakeThisHappen(input: SupplyInput): SupplyAnswer {
-  return findSupply(input);
+  const answer = findSupply(input);
+  return { ...answer, results: answer.results.filter((result) => Boolean(result.personId)) };
 }
 
 export { whenText as needWhenText };
