@@ -69,7 +69,7 @@ describe("Search Intent & Locality Resolution", () => {
     expect(res.locality?.place.name).toBe("Birmingham");
     expect(res.intentFamily).toBe("whats_on");
     expect(res.subject).toBe("drake");
-    expect(res.suggestedPath).toBe("/gb/birmingham");
+    expect(res.suggestedPath).toBe("/gb/birmingham?intent=whats_on&subject=drake");
   });
 
   it("extracts service query with canonical locality: 'gardener Brixton'", () => {
@@ -77,7 +77,7 @@ describe("Search Intent & Locality Resolution", () => {
     expect(res.locality?.place.name).toBe("Brixton");
     expect(res.intentFamily).toBe("local_service");
     expect(res.subject).toBe("gardener");
-    expect(res.suggestedPath).toBe("/need");
+    expect(res.suggestedPath).toBe("/gb/brixton?intent=local_service&subject=gardener");
   });
 
   it("extracts time-specific event query: 'things to do Birmingham tonight'", () => {
@@ -85,6 +85,7 @@ describe("Search Intent & Locality Resolution", () => {
     expect(res.locality?.place.name).toBe("Birmingham");
     expect(res.intentFamily).toBe("whats_on");
     expect(res.timeframe).toBe("tonight");
+    expect(res.suggestedPath).toBe("/gb/birmingham?intent=whats_on&timeframe=tonight");
   });
 
   it("extracts multi-token neighbourhood query: 'live music Kings Heath'", () => {
