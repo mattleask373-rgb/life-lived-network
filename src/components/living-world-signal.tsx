@@ -15,17 +15,14 @@ export function LivingWorldSignal({
     <div
       className={[
         "relative overflow-hidden rounded-2xl border p-5 shadow-paper sm:p-6",
-        quiet
-          ? "border-border bg-paper-deep/60"
-          : "border-primary/20 bg-card",
+        quiet ? "border-border bg-paper-deep/60" : "border-primary/20 bg-card",
       ].join(" ")}
     >
       <div
         aria-hidden="true"
-        className={[
-          "absolute inset-y-0 left-0 w-1",
-          quiet ? "bg-border" : "bg-primary",
-        ].join(" ")}
+        className={["absolute inset-y-0 left-0 w-1", quiet ? "bg-border" : "bg-primary"].join(
+          " ",
+        )}
       />
       <div className="pl-2">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
