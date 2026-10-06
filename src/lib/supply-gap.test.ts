@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { classifySupplyGap } from "./supply-gap";
 import type { SupplyAnswer, SupplyResult } from "./supply-engine";
+import type { Need } from "./needs";
 
 function makeResult(band: SupplyResult["band"], id = "r1"): SupplyResult {
   return {
@@ -37,7 +38,7 @@ function makeSupply(results: SupplyResult[], quiet = results.length === 0): Supp
       requiredQualifications: [],
       paymentType: "paid",
       flexibility: "flexible",
-    } as any,
+    } as Need,
     results,
     quiet,
     bandsSearched: [],
