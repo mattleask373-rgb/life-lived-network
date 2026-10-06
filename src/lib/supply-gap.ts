@@ -26,11 +26,7 @@
 
 import type { SupplyAnswer, SupplyBand } from "./supply-engine";
 
-export type SupplyGapStatus =
-  | "SATISFIED"
-  | "WEAK_SUPPLY"
-  | "ZERO_SUPPLY"
-  | "UNKNOWN_LOCALITY";
+export type SupplyGapStatus = "SATISFIED" | "WEAK_SUPPLY" | "ZERO_SUPPLY" | "UNKNOWN_LOCALITY";
 
 export interface SupplyGapInput {
   /** Result of the sole canonical discovery authority. */
