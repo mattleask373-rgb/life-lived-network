@@ -6,6 +6,7 @@ import { LayerFilter } from "@/components/layer-filter";
 import { EntrySheet } from "@/components/entry-sheet";
 import { EntryCard } from "@/components/entry-card";
 import { PlacePicker } from "@/components/place-picker";
+import { PossibilityFrontDoor } from "@/components/possibility-front-door";
 import { ThreeHours } from "@/components/three-hours";
 import { DoSomethingToday } from "@/components/do-something-today";
 import { LayerIcon } from "@/components/layer-icon";
@@ -42,16 +43,12 @@ function Home() {
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle, ids } = useLifeList();
 
-  // Where we are is shared application context, not a constant in this file.
   const { place, ancestors, setPlaceSlug, loading, index } = useWorldContext();
-  // What the map is looking at. Separate from where we are: moving the map never
-  // moves the person, it only offers somewhere they could choose instead.
   const [view, setView] = useState<MapView | null>(null);
   const [exploredSlug, setExploredSlug] = useState<string | null>(null);
   const exploredPlace = exploredSlug && index ? index.bySlug.get(exploredSlug) : null;
   const discoveryPlace = exploredPlace ?? place;
 
-  // The page asks for possibilities in a context; it never knows the source.
   const {
     data: world,
     isLoading: worldLoading,
@@ -60,11 +57,8 @@ function Home() {
   } = useQuery({
     queryKey: ["world", discoveryPlace?.id ?? null],
     enabled: Boolean(discoveryPlace),
-    queryFn: () =>
-      // Only where we are travels; the hierarchy is expanded behind the server.
-      fetchWorldEntries({ placeId: discoveryPlace?.id ?? null }),
+    queryFn: () => fetchWorldEntries({ placeId: discoveryPlace?.id ?? null }),
   });
-  // What people here have asked for. Counted honestly, never invented.
   const openNeedsFn = useServerFn(getOpenNeeds);
   const { data: openNeeds } = useQuery({
     queryKey: ["open-needs", place?.id ?? null],
@@ -82,7 +76,6 @@ function Home() {
     return layers.length ? filtered : meaningfulVariety(filtered);
   }, [all, layers]);
   const snapshot = useMemo(() => activitySnapshot(all), [all]);
-  // The locality read as one thing: dated events, providers, offered hours.
   const events = useMemo(() => upcomingEvents(all), [all]);
   const groups = useMemo(() => providerGroups(all), [all]);
   const given = useMemo(() => contributions(all), [all]);
@@ -123,7 +116,8 @@ function Home() {
           <PlacePicker />
         </div>
 
-        {/* The same locality, as a page anyone can be sent to or find by searching. */}
+        <PossibilityFrontDoor />
+
         {place && place.country_code ? (
           <Link
             to="/$country/$place"
@@ -136,7 +130,6 @@ function Home() {
 
         <LocalityQuestions questions={questions} placeName={placeName} />
 
-        {/* Something's happening here */}
         {snapshot.length ? (
           <section aria-labelledby="happening-heading" className="card-paper mt-6 p-5">
             <h2 id="happening-heading" className="text-xl">
@@ -159,7 +152,6 @@ function Home() {
           </section>
         ) : null}
 
-        {/* The quiet truth, when a place is quiet */}
         {quiet ? (
           <section className="card-paper mt-6 p-5">
             <h2 className="text-xl">There isn't much here yet.</h2>
@@ -192,7 +184,6 @@ function Home() {
           </section>
         ) : null}
 
-        {/* The map */}
         <section aria-labelledby="map-heading" className="mt-8">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3 sm:flex sm:justify-between">
             <h2 id="map-heading" className="truncate text-xl">
@@ -250,13 +241,9 @@ function Home() {
           </p>
         </section>
 
-        {/* What's happening — everything with a real date, by day */}
         <WhatsHappening events={events} placeName={placeName} onOpen={setOpen} />
-
-        {/* What's here — providers and their practices and services */}
         <WhatsHere groups={groups} placeName={placeName} onOpen={setOpen} />
 
-        {/* Who's here, and what people have asked for */}
         <section aria-labelledby="who" id="who" className="mt-10 scroll-mt-6">
           <h2 id="who-heading" className="text-2xl">
             Who's here, and what's needed
@@ -297,17 +284,13 @@ function Home() {
           </div>
         </section>
 
-        {/* Do something today */}
         <div className="mt-10">
           <DoSomethingToday world={all} savedIds={ids} onOpen={setOpen} />
         </div>
-
-        {/* I have three hours */}
         <div className="mt-10">
           <ThreeHours onOpen={setOpen} world={all} />
         </div>
 
-        {/* What can you give */}
         <section className="card-paper mt-10 p-5">
           <h2 className="text-xl">What can you give?</h2>
           <p className="mt-1 max-w-xl text-sm text-muted-foreground">
@@ -322,7 +305,6 @@ function Home() {
           </Link>
         </section>
 
-        {/* Journey */}
         <section className="card-paper mt-10 p-5">
           <h2 className="text-xl">What could your journey become?</h2>
           <p className="mt-1 max-w-xl text-sm text-muted-foreground">
