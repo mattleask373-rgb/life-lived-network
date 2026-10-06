@@ -86,9 +86,7 @@ describe("journey eligibility", () => {
     ];
 
     const journeys = planJourney(journeyBrief, world);
-    const ids = journeys.flatMap((journey) =>
-      journey.steps.map((step) => step.entry.id),
-    );
+    const ids = journeys.flatMap((journey) => journey.steps.map((step) => step.entry.id));
 
     expect(ids).toContain("live-today");
     expect(ids).toContain("live-tonight");
