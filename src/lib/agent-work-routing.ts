@@ -55,10 +55,16 @@ export function routeTask(
       });
       continue;
     }
-    if (RISK_RANK[task.risk] > RISK_RANK[role.maxRiskWithoutHumanGate] && role.id !== "security_privacy") {
+    if (
+      RISK_RANK[task.risk] > RISK_RANK[role.maxRiskWithoutHumanGate] &&
+      role.id !== "security_privacy"
+    ) {
       // High-risk tasks still route to security; others need human-capable path
       if (task.risk === "P0" && !role.humanGates.length) {
-        rejected.push({ roleId: role.id, reason: "P0 risk exceeds role ceiling without human gates" });
+        rejected.push({
+          roleId: role.id,
+          reason: "P0 risk exceeds role ceiling without human gates",
+        });
         continue;
       }
     }
