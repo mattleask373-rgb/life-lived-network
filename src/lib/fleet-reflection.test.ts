@@ -87,6 +87,21 @@ describe("fleet reflection", () => {
     ).toContain("human-gate requirement does not match risk/reversibility");
   });
 
+  it("rejects malformed evidence without throwing", () => {
+    expect(() =>
+      validateFleetReflectionFinding({
+        ...baseFinding,
+        evidence: undefined as never,
+      }),
+    ).not.toThrow();
+    expect(
+      validateFleetReflectionFinding({
+        ...baseFinding,
+        evidence: undefined as never,
+      }),
+    ).toContain("evidence must be an array of valid references");
+  });
+
   it("rejects an unbounded follow-up", () => {
     expect(
       validateFleetReflectionFinding({
