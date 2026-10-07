@@ -45,7 +45,7 @@ describe("provider registry policy", () => {
   it("rejects a provider that lacks the lane capability", () => {
     const provider = {
       ...EXAMPLE_PROVIDER_DESCRIPTORS.find((p) => p.id === "plane_ai")!,
-      capabilities: ["research"] as const,
+      capabilities: ["research"],
     };
     const decision = isEligibleProvider(
       provider,
