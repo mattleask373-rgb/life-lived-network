@@ -9,13 +9,7 @@
 import type { AgentTaskEnvelope, AutonomyLevel, RiskLevel } from "./agent-orchestration";
 import type { AgentExecutionResult } from "./agent-execution-contract";
 
-export type ProviderCapability =
-  | "implementation"
-  | "review"
-  | "research"
-  | "security_audit"
-  | "qa"
-  | "human_judgment";
+export type ProviderCapability = "implementation" | "review" | "research" | "security_audit" | "qa" | "human_judgment";
 
 export type ProviderHealthStatus = "available" | "degraded" | "unavailable" | "unknown";
 
@@ -157,7 +151,14 @@ export const EXAMPLE_PROVIDER_DESCRIPTORS: ProviderDescriptor[] = [
   {
     id: "human",
     displayName: "Human",
-    capabilities: ["implementation", "review", "research", "security_audit", "qa", "human_judgment"],
+    capabilities: [
+      "implementation",
+      "review",
+      "research",
+      "security_audit",
+      "qa",
+      "human_judgment",
+    ],
     maxAutonomy: "L4",
     maxRiskWithoutHumanGate: "P0",
     costClass: "human",
