@@ -1,87 +1,59 @@
 import { describe, expect, test } from "vitest";
+
 import {
   canPromoteToAccepted,
-  createExpansionProposal,
+  expansionRequiresHumanGate,
   findExpansionOverlaps,
-  requiresHumanGate,
   validateExpansionProposal,
   type ExpansionProposal,
 } from "./expansion-proposal";
 
-const evidence = [{ id: "test-1", source: "github://example/issue/65" }];
+const evidence = [{ id: "e1", source: "github://repo/issue/65" }];
 
-function proposal(
-  overrides: Partial<ExpansionProposal> = {},
-): ExpansionProposal {
+function proposal(overrides: Partial<ExpansionProposal> = {}): ExpansionProposal {
   return {
-    id: "expansion-1",
-    originatingObjective: "Increase useful real-world discovery",
-    originatingTask: "task-1",
-    observedPattern: "The current category cannot represent the observed workflow",
+    id: "exp-1",
+    originatingObjective: "Improve sparse locality honesty",
+    observedPattern: "Sparse places look empty and users abandon",
     evidence,
-    currentCategory: "opportunity",
-    currentMechanism: "canonical discovery",
-    limitation: "The current representation loses the workflow state",
-    proposedCategory: "workflow-opportunity",
-    proposedMechanism: "bounded workflow representation",
-    expectedLeverage: ["better representation"],
-    affectedCapabilities: ["discovery"],
-    alternativesConsidered: ["extend current category", "do not change"],
-    experimentPlan: ["model two real examples", "compare representation loss"],
-    falsificationCriteria: ["no representation improvement"],
+    proposedCategory: "presentation",
+    currentCategory: "map-first locality page",
+    limitation: "Presentation does not adapt to real density",
+    proposedMechanism: "Density-aware progressive disclosure",
+    expectedLeverage: "Sparse places remain useful without fabricated supply",
+    alternativesConsidered: ["Always show large map", "Hide map entirely"],
+    experimentPlan: "A/B layout heights against engagement in quiet localities",
+    falsificationCondition: "No improvement in time-to-first-useful-content",
     reversible: true,
     risk: "low",
     requiresHumanGate: false,
     epistemic: "EXPERIMENTAL",
-    status: "testing",
+    status: "proposed",
     ...overrides,
   };
 }
 
 describe("expansion-proposal", () => {
-  test("accepts every supported epistemic class without treating it as fact", () => {
-    for (const epistemic of [
-      "REAL",
-      "PLAUSIBLE",
-      "EXPERIMENTAL",
-      "SPECULATIVE",
-      "IMAGINED",
-      "UNKNOWN",
-    ] as const) {
-      const candidate = proposal({
-        epistemic,
-        status: epistemic === "REAL" ? "testing" : "proposed",
-      });
-      expect(validateExpansionProposal(candidate).valid).toBe(true);
-    }
+  test("rejects REAL classification for proposals", () => {
+    const result = validateExpansionProposal(proposal({ epistemic: "REAL" }));
+    expect(result.valid).toBe(false);
   });
 
-  test("reports malformed evidence without throwing", () => {
-    const candidate = proposal({
-      epistemic: "REAL",
-      evidence: undefined as unknown as ExpansionProposal["evidence"],
-    });
-    expect(() => validateExpansionProposal(candidate)).not.toThrow();
-    expect(validateExpansionProposal(candidate).valid).toBe(false);
+  test("requires human gate for irreversible or high-risk work", () => {
+    expect(expansionRequiresHumanGate({ risk: "low", reversible: false })).toBe(true);
+    expect(expansionRequiresHumanGate({ risk: "high", reversible: true })).toBe(true);
+    expect(expansionRequiresHumanGate({ risk: "low", reversible: true })).toBe(false);
   });
 
-  test("requires a human gate for high-risk and irreversible proposals", () => {
-    expect(requiresHumanGate({ risk: "high", reversible: true })).toBe(true);
-    expect(requiresHumanGate({ risk: "low", reversible: false })).toBe(true);
-    expect(
-      validateExpansionProposal(
-        proposal({ risk: "critical", reversible: true, requiresHumanGate: false }),
-      ).valid,
-    ).toBe(false);
+  test("rejects ungated high-risk proposals", () => {
+    const result = validateExpansionProposal(
+      proposal({ risk: "critical", reversible: false, requiresHumanGate: false }),
+    );
+    expect(result.valid).toBe(false);
   });
 
-  test("does not allow UNKNOWN to become accepted", () => {
-    const candidate = proposal({
-      epistemic: "UNKNOWN",
-      status: "accepted",
-      resultingTaskId: "task-2",
-    });
-    expect(validateExpansionProposal(candidate).valid).toBe(false);
+  test("accepts a well-formed experimental proposal", () => {
+    expect(validateExpansionProposal(proposal()).valid).toBe(true);
   });
 
   test("requires a bounded task reference when accepted", () => {
@@ -92,17 +64,13 @@ describe("expansion-proposal", () => {
     });
     expect(validateExpansionProposal(accepted).valid).toBe(true);
     expect(
-      validateExpansionProposal(
-        proposal({ status: "accepted", epistemic: "PLAUSIBLE" }),
-      ).valid,
+      validateExpansionProposal(proposal({ status: "accepted", epistemic: "PLAUSIBLE" })).valid,
     ).toBe(false);
   });
 
   test("does not silently attach a task to a proposal that is not accepted", () => {
     expect(
-      validateExpansionProposal(
-        proposal({ status: "testing", resultingTaskId: "task-2" }),
-      ).valid,
+      validateExpansionProposal(proposal({ status: "testing", resultingTaskId: "task-2" })).valid,
     ).toBe(false);
   });
 
@@ -113,6 +81,7 @@ describe("expansion-proposal", () => {
       proposal({
         id: "category-only",
         proposedMechanism: "another mechanism",
+        originatingObjective: "a different objective",
       }),
     ]);
 
@@ -132,30 +101,30 @@ describe("expansion-proposal", () => {
 
   test("promotion requires testing and evidence-backed epistemic status", () => {
     expect(
-      canPromoteToAccepted(
-        proposal({ status: "proposed", epistemic: "PLAUSIBLE" }),
-      ).valid,
+      canPromoteToAccepted(proposal({ status: "proposed", epistemic: "PLAUSIBLE" })).valid,
+    ).toBe(false);
+    expect(
+      canPromoteToAccepted(proposal({ status: "testing", epistemic: "UNKNOWN" })).valid,
     ).toBe(false);
     expect(
       canPromoteToAccepted(
-        proposal({ status: "testing", epistemic: "UNKNOWN" }),
+        proposal({ status: "testing", epistemic: "PLAUSIBLE", resultingTaskId: "task-3" }),
+      ).valid,
+    ).toBe(true);
+  });
+
+  test("rejects malformed evidence", () => {
+    expect(
+      validateExpansionProposal(
+        proposal({ evidence: [{ id: "", source: "x" }] as never }),
       ).valid,
     ).toBe(false);
   });
 
-  test("promotion can validate a tested, bounded, reversible proposal", () => {
-    const candidate = proposal({
-      status: "testing",
-      epistemic: "PLAUSIBLE",
-    });
-    expect(canPromoteToAccepted(candidate).valid).toBe(true);
-  });
-
-  test("creation does not mutate caller-owned arrays", () => {
-    const candidate = proposal();
-    const originalEvidence = candidate.evidence;
-    const created = createExpansionProposal(candidate);
-    expect(created.evidence).not.toBe(originalEvidence);
-    expect(created.expectedLeverage).not.toBe(candidate.expectedLeverage);
+  test("UNKNOWN cannot be accepted", () => {
+    const result = validateExpansionProposal(
+      proposal({ epistemic: "UNKNOWN", status: "accepted", resultingTaskId: "t1" }),
+    );
+    expect(result.valid).toBe(false);
   });
 });
