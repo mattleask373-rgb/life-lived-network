@@ -37,8 +37,8 @@ export interface LeaseSnapshot {
   owner: string | null;
   leaseExpiry: Date | null;
   lastHeartbeat: Date | null;
-  leaseGeneration: number;
-  leaseToken: string | null;
+  leaseGeneration?: number;
+  leaseToken?: string | null;
 }
 
 export interface StaleDecision {
