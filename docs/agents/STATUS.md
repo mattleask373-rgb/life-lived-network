@@ -1,33 +1,35 @@
-# Agent System Status — 2026-10-07 (Hour 4 — Team OS)
+# Agent System Status — 2026-10-07 (Hour 5 — Company OS)
 
 ## NORTH STAR
 
-Reusable **AI development company operating system**:
-Project A/B/C → configure → same specialist team operates under bounded autonomy + human gates.
+**AI company in a box:** configure project → activate specialist team → continuous discover/build/verify/learn under bounded autonomy + human gates.
 
-## HOUR 4 DELIVERED (IMPLEMENTED)
+## HOUR 5 IMPLEMENTED
 
-| Artifact | Path |
-|----------|------|
-| Role roster | `src/lib/agent-role-contract.ts` |
-| Agent factory | `src/lib/agent-factory.ts` |
-| Project bootstrap | `src/lib/agent-project-bootstrap.ts` |
-| Research boundary | `src/lib/agent-research-contract.ts` |
-| Work routing | `src/lib/agent-work-routing.ts` |
-| Tests | `src/lib/agent-team-os.test.ts` |
-| Docs | `TEAM-OPERATING-SYSTEM.md`, `PROJECT-BOOTSTRAP.md`, `TEAM-ROLES.md` |
+| Module | Purpose |
+|--------|---------|
+| `agent-capability-registry.ts` | Role ≠ capability ≠ permission ≠ provider |
+| `agent-lifecycle.ts` | Agent instance lifecycle + health |
+| `agent-opportunity.ts` | SIGNAL→…→DECISION pipeline |
+| `agent-work-generator.ts` | CandidateWork (never auto-requirement) |
+| `agent-human-attention.ts` | Human offline decision queue |
+| `agent-provider-degradation.ts` | Failure policy without retry storms |
+| `agent-priority.ts` | Priority scoring; never waives safety |
+| `agent-org-memory.ts` | Durable knowledge vs chat |
+| `agent-evaluation-schema.ts` | Metrics schema (no fabricated data) |
+| `agent-company-os.test.ts` | Pure organisational tests |
+| `PROJECT-ISOLATION.md` | Cross-project boundary |
 
 ## VERIFIED / NOT VERIFIED / BLOCKED
 
 | Item | Status |
 |------|--------|
-| CI green on Head Manager head `2e9f873` | VERIFIED (reported by Head Manager; Verify #200) |
-| Pure control-plane + team OS unit tests in repo | IMPLEMENTED (must re-run CI on latest head) |
-| Team OS role/factory/bootstrap/routing/research modules | IMPLEMENTED |
-| Live Supabase RPC / deployed EXECUTE grants | NOT VERIFIED |
-| Provider execute adapters | BLOCKED BY POLICY (disabled) |
-| Production Plane webhook | BLOCKED BY POLICY (disabled) |
-| Multi-project production use | NOT VERIFIED |
+| Hour-5 pure modules + tests in repo | **IMPLEMENTED** |
+| CI on latest head | **NOT VERIFIED** (recent Verify runs failing — likely lint; needs isolation) |
+| Head Manager green head `2e9f873` | **VERIFIED** (historical) |
+| Live Supabase / multi-project tenancy | **NOT VERIFIED** |
+| Provider execute / prod webhook | **BLOCKED BY POLICY** |
+| Fabricated metrics | **FORBIDDEN** (schema only) |
 
 ## DELIBERATELY DISABLED
 
@@ -35,8 +37,15 @@ Project A/B/C → configure → same specialist team operates under bounded auto
 - Production Plane webhook
 - Autonomous main merge
 
-## NEXT SAFE STEP
+## NEXT HIGHEST-VALUE WORK
 
-1. CI on latest hour-4 head (format/lint if needed).
-2. Human staging smoke of lifecycle path.
-3. Optionally bootstrap a second project config fixture to prove Project B pattern.
+1. Restore CI green on current head (format/lint).
+2. Wire `projectId` into durable `agent_tasks` rows (migration + normaliser) — human-approved schema change.
+3. Staging smoke of claim lifecycle.
+4. Optional: adversarial role roster entries (red_team, skeptic) via factory.
+5. Mission Control read model for Lovable (consume pure summaries only).
+
+## SUGGESTED NEXT SPECIALIST
+
+- **ChatGPT / QA:** CI isolation + adversarial review of hour-5 contracts.
+- **Human:** staging smoke + decide when to persist opportunities/memory in Supabase.

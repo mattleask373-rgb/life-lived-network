@@ -1,45 +1,62 @@
 # AI Team Operating System
 
-This repository is the first proving ground for a **reusable AI development organisation**.
+This repository is the proving ground for a **reusable AI development company**.
 
-> Configure a project → the same specialist team operates → evidence in GitHub → humans gate consequential actions.
+> Configure a project → activate a specialist team → continuously discover, research, build, test, document, measure and improve → route work → verify independently → human gates → integrate → learn.
 
 ## Layers
 
-1. **Control plane** — claim/lease/heartbeat, state machine, transitions, execution evidence (`src/lib/agent-*`, migrations).
-2. **Team OS** — role contracts, factory, bootstrap, routing, research boundary (this doc + machine-readable modules).
-3. **Project config** — per-repo identity, risk, providers, enabled roles (`bootstrapProject`).
-4. **Providers** — interchangeable runners; **execute adapters DISABLED** until human activation.
+1. **Control plane** — claim/lease/heartbeat, state machine, transitions, execution evidence.
+2. **Team OS** — roles, factory, bootstrap, routing, research boundary.
+3. **Company OS (hour 5)** — capability registry, opportunities, work generation, agent health, human attention, provider degradation, org memory, evaluation schema.
+4. **Project config** — isolated per `projectId`.
+5. **Providers** — interchangeable; **execute DISABLED** until human activation.
 
-## Continuous loops (bounded autonomy)
+## Continuous loop
 
 ```
-DISCOVER → PRIORITISE → DECOMPOSE → CLAIM → EXECUTE → VERIFY → REVIEW → ACCEPT → INTEGRATE → OBSERVE → LEARN
+MISSION → DISCOVERY → RESEARCH → OPPORTUNITIES → PRIORITISE
+  → CANDIDATE WORK → ROLE ROUTING → PROVIDER POLICY → CLAIM
+  → EXECUTE → EVIDENCE → INDEPENDENT VERIFY → HUMAN GATE
+  → INTEGRATE → MEASURE → LEARN → NEXT WORK
 ```
 
-Parallel lanes: engineering, research, SEO, marketing, product, reliability.
+## Human offline mode
 
-Agents may continue useful work inside leases, scopes, budgets and policies **without** waiting for humans on every micro-task.
+Agents may continue: research, analysis, docs, tests, safe branch implementation, SEO analysis, backlog refinement, CI diagnosis.
 
-Humans remain mandatory for: main merge, production deploy/secrets, destructive migrations, architecture/privacy invariant changes, regulated behaviour, external publication, paid spend, irreversible ops.
+Must queue: production deploy, external publish, major architecture, destructive migrations, security-sensitive decisions, financial actions, irreversible changes, merge to main.
+
+Surface via `agent-human-attention.ts`.
 
 ## Machine-readable modules
 
 | Module | Purpose |
 |--------|---------|
 | `agent-role-contract.ts` | Specialist roster |
-| `agent-factory.ts` | Spawn new specialist from template |
+| `agent-factory.ts` | Spawn specialist from template |
 | `agent-project-bootstrap.ts` | Project A/B/C configuration |
 | `agent-work-routing.ts` | Role eligibility + path collision |
 | `agent-research-contract.ts` | KNOWN/INFERRED/PROPOSED/UNKNOWN |
-| `agent-state-machine.ts` | Lifecycle transitions |
-| `agent-execution-contract.ts` | No silent done / no self-approve |
+| `agent-capability-registry.ts` | Fine capabilities + permissions |
+| `agent-lifecycle.ts` | Instance lifecycle + health |
+| `agent-opportunity.ts` | Opportunity pipeline |
+| `agent-work-generator.ts` | Candidate work generation |
+| `agent-human-attention.ts` | Human attention queue |
+| `agent-provider-degradation.ts` | Provider failure policy |
+| `agent-priority.ts` | Priority without safety bypass |
+| `agent-org-memory.ts` | Durable organisational memory |
+| `agent-evaluation-schema.ts` | Metrics schema only |
+| `agent-state-machine.ts` | Task lifecycle |
+| `agent-execution-contract.ts` | No silent done |
 | `agent-provider.ts` | Provider-neutral selection |
 
 ## Anti-goals
 
-- One generic “AI agent” does everything
-- Research silently becomes product requirements
-- Implementer self-accepts
-- Provider hard-wiring (role ≠ vendor)
-- 24/7 autonomy that bypasses human gates
+- One generic autonomous agent
+- Research → silent product requirements
+- Self-approval
+- Provider hard-wiring
+- Retry forever / lower safety when degraded
+- Fabricated telemetry
+- Cross-project leakage
