@@ -4,13 +4,7 @@
  */
 
 export type AgentLifecycleState =
-  | "PROPOSED"
-  | "SPECIFIED"
-  | "EVALUATING"
-  | "ACTIVE"
-  | "DEGRADED"
-  | "SUSPENDED"
-  | "RETIRED";
+  "PROPOSED" | "SPECIFIED" | "EVALUATING" | "ACTIVE" | "DEGRADED" | "SUSPENDED" | "RETIRED";
 
 export type AgentHealth = "HEALTHY" | "DEGRADED" | "FAILING" | "UNKNOWN";
 

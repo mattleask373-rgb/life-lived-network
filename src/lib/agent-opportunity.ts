@@ -16,13 +16,7 @@ export type OpportunityStage =
   | "DEFERRED";
 
 export type OpportunityDomain =
-  | "research"
-  | "seo"
-  | "marketing"
-  | "product"
-  | "engineering"
-  | "security"
-  | "operations";
+  "research" | "seo" | "marketing" | "product" | "engineering" | "security" | "operations";
 
 export interface OpportunityRecord {
   id: string;
