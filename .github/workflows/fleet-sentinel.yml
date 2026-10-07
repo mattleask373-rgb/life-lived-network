@@ -1,0 +1,41 @@
+name: Fleet Sentinel
+
+on:
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+
+concurrency:
+  group: fleet-sentinel
+  cancel-in-progress: true
+
+jobs:
+  pulse:
+    name: Read-only fleet pulse
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Generate fleet pulse
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: bash scripts/fleet-sentinel.sh > fleet-pulse.md
+
+      - name: Publish pulse
+        uses: actions/upload-artifact@v4
+        with:
+          name: fleet-pulse-${{ github.run_id }}
+          path: fleet-pulse.md
+          if-no-files-found: error
+          retention-days: 7
