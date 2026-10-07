@@ -2,11 +2,7 @@ import type { ProgrammeEvidenceRef } from "./programme-state";
 import type { ExperimentPlan, ExperimentOwner } from "./experiment-engine";
 import { validateExperimentPlan } from "./experiment-engine";
 
-export type ExperimentAcceptanceDisposition =
-  | "accepted"
-  | "rejected"
-  | "proposed"
-  | "testing";
+export type ExperimentAcceptanceDisposition = "accepted" | "rejected" | "proposed" | "testing";
 
 export interface ProgrammeStateReference {
   stateId: string;
@@ -80,12 +76,7 @@ function validEvidence(value: unknown): value is ProgrammeEvidenceRef[] {
 export function experimentTaskRequiresHumanGate(
   plan: Pick<ExperimentPlan, "risk" | "reversible" | "requiresHumanGate">,
 ): boolean {
-  return (
-    plan.requiresHumanGate ||
-    !plan.reversible ||
-    plan.risk === "high" ||
-    plan.risk === "critical"
-  );
+  return plan.requiresHumanGate || !plan.reversible || plan.risk === "high" || plan.risk === "critical";
 }
 
 export function validateAcceptedExperimentTaskInput(
