@@ -9,11 +9,11 @@ function config() {
 
 async function rest(path: string, init?: RequestInit): Promise<Response> {
   const { url, key } = config();
-  return fetch(\`${url}/rest/v1/${path}\`, {
+  return fetch(`${url}/rest/v1/${path}`, {
     ...init,
     headers: {
       apikey: key,
-      Authorization: \`Bearer ${key}\`,
+      Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
       Prefer: "return=representation",
       ...init?.headers,
@@ -22,11 +22,11 @@ async function rest(path: string, init?: RequestInit): Promise<Response> {
 }
 
 async function assertOk(response: Response): Promise<void> {
-  if (!response.ok) throw new Error(\`Agent control-plane storage failed (${response.status})\`);
+  if (!response.ok) throw new Error(`Agent control-plane storage failed (${response.status})`);
 }
 
 export async function hasAgentEvent(eventId: string): Promise<boolean> {
-  const response = await rest(\`agent_events?select=event_id&event_id=eq.${encodeURIComponent(eventId)}&limit=1\`);
+  const response = await rest(`agent_events?select=event_id&event_id=eq.${encodeURIComponent(eventId)}&limit=1`);
   await assertOk(response);
   const rows = (await response.json()) as SupabaseRow[];
   return rows.length > 0;
@@ -70,7 +70,7 @@ export async function recordNormalizedAgentTask(task: unknown, eventId: string):
 export async function markAgentEvent(
   eventId: string, status: "ignored" | "normalized" | "failed", error?: string,
 ): Promise<void> {
-  const response = await rest(\`agent_events?event_id=eq.${encodeURIComponent(eventId)}\`, {
+  const response = await rest(`agent_events?event_id=eq.${encodeURIComponent(eventId)}`, {
     method: "PATCH",
     body: JSON.stringify({ status, processed_at: new Date().toISOString(), error: error ?? null }),
   });
