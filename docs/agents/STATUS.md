@@ -27,9 +27,4 @@
 
 ## NEXT SAFE STEP
 
-Build the Phase A receiver as a small provider-neutral service with:
-- HMAC verification
-- event idempotency
-- task normalization
-- dry-run dispatch
-- no model credentials
+Connect the deployed webhook to Plane using `PLANE_WEBHOOK_SECRET`, then build the provider runner/claim layer. Keep execution disabled until a human verifies the live webhook path.
