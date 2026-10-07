@@ -1,12 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export type AgentLane =
-  | "PRODUCT"
-  | "ARCHITECTURE"
-  | "IMPLEMENTATION"
-  | "QA"
-  | "SECURITY"
-  | "REVIEW";
+export type AgentLane = "PRODUCT" | "ARCHITECTURE" | "IMPLEMENTATION" | "QA" | "SECURITY" | "REVIEW";
 
 export type AutonomyLevel = "L0" | "L1" | "L2" | "L3" | "L4";
 export type RiskLevel = "P0" | "P1" | "P2" | "P3";
@@ -161,10 +155,7 @@ export function autonomyFromRisk(risk: RiskLevel): AutonomyLevel {
   return "L2";
 }
 
-export function normalizePlaneTask(
-  event: PlaneWebhookEnvelope,
-  taskId: string,
-): AgentTaskEnvelope {
+export function normalizePlaneTask(event: PlaneWebhookEnvelope, taskId: string): AgentTaskEnvelope {
   const data = event.data as PlaneTaskData;
   const objective = data.description?.trim() || data.name?.trim();
 
@@ -246,9 +237,7 @@ export function claimTask(
   }
 
   if (task.status !== "READY" && task.status !== "STALE" && task.status !== "DISCOVERED") {
-    throw new Error(
-      `Task ${task.task_id} cannot be claimed from status ${task.status}`,
-    );
+    throw new Error(`Task ${task.task_id} cannot be claimed from status ${task.status}`);
   }
 
   const leaseMs = options?.leaseMs ?? defaultLeaseMs(task.risk);
@@ -281,9 +270,7 @@ export function heartbeatTask(
     throw new Error(`Task ${task.task_id} has no active claim`);
   }
   if (task.claim.owner !== owner) {
-    throw new Error(
-      `Task ${task.task_id} is claimed by ${task.claim.owner}, not ${owner}`,
-    );
+    throw new Error(`Task ${task.task_id} is claimed by ${task.claim.owner}, not ${owner}`);
   }
 
   const now = options?.now ?? new Date();
@@ -345,10 +332,7 @@ export function isStale(task: AgentTaskEnvelope, now: Date = new Date()): boolea
 /**
  * Mark a stale task as STALE (does not clear the claim so work can be inspected).
  */
-export function markStale(
-  task: AgentTaskEnvelope,
-  now: Date = new Date(),
-): AgentTaskEnvelope {
+export function markStale(task: AgentTaskEnvelope, now: Date = new Date()): AgentTaskEnvelope {
   if (!isStale(task, now)) {
     throw new Error(`Task ${task.task_id} is not stale`);
   }
@@ -372,9 +356,7 @@ export function reclaimTask(
   },
 ): AgentTaskEnvelope {
   if (task.status !== "STALE" && !isStale(task, options?.now)) {
-    throw new Error(
-      `Task ${task.task_id} is not stale and cannot be reclaimed without release`,
-    );
+    throw new Error(`Task ${task.task_id} is not stale and cannot be reclaimed without release`);
   }
 
   // Clear old claim first, then claim as READY
