@@ -3,13 +3,19 @@
  * Providers are interchangeable capabilities, not architectural dependencies.
  *
  * See docs/agents/ORCHESTRATION.md — provider routing is policy-driven.
+ * execute() adapters remain DISABLED until human activation.
  */
 
 import type { AgentTaskEnvelope, AutonomyLevel, RiskLevel } from "./agent-orchestration";
 import type { AgentExecutionResult } from "./agent-execution-contract";
 
 export type ProviderCapability =
-  "implementation" | "review" | "research" | "security_audit" | "qa" | "human_judgment";
+  | "implementation"
+  | "review"
+  | "research"
+  | "security_audit"
+  | "qa"
+  | "human_judgment";
 
 export type ProviderHealthStatus = "available" | "degraded" | "unavailable" | "unknown";
 
@@ -56,6 +62,13 @@ const AUTONOMY_RANK: Record<AutonomyLevel, number> = {
   L4: 4,
 };
 
+const RISK_RANK: Record<RiskLevel, number> = {
+  P3: 0,
+  P2: 1,
+  P1: 2,
+  P0: 3,
+};
+
 export function isEligibleProvider(
   provider: ProviderDescriptor,
   task: Pick<AgentTaskEnvelope, "autonomy" | "risk" | "lane">,
@@ -70,7 +83,11 @@ export function isEligibleProvider(
       reason: `task autonomy ${task.autonomy} exceeds provider max ${provider.maxAutonomy}`,
     };
   }
-  if (policy.requireHumanFor.includes(task.risk) && provider.id !== "human") {
+  if (
+    policy.requireHumanFor.includes(task.risk) &&
+    provider.id !== "human" &&
+    RISK_RANK[task.risk] > RISK_RANK[provider.maxRiskWithoutHumanGate]
+  ) {
     return {
       eligible: false,
       reason: `risk ${task.risk} requires human gate; provider ${provider.id} not human`,
@@ -90,22 +107,22 @@ export function selectProvider(
   policy: ProviderSelectionPolicy,
 ): ProviderDescriptor | null {
   const eligible = candidates.filter((p) => isEligibleProvider(p, task, policy).eligible);
-  if (eligible.length === 0) return null;
-
-  // Human is the explicit gate/fallback, not the default automated runner.
-  // If a non-human provider is eligible, prefer it unless policy requires human.
-  const humanRequired = policy.requireHumanFor.includes(task.risk);
-  const nonHumanEligible = eligible.filter((p) => p.id !== "human");
-  const routingPool = !humanRequired && nonHumanEligible.length > 0 ? nonHumanEligible : eligible;
+  if (eligible.length === 0) {
+    return null;
+  }
 
   const reliabilityOrder = { preferred: 0, standard: 1, experimental: 2 } as const;
   const costOrder = { free: 0, low: 1, medium: 2, high: 3, human: 4 } as const;
 
-  return [...routingPool].sort((a, b) => {
+  const sorted = [...eligible].sort((a, b) => {
     const r = reliabilityOrder[a.reliabilityClass] - reliabilityOrder[b.reliabilityClass];
-    if (r !== 0) return r;
+    if (r !== 0) {
+      return r;
+    }
     return costOrder[a.costClass] - costOrder[b.costClass];
-  })[0]!;
+  });
+
+  return sorted[0] ?? null;
 }
 
 /** Built-in descriptors for documentation and tests — not auto-registered. */
@@ -140,14 +157,7 @@ export const EXAMPLE_PROVIDER_DESCRIPTORS: ProviderDescriptor[] = [
   {
     id: "human",
     displayName: "Human",
-    capabilities: [
-      "implementation",
-      "review",
-      "research",
-      "security_audit",
-      "qa",
-      "human_judgment",
-    ],
+    capabilities: ["implementation", "review", "research", "security_audit", "qa", "human_judgment"],
     maxAutonomy: "L4",
     maxRiskWithoutHumanGate: "P0",
     costClass: "human",
