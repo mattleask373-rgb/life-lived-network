@@ -56,12 +56,6 @@ const AUTONOMY_RANK: Record<AutonomyLevel, number> = {
   L4: 4,
 };
 
-const RISK_RANK: Record<RiskLevel, number> = {
-  P3: 0,
-  P2: 1,
-  P1: 2,
-  P0: 3,
-};
 
 export function isEligibleProvider(
   provider: ProviderDescriptor,
