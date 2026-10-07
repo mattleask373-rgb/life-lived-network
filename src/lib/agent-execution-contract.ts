@@ -2,6 +2,7 @@
  * Execution result contract: provider output is evidence, never silent truth.
  *
  * A provider MUST NOT be able to declare "done" without structured evidence.
+ * A provider MUST NOT self-approve (ACCEPTED / INTEGRATED / REVIEW as outcome).
  * See docs/agents/ORCHESTRATION.md and HANDOFF.md.
  */
 
@@ -45,6 +46,11 @@ export interface AgentExecutionResult {
   };
   /** Wall-clock duration of the attempt, if known. */
   durationMs?: number;
+  /**
+   * If set, must differ from provider.id when recommending review acceptance.
+   * Providers cannot nominate themselves as independent reviewer.
+   */
+  proposedReviewer?: string;
 }
 
 export type ExecutionValidationIssue =
@@ -55,10 +61,23 @@ export type ExecutionValidationIssue =
   | { code: "CLAIM_WITHOUT_SUPPORT"; message: string }
   | { code: "TEST_COUNT_MISMATCH"; message: string }
   | { code: "MISSING_HANDOFF"; message: string }
-  | { code: "MISSING_NEXT_ACTION"; message: string };
+  | { code: "MISSING_NEXT_ACTION"; message: string }
+  | { code: "SELF_APPROVAL"; message: string }
+  | { code: "FORBIDDEN_OUTCOME"; message: string };
+
+const FORBIDDEN_PROVIDER_STATUSES = [
+  "DONE",
+  "ACCEPTED",
+  "INTEGRATED",
+  "SUCCESS",
+  "COMPLETE",
+  "REVIEW",
+  "CLAIMED",
+  "READY",
+] as const;
 
 /**
- * Validate that a provider result cannot silently declare success.
+ * Validate that a provider result cannot silently declare success or self-approve.
  * Returns issues; empty array means the result is structurally acceptable.
  */
 export function validateExecutionResult(result: AgentExecutionResult): ExecutionValidationIssue[] {
@@ -71,12 +90,32 @@ export function validateExecutionResult(result: AgentExecutionResult): Execution
     issues.push({ code: "EMPTY_SUMMARY", message: "summary is required" });
   }
 
-  // "done" / ACCEPTED / INTEGRATED are not valid provider outcome statuses.
-  const forbidden = ["DONE", "ACCEPTED", "INTEGRATED", "SUCCESS", "COMPLETE"];
-  if (forbidden.includes(String(result.status).toUpperCase())) {
+  const statusUpper = String(result.status).toUpperCase();
+  if ((FORBIDDEN_PROVIDER_STATUSES as readonly string[]).includes(statusUpper)) {
     issues.push({
       code: "SILENT_DONE",
-      message: `status ${result.status} is not a valid provider outcome; use VERIFYING or BLOCKED`,
+      message: `status ${result.status} is not a valid provider outcome; use VERIFYING, BLOCKED, FAILED, or PARTIAL`,
+    });
+  }
+
+  // CHANGES_REQUESTED as a provider outcome is reserved for independent review;
+  // implementers report FAILED/PARTIAL/BLOCKED instead of self-requesting changes.
+  if (statusUpper === "CHANGES_REQUESTED") {
+    issues.push({
+      code: "FORBIDDEN_OUTCOME",
+      message:
+        "CHANGES_REQUESTED is a reviewer transition, not a provider execution outcome",
+    });
+  }
+
+  if (
+    result.proposedReviewer &&
+    result.provider?.id &&
+    result.proposedReviewer === result.provider.id
+  ) {
+    issues.push({
+      code: "SELF_APPROVAL",
+      message: "provider cannot nominate itself as independent reviewer",
     });
   }
 

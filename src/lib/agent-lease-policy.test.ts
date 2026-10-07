@@ -38,6 +38,7 @@ describe("agent lease policy", () => {
     expect(isActiveOwnership("VERIFYING")).toBe(true);
     expect(isActiveOwnership("READY")).toBe(false);
     expect(isActiveOwnership("STALE")).toBe(false);
+    expect(isActiveOwnership("REVIEW")).toBe(false);
   });
 
   it("does not mark STALE while lease is still valid", () => {
@@ -57,7 +58,7 @@ describe("agent lease policy", () => {
   it("does not mark STALE inside heartbeat grace after lease expiry", () => {
     const leaseExpiry = new Date("2026-10-07T16:00:00.000Z");
     const lastHeartbeat = new Date("2026-10-07T15:50:00.000Z");
-    const now = new Date(leaseExpiry.getTime() + 10 * 60 * 1000); // 10 min after expiry
+    const now = new Date(leaseExpiry.getTime() + 10 * 60 * 1000);
     const decision = evaluateStale(
       snap({ status: "IN_PROGRESS", leaseExpiry, lastHeartbeat }),
       now,
@@ -99,6 +100,44 @@ describe("agent lease policy", () => {
     expect(canHeartbeat(expired, "grok", now).reason).toMatch(/lease expired/);
   });
 
+  it("heartbeat at exact expiry boundary fails (lease_expiry <= now)", () => {
+    const exact = new Date("2026-10-07T16:00:00.000Z");
+    const boundary = snap({
+      status: "IN_PROGRESS",
+      owner: "grok",
+      leaseExpiry: exact,
+      lastHeartbeat: new Date("2026-10-07T15:30:00.000Z"),
+    });
+    // SQL uses lease_expiry > now(); equality is not sufficient.
+    expect(canHeartbeat(boundary, "grok", exact).ok).toBe(false);
+  });
+
+  it("heartbeat one millisecond before expiry succeeds", () => {
+    const expiry = new Date("2026-10-07T16:00:00.000Z");
+    const justBefore = new Date(expiry.getTime() - 1);
+    const row = snap({
+      status: "VERIFYING",
+      owner: "grok",
+      leaseExpiry: expiry,
+      lastHeartbeat: new Date("2026-10-07T15:00:00.000Z"),
+    });
+    expect(canHeartbeat(row, "grok", justBefore).ok).toBe(true);
+  });
+
+  it("previous owner cannot heartbeat after conceptual reclaim", () => {
+    const now = new Date("2026-10-07T17:00:00.000Z");
+    const reclaimed = snap({
+      status: "CLAIMED",
+      owner: "chatgpt",
+      leaseExpiry: new Date("2026-10-07T20:00:00.000Z"),
+      lastHeartbeat: now,
+    });
+    expect(canHeartbeat(reclaimed, "grok", now).ok).toBe(false);
+    expect(canRelease(reclaimed, "grok").ok).toBe(false);
+    expect(canHeartbeat(reclaimed, "chatgpt", now).ok).toBe(true);
+    expect(canRelease(reclaimed, "chatgpt").ok).toBe(true);
+  });
+
   it("rejects release from non-owner or non-active status", () => {
     const active = snap({ status: "CLAIMED", owner: "grok" });
     expect(canRelease(active, "grok").ok).toBe(true);
@@ -128,5 +167,17 @@ describe("agent lease policy", () => {
       );
       expect(decision.isStale).toBe(false);
     }
+  });
+
+  it("stale grace is not permission to keep working — heartbeat still requires live lease", () => {
+    // Lease expired 10 min ago, still within 45 min heartbeat grace → not STALE yet,
+    // but heartbeat must still fail because lease_expiry <= now.
+    const leaseExpiry = new Date("2026-10-07T16:00:00.000Z");
+    const lastHeartbeat = new Date("2026-10-07T15:55:00.000Z");
+    const now = new Date(leaseExpiry.getTime() + 10 * 60 * 1000);
+    const row = snap({ status: "IN_PROGRESS", leaseExpiry, lastHeartbeat, owner: "grok" });
+
+    expect(evaluateStale(row, now).isStale).toBe(false);
+    expect(canHeartbeat(row, "grok", now).ok).toBe(false);
   });
 });

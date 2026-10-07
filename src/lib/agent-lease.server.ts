@@ -40,6 +40,7 @@ export async function claimAgentTask(
 /**
  * Sliding-lease heartbeat: successful call extends lease_expiry by extendMinutes.
  * Fails (returns null) if owner mismatch, status not active, or lease already expired.
+ * Expired owner cannot resurrect ownership via heartbeat — must STALE → reclaim.
  */
 export async function heartbeatAgentTask(
   taskId: string,
@@ -86,6 +87,27 @@ export async function reclaimAgentTask(
     requested_task_id: taskId,
     requested_owner: owner,
     lease_minutes: leaseMinutes,
+  });
+  return rows[0] ?? null;
+}
+
+/**
+ * Guarded status transition. Enforces LEGAL_TRANSITIONS (see agent-state-machine.ts).
+ * Throws on illegal transition / role / lease failure (RPC raises).
+ */
+export async function transitionAgentTask(input: {
+  taskId: string;
+  actor: string;
+  toStatus: string;
+  evidence?: Record<string, unknown> | null;
+  reviewer?: string | null;
+}): Promise<AgentTaskRow | null> {
+  const rows = await rpc<AgentTaskRow>("transition_agent_task", {
+    requested_task_id: input.taskId,
+    actor: input.actor,
+    to_status: input.toStatus,
+    evidence: input.evidence ?? null,
+    reviewer: input.reviewer ?? null,
   });
   return rows[0] ?? null;
 }
