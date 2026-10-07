@@ -6,12 +6,7 @@
  * See docs/agents/ORCHESTRATION.md and HANDOFF.md.
  */
 
-export type ExecutionOutcomeStatus =
-  | "VERIFYING"
-  | "BLOCKED"
-  | "CHANGES_REQUESTED"
-  | "FAILED"
-  | "PARTIAL";
+export type ExecutionOutcomeStatus = "VERIFYING" | "BLOCKED" | "CHANGES_REQUESTED" | "FAILED" | "PARTIAL";
 
 export type TestResultStatus = "pass" | "fail" | "not-run" | "error";
 
@@ -139,7 +134,9 @@ export function validateExecutionResult(result: AgentExecutionResult): Execution
   }
 
   const passCount = result.testsRun.filter((t) => t.result === "pass").length;
-  const failCount = result.testsRun.filter((t) => t.result === "fail" || t.result === "error").length;
+  const failCount = result.testsRun.filter(
+    (t) => t.result === "fail" || t.result === "error",
+  ).length;
   if (result.testsPassed !== passCount || result.testsFailed !== failCount) {
     issues.push({
       code: "TEST_COUNT_MISMATCH",
