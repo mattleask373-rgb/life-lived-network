@@ -144,6 +144,18 @@ describe("concurrency matrix (pure policy)", () => {
       ).toBe(true);
     });
 
+    it("DONE is never a legal destination", () => {
+      expect(
+        evaluateTransition({
+          from: "IN_PROGRESS",
+          to: "DONE",
+          actorId: "grok",
+          owner: "grok",
+          leaseValid: true,
+        }).allowed,
+      ).toBe(false);
+    });
+
     it("provider cannot emit DONE or ACCEPTED", () => {
       const bad: AgentExecutionResult = {
         taskId: "LW-20261007-001",
@@ -164,18 +176,44 @@ describe("concurrency matrix (pure policy)", () => {
     });
   });
 
-  describe("CANCELLED policy expectations", () => {
+  describe("CANCELLED", () => {
     it("owner may cancel active ownership states", () => {
       for (const from of ["CLAIMED", "IN_PROGRESS", "VERIFYING", "CHANGES_REQUESTED"] as const) {
-        const d = evaluateTransition({
-          from,
+        expect(
+          evaluateTransition({
+            from,
+            to: "CANCELLED",
+            actorId: "grok",
+            owner: "grok",
+            leaseValid: true,
+          }).allowed,
+        ).toBe(true);
+      }
+    });
+
+    it("non-owner cannot cancel active work", () => {
+      expect(
+        evaluateTransition({
+          from: "IN_PROGRESS",
           to: "CANCELLED",
-          actorId: "grok",
+          actorId: "chatgpt",
           owner: "grok",
-          leaseValid: from === "CHANGES_REQUESTED" ? false : true,
-        });
-        // May be false until LEGAL_TRANSITIONS updated in same hour — assert documented intent
-        expect(typeof d.allowed).toBe("boolean");
+          leaseValid: true,
+        }).allowed,
+      ).toBe(false);
+    });
+
+    it("human may cancel READY/BLOCKED/STALE", () => {
+      for (const from of ["READY", "BLOCKED", "STALE"] as const) {
+        expect(
+          evaluateTransition({
+            from,
+            to: "CANCELLED",
+            actorId: "human",
+            owner: null,
+            leaseValid: false,
+          }).allowed,
+        ).toBe(true);
       }
     });
   });

@@ -12,33 +12,26 @@ import { isActiveOwnership } from "./agent-lease-policy";
 export type TaskStatus = LeaseStatus;
 
 export type TransitionActorRole =
-  | "owner" // current lease owner / implementer
-  | "reviewer" // independent reviewer (must ≠ owner)
-  | "system" // mark_stale, orchestrator recovery
-  | "human" // human gate only
-  | "any_agent"; // triage / block from non-ownership states
+  | "owner"
+  | "reviewer"
+  | "system"
+  | "human"
+  | "any_agent";
 
 export interface TransitionRule {
   from: TaskStatus;
   to: TaskStatus;
   actor: TransitionActorRole;
-  /** Require matching owner + valid lease (lease_expiry > now). */
   requiresLiveLease: boolean;
-  /**
-   * When true, SQL renews lease_start/expiry/heartbeat on success
-   * (used for CHANGES_REQUESTED → IN_PROGRESS after review lag).
-   */
   renewsLease: boolean;
-  /** Human-readable evidence expectation (enforced at policy level). */
   evidenceHint: string;
-  /** If true, actor identity must not equal task.owner. */
   forbidSelfApproval: boolean;
 }
 
 /**
  * Legal transitions only. Anything not listed is illegal.
- * Claim/reclaim/stale/release remain available via dedicated lease RPCs;
- * this table covers status progression and exceptional paths.
+ * Claim/reclaim/stale/release remain available via dedicated lease RPCs.
+ * DONE is never a legal destination.
  */
 export const LEGAL_TRANSITIONS: readonly TransitionRule[] = [
   {
@@ -185,17 +178,96 @@ export const LEGAL_TRANSITIONS: readonly TransitionRule[] = [
     evidenceHint: "re-open decision",
     forbidSelfApproval: false,
   },
+  // CANCELLED — owner for active work; human for queue/side states
+  {
+    from: "CLAIMED",
+    to: "CANCELLED",
+    actor: "owner",
+    requiresLiveLease: false,
+    renewsLease: false,
+    evidenceHint: "cancellation reason",
+    forbidSelfApproval: false,
+  },
+  {
+    from: "IN_PROGRESS",
+    to: "CANCELLED",
+    actor: "owner",
+    requiresLiveLease: false,
+    renewsLease: false,
+    evidenceHint: "cancellation reason",
+    forbidSelfApproval: false,
+  },
+  {
+    from: "VERIFYING",
+    to: "CANCELLED",
+    actor: "owner",
+    requiresLiveLease: false,
+    renewsLease: false,
+    evidenceHint: "cancellation reason",
+    forbidSelfApproval: false,
+  },
+  {
+    from: "CHANGES_REQUESTED",
+    to: "CANCELLED",
+    actor: "owner",
+    requiresLiveLease: false,
+    renewsLease: false,
+    evidenceHint: "cancellation reason",
+    forbidSelfApproval: false,
+  },
+  {
+    from: "READY",
+    to: "CANCELLED",
+    actor: "human",
+    requiresLiveLease: false,
+    renewsLease: false,
+    evidenceHint: "cancellation reason",
+    forbidSelfApproval: false,
+  },
+  {
+    from: "BLOCKED",
+    to: "CANCELLED",
+    actor: "human",
+    requiresLiveLease: false,
+    renewsLease: false,
+    evidenceHint: "cancellation reason",
+    forbidSelfApproval: false,
+  },
+  {
+    from: "STALE",
+    to: "CANCELLED",
+    actor: "human",
+    requiresLiveLease: false,
+    renewsLease: false,
+    evidenceHint: "cancellation reason",
+    forbidSelfApproval: false,
+  },
+  {
+    from: "REVIEW",
+    to: "CANCELLED",
+    actor: "human",
+    requiresLiveLease: false,
+    renewsLease: false,
+    evidenceHint: "cancellation reason",
+    forbidSelfApproval: false,
+  },
+  {
+    from: "ABANDONED",
+    to: "CANCELLED",
+    actor: "human",
+    requiresLiveLease: false,
+    renewsLease: false,
+    evidenceHint: "cancellation reason",
+    forbidSelfApproval: false,
+  },
 ] as const;
 
 export interface TransitionRequest {
   from: TaskStatus;
   to: TaskStatus;
   actorId: string;
-  /** Current task owner (implementer). */
   owner: string | null;
-  /** True when lease_expiry > now AND status is active ownership. */
   leaseValid: boolean;
-  /** Optional reviewer id when advancing from REVIEW. */
   reviewerId?: string | null;
 }
 
@@ -231,7 +303,7 @@ function roleMatches(
     }
     case "human":
       if (actor !== "human" && !actor.startsWith("human:")) {
-        return { ok: false, reason: "INTEGRATED requires human actor" };
+        return { ok: false, reason: "human actor required" };
       }
       return { ok: true, reason: "human gate" };
     case "system":
@@ -246,13 +318,16 @@ function roleMatches(
   }
 }
 
-/**
- * Decide whether a status transition is legal under the authoritative table.
- * Does not perform I/O. Claim/reclaim/release use dedicated lease RPCs.
- */
 export function evaluateTransition(req: TransitionRequest): TransitionDecision {
   if (req.from === req.to) {
     return { allowed: false, reason: "no-op transition is not recorded" };
+  }
+
+  if (req.to === "DONE") {
+    return {
+      allowed: false,
+      reason: "DONE is legacy-only and not a legal transition destination",
+    };
   }
 
   const rule = LEGAL_TRANSITIONS.find((r) => r.from === req.from && r.to === req.to);
@@ -287,15 +362,10 @@ export function evaluateTransition(req: TransitionRequest): TransitionDecision {
   return { allowed: true, reason: "transition allowed", rule };
 }
 
-/** All destinations reachable from a given status (for docs/tests). */
 export function allowedDestinations(from: TaskStatus): TaskStatus[] {
   return LEGAL_TRANSITIONS.filter((r) => r.from === from).map((r) => r.to);
 }
 
-/**
- * Provider execution outcomes map into control-plane transitions.
- * Providers never write ACCEPTED or INTEGRATED.
- */
 export function providerOutcomeToTransition(
   outcome: "VERIFYING" | "BLOCKED" | "CHANGES_REQUESTED" | "FAILED" | "PARTIAL",
   current: TaskStatus,
