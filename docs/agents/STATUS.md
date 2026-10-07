@@ -1,30 +1,33 @@
-# Agent System Status — 2026-10-07
+# Agent System Status — 2026-10-07 (LW-20261007-002)
 
 ## CURRENT QUEUE
 
-- **P0:** restore/verify the canonical `src/lib/supply-engine.ts` implementation before any discovery work is treated as healthy.
-- **LW-20261007-001:** Provider-neutral orchestration control plane — IN PROGRESS.
-- Existing task lifecycle, claim/lease/heartbeat, handoff, specialist lanes, invariants and observability documents remain canonical.
+- **P0 product:** restore/verify the canonical `src/lib/supply-engine.ts` implementation before any discovery work is treated as healthy.
+- **LW-20261007-001:** Provider-neutral orchestration control plane — landed on branch, CI green (PR #61).
+- **LW-20261007-002:** Complete task envelope + pure claim/lease/heartbeat — IN PROGRESS (this branch).
 
 ## ACTIVE
 
-- Owner: ChatGPT / architecture + orchestration
-- Task: LW-20261007-001
+- Owner: Grok
+- Task: LW-20261007-002
 - Scope:
-  - provider-neutral orchestration contract
-  - Plane webhook bridge contract
-  - agent contracts
-  - no production webhook endpoint or credentials added in this phase
-- Branch: `agent/orchestrator/LW-20261007-001-provider-neutral`
+  - Expand `AgentTaskEnvelope` with claim, lease, heartbeat, status, evidence_required
+  - Pure claimTask / heartbeatTask / releaseTask / isStale / markStale / reclaimTask
+  - Unit tests for full claim lifecycle
+  - No production webhook, no credentials, no product engine changes
+- Branch: `agent/orchestrator/LW-20261007-002-claim-lease-envelope`
 
 ## DECISIONS
 
-- Plane is the work-control plane, not the sole inference provider.
-- Plane AI is an execution option, not an architectural dependency.
-- Plane v2 webhooks are the event trigger; REST/MCP are control/query interfaces.
-- Every substantive agent task has a durable claim and handoff.
+- Plane remains the work-control plane; AI execution stays provider-neutral.
+- Claim/lease/heartbeat are pure functions; persistence is a later Phase C concern.
+- Default lease durations follow CLAIM-LEASE-HEARTBEAT.md (P0=2h, P1/P2=4h, P3=6h).
+- Heartbeat grace = 45 minutes.
+- Autonomy defaults: P0 → L1, otherwise L2.
 - No autonomous merge to `main`.
 
 ## NEXT SAFE STEP
 
-Connect the deployed webhook to Plane using `PLANE_WEBHOOK_SECRET`, then build the provider runner/claim layer. Keep execution disabled until a human verifies the live webhook path.
+1. Independent review of the pure claim/lease API (ChatGPT or human).
+2. After acceptance, add a durable (or file-backed) processed-event + claim store interface.
+3. Keep the webhook path dry-run until a human configures `PLANE_WEBHOOK_SECRET` and verifies live delivery.
