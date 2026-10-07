@@ -69,9 +69,7 @@ export async function releaseAgentTask(
 }
 
 /** System recovery: mark tasks STALE when lease expired and heartbeat grace exceeded. */
-export async function markStaleAgentTasks(
-  heartbeatGraceMinutes = 45,
-): Promise<AgentTaskRow[]> {
+export async function markStaleAgentTasks(heartbeatGraceMinutes = 45): Promise<AgentTaskRow[]> {
   return rpc<AgentTaskRow>("mark_stale_agent_tasks", {
     heartbeat_grace_minutes: heartbeatGraceMinutes,
   });
