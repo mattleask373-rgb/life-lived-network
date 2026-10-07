@@ -10,9 +10,7 @@ import {
 
 const evidence = [{ id: "e1", source: "programme-state", locator: "state:1" }];
 
-function input(
-  overrides: Partial<AcceptedExperimentTaskInput> = {},
-): AcceptedExperimentTaskInput {
+function input(overrides: Partial<AcceptedExperimentTaskInput> = {}): AcceptedExperimentTaskInput {
   return {
     taskId: "LW-20261007-EXP-001",
     acceptance: "accepted",
@@ -41,13 +39,9 @@ function input(
 
 describe("experiment-task-adapter", () => {
   it("rejects unaccepted experiments", () => {
-    const validation = validateAcceptedExperimentTaskInput(
-      input({ acceptance: "proposed" }),
-    );
+    const validation = validateAcceptedExperimentTaskInput(input({ acceptance: "proposed" }));
     expect(validation.valid).toBe(false);
-    expect(validation.errors).toContain(
-      "only explicitly accepted experiments can become tasks",
-    );
+    expect(validation.errors).toContain("only explicitly accepted experiments can become tasks");
   });
 
   it("translates an accepted reversible low-risk plan without inventing execution", () => {
