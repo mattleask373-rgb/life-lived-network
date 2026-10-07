@@ -56,6 +56,15 @@ describe("expansion-proposal", () => {
     }
   });
 
+  test("reports malformed evidence without throwing", () => {
+    const candidate = proposal({
+      epistemic: "REAL",
+      evidence: undefined as unknown as ExpansionProposal["evidence"],
+    });
+    expect(() => validateExpansionProposal(candidate)).not.toThrow();
+    expect(validateExpansionProposal(candidate).valid).toBe(false);
+  });
+
   test("requires a human gate for high-risk and irreversible proposals", () => {
     expect(requiresHumanGate({ risk: "high", reversible: true })).toBe(true);
     expect(requiresHumanGate({ risk: "low", reversible: false })).toBe(true);
