@@ -49,6 +49,16 @@ export type ProviderSelectionPolicy = {
   excludeProviders: string[];
 };
 
+const CAPABILITY_BY_LANE: Record<AgentTaskEnvelope["lane"], ProviderCapability | null> = {
+  PRODUCT: "research",
+  ARCHITECTURE: "review",
+  IMPLEMENTATION: "implementation",
+  QA: "qa",
+  SECURITY: "security_audit",
+  REVIEW: "review",
+  ORCHESTRATOR: null,
+};
+
 const AUTONOMY_RANK: Record<AutonomyLevel, number> = {
   L0: 0,
   L1: 1,
@@ -72,20 +82,25 @@ export function isEligibleProvider(
   if (policy.excludeProviders.includes(provider.id)) {
     return { eligible: false, reason: `provider ${provider.id} excluded by policy` };
   }
+
+  const requiredCapability = CAPABILITY_BY_LANE[task.lane];
+  if (requiredCapability && !provider.capabilities.includes(requiredCapability)) {
+    return {
+      eligible: false,
+      reason: `provider ${provider.id} lacks required capability ${requiredCapability} for lane ${task.lane}`,
+    };
+  }
+
+  if (policy.requireHumanFor.includes(task.risk) && provider.id !== "human") {
+    return {
+      eligible: false,
+      reason: `risk ${task.risk} requires human gate; provider ${provider.id} is not the human provider`,
+    };
+  }
   if (AUTONOMY_RANK[task.autonomy] > AUTONOMY_RANK[provider.maxAutonomy]) {
     return {
       eligible: false,
       reason: `task autonomy ${task.autonomy} exceeds provider max ${provider.maxAutonomy}`,
-    };
-  }
-  if (
-    policy.requireHumanFor.includes(task.risk) &&
-    provider.id !== "human" &&
-    RISK_RANK[task.risk] > RISK_RANK[provider.maxRiskWithoutHumanGate]
-  ) {
-    return {
-      eligible: false,
-      reason: `risk ${task.risk} requires human gate; provider ${provider.id} not human`,
     };
   }
   return { eligible: true, reason: "eligible under policy" };
