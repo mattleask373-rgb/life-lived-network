@@ -169,7 +169,8 @@ export function createExpansionProposal(
   },
 ): ExpansionProposal {
   const requiresGate =
-    input.requiresHumanGate ?? requiresHumanGate({ risk: input.risk, reversible: input.reversible });
+    input.requiresHumanGate ??
+    requiresHumanGate({ risk: input.risk, reversible: input.reversible });
   return {
     ...input,
     status: input.status ?? "proposed",
