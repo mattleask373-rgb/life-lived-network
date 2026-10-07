@@ -8,12 +8,7 @@
  */
 
 export type ProgrammeEpistemicClass =
-  | "REAL"
-  | "PLAUSIBLE"
-  | "EXPERIMENTAL"
-  | "SPECULATIVE"
-  | "IMAGINED"
-  | "UNKNOWN";
+  "REAL" | "PLAUSIBLE" | "EXPERIMENTAL" | "SPECULATIVE" | "IMAGINED" | "UNKNOWN";
 
 export type ProgrammeStateStatus = "active" | "blocked" | "awaiting_human" | "complete";
 export type ProgrammeRiskClass = "low" | "medium" | "high" | "critical";
@@ -103,7 +98,12 @@ export interface ProgrammeStateValidation {
 }
 
 const EPISTEMIC = new Set<ProgrammeEpistemicClass>([
-  "REAL", "PLAUSIBLE", "EXPERIMENTAL", "SPECULATIVE", "IMAGINED", "UNKNOWN",
+  "REAL",
+  "PLAUSIBLE",
+  "EXPERIMENTAL",
+  "SPECULATIVE",
+  "IMAGINED",
+  "UNKNOWN",
 ]);
 const STATUSES = new Set<ProgrammeStateStatus>(["active", "blocked", "awaiting_human", "complete"]);
 const RISKS = new Set<ProgrammeRiskClass>(["low", "medium", "high", "critical"]);
@@ -113,11 +113,14 @@ function nonEmpty(value: unknown): value is string {
 }
 
 function validEvidence(value: unknown): value is ProgrammeEvidenceRef[] {
-  return Array.isArray(value) && value.every((item) => {
-    if (!item || typeof item !== "object") return false;
-    const evidence = item as ProgrammeEvidenceRef;
-    return nonEmpty(evidence.id) && nonEmpty(evidence.source);
-  });
+  return (
+    Array.isArray(value) &&
+    value.every((item) => {
+      if (!item || typeof item !== "object") return false;
+      const evidence = item as ProgrammeEvidenceRef;
+      return nonEmpty(evidence.id) && nonEmpty(evidence.source);
+    })
+  );
 }
 
 function validEpistemic(value: unknown): value is ProgrammeEpistemicClass {
@@ -127,34 +130,37 @@ function validEpistemic(value: unknown): value is ProgrammeEpistemicClass {
 function validClaim(value: unknown): value is ProgrammeClaim {
   if (!value || typeof value !== "object") return false;
   const claim = value as ProgrammeClaim;
-  return nonEmpty(claim.text)
-    && validEpistemic(claim.epistemic)
-    && validEvidence(claim.evidence)
-    && (claim.confidence === undefined || (
-      typeof claim.confidence === "number" && claim.confidence >= 0 && claim.confidence <= 1
-    ))
-    && (claim.uncertainty === undefined || (
-      Array.isArray(claim.uncertainty) && claim.uncertainty.every(nonEmpty)
-    ));
+  return (
+    nonEmpty(claim.text) &&
+    validEpistemic(claim.epistemic) &&
+    validEvidence(claim.evidence) &&
+    (claim.confidence === undefined ||
+      (typeof claim.confidence === "number" && claim.confidence >= 0 && claim.confidence <= 1)) &&
+    (claim.uncertainty === undefined ||
+      (Array.isArray(claim.uncertainty) && claim.uncertainty.every(nonEmpty)))
+  );
 }
 
 function validNextAction(value: unknown): value is ProgrammeNextAction {
   if (!value || typeof value !== "object") return false;
   const action = value as ProgrammeNextAction;
-  return nonEmpty(action.id)
-    && nonEmpty(action.statement)
-    && action.bounded === true
-    && ["human", "ai", "human_ai", "software"].includes(action.owner)
-    && typeof action.requiresHumanGate === "boolean"
-    && RISKS.has(action.risk)
-    && Array.isArray(action.acceptance)
-    && action.acceptance.length > 0
-    && action.acceptance.every(nonEmpty);
+  return (
+    nonEmpty(action.id) &&
+    nonEmpty(action.statement) &&
+    action.bounded === true &&
+    ["human", "ai", "human_ai", "software"].includes(action.owner) &&
+    typeof action.requiresHumanGate === "boolean" &&
+    RISKS.has(action.risk) &&
+    Array.isArray(action.acceptance) &&
+    action.acceptance.length > 0 &&
+    action.acceptance.every(nonEmpty)
+  );
 }
 
 export function validateProgrammeState(state: unknown): ProgrammeStateValidation {
   const errors: string[] = [];
-  if (!state || typeof state !== "object") return { valid: false, errors: ["state must be an object"] };
+  if (!state || typeof state !== "object")
+    return { valid: false, errors: ["state must be an object"] };
   const candidate = state as ProgrammeState;
 
   if (candidate.version !== 1) errors.push("version must be 1");
@@ -162,10 +168,18 @@ export function validateProgrammeState(state: unknown): ProgrammeStateValidation
   if (!nonEmpty(candidate.updatedAt) || Number.isNaN(Date.parse(candidate.updatedAt))) {
     errors.push("updatedAt must be an ISO date");
   }
-  if (!candidate.objective || !nonEmpty(candidate.objective.id) || !nonEmpty(candidate.objective.statement)) {
+  if (
+    !candidate.objective ||
+    !nonEmpty(candidate.objective.id) ||
+    !nonEmpty(candidate.objective.statement)
+  ) {
     errors.push("objective requires id and statement");
   }
-  if (!candidate.project || !nonEmpty(candidate.project.projectId) || !STATUSES.has(candidate.project.status)) {
+  if (
+    !candidate.project ||
+    !nonEmpty(candidate.project.projectId) ||
+    !STATUSES.has(candidate.project.status)
+  ) {
     errors.push("project requires projectId and valid status");
   }
   if (!Array.isArray(candidate.capabilityNeeds)) errors.push("capabilityNeeds must be an array");
@@ -223,10 +237,12 @@ export function updateProgrammeState(
     throw new Error("Invalid next ProgrammeState: " + nextValidation.errors.join("; "));
   }
   if (previous.stateId !== next.stateId) throw new Error("stateId cannot change during an update");
-  if (next.updatedAt === previous.updatedAt) throw new Error("updatedAt must change when state changes");
+  if (next.updatedAt === previous.updatedAt)
+    throw new Error("updatedAt must change when state changes");
   if (update.changed.length === 0) throw new Error("state update must identify what changed");
   if (!nonEmpty(update.reason)) throw new Error("state update requires a reason");
-  if (!validEvidence(update.evidence)) throw new Error("state update requires valid evidence references");
+  if (!validEvidence(update.evidence))
+    throw new Error("state update requires valid evidence references");
 
   return { state: next, update: { ...update, stateId: previous.stateId } };
 }

@@ -83,28 +83,32 @@ describe("programme-state", () => {
 
   test("requires a human gate for critical actions", () => {
     const value = state();
-    value.nextActions = [{
-      id: "danger",
-      statement: "Do something irreversible",
-      bounded: true,
-      owner: "human_ai",
-      risk: "critical",
-      requiresHumanGate: false,
-      acceptance: ["Done"],
-    }];
+    value.nextActions = [
+      {
+        id: "danger",
+        statement: "Do something irreversible",
+        bounded: true,
+        owner: "human_ai",
+        risk: "critical",
+        requiresHumanGate: false,
+        acceptance: ["Done"],
+      },
+    ];
     expect(validateProgrammeState(value).valid).toBe(false);
   });
 
   test("requires explicit change evidence and reason", () => {
     const previous = state();
     const next = { ...state(), updatedAt: "2026-10-07T13:00:00.000Z" };
-    expect(() => updateProgrammeState(previous, next, {
-      at: next.updatedAt,
-      changed: [],
-      reason: "",
-      evidence: [],
-      epistemic: "UNKNOWN",
-    })).toThrow();
+    expect(() =>
+      updateProgrammeState(previous, next, {
+        at: next.updatedAt,
+        changed: [],
+        reason: "",
+        evidence: [],
+        epistemic: "UNKNOWN",
+      }),
+    ).toThrow();
   });
 
   test("returns a durable update record", () => {
