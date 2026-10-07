@@ -45,12 +45,16 @@ export async function claimAgentTask(
 export async function heartbeatAgentTask(
   taskId: string,
   owner: string,
+  leaseGeneration: number,
+  leaseToken: string,
   extendMinutes = 240,
 ): Promise<AgentTaskRow | null> {
   const rows = await rpc<AgentTaskRow>("heartbeat_agent_task", {
     requested_task_id: taskId,
     requested_owner: owner,
     extend_minutes: extendMinutes,
+    requested_lease_generation: leaseGeneration,
+    requested_lease_token: leaseToken,
   });
   return rows[0] ?? null;
 }
@@ -99,6 +103,8 @@ export async function transitionAgentTask(input: {
   toStatus: string;
   evidence?: Record<string, unknown> | null;
   reviewer?: string | null;
+  leaseGeneration?: number | null;
+  leaseToken?: string | null;
 }): Promise<AgentTaskRow | null> {
   const rows = await rpc<AgentTaskRow>("transition_agent_task", {
     requested_task_id: input.taskId,
@@ -106,6 +112,8 @@ export async function transitionAgentTask(input: {
     to_status: input.toStatus,
     evidence: input.evidence ?? null,
     reviewer: input.reviewer ?? null,
+    requested_lease_generation: input.leaseGeneration ?? null,
+    requested_lease_token: input.leaseToken ?? null,
   });
   return rows[0] ?? null;
 }
