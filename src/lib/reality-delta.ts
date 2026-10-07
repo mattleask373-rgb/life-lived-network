@@ -68,11 +68,7 @@ const EPISTEMIC = new Set<RealityDeltaEpistemic>([
 ]);
 
 const RISKS = new Set<RealityDeltaRisk>(["low", "medium", "high", "critical"]);
-const ACTIONS = new Set<RealityDeltaActionKind>([
-  "investigation",
-  "experiment",
-  "review",
-]);
+const ACTIONS = new Set<RealityDeltaActionKind>(["investigation", "experiment", "review"]);
 
 function nonEmpty(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
@@ -182,11 +178,7 @@ export function compareRealitySnapshots(
     resolvedUnknowns.length > 0;
 
   const epistemic: RealityDeltaEpistemic =
-    current.epistemic === "UNKNOWN"
-      ? "UNKNOWN"
-      : changed
-        ? current.epistemic
-        : "UNKNOWN";
+    current.epistemic === "UNKNOWN" ? "UNKNOWN" : changed ? current.epistemic : "UNKNOWN";
 
   const risk: RealityDeltaRisk = "low";
   const reversible = true;
