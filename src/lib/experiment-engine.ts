@@ -120,7 +120,11 @@ export function validateExperimentPlan(value: ExperimentPlan): Validation {
   if (!nonEmpty(value.id) || !nonEmpty(value.hypothesisId) || !nonEmpty(value.question)) {
     errors.push("experiment identity and question are required");
   }
-  if (!Array.isArray(value.procedure) || value.procedure.length === 0 || !value.procedure.every(nonEmpty)) {
+  if (
+    !Array.isArray(value.procedure) ||
+    value.procedure.length === 0 ||
+    !value.procedure.every(nonEmpty)
+  ) {
     errors.push("bounded procedure is required");
   }
   if (!Array.isArray(value.inputs) || !value.inputs.every(nonEmpty)) {
@@ -129,16 +133,25 @@ export function validateExperimentPlan(value: ExperimentPlan): Validation {
   if (!Array.isArray(value.expectedObservations) || !value.expectedObservations.every(nonEmpty)) {
     errors.push("expected observations must be an array of strings");
   }
-  if (!Array.isArray(value.successCriteria) || value.successCriteria.length === 0 || !value.successCriteria.every(nonEmpty)) {
+  if (
+    !Array.isArray(value.successCriteria) ||
+    value.successCriteria.length === 0 ||
+    !value.successCriteria.every(nonEmpty)
+  ) {
     errors.push("success criteria are required");
   }
-  if (!Array.isArray(value.failureCriteria) || value.failureCriteria.length === 0 || !value.failureCriteria.every(nonEmpty)) {
+  if (
+    !Array.isArray(value.failureCriteria) ||
+    value.failureCriteria.length === 0 ||
+    !value.failureCriteria.every(nonEmpty)
+  ) {
     errors.push("failure criteria are required");
   }
   if (!RISKS.has(value.risk)) errors.push("invalid risk class");
   if (!OWNERS.has(value.owner)) errors.push("invalid experiment owner");
   if (typeof value.reversible !== "boolean") errors.push("reversibility must be explicit");
-  if (typeof value.requiresHumanGate !== "boolean") errors.push("human-gate requirement must be explicit");
+  if (typeof value.requiresHumanGate !== "boolean")
+    errors.push("human-gate requirement must be explicit");
   if (experimentRequiresHumanGate(value) && !value.requiresHumanGate) {
     errors.push("irreversible or high-risk experiments require a human gate");
   }
@@ -165,7 +178,8 @@ export function preservesUncertainty(result: ExperimentResult): boolean {
 
 export function validateExperimentResult(result: ExperimentResult): Validation {
   const errors: string[] = [];
-  if (!nonEmpty(result.id) || !nonEmpty(result.experimentId)) errors.push("result identity is required");
+  if (!nonEmpty(result.id) || !nonEmpty(result.experimentId))
+    errors.push("result identity is required");
   if (!Array.isArray(result.observations) || !result.observations.every(nonEmpty)) {
     errors.push("observations must be an array of strings");
   }
@@ -180,13 +194,19 @@ export function validateExperimentResult(result: ExperimentResult): Validation {
     errors.push("invalid experiment outcome");
   }
   if (!validEpistemic(result.epistemic)) errors.push("invalid epistemic class");
-  if (result.epistemic === "REAL" && result.evidence.length === 0) errors.push("REAL result requires evidence");
-  if (result.outcome === "inconclusive" && result.epistemic === "REAL") errors.push("inconclusive result cannot be classified REAL");
-  if (result.outcome === "falsified" && result.epistemic === "REAL") errors.push("falsified result cannot be classified REAL");
+  if (result.epistemic === "REAL" && result.evidence.length === 0)
+    errors.push("REAL result requires evidence");
+  if (result.outcome === "inconclusive" && result.epistemic === "REAL")
+    errors.push("inconclusive result cannot be classified REAL");
+  if (result.outcome === "falsified" && result.epistemic === "REAL")
+    errors.push("falsified result cannot be classified REAL");
   if (result.outcome === "supported" && !resultSupportsClaim(result)) {
-    errors.push("supported result requires observations, evidence and a non-UNKNOWN epistemic class");
+    errors.push(
+      "supported result requires observations, evidence and a non-UNKNOWN epistemic class",
+    );
   }
-  if (!preservesUncertainty(result)) errors.push("inconclusive or falsified results must preserve uncertainty");
+  if (!preservesUncertainty(result))
+    errors.push("inconclusive or falsified results must preserve uncertainty");
   return { valid: errors.length === 0, errors };
 }
 
@@ -202,23 +222,35 @@ export function toProgrammeStateUpdate(
   if (!nonEmpty(stateId) || changed.length === 0 || !nonEmpty(reason)) {
     throw new Error("state update requires state, changed fields and reason");
   }
-  if (!nonEmpty(at) || Number.isNaN(Date.parse(at))) throw new Error("state update requires a valid timestamp");
+  if (!nonEmpty(at) || Number.isNaN(Date.parse(at))
+    throw new Error("state update requires a valid timestamp");
   return { stateId, at, changed, reason, evidence: result.evidence, epistemic: result.epistemic };
 }
 
 export function validateLearning(record: LearningRecord): Validation {
   const errors: string[] = [];
-  if (!nonEmpty(record.id) || !nonEmpty(record.sourceExperimentId) || !nonEmpty(record.whatChanged) || !nonEmpty(record.reusableLearning)) {
+  if (
+    !nonEmpty(record.id) ||
+    !nonEmpty(record.sourceExperimentId) ||
+    !nonEmpty(record.whatChanged) ||
+    !nonEmpty(record.reusableLearning)
+  ) {
     errors.push("learning identity and content are required");
   }
   if (!Number.isFinite(record.confidence) || record.confidence < 0 || record.confidence > 1) {
     errors.push("confidence must be a finite number between 0 and 1");
   }
   if (!validEpistemic(record.epistemic)) errors.push("invalid epistemic class");
-  if (record.epistemic === "UNKNOWN" && record.confidence > 0) errors.push("UNKNOWN learning cannot carry positive confidence");
-  if (!Array.isArray(record.stateFieldsAffected) || record.stateFieldsAffected.length === 0 || !record.stateFieldsAffected.every(nonEmpty)) {
+  if (record.epistemic === "UNKNOWN" && record.confidence > 0)
+    errors.push("UNKNOWN learning cannot carry positive confidence");
+  if (
+    !Array.isArray(record.stateFieldsAffected) ||
+    record.stateFieldsAffected.length === 0 ||
+    !record.stateFieldsAffected.every(nonEmpty)
+  ) {
     errors.push("learning must identify affected state fields");
   }
-  if (record.epistemic === "REAL" && record.confidence <= 0) errors.push("REAL learning requires positive confidence");
+  if (record.epistemic === "REAL" && record.confidence <= 0)
+    errors.push("REAL learning requires positive confidence");
   return { valid: errors.length === 0, errors };
 }
