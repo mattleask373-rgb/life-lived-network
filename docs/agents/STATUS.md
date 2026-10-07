@@ -1,33 +1,35 @@
-# Agent System Status — 2026-10-06 (post front-door)
+# Agent System Status — 2026-10-07
 
 ## CURRENT QUEUE
-- **P0 BLOCKER:** `src/lib/supply-engine.ts` on main is still a temporary stub (throws). Full hardened engine exists locally / in artifacts — must be restored via normal git push before any discovery path works.
-- LW-20261006-003 — Possibility Front Door (this cycle) — landed on main
 
-## ACTIVE / COMPLETED THIS CYCLE
-- Owner: Grok
-- Task: Possibility Front Door
-- Status: INTEGRATED on main (intent lib + UI + homepage + tests)
+- **P0:** restore/verify the canonical `src/lib/supply-engine.ts` implementation before any discovery work is treated as healthy.
+- **LW-20261007-001:** Provider-neutral orchestration control plane — IN PROGRESS.
+- Existing task lifecycle, claim/lease/heartbeat, handoff, specialist lanes, invariants and observability documents remain canonical.
 
-## WHAT LANDED ON MAIN
-- `src/lib/possibility-intent.ts` — deterministic NEED/HELP/GIVE/JOURNEY router
-- `src/lib/possibility-intent.test.ts`
-- `src/components/possibility-front-door.tsx`
-- `src/routes/index.tsx` — mounts front door after PlacePicker
+## ACTIVE
 
-## WHAT DID NOT LAND
-- Full supply-engine restore (tool payload limit); local file ready at artifacts/supply-engine-restore.ts
-- Adversarial supply-engine.eval.test.ts (local only)
-- .env untrack (local staged only)
+- Owner: ChatGPT / architecture + orchestration
+- Task: LW-20261007-001
+- Scope:
+  - provider-neutral orchestration contract
+  - Plane webhook bridge contract
+  - agent contracts
+  - no production webhook endpoint or credentials added in this phase
+- Branch: `agent/orchestrator/LW-20261007-001-provider-neutral`
 
-## NEXT
-1. **P0** Restore full `supply-engine.ts` from commit `3d9896e` + hardening (selectCapability + regulated flags)
-2. Run vitest for possibility-intent + supply-engine
-3. ChatGPT review of front-door routing assumptions
-4. Structured intent progressive questioning (confirm before act)
-5. Possibility card explanation UX
+## DECISIONS
 
-## METRICS
-- Front-door files on main: 4
-- Second matching engine created: **no**
-- Autonomous merge: **no**
+- Plane is the work-control plane, not the sole inference provider.
+- Plane AI is an execution option, not an architectural dependency.
+- Plane v2 webhooks are the event trigger; REST/MCP are control/query interfaces.
+- Every substantive agent task has a durable claim and handoff.
+- No autonomous merge to `main`.
+
+## NEXT SAFE STEP
+
+Build the Phase A receiver as a small provider-neutral service with:
+- HMAC verification
+- event idempotency
+- task normalization
+- dry-run dispatch
+- no model credentials
