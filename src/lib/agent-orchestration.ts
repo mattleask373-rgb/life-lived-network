@@ -81,10 +81,7 @@ export function verifyPlaneSignature(
   const actual = Buffer.from(signature, "utf8");
   const expectedBuffer = Buffer.from(expected, "utf8");
 
-  return (
-    actual.length === expectedBuffer.length &&
-    timingSafeEqual(actual, expectedBuffer)
-  );
+  return actual.length === expectedBuffer.length && timingSafeEqual(actual, expectedBuffer);
 }
 
 export function isAgentReady(event: PlaneWebhookEnvelope): boolean {
@@ -102,9 +99,7 @@ export function isAgentReady(event: PlaneWebhookEnvelope): boolean {
 
 export function laneFromTask(data: PlaneTaskData): AgentLane | "ORCHESTRATOR" {
   for (const label of data.labels ?? []) {
-    const lane = label.name
-      ? LANE_BY_LABEL[label.name.toLowerCase()]
-      : undefined;
+    const lane = label.name ? LANE_BY_LABEL[label.name.toLowerCase()] : undefined;
     if (lane) return lane;
   }
 
