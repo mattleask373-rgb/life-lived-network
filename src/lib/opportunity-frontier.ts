@@ -88,21 +88,16 @@ export function validateOpportunityFrontier(
   if (!nonEmpty(observation.id)) errors.push("observation id is required");
   if (!nonEmpty(observation.scope)) errors.push("scope is required");
   if (!nonEmpty(observation.objective)) errors.push("objective is required");
-  if (!nonEmpty(observation.observedSupplyState))
-    errors.push("observed supply state is required");
+  if (!nonEmpty(observation.observedSupplyState)) errors.push("observed supply state is required");
   if (!nonEmpty(observation.sourceCoverage)) errors.push("source coverage is required");
   if (!nonEmpty(observation.unmetNeed)) errors.push("unmet need is required");
-  if (!nonEmpty(observation.candidateOpportunity))
-    errors.push("candidate opportunity is required");
-  if (!Array.isArray(observation.unknowns))
-    errors.push("unknowns must be an array");
+  if (!nonEmpty(observation.candidateOpportunity)) errors.push("candidate opportunity is required");
+  if (!Array.isArray(observation.unknowns)) errors.push("unknowns must be an array");
   if (!validEvidence(observation.evidence))
     errors.push("evidence must be an array of valid references");
-  if (!EPISTEMIC.has(observation.interpretation))
-    errors.push("invalid epistemic class");
+  if (!EPISTEMIC.has(observation.interpretation)) errors.push("invalid epistemic class");
   if (!RISKS.has(observation.risk)) errors.push("invalid risk class");
-  if (typeof observation.reversible !== "boolean")
-    errors.push("reversibility must be explicit");
+  if (typeof observation.reversible !== "boolean") errors.push("reversibility must be explicit");
   if (typeof observation.requiresHumanGate !== "boolean")
     errors.push("human-gate requirement must be explicit");
 
@@ -110,10 +105,7 @@ export function validateOpportunityFrontier(
     errors.push("REAL observations require evidence");
   }
 
-  if (
-    frontierRequiresHumanGate(observation) &&
-    !observation.requiresHumanGate
-  ) {
+  if (frontierRequiresHumanGate(observation) && !observation.requiresHumanGate) {
     errors.push("irreversible or high/critical-risk observations require a human gate");
   }
 
@@ -135,9 +127,7 @@ export function createFrontierObservation(
 ): OpportunityFrontierObservation {
   return {
     ...input,
-    requiresHumanGate:
-      input.requiresHumanGate ??
-      frontierRequiresHumanGate(input),
+    requiresHumanGate: input.requiresHumanGate ?? frontierRequiresHumanGate(input),
   };
 }
 
@@ -154,10 +144,7 @@ export function canBecomeBoundedTask(
     errors.push("UNKNOWN observations require an experiment or evidence-gathering task");
   }
 
-  if (
-    observation.interpretation === "IMAGINED" ||
-    observation.interpretation === "SPECULATIVE"
-  ) {
+  if (observation.interpretation === "IMAGINED" || observation.interpretation === "SPECULATIVE") {
     errors.push("speculative frontier observations require testing before ordinary execution");
   }
 
