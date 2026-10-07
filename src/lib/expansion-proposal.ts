@@ -132,7 +132,7 @@ export function validateExpansionProposal(
   if (typeof candidate.reversible !== "boolean") errors.push("reversible is required");
   if (typeof candidate.requiresHumanGate !== "boolean") errors.push("requiresHumanGate is required");
 
-  if (candidate.epistemic === "REAL" && candidate.evidence.length === 0) {
+  if (candidate.epistemic === "REAL" && validEvidence(candidate.evidence) && candidate.evidence.length === 0) {
     errors.push("REAL proposals require evidence");
   }
   if (candidate.epistemic === "UNKNOWN" && candidate.status === "accepted") {
