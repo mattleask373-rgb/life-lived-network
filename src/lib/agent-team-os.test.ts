@@ -97,7 +97,6 @@ describe("project bootstrap", () => {
     expect(boot.continuousLoops.some((l) => l.startsWith("research:"))).toBe(true);
   });
 
-
   it("keeps every default role unable to self-accept", () => {
     expect(DEFAULT_ROLE_ROSTER.every((role) => role.canAcceptOwnWork === false)).toBe(true);
     expect(DEFAULT_ROLE_ROSTER.every((role) => role.maxAutonomy.length === 2)).toBe(true);
