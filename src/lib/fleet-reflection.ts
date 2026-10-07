@@ -1,3 +1,10 @@
+/**
+ * Fleet Reflection Kernel — AI-NATIVE-07 / Issue #83
+ *
+ * Records what surprised the fleet after a creative cycle without treating
+ * reflection as fact, ranking, execution, or self-modification authority.
+ */
+
 export type ReflectionEpistemic =
   | "REAL"
   | "PLAUSIBLE"
@@ -7,23 +14,24 @@ export type ReflectionEpistemic =
   | "UNKNOWN";
 
 export type ReflectionRisk = "low" | "medium" | "high" | "critical";
+
 export type ReflectionDisposition =
   | "recorded"
   | "investigate"
   | "experiment"
   | "superseded";
 
+export type ReflectionActionKind = "investigation" | "experiment" | "review";
+
 export interface ReflectionEvidenceRef {
   id: string;
   source: string;
   locator?: string;
-  observedAt?: string;
 }
 
 export interface ReflectionAction {
-  kind: "investigation" | "experiment" | "review";
+  kind: ReflectionActionKind;
   summary: string;
-  taskRef?: string;
   bounded: boolean;
   reversible: boolean;
   risk: ReflectionRisk;
@@ -44,8 +52,8 @@ export interface FleetReflectionFinding {
   reversible: boolean;
   risk: ReflectionRisk;
   requiresHumanGate: boolean;
-  nextAction?: ReflectionAction;
   disposition: ReflectionDisposition;
+  nextAction?: ReflectionAction;
 }
 
 export interface FleetReflectionCycle {
@@ -66,6 +74,7 @@ const EPISTEMIC = new Set<ReflectionEpistemic>([
 ]);
 
 const RISK = new Set<ReflectionRisk>(["low", "medium", "high", "critical"]);
+
 const DISPOSITION = new Set<ReflectionDisposition>([
   "recorded",
   "investigate",
@@ -73,25 +82,32 @@ const DISPOSITION = new Set<ReflectionDisposition>([
   "superseded",
 ]);
 
-const nonEmpty = (value: unknown): value is string =>
-  typeof value === "string" && value.trim().length > 0;
+const ACTION_KIND = new Set<ReflectionActionKind>([
+  "investigation",
+  "experiment",
+  "review",
+]);
 
-const stringArray = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.every(nonEmpty);
+function nonEmpty(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
 
-const evidenceArray = (value: unknown): value is ReflectionEvidenceRef[] =>
-  Array.isArray(value) &&
-  value.every(
-    (item) =>
-      typeof item === "object" &&
-      item !== null &&
-      nonEmpty((item as ReflectionEvidenceRef).id) &&
-      nonEmpty((item as ReflectionEvidenceRef).source) &&
-      ((item as ReflectionEvidenceRef).locator === undefined ||
-        nonEmpty((item as ReflectionEvidenceRef).locator)) &&
-      ((item as ReflectionEvidenceRef).observedAt === undefined ||
-        nonEmpty((item as ReflectionEvidenceRef).observedAt)),
+function stringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function evidenceArray(value: unknown): value is ReflectionEvidenceRef[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        !!item &&
+        typeof item === "object" &&
+        nonEmpty((item as ReflectionEvidenceRef).id) &&
+        nonEmpty((item as ReflectionEvidenceRef).source),
+    )
   );
+}
 
 export function reflectionRequiresHumanGate(
   risk: ReflectionRisk,
@@ -100,34 +116,22 @@ export function reflectionRequiresHumanGate(
   return !reversible || risk === "high" || risk === "critical";
 }
 
-export function validateReflectionAction(
-  action: ReflectionAction,
-): string[] {
+function validateReflectionAction(action: ReflectionAction): string[] {
   const errors: string[] = [];
-
-  if (!["investigation", "experiment", "review"].includes(action.kind)) {
-    errors.push("action kind must be investigation, experiment, or review");
-  }
+  if (!ACTION_KIND.has(action.kind)) errors.push("action kind is invalid");
   if (!nonEmpty(action.summary)) errors.push("action summary is required");
-  if (action.taskRef !== undefined && !nonEmpty(action.taskRef)) {
-    errors.push("taskRef must be non-empty when supplied");
-  }
   if (action.bounded !== true) errors.push("reflection actions must be explicitly bounded");
   if (typeof action.reversible !== "boolean") errors.push("action reversibility is required");
   if (!RISK.has(action.risk)) errors.push("action risk is invalid");
   if (
-    action.requiresHumanGate !==
-    reflectionRequiresHumanGate(action.risk, action.reversible)
+    action.requiresHumanGate !== reflectionRequiresHumanGate(action.risk, action.reversible)
   ) {
     errors.push("action human-gate requirement does not match risk/reversibility");
   }
-
   return errors;
 }
 
-export function validateFleetReflectionFinding(
-  finding: FleetReflectionFinding,
-): string[] {
+export function validateFleetReflectionFinding(finding: FleetReflectionFinding): string[] {
   const errors: string[] = [];
 
   if (!nonEmpty(finding.id)) errors.push("finding id is required");
@@ -141,8 +145,10 @@ export function validateFleetReflectionFinding(
   if (!validEvidence) errors.push("evidence must be an array of valid references");
   if (!EPISTEMIC.has(finding.epistemic)) errors.push("epistemic class is invalid");
   if (!stringArray(finding.uncertainty)) errors.push("uncertainty must be an array of strings");
-  if (!stringArray(finding.openQuestions)) errors.push("open questions must be an array of strings");
-  if (!stringArray(finding.affectedAreas)) errors.push("affected areas must be an array of strings");
+  if (!stringArray(finding.openQuestions))
+    errors.push("open questions must be an array of strings");
+  if (!stringArray(finding.affectedAreas))
+    errors.push("affected areas must be an array of strings");
   if (typeof finding.reversible !== "boolean") errors.push("reversibility is required");
   if (!RISK.has(finding.risk)) errors.push("risk is invalid");
   if (typeof finding.requiresHumanGate !== "boolean") {
@@ -165,10 +171,7 @@ export function validateFleetReflectionFinding(
     errors.push("human-gate requirement does not match risk/reversibility");
   }
 
-  if (
-    finding.nextAction &&
-    validateReflectionAction(finding.nextAction).length > 0
-  ) {
+  if (finding.nextAction && validateReflectionAction(finding.nextAction).length > 0) {
     errors.push(...validateReflectionAction(finding.nextAction));
   }
 
@@ -183,35 +186,32 @@ export function validateFleetReflectionFinding(
     errors.push("uncertain/speculative findings cannot become direct review authority");
   }
 
-  return [...new Set(errors)];
+  return errors;
 }
 
-export function validateFleetReflectionCycle(
-  cycle: FleetReflectionCycle,
-): string[] {
+export function validateFleetReflectionCycle(cycle: FleetReflectionCycle): string[] {
   const errors: string[] = [];
-
   if (!nonEmpty(cycle.cycleId)) errors.push("cycle id is required");
-  if (!nonEmpty(cycle.startedAt) || !nonEmpty(cycle.endedAt)) {
-    errors.push("cycle timestamps are required");
+  if (!nonEmpty(cycle.startedAt)) errors.push("startedAt is required");
+  if (!nonEmpty(cycle.endedAt)) errors.push("endedAt is required");
+  if (typeof cycle.timeboxHours !== "number" || cycle.timeboxHours <= 0) {
+    errors.push("timeboxHours must be a positive number");
   }
-  if (!Number.isFinite(cycle.timeboxHours) || cycle.timeboxHours <= 0) {
-    errors.push("timeboxHours must be a positive finite number");
+  if (!Array.isArray(cycle.findings)) {
+    errors.push("findings must be an array");
+    return errors;
   }
-  if (!Array.isArray(cycle.findings)) errors.push("findings must be an array");
 
-  const findings = Array.isArray(cycle.findings) ? cycle.findings : [];
-  const ids = new Set<string>();
-  for (const finding of findings) {
-    if (ids.has(finding.id)) errors.push(`duplicate finding id: ${finding.id}`);
-    ids.add(finding.id);
-    errors.push(...validateFleetReflectionFinding(finding));
+  const seen = new Set<string>();
+  for (const finding of cycle.findings) {
+    if (seen.has(finding.id)) errors.push(`duplicate finding id: ${finding.id}`);
+    seen.add(finding.id);
     if (finding.cycleId !== cycle.cycleId) {
       errors.push(`finding ${finding.id} belongs to another cycle`);
     }
+    errors.push(...validateFleetReflectionFinding(finding));
   }
-
-  return [...new Set(errors)];
+  return errors;
 }
 
 export function createFleetReflectionFinding(
@@ -220,24 +220,17 @@ export function createFleetReflectionFinding(
   },
 ): FleetReflectionFinding {
   const requiresHumanGate =
-    input.requiresHumanGate ??
-    reflectionRequiresHumanGate(input.risk, input.reversible);
-
+    input.requiresHumanGate ?? reflectionRequiresHumanGate(input.risk, input.reversible);
   return { ...input, requiresHumanGate };
 }
 
-/**
- * Returns only bounded next steps. This function never executes or mutates
- * another system; it is a reflection-to-intent boundary.
- */
 export function nextBoundedReflectionActions(
   cycle: FleetReflectionCycle,
 ): ReflectionAction[] {
   const errors = validateFleetReflectionCycle(cycle);
   if (errors.length > 0) return [];
-
   return cycle.findings
-    .filter((finding) => finding.disposition !== "superseded" && finding.nextAction)
-    .map((finding) => finding.nextAction!)
-    .filter((action) => action.bounded === true);
+    .filter((f) => f.disposition === "investigate" || f.disposition === "experiment")
+    .map((f) => f.nextAction)
+    .filter((a): a is ReflectionAction => !!a && a.bounded === true);
 }
