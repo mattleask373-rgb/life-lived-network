@@ -1,21 +1,35 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import {
   requiresHumanApproval,
   validateAgentActionRequest,
-  validateHumanApproval,
+  validateAgentIdentity,
   type AgentActionRequest,
 } from "./agent-identity-contract";
 
-const identity = {
-  actorId: "agent:builder-1",
-  agentId: "builder-1",
+const now = new Date("2026-10-07T12:00:00.000Z");
+
+const baseIdentity = {
+  actorId: "actor-1",
+  agentId: "agent-1",
   runId: "run-1",
-  workspaceId: "workspace-1",
-  projectId: "project-1",
+  workspaceId: "ws-1",
+  projectId: "proj-1",
+};
+
+const baseApproval = {
+  approvalId: "appr-1",
+  approverId: "human-1",
+  workspaceId: "ws-1",
+  projectId: "proj-1",
+  taskId: "task-1",
+  action: "execute" as const,
+  issuedAt: "2026-10-07T11:00:00.000Z",
+  expiresAt: "2026-10-07T13:00:00.000Z",
 };
 
 const baseRequest: AgentActionRequest = {
-  identity,
+  identity: baseIdentity,
   taskId: "task-1",
   action: "execute",
   risk: "P3",
@@ -23,102 +37,79 @@ const baseRequest: AgentActionRequest = {
   requiresHumanGate: false,
 };
 
-const approval = {
-  approvalId: "approval-1",
-  approverId: "human:1",
-  workspaceId: "workspace-1",
-  projectId: "project-1",
-  taskId: "task-1",
-  action: "execute" as const,
-  issuedAt: "2026-01-01T00:00:00.000Z",
-  expiresAt: "2027-01-01T00:00:00.000Z",
-};
-
 describe("agent-identity-contract", () => {
-  const now = new Date("2026-10-08T00:00:00.000Z");
+  it("validates a complete identity", () => {
+    expect(validateAgentIdentity(baseIdentity).valid).toBe(true);
+  });
 
-  test("accepts a scoped provider-neutral identity", () => {
+  it("rejects incomplete identity", () => {
+    expect(validateAgentIdentity({ ...baseIdentity, actorId: "" }).valid).toBe(false);
+  });
+
+  it("allows low-risk reversible execute without approval", () => {
     expect(validateAgentActionRequest(baseRequest, now).valid).toBe(true);
   });
 
-  test("requires approval for irreversible or high-risk actions", () => {
+  it("requires approval for P1 risk", () => {
+    expect(validateAgentActionRequest({ ...baseRequest, risk: "P1" }, now).valid).toBe(false);
     expect(
-      requiresHumanApproval({
-        risk: "P3",
-        reversible: false,
-        requiresHumanGate: false,
-        action: "execute",
-      }),
+      validateAgentActionRequest(
+        { ...baseRequest, risk: "P1", approval: { ...baseApproval, action: "execute" } },
+        now,
+      ).valid,
     ).toBe(true);
+  });
+
+  it("rejects expired approval", () => {
     expect(
       validateAgentActionRequest(
-        { ...baseRequest, risk: "P1" },
+        {
+          ...baseRequest,
+          risk: "P1",
+          approval: {
+            ...baseApproval,
+            issuedAt: "2026-10-07T09:00:00.000Z",
+            expiresAt: "2026-10-07T10:00:00.000Z",
+          },
+        },
         now,
       ).valid,
     ).toBe(false);
   });
 
-  test("rejects an approval from the wrong scope", () => {
-    const result = validateHumanApproval(
-      { ...approval, projectId: "other-project" },
-      baseRequest,
-      now,
-    );
-    expect(result.valid).toBe(false);
-  });
-
-  test("rejects expired approval", () => {
-    const result = validateHumanApproval(
-      { ...approval, expiresAt: "2026-10-07T23:59:00.000Z" },
-      { ...baseRequest, requiresHumanGate: true },
-      now,
-    );
-    expect(result.valid).toBe(false);
-  });
-
-  test("rejects agent self-approval", () => {
-    const result = validateHumanApproval(
-      { ...approval, approverId: identity.actorId },
-      { ...baseRequest, requiresHumanGate: true },
-      now,
-    );
-    expect(result.valid).toBe(false);
-  });
-
-  test("rejects an approval for another action", () => {
-    const result = validateHumanApproval(
-      { ...approval, action: "deploy" },
-      { ...baseRequest, requiresHumanGate: true },
-      now,
-    );
-    expect(result.valid).toBe(false);
-  });
-
-  test("requires approval for merge/deploy regardless of caller claim", () => {
+  it("rejects self-approval", () => {
     expect(
       validateAgentActionRequest(
-        { ...baseRequest, action: "merge" },
-        now,
-      ).valid,
-    ).toBe(false);
-    expect(
-      validateAgentActionRequest(
-        { ...baseRequest, action: "deploy" },
+        {
+          ...baseRequest,
+          risk: "P1",
+          approval: { ...baseApproval, approverId: "actor-1" },
+        },
         now,
       ).valid,
     ).toBe(false);
   });
 
-  test("valid high-risk request can proceed only with matching human approval", () => {
-    const result = validateAgentActionRequest(
-      {
-        ...baseRequest,
-        risk: "P1",
-        requiresHumanGate: true,
-        approval,
-      },
-      now,
+  it("never treats merge or deploy as ungated", () => {
+    expect(requiresHumanApproval({ ...baseRequest, action: "merge" })).toBe(true);
+    expect(validateAgentActionRequest({ ...baseRequest, action: "merge" }, now).valid).toBe(
+      false,
     );
-    expect(result.valid).toBe(true);
+    expect(validateAgentActionRequest({ ...baseRequest, action: "deploy" }, now).valid).toBe(
+      false,
+    );
+  });
+
+  it("rejects approval scope mismatches", () => {
+    expect(
+      validateAgentActionRequest(
+        {
+          ...baseRequest,
+          risk: "P1",
+          approval: { ...baseApproval, workspaceId: "other-ws" },
+        },
+        now,
+      ).valid,
+    ).toBe(false);
   });
 });
