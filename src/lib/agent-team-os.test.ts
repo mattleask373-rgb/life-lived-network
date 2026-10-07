@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createRoleFromTemplate, registerRole, validateRoleTemplate } from "./agent-factory";
-import {
-  bootstrapProject,
-  LIFE_LIVED_BOOTSTRAP_EXAMPLE,
-} from "./agent-project-bootstrap";
+import { bootstrapProject, LIFE_LIVED_BOOTSTRAP_EXAMPLE } from "./agent-project-bootstrap";
 import {
   isSafeResearchFinding,
   nextSafeStepFromFinding,
