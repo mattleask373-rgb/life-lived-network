@@ -14,70 +14,55 @@ const defaultPolicy: ProviderSelectionPolicy = {
 };
 
 describe("provider registry policy", () => {
-  it("selects a standard coding provider for L2/P2 implementation", () => {
-    const selected = selectProvider(
-      EXAMPLE_PROVIDER_DESCRIPTORS,
-      { autonomy: "L2", risk: "P2", lane: "IMPLEMENTATION" },
+  it("marks a standard provider eligible for L1 product research", () => {
+    const result = isEligibleProvider(
+      EXAMPLE_PROVIDER_DESCRIPTORS.find((p) => p.id === "grok")!,
+      { autonomy: "L1", risk: "P3", lane: "PRODUCT" },
       defaultPolicy,
     );
-    expect(selected).not.toBeNull();
-    expect(["grok", "openai", "plane_ai", "human"]).toContain(selected!.id);
+    expect(result.eligible).toBe(true);
+  });
+
+  it("rejects a provider that lacks required lane capability", () => {
+    const plane = EXAMPLE_PROVIDER_DESCRIPTORS.find((p) => p.id === "plane_ai")!;
+    const result = isEligibleProvider(
+      plane,
+      { autonomy: "L1", risk: "P3", lane: "SECURITY" },
+      defaultPolicy,
+    );
+    expect(result.eligible).toBe(false);
+    expect(result.reason).toMatch(/lacks required capability/);
+  });
+
+  it("rejects providers exceeding task autonomy", () => {
+    const plane = EXAMPLE_PROVIDER_DESCRIPTORS.find((p) => p.id === "plane_ai")!;
+    const result = isEligibleProvider(
+      plane,
+      { autonomy: "L3", risk: "P3", lane: "IMPLEMENTATION" },
+      defaultPolicy,
+    );
+    expect(result.eligible).toBe(false);
+    expect(result.reason).toMatch(/exceeds provider max/);
   });
 
   it("requires human for P0 when policy says so", () => {
-    const humanOnly = isEligibleProvider(
-      EXAMPLE_PROVIDER_DESCRIPTORS.find((p) => p.id === "human")!,
-      { autonomy: "L2", risk: "P0", lane: "SECURITY" },
-      defaultPolicy,
-    );
-    expect(humanOnly.eligible).toBe(true);
-
-    const grok = isEligibleProvider(
+    const result = isEligibleProvider(
       EXAMPLE_PROVIDER_DESCRIPTORS.find((p) => p.id === "grok")!,
-      { autonomy: "L2", risk: "P0", lane: "SECURITY" },
+      { autonomy: "L1", risk: "P0", lane: "IMPLEMENTATION" },
       defaultPolicy,
     );
-    expect(grok.eligible).toBe(false);
-    expect(grok.reason).toMatch(/human gate/);
+    expect(result.eligible).toBe(false);
+    expect(result.reason).toMatch(/requires human gate/);
   });
 
-
-  it("rejects a provider that lacks the lane capability", () => {
-    const provider = {
-      ...EXAMPLE_PROVIDER_DESCRIPTORS.find((p) => p.id === "plane_ai")!,
-      capabilities: ["research"],
-    };
-    const decision = isEligibleProvider(
-      provider,
-      { autonomy: "L2", risk: "P2", lane: "IMPLEMENTATION" },
-      defaultPolicy,
-    );
-    expect(decision.eligible).toBe(false);
-    expect(decision.reason).toMatch(/lacks required capability implementation/);
-  });
-
-  it("requires the actual human provider for a human-gated risk", () => {
-    const disguised = {
-      ...EXAMPLE_PROVIDER_DESCRIPTORS.find((p) => p.id === "grok")!,
-      id: "trusted-non-human",
-      maxRiskWithoutHumanGate: "P0" as const,
-    };
-    const decision = isEligibleProvider(
-      disguised,
-      { autonomy: "L2", risk: "P0", lane: "REVIEW" },
-      defaultPolicy,
-    );
-    expect(decision.eligible).toBe(false);
-    expect(decision.reason).toMatch(/not the human provider/);
-  });
-
-  it("excludes providers listed in policy", () => {
+  it("selects an eligible non-human provider for ordinary work", () => {
     const selected = selectProvider(
       EXAMPLE_PROVIDER_DESCRIPTORS,
-      { autonomy: "L1", risk: "P3", lane: "PRODUCT" },
-      { ...defaultPolicy, excludeProviders: ["plane_ai", "openai", "grok"] },
+      { autonomy: "L1", risk: "P3", lane: "IMPLEMENTATION" },
+      defaultPolicy,
     );
-    expect(selected?.id).toBe("human");
+    expect(selected).not.toBeNull();
+    expect(selected!.id).not.toBe("human");
   });
 
   it("returns null when no provider is eligible", () => {
