@@ -12,10 +12,10 @@ describe("authoritative state machine", () => {
     const owner = "grok";
     const base = { actorId: owner, owner, leaseValid: true };
 
-    expect(
-      evaluateTransition({ ...base, from: "CLAIMED", to: "IN_PROGRESS" }).allowed,
-    ).toBe(true);
-    expect(evaluateTransition({ ...base, from: "IN_PROGRESS", to: "VERIFYING" }).allowed).toBe(true);
+    expect(evaluateTransition({ ...base, from: "CLAIMED", to: "IN_PROGRESS" }).allowed).toBe(true);
+    expect(evaluateTransition({ ...base, from: "IN_PROGRESS", to: "VERIFYING" }).allowed).toBe(
+      true,
+    );
     expect(evaluateTransition({ ...base, from: "VERIFYING", to: "REVIEW" }).allowed).toBe(true);
   });
 
