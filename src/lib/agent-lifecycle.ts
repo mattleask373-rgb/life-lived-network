@@ -3,14 +3,7 @@
  * ACTIVE is not the same as HEALTHY.
  */
 
-export type AgentLifecycleState =
-  | "PROPOSED"
-  | "SPECIFIED"
-  | "EVALUATING"
-  | "ACTIVE"
-  | "DEGRADED"
-  | "SUSPENDED"
-  | "RETIRED";
+export type AgentLifecycleState = "PROPOSED" | "SPECIFIED" | "EVALUATING" | "ACTIVE" | "DEGRADED" | "SUSPENDED" | "RETIRED";
 
 export type AgentHealth = "HEALTHY" | "DEGRADED" | "FAILING" | "UNKNOWN";
 
