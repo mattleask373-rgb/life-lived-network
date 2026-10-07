@@ -1,53 +1,34 @@
 /**
- * Provider failure / degradation policy.
- * Never retry forever; never lower safety standards.
+ * Provider degradation policy — pure functions.
+ * When a provider fails, decide retry / alternate / human fallback.
  */
 
-export type ProviderFailureKind =
-  | "unavailable"
-  | "timeout"
-  | "rate_limited"
-  | "invalid_result"
-  | "contract_violation"
-  | "insufficient_evidence"
-  | "conflicting_evidence"
-  | "repeated_failure"
-  | "cost_exceeded"
-  | "unreliable";
+export type DegradationAction = "retry_once" | "alternate_provider" | "human_fallback";
 
-export type DegradationAction =
-  | "retry_once"
-  | "alternate_provider"
-  | "human_fallback"
-  | "blocked";
-
-export interface FailureContext {
-  kind: ProviderFailureKind;
+export interface ProviderFailureContext {
   consecutiveFailures: number;
+  lastErrorClass: "timeout" | "auth" | "rate_limit" | "malformed" | "unknown";
   alternateAvailable: boolean;
-  humanAvailable: boolean;
-  isDeterministicFailure: boolean;
+  riskCeiling: "low" | "medium" | "high" | "critical";
 }
 
-export function nextDegradationAction(ctx: FailureContext): DegradationAction {
-  if (ctx.kind === "contract_violation" || ctx.kind === "insufficient_evidence") {
-    return ctx.alternateAvailable ? "alternate_provider" : "blocked";
-  }
-  if (ctx.isDeterministicFailure) {
-    return ctx.alternateAvailable ? "alternate_provider" : "blocked";
-  }
+export function chooseDegradationAction(ctx: ProviderFailureContext): DegradationAction {
+  if (ctx.lastErrorClass === "auth") return "human_fallback";
   if (ctx.consecutiveFailures >= 3) {
-    if (ctx.alternateAvailable) return "alternate_provider";
-    if (ctx.humanAvailable) return "human_fallback";
-    return "blocked";
+    return ctx.alternateAvailable ? "alternate_provider" : "human_fallback";
   }
-  if (ctx.kind === "timeout" || ctx.kind === "rate_limited" || ctx.kind === "unavailable") {
-    if (ctx.consecutiveFailures === 0) return "retry_once";
-    if (ctx.alternateAvailable) return "alternate_provider";
-    if (ctx.humanAvailable) return "human_fallback";
-    return "blocked";
+  if (ctx.lastErrorClass === "rate_limit" && ctx.alternateAvailable) {
+    return "alternate_provider";
   }
-  if (ctx.alternateAvailable) return "alternate_provider";
-  if (ctx.humanAvailable) return "human_fallback";
-  return "blocked";
+  if (ctx.consecutiveFailures === 1 && ctx.lastErrorClass === "timeout") {
+    return "retry_once";
+  }
+  if (ctx.riskCeiling === "critical" || ctx.riskCeiling === "high") {
+    return "human_fallback";
+  }
+  return ctx.alternateAvailable ? "alternate_provider" : "retry_once";
+}
+
+export function shouldQueueForHuman(action: DegradationAction): boolean {
+  return action === "human_fallback";
 }
