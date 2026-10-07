@@ -46,20 +46,20 @@ export const Route = createFileRoute("/api/agents/plane-webhook")({
         }
 
         const {
-          hasAgentEvent, markAgentEvent, recordAgentEvent, recordNormalizedAgentTask,
+          markAgentEvent, recordAgentEvent, recordNormalizedAgentTask,
         } = await import("@/lib/agent-event-store.server");
 
-        if (await hasAgentEvent(event.event_id)) {
-          return new Response(JSON.stringify({ accepted: true, duplicate: true }), {
-            headers: JSON_HEADERS,
-          });
-        }
-
-        await recordAgentEvent({
+        const inserted = await recordAgentEvent({
           eventId: event.event_id, deliveryId: event.delivery_id, webhookId: event.webhook_id,
           eventType: event.event, entityId: event.entity_id, workspaceId: event.workspace_id,
           payload: event,
         });
+
+        if (!inserted) {
+          return new Response(JSON.stringify({ accepted: true, duplicate: true }), {
+            headers: JSON_HEADERS,
+          });
+        }
 
         if (!isAgentReady(event)) {
           await markAgentEvent(event.event_id, "ignored");
