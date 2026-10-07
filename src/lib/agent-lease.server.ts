@@ -62,12 +62,16 @@ export async function heartbeatAgentTask(
 export async function releaseAgentTask(
   taskId: string,
   owner: string,
+  leaseGeneration: number,
+  leaseToken: string,
   nextStatus: "READY" | "BLOCKED" = "READY",
 ): Promise<AgentTaskRow | null> {
   const rows = await rpc<AgentTaskRow>("release_agent_task", {
     requested_task_id: taskId,
     requested_owner: owner,
     next_status: nextStatus,
+    requested_lease_generation: leaseGeneration,
+    requested_lease_token: leaseToken,
   });
   return rows[0] ?? null;
 }
