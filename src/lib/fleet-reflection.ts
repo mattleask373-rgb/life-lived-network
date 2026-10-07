@@ -137,7 +137,8 @@ export function validateFleetReflectionFinding(
   if (!nonEmpty(finding.assumptionChallenged)) {
     errors.push("assumption challenged is required");
   }
-  if (!evidenceArray(finding.evidence)) errors.push("evidence must be an array of valid references");
+  const validEvidence = evidenceArray(finding.evidence);
+  if (!validEvidence) errors.push("evidence must be an array of valid references");
   if (!EPISTEMIC.has(finding.epistemic)) errors.push("epistemic class is invalid");
   if (!stringArray(finding.uncertainty)) errors.push("uncertainty must be an array of strings");
   if (!stringArray(finding.openQuestions)) errors.push("open questions must be an array of strings");
@@ -149,11 +150,12 @@ export function validateFleetReflectionFinding(
   }
   if (!DISPOSITION.has(finding.disposition)) errors.push("disposition is invalid");
 
-  if (finding.epistemic === "REAL" && finding.evidence.length === 0) {
+  const evidenceCount = validEvidence ? finding.evidence.length : 0;
+  if (finding.epistemic === "REAL" && evidenceCount === 0) {
     errors.push("REAL reflections require evidence");
   }
-  if (finding.epistemic === "UNKNOWN" && finding.evidence.length === 0) {
-    if (finding.uncertainty.length === 0) {
+  if (finding.epistemic === "UNKNOWN" && evidenceCount === 0) {
+    if (stringArray(finding.uncertainty) && finding.uncertainty.length === 0) {
       errors.push("UNKNOWN reflections must preserve explicit uncertainty");
     }
   }
