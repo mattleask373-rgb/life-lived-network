@@ -11,9 +11,16 @@ function baseResult(overrides: Partial<AgentExecutionResult> = {}): AgentExecuti
     taskId: "LW-20261007-001",
     status: "VERIFYING",
     summary: "Implemented claim lease hardening and unit tests.",
-    changedPaths: ["src/lib/agent-lease-policy.ts", "supabase/migrations/20261007140000_agent_claim_lease_hardening.sql"],
+    changedPaths: [
+      "src/lib/agent-lease-policy.ts",
+      "supabase/migrations/20261007140000_agent_claim_lease_hardening.sql",
+    ],
     testsRun: [
-      { command: "bun run test src/lib/agent-lease-policy.test.ts", result: "pass", evidence: "9 tests" },
+      {
+        command: "bun run test src/lib/agent-lease-policy.test.ts",
+        result: "pass",
+        evidence: "9 tests",
+      },
     ],
     testsPassed: 1,
     testsFailed: 0,
@@ -28,7 +35,8 @@ function baseResult(overrides: Partial<AgentExecutionResult> = {}): AgentExecuti
     blockers: [],
     handoff:
       "TASK: LW-20261007-001\nSTATUS: VERIFYING\nWHAT I CHANGED: lease hardening migration + pure policy tests.\nNEXT: independent review of SQL functions.",
-    recommendedNextAction: "Independent review of claim/lease SQL and run mark_stale against a staging DB",
+    recommendedNextAction:
+      "Independent review of claim/lease SQL and run mark_stale against a staging DB",
     provider: { id: "grok", model: "grok-4" },
     ...overrides,
   };
@@ -46,6 +54,27 @@ describe("execution result contract", () => {
       baseResult({ status: "DONE" as unknown as AgentExecutionResult["status"] }),
     );
     expect(issues.some((i) => i.code === "SILENT_DONE")).toBe(true);
+  });
+
+  it("rejects ACCEPTED / INTEGRATED / REVIEW as provider outcomes", () => {
+    for (const status of ["ACCEPTED", "INTEGRATED", "REVIEW"] as const) {
+      const issues = validateExecutionResult(
+        baseResult({ status: status as unknown as AgentExecutionResult["status"] }),
+      );
+      expect(issues.some((i) => i.code === "SILENT_DONE")).toBe(true);
+    }
+  });
+
+  it("rejects CHANGES_REQUESTED as a provider execution outcome", () => {
+    const issues = validateExecutionResult(baseResult({ status: "CHANGES_REQUESTED" }));
+    expect(issues.some((i) => i.code === "FORBIDDEN_OUTCOME")).toBe(true);
+  });
+
+  it("rejects provider nominating itself as reviewer", () => {
+    const issues = validateExecutionResult(
+      baseResult({ proposedReviewer: "grok", provider: { id: "grok" } }),
+    );
+    expect(issues.some((i) => i.code === "SELF_APPROVAL")).toBe(true);
   });
 
   it("rejects VERIFYING with no tests, claims, or paths", () => {
@@ -77,7 +106,9 @@ describe("execution result contract", () => {
 
   it("rejects missing handoff or next action", () => {
     expect(
-      validateExecutionResult(baseResult({ handoff: "short" })).some((i) => i.code === "MISSING_HANDOFF"),
+      validateExecutionResult(baseResult({ handoff: "short" })).some(
+        (i) => i.code === "MISSING_HANDOFF",
+      ),
     ).toBe(true);
     expect(
       validateExecutionResult(baseResult({ recommendedNextAction: "" })).some(

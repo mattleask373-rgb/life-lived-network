@@ -1,53 +1,43 @@
-# Agent System Status — 2026-10-07 (Grok audit pass)
+# Agent System Status — 2026-10-07 (Grok hour 2)
 
 ## CURRENT QUEUE
 
 - **P0:** restore/verify the canonical `src/lib/supply-engine.ts` implementation before any discovery work is treated as healthy.
-- **LW-20261007-001:** Provider-neutral orchestration control plane — IN PROGRESS (claim/lease hardened; provider registry + execution contract added).
+- **LW-20261007-001:** Provider-neutral orchestration control plane — IN PROGRESS.
 
 ## ACTIVE
 
-- Owner: Grok (adversarial review + implementation) after ChatGPT Phase A ingress
+- Owner: Grok (hour 2: authoritative state machine + guarded transitions)
 - Task: LW-20261007-001
 - Branch: `agent/orchestrator/LW-20261007-001-provider-neutral`
-- Scope this pass:
-  - adversarial review of claim/lease/heartbeat
-  - status domain alignment with STATE-MACHINE.md
-  - STALE + reclaim recovery path
-  - sliding-lease heartbeat
-  - provider-neutral selection policy (no hard-coded provider dependency)
-  - execution evidence contract (no silent "done")
-  - pure unit tests for lease policy, provider policy, execution validation
 
-## DECISIONS
+## HOUR 2 DELIVERED
 
-- Plane is the work-control plane, not the sole inference provider.
-- Plane AI is an execution option, not an architectural dependency.
-- Claim exclusivity is atomic SQL on `status = 'READY'`.
-- Reclaim is STALE/READY only; live ownership is never overwritten.
-- Heartbeat is a sliding lease (extends `lease_expiry`).
-- Provider selection is policy-driven (`selectProvider` / `isEligibleProvider`).
-- Provider results must pass `validateExecutionResult` before acceptance into the control plane.
+1. **Authoritative state machine** — `src/lib/agent-state-machine.ts` + unit tests
+2. **Guarded durable transitions** — `transition_agent_task` SQL RPC + server wrapper
+3. **Self-approval ban** — REVIEW→ACCEPTED requires actor ≠ owner; INTEGRATED human-only
+4. **Execution contract** — rejects REVIEW/ACCEPTED/INTEGRATED/CHANGES_REQUESTED as provider outcomes; rejects self-nominated reviewer
+5. **Lease boundary tests** — exact expiry, grace ≠ permission to work, post-reclaim old owner blocked
+6. **Observability helpers** — pure `summariseTasks` for READY/CLAIMED/STALE/blocked/review counts
 
-## PROBLEMS FOUND (this pass)
+## DELIBERATELY DISABLED
 
-1. Initial claim migration status CHECK omitted STALE, IN_PROGRESS, REVIEW, etc.
-2. No mark-stale or reclaim function — recovery after crash was impossible.
-3. Heartbeat did not extend lease; tasks > lease duration silently expired.
-4. Redundant unique index on task_id for active statuses (task_id already UNIQUE).
-5. No unit tests for ownership concurrency semantics.
-6. No structured execution evidence boundary.
+- Real provider `execute()` adapters
+- Production Plane webhook connection
+- Autonomous merge to main
 
 ## REMAINING RISKS
 
-- SQL functions are SECURITY DEFINER; EXECUTE grants should be confirmed service-role-only in deployed environments.
-- Live Supabase RPC behaviour is not exercised in CI (pure policy tests only).
-- Webhook secret and service-role key must remain outside the repo.
-- Full failure-recovery matrix (provider timeout storms, review rejection loops) not yet automated.
-- Status transition API for CLAIMED → IN_PROGRESS → VERIFYING → REVIEW is not yet a single RPC surface.
+| Rank | Risk |
+|------|------|
+| P0 | Live Supabase RPC behaviour not exercised in CI |
+| P0 | EXECUTE grants on SECURITY DEFINER functions must be verified service-role-only in deployment |
+| P1 | Hour-1 CI `verify` was red; root cause not fully isolated this hour |
+| P1 | CHANGES_REQUESTED → IN_PROGRESS lease renewal semantics need staging confirmation |
+| P2 | CANCELLED transition not yet exposed as RPC |
+| P3 | Observability is pure helpers only — no live API surface for Lovable yet |
 
 ## NEXT SAFE STEP
 
-1. Human: apply migrations on a staging Supabase and smoke-test claim / dual-claim / stale / reclaim.
-2. Agent: add a thin status-transition RPC (start_work, submit_for_verify) with the same owner+lease guards.
-3. Keep execution providers disabled until the live Plane webhook is manually verified.
+1. **Human:** apply migrations through `20261007150000` on staging; smoke claim → start → verify → review (non-owner accept) → human integrate path.
+2. **Agent/CI:** restore green `verify` workflow; do not enable providers until webhook path is manually verified.
