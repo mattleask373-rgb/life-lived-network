@@ -11,12 +11,7 @@ import { isActiveOwnership } from "./agent-lease-policy";
 
 export type TaskStatus = LeaseStatus;
 
-export type TransitionActorRole =
-  | "owner"
-  | "reviewer"
-  | "system"
-  | "human"
-  | "any_agent";
+export type TransitionActorRole = "owner" | "reviewer" | "system" | "human" | "any_agent";
 
 export interface TransitionRule {
   from: TaskStatus;
