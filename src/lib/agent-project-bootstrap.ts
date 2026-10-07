@@ -59,9 +59,7 @@ export function bootstrapProject(config: ProjectBootstrapConfig): BootstrappedPr
     throw new Error("sourceOfTruthOrder is required");
   }
 
-  const enabled = new Set(
-    config.enabledRoles ?? DEFAULT_ROLE_ROSTER.map((r) => r.id),
-  );
+  const enabled = new Set(config.enabledRoles ?? DEFAULT_ROLE_ROSTER.map((r) => r.id));
   const roster = DEFAULT_ROLE_ROSTER.filter((r) => enabled.has(r.id));
 
   const requireHumanFor: RiskLevel[] =
