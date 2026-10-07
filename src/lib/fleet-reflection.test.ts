@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   createFleetReflectionFinding,
   nextBoundedReflectionActions,
@@ -20,6 +20,7 @@ const baseFinding = {
   affectedAreas: ["agent coordination", "product discovery"],
   reversible: true,
   risk: "low" as const,
+  requiresHumanGate: false,
   disposition: "investigate" as const,
   nextAction: {
     kind: "investigation" as const,
@@ -135,9 +136,7 @@ describe("fleet reflection", () => {
       timeboxHours: 24,
       findings: [baseFinding, { ...baseFinding }],
     };
-    expect(validateFleetReflectionCycle(cycle)).toContain(
-      "duplicate finding id: finding-1",
-    );
+    expect(validateFleetReflectionCycle(cycle)).toContain("duplicate finding id: finding-1");
   });
 
   it("rejects findings belonging to another cycle", () => {
