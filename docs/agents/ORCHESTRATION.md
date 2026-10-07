@@ -48,13 +48,53 @@ Plane's current developer platform provides REST API, webhooks, MCP and an agent
 
 ## Phase A implementation
 
-The repository now exposes a provider-neutral Plane ingress at:
+The repository exposes a provider-neutral Plane ingress at:
 
     POST /api/agents/plane-webhook
 
 It requires `PLANE_WEBHOOK_SECRET` and accepts the configured Plane signature header. The receiver records every accepted webhook in the durable `agent_events` ledger before dispatching, and uses the database uniqueness constraint on `event_id` as the concurrency-safe idempotency gate. Agent-ready work is normalized into `agent_tasks`.
 
 No model credentials are required at ingress. No runner is invoked yet; this boundary deliberately stops at a durable READY task.
+
+## Claim / lease (Phase A+)
+
+Durable ownership is implemented in:
+
+- `supabase/migrations/20261007133000_agent_claim_leases.sql`
+- `supabase/migrations/20261007140000_agent_claim_lease_hardening.sql`
+- `src/lib/agent-lease.server.ts`
+- `src/lib/agent-lease-policy.ts` (pure policy + tests)
+
+See CLAIM-LEASE-HEARTBEAT.md for the concurrency table.
+
+## Provider registry
+
+Providers implement a neutral interface (`src/lib/agent-provider.ts`):
+
+```
+Provider
+  id, capabilities, maxAutonomy, maxRiskWithoutHumanGate
+  costClass, reliabilityClass
+  health()
+  execute(task) → AgentExecutionResult
+  cancel?(taskId)
+```
+
+Selection is policy-driven (`selectProvider` / `isEligibleProvider`). Example descriptors exist for tests only; they are not auto-registered runners.
+
+Do not hard-code a single vendor into the control plane. Removing Plane AI credits, Grok, or OpenAI must only change throughput, not architecture.
+
+## Execution evidence contract
+
+Every runner returns a structured `AgentExecutionResult` (`src/lib/agent-execution-contract.ts`):
+
+- status is limited to VERIFYING | BLOCKED | CHANGES_REQUESTED | FAILED | PARTIAL
+- silent DONE / ACCEPTED / INTEGRATED is rejected by `validateExecutionResult`
+- VERIFYING requires evidence (tests, claims, or changed paths)
+- claims with non-unknown confidence require `supportedBy`
+- handoff and recommendedNextAction are mandatory
+
+Provider output is evidence. Independent review and human gates remain the path to ACCEPTED / INTEGRATED.
 
 ## Event model
 
@@ -104,59 +144,6 @@ The orchestrator converts a Plane work item into a normalized task envelope:
 
 The provider field is a routing decision, not part of product truth.
 
-## Provider routing
-
-provider: auto selects the least constrained eligible runner.
-
-Example policy:
-
-- L0/L1: any approved model runner.
-- L2 implementation: coding-capable runner with repository access.
-- L3 verification/review: independent runner from the implementation runner where possible.
-- P0 security / regulated / architectural change: human approval gate before execution or integration.
-- No eligible runner: leave the Plane item READY/BLOCKED; do not silently make the human become the missing automation.
-
-This is the key resilience rule: provider outage changes queue throughput, not architecture.
-
-## Agent result contract
-
-Every runner returns:
-
-    task_id: <id>
-    status: VERIFYING | BLOCKED | CHANGES_REQUESTED
-    summary: <short>
-    files_touched: []
-    decisions: []
-    tests:
-      - command: <command>
-        result: pass | fail | not-run
-        evidence: <short>
-    risks: []
-    blockers: []
-    next_safe_step: <single concrete action>
-    review_request:
-      questions: []
-    provider:
-      name: <runner>
-      model: <model-or-unknown>
-
-The result is written back to the task record/Plane and, for implementation work, the branch/PR.
-
-## Claim ownership
-
-The existing CLAIM-LEASE-HEARTBEAT.md remains canonical.
-
-The orchestrator must never infer ownership from a model conversation. A task is owned only after a durable claim exists with:
-
-- task ID
-- owner
-- lease
-- heartbeat
-- scope
-- dependencies
-- risk
-- acceptance criteria
-
 ## Failure handling
 
 ### Provider failure
@@ -178,6 +165,10 @@ The repository control plane remains usable locally/GitHub-side, but no new Plan
 ### Orchestrator unavailable
 
 Plane remains usable as the source of work state. Manual execution remains possible.
+
+### Stale ownership / worker crash
+
+`mark_stale_agent_tasks` → inspect → `reclaim_agent_task`. See CLAIM-LEASE-HEARTBEAT.md.
 
 ## Human gates
 
@@ -203,3 +194,5 @@ The orchestration layer is complete when:
 6. A different runner can independently review it.
 7. Human integration remains the final gate.
 8. Removing Plane AI credits does not stop the lifecycle.
+9. Stale ownership is recoverable without silent overwrite.
+10. Provider results cannot silently declare done without evidence.
