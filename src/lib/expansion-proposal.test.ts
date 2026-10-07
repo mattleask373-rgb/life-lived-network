@@ -103,9 +103,9 @@ describe("expansion-proposal", () => {
     expect(
       canPromoteToAccepted(proposal({ status: "proposed", epistemic: "PLAUSIBLE" })).valid,
     ).toBe(false);
-    expect(
-      canPromoteToAccepted(proposal({ status: "testing", epistemic: "UNKNOWN" })).valid,
-    ).toBe(false);
+    expect(canPromoteToAccepted(proposal({ status: "testing", epistemic: "UNKNOWN" })).valid).toBe(
+      false,
+    );
     expect(
       canPromoteToAccepted(
         proposal({ status: "testing", epistemic: "PLAUSIBLE", resultingTaskId: "task-3" }),
@@ -115,9 +115,7 @@ describe("expansion-proposal", () => {
 
   test("rejects malformed evidence", () => {
     expect(
-      validateExpansionProposal(
-        proposal({ evidence: [{ id: "", source: "x" }] as never }),
-      ).valid,
+      validateExpansionProposal(proposal({ evidence: [{ id: "", source: "x" }] as never })).valid,
     ).toBe(false);
   });
 
