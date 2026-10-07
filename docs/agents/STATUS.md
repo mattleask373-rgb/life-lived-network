@@ -1,46 +1,42 @@
-# Agent System Status — 2026-10-07 (Grok hour 3)
+# Agent System Status — 2026-10-07 (Hour 4 — Team OS)
 
-## CURRENT QUEUE
+## NORTH STAR
 
-- **P0:** restore/verify the canonical `src/lib/supply-engine.ts` implementation before any discovery work is treated as healthy.
-- **LW-20261007-001:** Provider-neutral orchestration control plane — IN PROGRESS.
+Reusable **AI development company operating system**:
+Project A/B/C → configure → same specialist team operates under bounded autonomy + human gates.
 
-## ACTIVE
+## HOUR 4 DELIVERED (IMPLEMENTED)
 
-- Owner: Grok (hour 3: make control plane provable)
-- Collaborator: ChatGPT / Head Manager mission on PR #61
-- Branch: `agent/orchestrator/LW-20261007-001-provider-neutral`
-
-## HOUR 3 DELIVERED
-
-1. **SECURITY DEFINER EXECUTE** — migration `20261007160000` REVOKE PUBLIC/anon/authenticated, GRANT service_role
-2. **CANCELLED** — guarded transitions in SQL + `LEGAL_TRANSITIONS` (owner for active work; human for queue/side states)
-3. **DONE policy** — explicit rejection as transition destination (legacy CHECK only)
-4. **Concurrency matrix** — pure tests for claim/reclaim/heartbeat/self-approval/human gate
-5. **Lint hygiene** — removed non-null assertion in `selectProvider`
+| Artifact | Path |
+|----------|------|
+| Role roster | `src/lib/agent-role-contract.ts` |
+| Agent factory | `src/lib/agent-factory.ts` |
+| Project bootstrap | `src/lib/agent-project-bootstrap.ts` |
+| Research boundary | `src/lib/agent-research-contract.ts` |
+| Work routing | `src/lib/agent-work-routing.ts` |
+| Tests | `src/lib/agent-team-os.test.ts` |
+| Docs | `TEAM-OPERATING-SYSTEM.md`, `PROJECT-BOOTSTRAP.md`, `TEAM-ROLES.md` |
 
 ## VERIFIED / NOT VERIFIED / BLOCKED
 
 | Item | Status |
 |------|--------|
-| Pure state-machine policy tests exist | VERIFIED (in repo) |
-| Self-approval forbidden in TS + SQL | VERIFIED (in repo) |
-| Human-only INTEGRATED | VERIFIED (in repo) |
-| Least-privilege EXECUTE in migration | VERIFIED (in repo text) |
-| Live Supabase RPC behaviour | **NOT VERIFIED** |
-| Deployed role grants match migration | **NOT VERIFIED** |
-| CI `verify` green | **BLOCKED** (lint still failing; exact prettier rule/file not isolated from job logs) |
-| Provider execute adapters | **DISABLED** (intentional) |
-| Production Plane webhook | **DISABLED** (intentional) |
+| CI green on Head Manager head `2e9f873` | VERIFIED (reported by Head Manager; Verify #200) |
+| Pure control-plane + team OS unit tests in repo | IMPLEMENTED (must re-run CI on latest head) |
+| Team OS role/factory/bootstrap/routing/research modules | IMPLEMENTED |
+| Live Supabase RPC / deployed EXECUTE grants | NOT VERIFIED |
+| Provider execute adapters | BLOCKED BY POLICY (disabled) |
+| Production Plane webhook | BLOCKED BY POLICY (disabled) |
+| Multi-project production use | NOT VERIFIED |
 
 ## DELIBERATELY DISABLED
 
-- Real provider `execute()` adapters
-- Production Plane webhook connection
-- Autonomous merge to main
+- Provider `execute()`
+- Production Plane webhook
+- Autonomous main merge
 
 ## NEXT SAFE STEP
 
-1. **Anyone with CI log access:** open the failing `bun run lint` step and paste the first prettier/eslint file path; apply format-only fix.
-2. **Human:** apply migrations through `20261007160000` on staging; smoke claim → transition → non-owner ACCEPTED → human INTEGRATED; confirm `service_role` only can EXECUTE agent RPCs.
-3. Keep providers and production webhook off until (1) and (2) pass.
+1. CI on latest hour-4 head (format/lint if needed).
+2. Human staging smoke of lifecycle path.
+3. Optionally bootstrap a second project config fixture to prove Project B pattern.
