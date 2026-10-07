@@ -11,7 +11,7 @@ const JSON_HEADERS = { "content-type": "application/json" };
 
 function taskIdFor(event: PlaneWebhookEnvelope): string {
   const compact = new Date().toISOString().slice(0, 10).replaceAll("-", "");
-  return \`LW-${compact}-${event.entity_id.slice(0, 8).toUpperCase()}\`;
+  return `LW-${compact}-${event.event_id.slice(0, 12).toUpperCase()}`;
 }
 
 export const Route = createFileRoute("/api/agents/plane-webhook")({
