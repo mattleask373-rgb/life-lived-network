@@ -53,7 +53,8 @@ export function validateResearchFinding(finding: ResearchFinding): ResearchValid
   if (finding.isProductRequirement && finding.confidence !== "KNOWN") {
     issues.push({
       code: "PROMOTED_WITHOUT_KNOWN",
-      message: "only KNOWN findings may be marked isProductRequirement (and still need product decision)",
+      message:
+        "only KNOWN findings may be marked isProductRequirement (and still need product decision)",
     });
   }
   if (finding.confidence === "UNKNOWN" && finding.isProductRequirement) {
