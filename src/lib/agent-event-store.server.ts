@@ -35,10 +35,10 @@ export async function hasAgentEvent(eventId: string): Promise<boolean> {
 export async function recordAgentEvent(input: {
   eventId: string; deliveryId: string; webhookId: string; eventType: string;
   entityId: string; workspaceId: string; payload: unknown;
-}): Promise<void> {
+}): Promise<boolean> {
   const response = await rest("agent_events", {
     method: "POST",
-    headers: { Prefer: "resolution=ignore-duplicates,return=minimal" },
+    headers: { Prefer: "resolution=ignore-duplicates,return=representation" },
     body: JSON.stringify({
       event_id: input.eventId, delivery_id: input.deliveryId, webhook_id: input.webhookId,
       event_type: input.eventType, entity_id: input.entityId, workspace_id: input.workspaceId,
@@ -46,6 +46,8 @@ export async function recordAgentEvent(input: {
     }),
   });
   await assertOk(response);
+  const rows = (await response.json()) as SupabaseRow[];
+  return rows.length > 0;
 }
 
 export async function recordNormalizedAgentTask(task: unknown, eventId: string): Promise<void> {
