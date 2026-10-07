@@ -1,13 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export type AgentLane =
-  | "PRODUCT"
-  | "ARCHITECTURE"
-  | "IMPLEMENTATION"
-  | "QA"
-  | "SECURITY"
-  | "REVIEW";
-
+export type AgentLane = "PRODUCT" | "ARCHITECTURE" | "IMPLEMENTATION" | "QA" | "SECURITY" | "REVIEW";
 export type AutonomyLevel = "L0" | "L1" | "L2" | "L3" | "L4";
 export type RiskLevel = "P0" | "P1" | "P2" | "P3";
 
@@ -110,10 +103,7 @@ export function riskFromTask(data: PlaneTaskData): RiskLevel {
   return RISK_BY_PRIORITY[data.priority?.toLowerCase() ?? "none"] ?? "P3";
 }
 
-export function normalizePlaneTask(
-  event: PlaneWebhookEnvelope,
-  taskId: string,
-): AgentTaskEnvelope {
+export function normalizePlaneTask(event: PlaneWebhookEnvelope, taskId: string): AgentTaskEnvelope {
   const data = event.data as PlaneTaskData;
   const objective = data.description?.trim() || data.name?.trim();
 
