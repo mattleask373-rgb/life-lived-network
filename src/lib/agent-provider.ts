@@ -103,10 +103,16 @@ export function selectProvider(
   const eligible = candidates.filter((p) => isEligibleProvider(p, task, policy).eligible);
   if (eligible.length === 0) return null;
 
+  // Human is the explicit gate/fallback, not the default automated runner.
+  // If a non-human provider is eligible, prefer it unless policy requires human.
+  const humanRequired = policy.requireHumanFor.includes(task.risk);
+  const nonHumanEligible = eligible.filter((p) => p.id !== "human");
+  const routingPool = !humanRequired && nonHumanEligible.length > 0 ? nonHumanEligible : eligible;
+
   const reliabilityOrder = { preferred: 0, standard: 1, experimental: 2 } as const;
   const costOrder = { free: 0, low: 1, medium: 2, high: 3, human: 4 } as const;
 
-  return [...eligible].sort((a, b) => {
+  return [...routingPool].sort((a, b) => {
     const r = reliabilityOrder[a.reliabilityClass] - reliabilityOrder[b.reliabilityClass];
     if (r !== 0) return r;
     return costOrder[a.costClass] - costOrder[b.costClass];
