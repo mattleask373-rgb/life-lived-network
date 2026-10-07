@@ -127,9 +127,7 @@ describe("claim / lease / heartbeat", () => {
     expect(claimed.claim!.owner).toBe("grok");
     expect(claimed.claim!.lease_start).toBe(now.toISOString());
     expect(claimed.claim!.last_heartbeat).toBe(now.toISOString());
-    expect(new Date(claimed.claim!.lease_expiry).getTime()).toBeGreaterThan(
-      now.getTime(),
-    );
+    expect(new Date(claimed.claim!.lease_expiry).getTime()).toBeGreaterThan(now.getTime());
     expect(claimed.claim!.branch).toContain("LW-20261007-002");
   });
 
