@@ -12,7 +12,9 @@ describe("authoritative state machine", () => {
     const owner = "grok";
     const base = { actorId: owner, owner, leaseValid: true };
 
-    expect(evaluateTransition({ ...base, from: "CLAIMED", to: "IN_PROGRESS" }).allowed).toBe(true);
+    expect(
+      evaluateTransition({ ...base, from: "CLAIMED", to: "IN_PROGRESS" }).allowed,
+    ).toBe(true);
     expect(evaluateTransition({ ...base, from: "IN_PROGRESS", to: "VERIFYING" }).allowed).toBe(true);
     expect(evaluateTransition({ ...base, from: "VERIFYING", to: "REVIEW" }).allowed).toBe(true);
   });
@@ -164,7 +166,13 @@ describe("authoritative state machine", () => {
   });
 
   it("provider outcomes never map to ACCEPTED or INTEGRATED", () => {
-    for (const outcome of ["VERIFYING", "BLOCKED", "CHANGES_REQUESTED", "FAILED", "PARTIAL"] as const) {
+    for (const outcome of [
+      "VERIFYING",
+      "BLOCKED",
+      "CHANGES_REQUESTED",
+      "FAILED",
+      "PARTIAL",
+    ] as const) {
       const dest = providerOutcomeToTransition(outcome, "IN_PROGRESS");
       expect(dest).not.toBe("ACCEPTED");
       expect(dest).not.toBe("INTEGRATED");
