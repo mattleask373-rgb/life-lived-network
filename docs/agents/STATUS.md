@@ -1,33 +1,51 @@
-# Agent System Status — 2026-10-06 (post front-door)
+# Agent System Status — 2026-10-07 (Hour 5 — Company OS)
 
-## CURRENT QUEUE
-- **P0 BLOCKER:** `src/lib/supply-engine.ts` on main is still a temporary stub (throws). Full hardened engine exists locally / in artifacts — must be restored via normal git push before any discovery path works.
-- LW-20261006-003 — Possibility Front Door (this cycle) — landed on main
+## NORTH STAR
 
-## ACTIVE / COMPLETED THIS CYCLE
-- Owner: Grok
-- Task: Possibility Front Door
-- Status: INTEGRATED on main (intent lib + UI + homepage + tests)
+**AI company in a box:** configure project → activate specialist team → continuous discover/build/verify/learn under bounded autonomy + human gates.
 
-## WHAT LANDED ON MAIN
-- `src/lib/possibility-intent.ts` — deterministic NEED/HELP/GIVE/JOURNEY router
-- `src/lib/possibility-intent.test.ts`
-- `src/components/possibility-front-door.tsx`
-- `src/routes/index.tsx` — mounts front door after PlacePicker
+## HOUR 5 IMPLEMENTED
 
-## WHAT DID NOT LAND
-- Full supply-engine restore (tool payload limit); local file ready at artifacts/supply-engine-restore.ts
-- Adversarial supply-engine.eval.test.ts (local only)
-- .env untrack (local staged only)
+| Module | Purpose |
+|--------|---------|
+| `agent-capability-registry.ts` | Role ≠ capability ≠ permission ≠ provider |
+| `agent-lifecycle.ts` | Agent instance lifecycle + health |
+| `agent-opportunity.ts` | SIGNAL→…→DECISION pipeline |
+| `agent-work-generator.ts` | CandidateWork (never auto-requirement) |
+| `agent-human-attention.ts` | Human offline decision queue |
+| `agent-provider-degradation.ts` | Failure policy without retry storms |
+| `agent-priority.ts` | Priority scoring; never waives safety |
+| `agent-org-memory.ts` | Durable knowledge vs chat |
+| `agent-evaluation-schema.ts` | Metrics schema (no fabricated data) |
+| `agent-company-os.test.ts` | Pure organisational tests |
+| `PROJECT-ISOLATION.md` | Cross-project boundary |
 
-## NEXT
-1. **P0** Restore full `supply-engine.ts` from commit `3d9896e` + hardening (selectCapability + regulated flags)
-2. Run vitest for possibility-intent + supply-engine
-3. ChatGPT review of front-door routing assumptions
-4. Structured intent progressive questioning (confirm before act)
-5. Possibility card explanation UX
+## VERIFIED / NOT VERIFIED / BLOCKED
 
-## METRICS
-- Front-door files on main: 4
-- Second matching engine created: **no**
-- Autonomous merge: **no**
+| Item | Status |
+|------|--------|
+| Hour-5 pure modules + tests in repo | **IMPLEMENTED** |
+| CI on latest head | **NOT VERIFIED** (recent Verify runs failing — likely lint; needs isolation) |
+| Head Manager green head `2e9f873` | **VERIFIED** (historical) |
+| Live Supabase / multi-project tenancy | **NOT VERIFIED** |
+| Provider execute / prod webhook | **BLOCKED BY POLICY** |
+| Fabricated metrics | **FORBIDDEN** (schema only) |
+
+## DELIBERATELY DISABLED
+
+- Provider `execute()`
+- Production Plane webhook
+- Autonomous main merge
+
+## NEXT HIGHEST-VALUE WORK
+
+1. Restore CI green on current head (format/lint).
+2. Wire `projectId` into durable `agent_tasks` rows (migration + normaliser) — human-approved schema change.
+3. Staging smoke of claim lifecycle.
+4. Optional: adversarial role roster entries (red_team, skeptic) via factory.
+5. Mission Control read model for Lovable (consume pure summaries only).
+
+## SUGGESTED NEXT SPECIALIST
+
+- **ChatGPT / QA:** CI isolation + adversarial review of hour-5 contracts.
+- **Human:** staging smoke + decide when to persist opportunities/memory in Supabase.
