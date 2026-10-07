@@ -8,7 +8,8 @@
 import type { AgentTaskEnvelope, AutonomyLevel, RiskLevel } from "./agent-orchestration";
 import type { AgentExecutionResult } from "./agent-execution-contract";
 
-export type ProviderCapability = "implementation" | "review" | "research" | "security_audit" | "qa" | "human_judgment";
+export type ProviderCapability =
+  "implementation" | "review" | "research" | "security_audit" | "qa" | "human_judgment";
 
 export type ProviderHealthStatus = "available" | "degraded" | "unavailable" | "unknown";
 
