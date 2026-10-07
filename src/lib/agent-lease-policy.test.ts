@@ -72,8 +72,7 @@ describe("agent lease policy", () => {
     const leaseExpiry = new Date("2026-10-07T16:00:00.000Z");
     const lastHeartbeat = new Date("2026-10-07T15:00:00.000Z");
     const now = new Date(lastHeartbeat.getTime() + DEFAULT_HEARTBEAT_GRACE_MS + 60_000);
-    const decision = evaluateStale(
-      snap({ status: "CLAIMED", leaseExpiry, lastHeartbeat }), now);
+    const decision = evaluateStale(snap({ status: "CLAIMED", leaseExpiry, lastHeartbeat }), now);
     expect(decision.isStale).toBe(true);
     expect(decision.reason).toMatch(/lease expired and heartbeat grace/);
   });
