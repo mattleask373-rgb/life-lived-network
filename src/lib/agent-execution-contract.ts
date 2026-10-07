@@ -6,7 +6,8 @@
  * See docs/agents/ORCHESTRATION.md and HANDOFF.md.
  */
 
-export type ExecutionOutcomeStatus = "VERIFYING" | "BLOCKED" | "CHANGES_REQUESTED" | "FAILED" | "PARTIAL";
+export type ExecutionOutcomeStatus =
+  "VERIFYING" | "BLOCKED" | "CHANGES_REQUESTED" | "FAILED" | "PARTIAL";
 
 export type TestResultStatus = "pass" | "fail" | "not-run" | "error";
 
@@ -98,8 +99,7 @@ export function validateExecutionResult(result: AgentExecutionResult): Execution
   if (statusUpper === "CHANGES_REQUESTED") {
     issues.push({
       code: "FORBIDDEN_OUTCOME",
-      message:
-        "CHANGES_REQUESTED is a reviewer transition, not a provider execution outcome",
+      message: "CHANGES_REQUESTED is a reviewer transition, not a provider execution outcome",
     });
   }
 
