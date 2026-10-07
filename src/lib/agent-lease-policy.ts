@@ -37,6 +37,8 @@ export interface LeaseSnapshot {
   owner: string | null;
   leaseExpiry: Date | null;
   lastHeartbeat: Date | null;
+  leaseGeneration: number;
+  leaseToken: string | null;
 }
 
 export interface StaleDecision {
@@ -156,4 +158,26 @@ export function canRelease(
     return { ok: false, reason: `status ${snapshot.status} cannot be released` };
   }
   return { ok: true, reason: "release accepted" };
+}
+
+
+/** Every owner mutation must present the exact current fencing generation and token. */
+export function canFence(
+  snapshot: LeaseSnapshot,
+  requestedGeneration: number,
+  requestedToken: string,
+): { ok: boolean; reason: string } {
+  if (!Number.isSafeInteger(requestedGeneration) || requestedGeneration < 1) {
+    return { ok: false, reason: "lease generation is required" };
+  }
+  if (!requestedToken || requestedToken.trim() === "") {
+    return { ok: false, reason: "lease token is required" };
+  }
+  if (snapshot.leaseGeneration !== requestedGeneration) {
+    return { ok: false, reason: "lease generation mismatch" };
+  }
+  if (snapshot.leaseToken !== requestedToken) {
+    return { ok: false, reason: "lease token mismatch" };
+  }
+  return { ok: true, reason: "lease fence accepted" };
 }
