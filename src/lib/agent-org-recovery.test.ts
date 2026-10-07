@@ -14,10 +14,7 @@ import {
   selectProvider,
   type ProviderSelectionPolicy,
 } from "./agent-provider";
-import {
-  isAcceptableExecutionResult,
-  type AgentExecutionResult,
-} from "./agent-execution-contract";
+import { isAcceptableExecutionResult, type AgentExecutionResult } from "./agent-execution-contract";
 
 /**
  * Priority 6 — test the organisation itself.
