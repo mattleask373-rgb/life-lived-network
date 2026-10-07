@@ -37,10 +37,7 @@ export interface OpportunityRecord {
   createdByRole: string;
 }
 
-export function canAdvanceOpportunity(
-  from: OpportunityStage,
-  to: OpportunityStage,
-): boolean {
+export function canAdvanceOpportunity(from: OpportunityStage, to: OpportunityStage): boolean {
   const order: OpportunityStage[] = [
     "SIGNAL",
     "HYPOTHESIS",
@@ -75,7 +72,10 @@ export function canSpawnTaskFromOpportunity(opp: OpportunityRecord): {
     return { ok: false, reason: "confidence too weak to spawn implementation" };
   }
   if (opp.confidence === "INFERRED" && opp.domain !== "engineering") {
-    return { ok: false, reason: "INFERRED non-engineering needs product acceptance as KNOWN path" };
+    return {
+      ok: false,
+      reason: "INFERRED non-engineering needs product acceptance as KNOWN path",
+    };
   }
   return { ok: true, reason: "eligible to spawn candidate task" };
 }
