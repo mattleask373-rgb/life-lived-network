@@ -16,9 +16,9 @@ It does not execute product changes, claim tasks, merge pull requests, deploy, m
 
 ## Why this exists
 
-The 24/7 constitution needs a heartbeat before it needs autonomy. GitHub Actions supports scheduled workflows, including schedules as short as every five minutes; this sentinel deliberately uses a 15-minute cadence and an offset from the top of the hour to reduce schedule-load collisions. citeturn1search0turn1search2
+The 24/7 constitution needs a heartbeat before it needs autonomy. GitHub Actions supports scheduled workflows, including schedules as short as every five minutes; this sentinel deliberately uses a 15-minute cadence and an offset from the top of the hour to reduce schedule-load collisions.
 
-The workflow uses read-only permissions. GitHub recommends granting `GITHUB_TOKEN` only the minimum permissions a workflow needs. citeturn2search0turn2search1
+The workflow uses read-only permissions. GitHub recommends granting `GITHUB_TOKEN` only the minimum permissions a workflow needs.
 
 ## Evidence boundary
 
