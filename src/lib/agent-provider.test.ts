@@ -41,6 +41,36 @@ describe("provider registry policy", () => {
     expect(grok.reason).toMatch(/human gate/);
   });
 
+
+  it("rejects a provider that lacks the lane capability", () => {
+    const provider = {
+      ...EXAMPLE_PROVIDER_DESCRIPTORS.find((p) => p.id === "plane_ai")!,
+      capabilities: ["research"] as const,
+    };
+    const decision = isEligibleProvider(
+      provider,
+      { autonomy: "L2", risk: "P2", lane: "IMPLEMENTATION" },
+      defaultPolicy,
+    );
+    expect(decision.eligible).toBe(false);
+    expect(decision.reason).toMatch(/lacks required capability implementation/);
+  });
+
+  it("requires the actual human provider for a human-gated risk", () => {
+    const disguised = {
+      ...EXAMPLE_PROVIDER_DESCRIPTORS.find((p) => p.id === "grok")!,
+      id: "trusted-non-human",
+      maxRiskWithoutHumanGate: "P0" as const,
+    };
+    const decision = isEligibleProvider(
+      disguised,
+      { autonomy: "L2", risk: "P0", lane: "REVIEW" },
+      defaultPolicy,
+    );
+    expect(decision.eligible).toBe(false);
+    expect(decision.reason).toMatch(/not the human provider/);
+  });
+
   it("excludes providers listed in policy", () => {
     const selected = selectProvider(
       EXAMPLE_PROVIDER_DESCRIPTORS,
