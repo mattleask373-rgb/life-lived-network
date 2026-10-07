@@ -126,10 +126,7 @@ export function validateHumanApproval(
   if (!nonEmpty(value.issuedAt)) errors.push("issuedAt is required");
   if (!nonEmpty(value.expiresAt)) errors.push("expiresAt is required");
 
-  if (
-    nonEmpty(value.workspaceId) &&
-    value.workspaceId !== request.identity.workspaceId
-  ) {
+  if (nonEmpty(value.workspaceId) && value.workspaceId !== request.identity.workspaceId) {
     errors.push("approval workspace does not match action workspace");
   }
   if (nonEmpty(value.projectId) && value.projectId !== request.identity.projectId) {
@@ -161,10 +158,7 @@ export function validateHumanApproval(
   return { valid: errors.length === 0, errors };
 }
 
-export function validateAgentActionRequest(
-  request: unknown,
-  now = new Date(),
-): IdentityValidation {
+export function validateAgentActionRequest(request: unknown, now = new Date()): IdentityValidation {
   const errors: string[] = [];
   if (!request || typeof request !== "object") {
     return { valid: false, errors: ["request must be an object"] };
@@ -193,9 +187,7 @@ export function validateAgentActionRequest(
     if (!value.approval) {
       errors.push("human approval is required for this action");
     } else {
-      errors.push(
-        ...validateHumanApproval(value.approval, value, now).errors,
-      );
+      errors.push(...validateHumanApproval(value.approval, value, now).errors);
     }
   }
 
