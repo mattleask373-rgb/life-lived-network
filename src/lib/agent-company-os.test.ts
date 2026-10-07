@@ -6,16 +6,8 @@ import {
   resolvePermissions,
 } from "./agent-capability-registry";
 import { emptyCounters, successRate } from "./agent-evaluation-schema";
-import {
-  buildAttentionItem,
-  isOfflineSafe,
-  mustQueueForHuman,
-} from "./agent-human-attention";
-import {
-  canTransitionLifecycle,
-  evaluateHealth,
-  shouldSuspendRouting,
-} from "./agent-lifecycle";
+import { buildAttentionItem, isOfflineSafe, mustQueueForHuman } from "./agent-human-attention";
+import { canTransitionLifecycle, evaluateHealth, shouldSuspendRouting } from "./agent-lifecycle";
 import { createMemoryRecord, isAuthoritativeMemory } from "./agent-org-memory";
 import {
   canAdvanceOpportunity,
@@ -24,14 +16,8 @@ import {
 } from "./agent-opportunity";
 import { nextDegradationAction } from "./agent-provider-degradation";
 import { priorityWaivesSafetyGates, scorePriority } from "./agent-priority";
-import {
-  bootstrapProject,
-  LIFE_LIVED_BOOTSTRAP_EXAMPLE,
-} from "./agent-project-bootstrap";
-import {
-  generateCandidateWork,
-  promoteCandidateToRequirement,
-} from "./agent-work-generator";
+import { bootstrapProject, LIFE_LIVED_BOOTSTRAP_EXAMPLE } from "./agent-project-bootstrap";
+import { generateCandidateWork, promoteCandidateToRequirement } from "./agent-work-generator";
 
 describe("capability registry", () => {
   it("never allows merge_main via capability resolution", () => {
