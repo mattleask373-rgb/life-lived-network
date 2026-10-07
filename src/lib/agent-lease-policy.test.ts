@@ -5,6 +5,7 @@ import {
   canHeartbeat,
   canReclaim,
   canRelease,
+  canFence,
   DEFAULT_HEARTBEAT_GRACE_MS,
   evaluateStale,
   isActiveOwnership,
@@ -176,5 +177,30 @@ describe("agent lease policy", () => {
 
     expect(evaluateStale(row, now).isStale).toBe(false);
     expect(canHeartbeat(row, "grok", now).ok).toBe(false);
+  });
+});
+
+
+describe("lease fencing", () => {
+  const fenced = snap({
+    status: "IN_PROGRESS",
+    owner: "agent-a",
+    leaseGeneration: 1,
+    leaseToken: "token-a",
+  });
+
+  it("accepts the exact current generation and token", () => {
+    expect(canFence(fenced, 1, "token-a").ok).toBe(true);
+  });
+
+  it("rejects an old generation after reclaim", () => {
+    const reclaimed = { ...fenced, owner: "agent-b", leaseGeneration: 2, leaseToken: "token-b" };
+    expect(canFence(reclaimed, 1, "token-a").ok).toBe(false);
+    expect(canFence(reclaimed, 1, "token-a").reason).toMatch(/generation mismatch/);
+  });
+
+  it("rejects a stale token even when generation matches", () => {
+    expect(canFence(fenced, 1, "token-b").ok).toBe(false);
+    expect(canFence(fenced, 1, "token-b").reason).toMatch(/token mismatch/);
   });
 });
