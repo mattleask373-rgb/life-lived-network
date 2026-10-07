@@ -222,7 +222,7 @@ export function toProgrammeStateUpdate(
   if (!nonEmpty(stateId) || changed.length === 0 || !nonEmpty(reason)) {
     throw new Error("state update requires state, changed fields and reason");
   }
-  if (!nonEmpty(at) || Number.isNaN(Date.parse(at))
+  if (!nonEmpty(at) || Number.isNaN(Date.parse(at)))
     throw new Error("state update requires a valid timestamp");
   return { stateId, at, changed, reason, evidence: result.evidence, epistemic: result.epistemic };
 }
