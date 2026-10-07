@@ -15,11 +15,7 @@ export type ProviderFailureKind =
   | "cost_exceeded"
   | "unreliable";
 
-export type DegradationAction =
-  | "retry_once"
-  | "alternate_provider"
-  | "human_fallback"
-  | "blocked";
+export type DegradationAction = "retry_once" | "alternate_provider" | "human_fallback" | "blocked";
 
 export interface FailureContext {
   kind: ProviderFailureKind;
