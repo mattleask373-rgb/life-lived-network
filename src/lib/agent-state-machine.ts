@@ -24,6 +24,11 @@ export interface TransitionRule {
   actor: TransitionActorRole;
   /** Require matching owner + valid lease (lease_expiry > now). */
   requiresLiveLease: boolean;
+  /**
+   * When true, SQL renews lease_start/expiry/heartbeat on success
+   * (used for CHANGES_REQUESTED → IN_PROGRESS after review lag).
+   */
+  renewsLease: boolean;
   /** Human-readable evidence expectation (enforced at policy level). */
   evidenceHint: string;
   /** If true, actor identity must not equal task.owner. */
@@ -36,12 +41,12 @@ export interface TransitionRule {
  * this table covers status progression and exceptional paths.
  */
 export const LEGAL_TRANSITIONS: readonly TransitionRule[] = [
-  // Happy path
   {
     from: "CLAIMED",
     to: "IN_PROGRESS",
     actor: "owner",
     requiresLiveLease: true,
+    renewsLease: false,
     evidenceHint: "branch or files touched",
     forbidSelfApproval: false,
   },
@@ -50,6 +55,7 @@ export const LEGAL_TRANSITIONS: readonly TransitionRule[] = [
     to: "VERIFYING",
     actor: "owner",
     requiresLiveLease: true,
+    renewsLease: false,
     evidenceHint: "handoff draft + tests intended",
     forbidSelfApproval: false,
   },
@@ -58,6 +64,7 @@ export const LEGAL_TRANSITIONS: readonly TransitionRule[] = [
     to: "REVIEW",
     actor: "owner",
     requiresLiveLease: true,
+    renewsLease: false,
     evidenceHint: "test/lint/build results",
     forbidSelfApproval: false,
   },
@@ -66,6 +73,7 @@ export const LEGAL_TRANSITIONS: readonly TransitionRule[] = [
     to: "ACCEPTED",
     actor: "reviewer",
     requiresLiveLease: false,
+    renewsLease: false,
     evidenceHint: "review notes + checklist",
     forbidSelfApproval: true,
   },
@@ -74,6 +82,7 @@ export const LEGAL_TRANSITIONS: readonly TransitionRule[] = [
     to: "CHANGES_REQUESTED",
     actor: "reviewer",
     requiresLiveLease: false,
+    renewsLease: false,
     evidenceHint: "specific findings",
     forbidSelfApproval: true,
   },
@@ -81,7 +90,8 @@ export const LEGAL_TRANSITIONS: readonly TransitionRule[] = [
     from: "CHANGES_REQUESTED",
     to: "IN_PROGRESS",
     actor: "owner",
-    requiresLiveLease: true,
+    requiresLiveLease: false,
+    renewsLease: true,
     evidenceHint: "response to findings",
     forbidSelfApproval: false,
   },
@@ -90,16 +100,16 @@ export const LEGAL_TRANSITIONS: readonly TransitionRule[] = [
     to: "INTEGRATED",
     actor: "human",
     requiresLiveLease: false,
+    renewsLease: false,
     evidenceHint: "merge evidence",
     forbidSelfApproval: false,
   },
-
-  // Block paths (from active ownership)
   {
     from: "CLAIMED",
     to: "BLOCKED",
     actor: "owner",
     requiresLiveLease: true,
+    renewsLease: false,
     evidenceHint: "blocker template",
     forbidSelfApproval: false,
   },
@@ -108,6 +118,7 @@ export const LEGAL_TRANSITIONS: readonly TransitionRule[] = [
     to: "BLOCKED",
     actor: "owner",
     requiresLiveLease: true,
+    renewsLease: false,
     evidenceHint: "blocker template",
     forbidSelfApproval: false,
   },
@@ -116,26 +127,25 @@ export const LEGAL_TRANSITIONS: readonly TransitionRule[] = [
     to: "BLOCKED",
     actor: "owner",
     requiresLiveLease: true,
+    renewsLease: false,
     evidenceHint: "blocker template",
     forbidSelfApproval: false,
   },
-
-  // Unblock back to READY for re-queue (owner or system after inspection)
   {
     from: "BLOCKED",
     to: "READY",
     actor: "any_agent",
     requiresLiveLease: false,
+    renewsLease: false,
     evidenceHint: "blocker cleared",
     forbidSelfApproval: false,
   },
-
-  // STALE is primarily via mark_stale_agent_tasks; explicit system transition allowed
   {
     from: "CLAIMED",
     to: "STALE",
     actor: "system",
     requiresLiveLease: false,
+    renewsLease: false,
     evidenceHint: "lease expiry + heartbeat grace",
     forbidSelfApproval: false,
   },
@@ -144,6 +154,7 @@ export const LEGAL_TRANSITIONS: readonly TransitionRule[] = [
     to: "STALE",
     actor: "system",
     requiresLiveLease: false,
+    renewsLease: false,
     evidenceHint: "lease expiry + heartbeat grace",
     forbidSelfApproval: false,
   },
@@ -152,16 +163,16 @@ export const LEGAL_TRANSITIONS: readonly TransitionRule[] = [
     to: "STALE",
     actor: "system",
     requiresLiveLease: false,
+    renewsLease: false,
     evidenceHint: "lease expiry + heartbeat grace",
     forbidSelfApproval: false,
   },
-
-  // Abandon after recovery inspection
   {
     from: "STALE",
     to: "ABANDONED",
     actor: "any_agent",
     requiresLiveLease: false,
+    renewsLease: false,
     evidenceHint: "inspection notes",
     forbidSelfApproval: false,
   },
@@ -170,6 +181,7 @@ export const LEGAL_TRANSITIONS: readonly TransitionRule[] = [
     to: "READY",
     actor: "any_agent",
     requiresLiveLease: false,
+    renewsLease: false,
     evidenceHint: "re-open decision",
     forbidSelfApproval: false,
   },
@@ -215,7 +227,6 @@ function roleMatches(
           reason: "self-approval forbidden: implementer cannot accept own work",
         };
       }
-      // Reviewer identity is recorded separately; any non-owner agent/human may review.
       return { ok: true, reason: "independent reviewer" };
     }
     case "human":
@@ -257,22 +268,12 @@ export function evaluateTransition(req: TransitionRequest): TransitionDecision {
     return { allowed: false, reason: role.reason, rule };
   }
 
-  if (rule.requiresLiveLease) {
-    if (!req.leaseValid) {
-      return {
-        allowed: false,
-        reason: "live lease required; mark STALE and reclaim if expired",
-        rule,
-      };
-    }
-    if (!isActiveOwnership(req.from) && req.from !== "CHANGES_REQUESTED") {
-      // CHANGES_REQUESTED → IN_PROGRESS still requires a live lease on the owner.
-      return {
-        allowed: false,
-        reason: `status ${req.from} is not under active ownership lease`,
-        rule,
-      };
-    }
+  if (rule.requiresLiveLease && !req.leaseValid) {
+    return {
+      allowed: false,
+      reason: "live lease required; mark STALE and reclaim if expired",
+      rule,
+    };
   }
 
   if (rule.forbidSelfApproval && req.owner && req.owner === req.actorId) {
@@ -307,8 +308,6 @@ export function providerOutcomeToTransition(
       if (isActiveOwnership(current)) return "BLOCKED";
       return null;
     case "CHANGES_REQUESTED":
-      // Only a reviewer moves REVIEW → CHANGES_REQUESTED; provider cannot self-issue this
-      // from implementation statuses. Partial/failed work stays IN_PROGRESS or BLOCKED.
       return null;
     case "FAILED":
     case "PARTIAL":

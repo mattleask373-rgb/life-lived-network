@@ -117,6 +117,18 @@ describe("authoritative state machine", () => {
     expect(decision.reason).toMatch(/live lease/);
   });
 
+  it("CHANGES_REQUESTED → IN_PROGRESS allowed without prior live lease (lease renews)", () => {
+    const decision = evaluateTransition({
+      from: "CHANGES_REQUESTED",
+      to: "IN_PROGRESS",
+      actorId: "grok",
+      owner: "grok",
+      leaseValid: false,
+    });
+    expect(decision.allowed).toBe(true);
+    expect(decision.rule?.renewsLease).toBe(true);
+  });
+
   it("rejects non-owner attempting owner transitions", () => {
     const decision = evaluateTransition({
       from: "CLAIMED",
@@ -166,7 +178,6 @@ describe("authoritative state machine", () => {
     expect(fromReview).toContain("CHANGES_REQUESTED");
     expect(fromReview).not.toContain("INTEGRATED");
 
-    // Every rule is unique (from,to)
     const keys = LEGAL_TRANSITIONS.map((r) => `${r.from}->${r.to}`);
     expect(new Set(keys).size).toBe(keys.length);
   });
