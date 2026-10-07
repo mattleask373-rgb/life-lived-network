@@ -37,13 +37,19 @@ export async function claimAgentTask(
   return rows[0] ?? null;
 }
 
+/**
+ * Sliding-lease heartbeat: successful call extends lease_expiry by extendMinutes.
+ * Fails (returns null) if owner mismatch, status not active, or lease already expired.
+ */
 export async function heartbeatAgentTask(
   taskId: string,
   owner: string,
+  extendMinutes = 240,
 ): Promise<AgentTaskRow | null> {
   const rows = await rpc<AgentTaskRow>("heartbeat_agent_task", {
     requested_task_id: taskId,
     requested_owner: owner,
+    extend_minutes: extendMinutes,
   });
   return rows[0] ?? null;
 }
@@ -57,6 +63,29 @@ export async function releaseAgentTask(
     requested_task_id: taskId,
     requested_owner: owner,
     next_status: nextStatus,
+  });
+  return rows[0] ?? null;
+}
+
+/** System recovery: mark tasks STALE when lease expired and heartbeat grace exceeded. */
+export async function markStaleAgentTasks(
+  heartbeatGraceMinutes = 45,
+): Promise<AgentTaskRow[]> {
+  return rpc<AgentTaskRow>("mark_stale_agent_tasks", {
+    heartbeat_grace_minutes: heartbeatGraceMinutes,
+  });
+}
+
+/** Reclaim only from STALE or READY. Never overwrites live non-stale ownership. */
+export async function reclaimAgentTask(
+  taskId: string,
+  owner: string,
+  leaseMinutes = 240,
+): Promise<AgentTaskRow | null> {
+  const rows = await rpc<AgentTaskRow>("reclaim_agent_task", {
+    requested_task_id: taskId,
+    requested_owner: owner,
+    lease_minutes: leaseMinutes,
   });
   return rows[0] ?? null;
 }
