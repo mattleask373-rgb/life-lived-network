@@ -39,7 +39,7 @@ describe("organisational recovery scenarios", () => {
   it("if an agent dies halfway through, another agent can recover via STALE → reclaim", () => {
     const leaseExpiry = new Date("2026-10-07T12:00:00.000Z");
     const lastHeartbeat = new Date("2026-10-07T11:00:00.000Z");
-    const now = new Date(lastHeartbeat.getTime() + DEFAULT_HEARTBEAT_GRACE_MS + 60_000);
+    const now = new Date(leaseExpiry.getTime() + DEFAULT_HEARTBEAT_GRACE_MS + 60_000);
 
     const dead: LeaseSnapshot = {
       taskId: "LW-20261007-001",
