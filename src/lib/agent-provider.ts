@@ -77,11 +77,7 @@ export function isEligibleProvider(
       reason: `task autonomy ${task.autonomy} exceeds provider max ${provider.maxAutonomy}`,
     };
   }
-  if (
-    policy.requireHumanFor.includes(task.risk) &&
-    provider.id !== "human" &&
-    RISK_RANK[task.risk] > RISK_RANK[provider.maxRiskWithoutHumanGate]
-  ) {
+  if (policy.requireHumanFor.includes(task.risk) && provider.id !== "human") {
     return {
       eligible: false,
       reason: `risk ${task.risk} requires human gate; provider ${provider.id} not human`,
