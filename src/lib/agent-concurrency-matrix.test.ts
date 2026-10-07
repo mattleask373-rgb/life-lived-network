@@ -12,10 +12,7 @@ import {
   DEFAULT_HEARTBEAT_GRACE_MS,
 } from "./agent-lease-policy";
 import { evaluateTransition } from "./agent-state-machine";
-import {
-  isAcceptableExecutionResult,
-  type AgentExecutionResult,
-} from "./agent-execution-contract";
+import { isAcceptableExecutionResult, type AgentExecutionResult } from "./agent-execution-contract";
 
 /**
  * Hour-3 concurrency / boundary matrix (pure policy).
