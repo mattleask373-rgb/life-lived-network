@@ -15,14 +15,7 @@ export type OpportunityStage =
   | "REJECTED"
   | "DEFERRED";
 
-export type OpportunityDomain =
-  | "research"
-  | "seo"
-  | "marketing"
-  | "product"
-  | "engineering"
-  | "security"
-  | "operations";
+export type OpportunityDomain = "research" | "seo" | "marketing" | "product" | "engineering" | "security" | "operations";
 
 export interface OpportunityRecord {
   id: string;
@@ -37,10 +30,7 @@ export interface OpportunityRecord {
   createdByRole: string;
 }
 
-export function canAdvanceOpportunity(
-  from: OpportunityStage,
-  to: OpportunityStage,
-): boolean {
+export function canAdvanceOpportunity(from: OpportunityStage, to: OpportunityStage): boolean {
   const order: OpportunityStage[] = [
     "SIGNAL",
     "HYPOTHESIS",
