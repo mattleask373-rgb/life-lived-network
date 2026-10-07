@@ -97,6 +97,27 @@ describe("project bootstrap", () => {
     expect(boot.continuousLoops.some((l) => l.startsWith("research:"))).toBe(true);
   });
 
+
+  it("keeps every default role unable to self-accept", () => {
+    expect(DEFAULT_ROLE_ROSTER.every((role) => role.canAcceptOwnWork === false)).toBe(true);
+    expect(DEFAULT_ROLE_ROSTER.every((role) => role.maxAutonomy.length === 2)).toBe(true);
+  });
+
+  it("can bootstrap a second project from the same team OS", () => {
+    const boot = bootstrapProject({
+      ...LIFE_LIVED_BOOTSTRAP_EXAMPLE,
+      projectId: "project-b",
+      displayName: "Project B",
+      repositories: ["example/project-b"],
+      objective: "Prove the team is portable",
+    });
+    expect(boot.config.projectId).toBe("project-b");
+    expect(boot.roster.map((role) => role.id)).toEqual(
+      expect.arrayContaining(["head_manager", "research_intelligence", "agent_factory"]),
+    );
+    expect(boot.reviewPolicy.humanRequiredForIntegration).toBe(true);
+  });
+
   it("requires projectId objective repos sourceOfTruth", () => {
     expect(() =>
       bootstrapProject({
