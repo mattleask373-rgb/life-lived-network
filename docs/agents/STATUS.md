@@ -1,33 +1,24 @@
-# Agent System Status — 2026-10-07 (LW-20261007-002)
+# Agent System Status — 2026-10-07
 
 ## CURRENT QUEUE
 
-- **P0 product:** restore/verify the canonical `src/lib/supply-engine.ts` implementation before any discovery work is treated as healthy.
-- **LW-20261007-001:** Provider-neutral orchestration control plane — landed on branch, CI green (PR #61).
-- **LW-20261007-002:** Complete task envelope + pure claim/lease/heartbeat — IN PROGRESS (this branch).
+- Canonical supply/discovery: live on main via `findSupply()`.
+- Persistent autonomous executor: **MISSING**.
+- Durable control-plane persistence: **NOT PROVEN**; see #74.
+- Provider-neutral orchestration and claim/lease semantics remain contract-level work pending fresh hosted verification and human security review.
 
 ## ACTIVE
 
-- Owner: Grok
-- Task: LW-20261007-002
-- Scope:
-  - Expand `AgentTaskEnvelope` with claim, lease, heartbeat, status, evidence_required
-  - Pure claimTask / heartbeatTask / releaseTask / isStale / markStale / reclaimTask
-  - Unit tests for full claim lifecycle
-  - No production webhook, no credentials, no product engine changes
 - Branch: `agent/orchestrator/LW-20261007-002-claim-lease-envelope`
+- Claim/lease/heartbeat is currently a pure TypeScript envelope; durable persistence and authenticated fencing are not yet proven and are tracked in #74.
 
-## DECISIONS
+## SAFETY
 
-- Plane remains the work-control plane; AI execution stays provider-neutral.
-- Claim/lease/heartbeat are pure functions; persistence is a later Phase C concern.
-- Default lease durations follow CLAIM-LEASE-HEARTBEAT.md (P0=2h, P1/P2=4h, P3=6h).
-- Heartbeat grace = 45 minutes.
-- Autonomy defaults: P0 → L1, otherwise L2.
-- No autonomous merge to `main`.
+- No autonomous merge/deploy.
+- No production execution authority.
+- No auth/RLS weakening.
+- Human gates remain mandatory for durable control-plane integration, security/RLS/privacy, external side effects and production autonomy.
 
 ## NEXT SAFE STEP
 
-1. Independent review of the pure claim/lease API (ChatGPT or human).
-2. After acceptance, add a durable (or file-backed) processed-event + claim store interface.
-3. Keep the webhook path dry-run until a human configures `PLANE_WEBHOOK_SECRET` and verifies live delivery.
+Resolve CI/base drift, then reconcile the pure lifecycle contracts with one real durable persistence boundary under #74 before enabling any executor.
