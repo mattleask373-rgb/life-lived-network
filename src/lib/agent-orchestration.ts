@@ -1,6 +1,8 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export type AgentLane = "PRODUCT" | "ARCHITECTURE" | "IMPLEMENTATION" | "QA" | "SECURITY" | "REVIEW";
+export type AgentLane =
+  | "PRODUCT" | "ARCHITECTURE" | "IMPLEMENTATION" | "QA" | "SECURITY"
+  | "REVIEW";
 export type AutonomyLevel = "L0" | "L1" | "L2" | "L3" | "L4";
 export type RiskLevel = "P0" | "P1" | "P2" | "P3";
 
