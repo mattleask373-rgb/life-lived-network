@@ -92,12 +92,8 @@ describe("agent-identity-contract", () => {
 
   it("never treats merge or deploy as ungated", () => {
     expect(requiresHumanApproval({ ...baseRequest, action: "merge" })).toBe(true);
-    expect(validateAgentActionRequest({ ...baseRequest, action: "merge" }, now).valid).toBe(
-      false,
-    );
-    expect(validateAgentActionRequest({ ...baseRequest, action: "deploy" }, now).valid).toBe(
-      false,
-    );
+    expect(validateAgentActionRequest({ ...baseRequest, action: "merge" }, now).valid).toBe(false);
+    expect(validateAgentActionRequest({ ...baseRequest, action: "deploy" }, now).valid).toBe(false);
   });
 
   it("rejects approval scope mismatches", () => {
