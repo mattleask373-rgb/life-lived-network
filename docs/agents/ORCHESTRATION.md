@@ -46,6 +46,16 @@ The execution layer is provider-neutral:
 
 Plane's current developer platform provides REST API, webhooks, MCP and an agent framework, so the integration should use those stable boundaries rather than depending on Plane's internal AI-credit mechanism.
 
+## Phase A implementation
+
+The repository now exposes a provider-neutral Plane ingress at:
+
+    POST /api/agents/plane-webhook
+
+It requires `PLANE_WEBHOOK_SECRET` and accepts the configured Plane signature header. The receiver records every accepted webhook in the durable `agent_events` ledger before dispatching, and uses the database uniqueness constraint on `event_id` as the concurrency-safe idempotency gate. Agent-ready work is normalized into `agent_tasks`.
+
+No model credentials are required at ingress. No runner is invoked yet; this boundary deliberately stops at a durable READY task.
+
 ## Event model
 
 The bridge subscribes to the smallest useful set of Plane v2 events:
