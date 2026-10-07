@@ -56,7 +56,6 @@ const AUTONOMY_RANK: Record<AutonomyLevel, number> = {
   L4: 4,
 };
 
-
 export function isEligibleProvider(
   provider: ProviderDescriptor,
   task: Pick<AgentTaskEnvelope, "autonomy" | "risk" | "lane">,
