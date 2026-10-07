@@ -1,12 +1,11 @@
 /**
- * Bounded possibility/expansion proposal kernel.
+ * Expansion Proposal kernel — AI-NATIVE-01 / Issue #65
  *
- * This module records when an observed pattern may not fit the current
- * category or mechanism without treating the proposal as fact or granting
- * it self-modification authority.
+ * Pure, provider-neutral contract for proposing new mechanisms when the
+ * current category/workflow appears insufficient.
  *
- * Pure and provider-neutral. It does not execute work, mutate production
- * state, select providers, rank supply, or replace findSupply().
+ * DOES NOT: execute, auto-accept, mutate production, create a second matcher,
+ * invent external facts, or grant autonomous merge/deploy authority.
  */
 
 export type ExpansionEpistemic =
@@ -18,37 +17,35 @@ export type ExpansionEpistemic =
   | "UNKNOWN";
 
 export type ExpansionRisk = "low" | "medium" | "high" | "critical";
+
 export type ExpansionStatus = "proposed" | "testing" | "accepted" | "rejected" | "superseded";
 
 export interface ExpansionEvidenceRef {
   id: string;
   source: string;
-  note?: string;
+  locator?: string;
 }
 
 export interface ExpansionProposal {
   id: string;
   originatingObjective: string;
-  originatingTask?: string;
+  originatingTaskId?: string;
   observedPattern: string;
   evidence: ExpansionEvidenceRef[];
-  currentCategory: string;
-  currentMechanism: string;
-  limitation: string;
   proposedCategory: string;
+  currentCategory: string;
+  limitation: string;
   proposedMechanism: string;
-  expectedLeverage: string[];
-  affectedCapabilities: string[];
+  expectedLeverage: string;
   alternativesConsidered: string[];
-  experimentPlan: string[];
-  falsificationCriteria: string[];
+  experimentPlan: string;
+  falsificationCondition: string;
   reversible: boolean;
   risk: ExpansionRisk;
   requiresHumanGate: boolean;
   epistemic: ExpansionEpistemic;
   status: ExpansionStatus;
   resultingTaskId?: string;
-  supersedesProposalId?: string;
 }
 
 export interface ExpansionValidation {
@@ -58,11 +55,11 @@ export interface ExpansionValidation {
 
 export interface ExpansionOverlap {
   proposalId: string;
-  overlap: "exact" | "category" | "mechanism" | "objective";
+  overlap: "exact" | "category" | "objective";
   reason: string;
 }
 
-const EPISTEMICS = new Set<ExpansionEpistemic>([
+const EPISTEMIC = new Set<ExpansionEpistemic>([
   "REAL",
   "PLAUSIBLE",
   "EXPERIMENTAL",
@@ -70,8 +67,8 @@ const EPISTEMICS = new Set<ExpansionEpistemic>([
   "IMAGINED",
   "UNKNOWN",
 ]);
-const RISKS = new Set<ExpansionRisk>(["low", "medium", "high", "critical"]);
-const STATUSES = new Set<ExpansionStatus>([
+
+const STATUS = new Set<ExpansionStatus>([
   "proposed",
   "testing",
   "accepted",
@@ -79,93 +76,104 @@ const STATUSES = new Set<ExpansionStatus>([
   "superseded",
 ]);
 
-const nonEmpty = (value: unknown): value is string =>
-  typeof value === "string" && value.trim().length > 0;
+const RISKS = new Set<ExpansionRisk>(["low", "medium", "high", "critical"]);
 
-const nonEmptyList = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.length > 0 && value.every(nonEmpty);
+function nonEmpty(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
 
-const validEvidence = (value: unknown): value is ExpansionEvidenceRef[] =>
-  Array.isArray(value) &&
-  value.every(
-    (item) =>
-      Boolean(item) &&
-      typeof item === "object" &&
-      nonEmpty((item as ExpansionEvidenceRef).id) &&
-      nonEmpty((item as ExpansionEvidenceRef).source),
+function validEvidence(value: unknown): value is ExpansionEvidenceRef[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        !!item &&
+        typeof item === "object" &&
+        nonEmpty((item as ExpansionEvidenceRef).id) &&
+        nonEmpty((item as ExpansionEvidenceRef).source),
+    )
   );
+}
+
+function norm(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
 
 export function requiresHumanGate(
   proposal: Pick<ExpansionProposal, "risk" | "reversible">,
 ): boolean {
-  return proposal.risk === "high" || proposal.risk === "critical" || !proposal.reversible;
+  return !proposal.reversible || proposal.risk === "high" || proposal.risk === "critical";
 }
 
-export function validateExpansionProposal(
-  proposal: unknown,
-): ExpansionValidation {
+/** @deprecated use requiresHumanGate */
+export function expansionRequiresHumanGate(
+  proposal: Pick<ExpansionProposal, "risk" | "reversible">,
+): boolean {
+  return requiresHumanGate(proposal);
+}
+
+export function validateExpansionProposal(proposal: ExpansionProposal): ExpansionValidation {
   const errors: string[] = [];
 
-  if (!proposal || typeof proposal !== "object") {
-    return { valid: false, errors: ["proposal must be an object"] };
-  }
+  if (!nonEmpty(proposal.id)) errors.push("proposal id is required");
+  if (!nonEmpty(proposal.originatingObjective)) errors.push("originating objective is required");
+  if (!nonEmpty(proposal.observedPattern)) errors.push("observed pattern is required");
+  if (!nonEmpty(proposal.proposedCategory)) errors.push("proposed category is required");
+  if (!nonEmpty(proposal.currentCategory)) errors.push("current category is required");
+  if (!nonEmpty(proposal.limitation)) errors.push("limitation is required");
+  if (!nonEmpty(proposal.proposedMechanism)) errors.push("proposed mechanism is required");
+  if (!nonEmpty(proposal.expectedLeverage)) errors.push("expected leverage is required");
+  if (!nonEmpty(proposal.experimentPlan)) errors.push("experiment plan is required");
+  if (!nonEmpty(proposal.falsificationCondition))
+    errors.push("falsification condition is required");
 
-  const candidate = proposal as ExpansionProposal;
+  if (!validEvidence(proposal.evidence)) {
+    errors.push("evidence must be an array of valid references");
+  }
+  if (!Array.isArray(proposal.alternativesConsidered)) {
+    errors.push("alternatives considered must be an array");
+  }
+  if (!EPISTEMIC.has(proposal.epistemic)) errors.push("invalid epistemic class");
+  if (!STATUS.has(proposal.status)) errors.push("invalid status");
+  if (!RISKS.has(proposal.risk)) errors.push("invalid risk class");
+  if (typeof proposal.reversible !== "boolean") errors.push("reversibility must be explicit");
+  if (typeof proposal.requiresHumanGate !== "boolean")
+    errors.push("human-gate requirement must be explicit");
 
-  if (!nonEmpty(candidate.id)) errors.push("id is required");
-  if (!nonEmpty(candidate.originatingObjective)) errors.push("originatingObjective is required");
-  if (!nonEmpty(candidate.observedPattern)) errors.push("observedPattern is required");
-  if (!validEvidence(candidate.evidence)) errors.push("evidence must contain valid references");
-  if (!nonEmpty(candidate.currentCategory)) errors.push("currentCategory is required");
-  if (!nonEmpty(candidate.currentMechanism)) errors.push("currentMechanism is required");
-  if (!nonEmpty(candidate.limitation)) errors.push("limitation is required");
-  if (!nonEmpty(candidate.proposedCategory)) errors.push("proposedCategory is required");
-  if (!nonEmpty(candidate.proposedMechanism)) errors.push("proposedMechanism is required");
-  if (!nonEmptyList(candidate.expectedLeverage)) errors.push("expectedLeverage is required");
-  if (!nonEmptyList(candidate.affectedCapabilities)) errors.push("affectedCapabilities is required");
-  if (!nonEmptyList(candidate.alternativesConsidered)) errors.push("alternativesConsidered is required");
-  if (!nonEmptyList(candidate.experimentPlan)) errors.push("experimentPlan is required");
-  if (!nonEmptyList(candidate.falsificationCriteria)) errors.push("falsificationCriteria is required");
-  if (!EPISTEMICS.has(candidate.epistemic)) errors.push("epistemic classification is invalid");
-  if (!RISKS.has(candidate.risk)) errors.push("risk classification is invalid");
-  if (!STATUSES.has(candidate.status)) errors.push("status is invalid");
-  if (typeof candidate.reversible !== "boolean") errors.push("reversible is required");
-  if (typeof candidate.requiresHumanGate !== "boolean") errors.push("requiresHumanGate is required");
-
-  if (candidate.epistemic === "REAL" && validEvidence(candidate.evidence) && candidate.evidence.length === 0) {
-    errors.push("REAL proposals require evidence");
+  if (proposal.epistemic === "REAL") {
+    errors.push("a proposal cannot be classified REAL; proposals are not facts");
   }
-  if (candidate.epistemic === "UNKNOWN" && candidate.status === "accepted") {
-    errors.push("UNKNOWN proposals cannot be accepted");
+  if (proposal.epistemic === "UNKNOWN" && proposal.status === "accepted") {
+    errors.push("UNKNOWN proposals cannot be accepted without evidence upgrade");
   }
-  if (requiresHumanGate(candidate) && !candidate.requiresHumanGate) {
-    errors.push("high/critical-risk or irreversible proposals require a human gate");
+  if (proposal.epistemic === "IMAGINED" && proposal.status === "accepted") {
+    errors.push("IMAGINED proposals cannot be accepted without evidence upgrade");
   }
-  if (candidate.status === "accepted" && !candidate.resultingTaskId) {
-    errors.push("accepted proposals require a resulting bounded task reference");
+  if (requiresHumanGate(proposal) && !proposal.requiresHumanGate) {
+    errors.push("irreversible or high/critical-risk proposals require a human gate");
   }
-  if (candidate.resultingTaskId && candidate.status !== "accepted") {
-    errors.push("resultingTaskId is only valid for accepted proposals");
+  if (proposal.status === "accepted" && !nonEmpty(proposal.resultingTaskId ?? "")) {
+    errors.push("accepted proposals must reference a resulting bounded task");
+  }
+  if (proposal.status !== "accepted" && nonEmpty(proposal.resultingTaskId ?? "")) {
+    errors.push("resulting task may only be attached when status is accepted");
   }
 
   return { valid: errors.length === 0, errors };
 }
 
 export function createExpansionProposal(
-  proposal: ExpansionProposal,
+  input: Omit<ExpansionProposal, "status" | "requiresHumanGate"> & {
+    status?: ExpansionStatus;
+    requiresHumanGate?: boolean;
+  },
 ): ExpansionProposal {
-  const validation = validateExpansionProposal(proposal);
-  if (!validation.valid) {
-    throw new Error("Invalid expansion proposal: " + validation.errors.join("; "));
-  }
+  const requiresGate =
+    input.requiresHumanGate ?? requiresHumanGate({ risk: input.risk, reversible: input.reversible });
   return {
-    ...proposal,
-    evidence: proposal.evidence.map((item) => ({ ...item })),
-    expectedLeverage: [...proposal.expectedLeverage],
-    affectedCapabilities: [...proposal.affectedCapabilities],
-    alternativesConsidered: [...proposal.alternativesConsidered],
-    experimentPlan: [...proposal.experimentPlan],
-    falsificationCriteria: [...proposal.falsificationCriteria],
+    ...input,
+    status: input.status ?? "proposed",
+    requiresHumanGate: requiresGate,
   };
 }
 
@@ -174,77 +182,55 @@ export function findExpansionOverlaps(
   existing: ExpansionProposal[],
 ): ExpansionOverlap[] {
   const overlaps: ExpansionOverlap[] = [];
+  const candMech = norm(candidate.proposedMechanism);
+  const candCat = norm(candidate.proposedCategory);
+  const candObj = norm(candidate.originatingObjective);
 
-  for (const proposal of existing) {
-    if (proposal.id === candidate.id) continue;
+  for (const p of existing) {
+    if (p.id === candidate.id) continue;
+    if (p.status === "rejected" || p.status === "superseded") continue;
 
-    if (
-      proposal.proposedCategory.trim().toLowerCase() ===
-        candidate.proposedCategory.trim().toLowerCase() &&
-      proposal.proposedMechanism.trim().toLowerCase() ===
-        candidate.proposedMechanism.trim().toLowerCase()
-    ) {
+    const sameMech = norm(p.proposedMechanism) === candMech;
+    const sameCat = norm(p.proposedCategory) === candCat;
+    const sameObj = norm(p.originatingObjective) === candObj;
+
+    if (sameMech && sameCat) {
       overlaps.push({
-        proposalId: proposal.id,
+        proposalId: p.id,
         overlap: "exact",
         reason: "same proposed category and mechanism",
       });
-      continue;
-    }
-
-    if (
-      proposal.proposedCategory.trim().toLowerCase() ===
-      candidate.proposedCategory.trim().toLowerCase()
-    ) {
+    } else if (sameCat) {
       overlaps.push({
-        proposalId: proposal.id,
+        proposalId: p.id,
         overlap: "category",
         reason: "same proposed category",
       });
     }
-
-    if (
-      proposal.proposedMechanism.trim().toLowerCase() ===
-      candidate.proposedMechanism.trim().toLowerCase()
-    ) {
+    if (sameObj && !sameMech) {
       overlaps.push({
-        proposalId: proposal.id,
-        overlap: "mechanism",
-        reason: "same proposed mechanism",
-      });
-    }
-
-    if (
-      proposal.originatingObjective.trim().toLowerCase() ===
-      candidate.originatingObjective.trim().toLowerCase()
-    ) {
-      overlaps.push({
-        proposalId: proposal.id,
+        proposalId: p.id,
         overlap: "objective",
         reason: "same originating objective",
       });
     }
   }
-
   return overlaps;
 }
 
-export function canPromoteToAccepted(
-  proposal: ExpansionProposal,
-): ExpansionValidation {
-  const validation = validateExpansionProposal(proposal);
-  if (!validation.valid) return validation;
+export function canPromoteToAccepted(proposal: ExpansionProposal): ExpansionValidation {
+  const errors: string[] = [];
   if (proposal.status !== "testing") {
-    return { valid: false, errors: ["only a testing proposal can be promoted to accepted"] };
+    errors.push("only proposals in testing may be promoted to accepted");
   }
   if (proposal.epistemic === "UNKNOWN" || proposal.epistemic === "IMAGINED") {
-    return {
-      valid: false,
-      errors: ["UNKNOWN or IMAGINED proposals require evidence-backed testing before acceptance"],
-    };
+    errors.push("epistemic class must be upgraded before acceptance");
   }
-  if (requiresHumanGate(proposal) && !proposal.requiresHumanGate) {
-    return { valid: false, errors: ["promotion requires a human gate"] };
+  if (proposal.epistemic === "REAL") {
+    errors.push("a proposal cannot be classified REAL");
   }
-  return { valid: true, errors: [] };
+  if (!validEvidence(proposal.evidence) || proposal.evidence.length === 0) {
+    errors.push("acceptance requires evidence");
+  }
+  return { valid: errors.length === 0, errors };
 }
