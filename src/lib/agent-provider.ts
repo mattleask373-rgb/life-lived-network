@@ -10,12 +10,7 @@ import type { AgentTaskEnvelope, AutonomyLevel, RiskLevel } from "./agent-orches
 import type { AgentExecutionResult } from "./agent-execution-contract";
 
 export type ProviderCapability =
-  | "implementation"
-  | "review"
-  | "research"
-  | "security_audit"
-  | "qa"
-  | "human_judgment";
+  "implementation" | "review" | "research" | "security_audit" | "qa" | "human_judgment";
 
 export type ProviderHealthStatus = "available" | "degraded" | "unavailable" | "unknown";
 
@@ -113,8 +108,8 @@ export function isEligibleProvider(
 
 /**
  * Select the least constrained eligible provider.
- * Preference order: preferred reliability → standard → experimental;
- * then lower costClass. Does not invoke health() (caller may pre-filter).
+ * Preference order: automated over human, then preferred reliability → standard →
+ * experimental; then lower costClass. Does not invoke health() (caller may pre-filter).
  */
 export function selectProvider(
   candidates: ProviderDescriptor[],
@@ -130,6 +125,12 @@ export function selectProvider(
   const costOrder = { free: 0, low: 1, medium: 2, high: 3, human: 4 } as const;
 
   const sorted = [...eligible].sort((a, b) => {
+    // Prefer automated providers; human is last-resort unless exclusively eligible.
+    const aHuman = a.costClass === "human" ? 1 : 0;
+    const bHuman = b.costClass === "human" ? 1 : 0;
+    if (aHuman !== bHuman) {
+      return aHuman - bHuman;
+    }
     const r = reliabilityOrder[a.reliabilityClass] - reliabilityOrder[b.reliabilityClass];
     if (r !== 0) {
       return r;
