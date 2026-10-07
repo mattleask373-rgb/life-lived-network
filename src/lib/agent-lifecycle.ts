@@ -1,9 +1,9 @@
 /**
- * Specialist instance lifecycle and health.
- * ACTIVE is not the same as HEALTHY.
+ * Company-level lifecycle for the Living World engineering organisation.
+ * Pure functions only — no side effects, no persistence, no provider calls.
  */
 
-export type AgentLifecycleState =
+export type OrganisationLifecycle =
   | "PROPOSED"
   | "SPECIFIED"
   | "EVALUATING"
@@ -12,87 +12,61 @@ export type AgentLifecycleState =
   | "SUSPENDED"
   | "RETIRED";
 
-export type AgentHealth = "HEALTHY" | "DEGRADED" | "FAILING" | "UNKNOWN";
+export type LifecycleTransition = {
+  from: OrganisationLifecycle;
+  to: OrganisationLifecycle;
+  reason: string;
+};
 
-export interface AgentHealthSignals {
-  recentFailures: number;
-  recentReviewRejections: number;
-  malformedHandoffs: number;
-  scopeViolations: number;
-  evidenceViolations: number;
-}
-
-export interface AgentInstanceRecord {
-  identity: string;
-  roleId: string;
-  projectId: string;
-  lifecycle: AgentLifecycleState;
-  health: AgentHealth;
-  version: string;
-  owner: string;
-}
-
-const LIFECYCLE_ORDER: AgentLifecycleState[] = [
-  "PROPOSED",
-  "SPECIFIED",
-  "EVALUATING",
-  "ACTIVE",
-  "DEGRADED",
-  "SUSPENDED",
-  "RETIRED",
-];
+const ALLOWED: Record<OrganisationLifecycle, OrganisationLifecycle[]> = {
+  PROPOSED: ["SPECIFIED", "RETIRED"],
+  SPECIFIED: ["EVALUATING", "RETIRED"],
+  EVALUATING: ["ACTIVE", "RETIRED"],
+  ACTIVE: ["DEGRADED", "SUSPENDED", "RETIRED"],
+  DEGRADED: ["ACTIVE", "SUSPENDED", "RETIRED"],
+  SUSPENDED: ["ACTIVE", "DEGRADED", "RETIRED"],
+  RETIRED: [],
+};
 
 export function canTransitionLifecycle(
-  from: AgentLifecycleState,
-  to: AgentLifecycleState,
+  from: OrganisationLifecycle,
+  to: OrganisationLifecycle,
 ): boolean {
-  if (from === to) return false;
-  if (to === "RETIRED") return from !== "RETIRED";
-  if (from === "RETIRED") return false;
-  if (from === "SUSPENDED" && (to === "ACTIVE" || to === "DEGRADED" || to === "RETIRED")) {
-    return true;
-  }
-  if (from === "ACTIVE" && (to === "DEGRADED" || to === "SUSPENDED" || to === "RETIRED")) {
-    return true;
-  }
-  if (from === "DEGRADED" && (to === "ACTIVE" || to === "SUSPENDED" || to === "RETIRED")) {
-    return true;
-  }
-  const fi = LIFECYCLE_ORDER.indexOf(from);
-  const ti = LIFECYCLE_ORDER.indexOf(to);
-  // Forward-only along the early chain
-  if (fi >= 0 && ti >= 0 && ti === fi + 1 && ti <= LIFECYCLE_ORDER.indexOf("ACTIVE")) {
-    return true;
-  }
-  return false;
+  return ALLOWED[from]?.includes(to) ?? false;
 }
 
-export function evaluateHealth(signals: AgentHealthSignals): AgentHealth {
-  if (
-    signals.scopeViolations > 0 ||
-    signals.evidenceViolations >= 3 ||
-    signals.recentFailures >= 5
-  ) {
-    return "FAILING";
-  }
-  if (
-    signals.recentFailures >= 2 ||
-    signals.recentReviewRejections >= 2 ||
-    signals.malformedHandoffs >= 2
-  ) {
-    return "DEGRADED";
-  }
-  if (
-    signals.recentFailures === 0 &&
-    signals.recentReviewRejections === 0 &&
-    signals.malformedHandoffs === 0
-  ) {
-    return "HEALTHY";
-  }
-  return "UNKNOWN";
+export type HealthSignal = {
+  failingProviders: number;
+  staleTasks: number;
+  openP0: number;
+  consecutiveProviderFailures: number;
+};
+
+export type HealthEvaluation = {
+  status: "healthy" | "degraded" | "critical";
+  recommendSuspend: boolean;
+  reasons: string[];
+};
+
+export function evaluateHealth(signal: HealthSignal): HealthEvaluation {
+  const reasons: string[] = [];
+  if (signal.openP0 > 0) reasons.push(`${signal.openP0} open P0 findings`);
+  if (signal.staleTasks > 3) reasons.push(`${signal.staleTasks} stale tasks`);
+  if (signal.failingProviders > 1) reasons.push(`${signal.failingProviders} failing providers`);
+  if (signal.consecutiveProviderFailures >= 3)
+    reasons.push(`${signal.consecutiveProviderFailures} consecutive provider failures`);
+
+  const critical =
+    signal.openP0 > 0 || signal.consecutiveProviderFailures >= 5 || signal.failingProviders >= 3;
+  const degraded = reasons.length > 0;
+
+  return {
+    status: critical ? "critical" : degraded ? "degraded" : "healthy",
+    recommendSuspend: critical,
+    reasons,
+  };
 }
 
-/** Health may suspend routing preference but never invents permissions. */
-export function shouldSuspendRouting(health: AgentHealth): boolean {
-  return health === "FAILING";
+export function shouldSuspendRouting(evaluation: HealthEvaluation): boolean {
+  return evaluation.recommendSuspend;
 }
