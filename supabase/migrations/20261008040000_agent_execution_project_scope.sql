@@ -2,9 +2,14 @@
 -- This migration intentionally fails closed if legacy execution rows already exist
 -- without a project scope. We must not invent a project for historical records.
 --
--- Ordering: this runs after the Phase 10 execution identity tables are created
--- and before the Phase 10/11 result RPCs are defined, so their project_id
--- references are valid on a fresh migration.
+-- Ordering: Phase 10 creates the tables first; this migration adds the scope
+-- columns before the Phase 10/11 result RPCs reference them.
+
+ALTER TABLE public.agent_execution_runs
+  ADD COLUMN IF NOT EXISTS project_id TEXT;
+
+ALTER TABLE public.agent_execution_attempts
+  ADD COLUMN IF NOT EXISTS project_id TEXT;
 
 DO $$
 BEGIN
@@ -26,12 +31,6 @@ BEGIN
       'cannot add mandatory project scope: existing execution attempts lack project_id';
   END IF;
 END $$;
-
-ALTER TABLE public.agent_execution_runs
-  ADD COLUMN IF NOT EXISTS project_id TEXT;
-
-ALTER TABLE public.agent_execution_attempts
-  ADD COLUMN IF NOT EXISTS project_id TEXT;
 
 ALTER TABLE public.agent_execution_runs
   ALTER COLUMN project_id SET NOT NULL;
