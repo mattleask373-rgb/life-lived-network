@@ -42,7 +42,7 @@ blocker: null | {why, evidence, required, owner}
 - Voluntary release returns task to READY (or BLOCKED if reason given). Preserve work.
 
 **EXPIRE / STALE**
-- If `now > lease_expiry` **and** `now - last_heartbeat > heartbeat_grace` (default 45 min) → mark STALE.
+- Heartbeat is rejected when `now >= lease_expiry` (the durable SQL contract requires `lease_expiry > now()`). Mark STALE only when `now > lease_expiry` **and** `now - last_heartbeat > heartbeat_grace` (default 45 min).
 - Preserve branch, commits, and any handoff notes.
 - Record “stale ownership” with last known state.
 
