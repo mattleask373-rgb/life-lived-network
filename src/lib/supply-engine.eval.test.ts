@@ -211,7 +211,11 @@ describe("P1-B adversarial supply-engine evaluation", () => {
 
   it("returns a quiet result when no truthful evidence supports a match", () => {
     const answer = findSupply({
-      need: { ...gardenerNeed, category: "underwater welding", requiredSkills: ["underwater welding"] },
+      need: {
+        ...gardenerNeed,
+        category: "underwater welding",
+        requiredSkills: ["underwater welding"],
+      },
       people: [latentGardener],
       entries: [],
       now: current,
