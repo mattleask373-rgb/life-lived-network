@@ -36,6 +36,7 @@ describe("supply engine", () => {
   it("keeps a bare capability out of the availability band", () => {
     const answer = findSupply({ need: gardenerNeed, people: [latentGardener], entries: [] });
     expect(bands(answer.results)).toEqual(["local_capability"]);
+    expect(bands(answer.results)).not.toContain("open_to_opportunities");
     expect(answer.results[0]?.when).toMatch(/Nothing said/);
   });
 
@@ -48,6 +49,7 @@ describe("supply engine", () => {
   it("never treats a journey as availability", () => {
     const answer = findSupply({ need: gardenerNeed, people: [travellingGardener], entries: [] });
     expect(bands(answer.results)).toContain("journey");
+    expect(bands(answer.results)).not.toContain("open_to_opportunities");
     const journey = answer.results.find((r) => r.band === "journey");
     expect(journey?.caveat).toMatch(/not their live location/);
   });
