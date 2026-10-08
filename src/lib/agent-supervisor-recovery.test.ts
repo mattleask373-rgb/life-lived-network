@@ -61,10 +61,10 @@ describe("agent supervisor recovery", () => {
     expect(decision.kind).toBe("HOLD");
   });
 
-  it("permits a fresh reclaim only after ownership is cleared", () => {
+  it("permits fresh reclaim only from STALE", () => {
     const decision = authorizeReclaim({
       taskId: "task-1",
-      status: "READY",
+      status: "STALE",
       workspaceId: "workspace-1",
       projectId: "project-1",
     });
