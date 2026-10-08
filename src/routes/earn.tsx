@@ -56,7 +56,9 @@ function EarnPage() {
         </p>
       ) : null}
 
-      {user && opps.isLoading ? <p className="mt-6 text-sm text-muted-foreground">Looking…</p> : null}
+      {user && opps.isLoading ? (
+        <p className="mt-6 text-sm text-muted-foreground">Looking…</p>
+      ) : null}
       {user && opps.isError ? <DataErrorState retry={() => void opps.refetch()} /> : null}
 
       {user && opps.data ? (
@@ -76,12 +78,18 @@ function EarnPage() {
             <ul className="mt-3 space-y-3">
               {paid.map((o) => (
                 <li key={o.id} className="card-paper p-5">
-                  <Link to="/need/$id" params={{ id: o.need.id }} className="focus-ink text-lg underline">
+                  <Link
+                    to="/need/$id"
+                    params={{ id: o.need.id }}
+                    className="focus-ink text-lg underline"
+                  >
                     {o.need.title}
                   </Link>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {o.need.placeText} ·{" "}
-                    {o.need.startsAt ? eventDate(o.need.startsAt, o.need.timezone) : "Time still to agree"}{" "}
+                    {o.need.startsAt
+                      ? eventDate(o.need.startsAt, o.need.timezone)
+                      : "Time still to agree"}{" "}
                     · {describePay(o.need)}
                   </p>
                   <ul className="mt-3 space-y-1 text-sm">
