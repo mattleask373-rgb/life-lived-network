@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  assertCurrentAuthority,
   completeLearning,
   planCycle,
   recordProviderEvidence,
   verifyEvidence,
+  serializeCycleTrace,
   type AuthorityContext,
   type CycleCandidate,
   type Evidence,
@@ -177,5 +179,64 @@ describe("intelligence cycle runner", () => {
 
     expect(result.status).toBe("BLOCKED");
     expect(result.trace.unresolvedBlockers).toContain("no eligible candidate");
+  });
+
+  it("rejects stale lease generations and preserves the trust chain", () => {
+    expect(() =>
+      assertCurrentAuthority(authority, {
+        ...authority,
+        leaseGeneration: 1,
+      }),
+    ).toThrow("stale or mismatched execution authority");
+  });
+
+  it("requires an independent verifier", () => {
+    const planned = planCycle(
+      "cycle-7",
+      [candidate],
+      authority,
+      "provider-a",
+      [source],
+      {
+        allowedScopes: ["project-1"],
+        allowedCapabilities: ["research"],
+        allowHumanGate: false,
+      },
+    );
+
+    const withEvidence = recordProviderEvidence(planned.trace, {
+      id: "e-7",
+      source: "provider-a",
+      epistemic: "UNKNOWN",
+      observedAt: "2026-10-08T00:01:00Z",
+      attemptId: "attempt-1",
+    });
+
+    expect(() =>
+      verifyEvidence(withEvidence, {
+        id: "v-7",
+        source: "provider-a",
+        epistemic: "UNKNOWN",
+        observedAt: "2026-10-08T00:02:00Z",
+        attemptId: "attempt-1",
+      }),
+    ).toThrow("verification must be independent");
+  });
+
+  it("emits a machine-readable cycle trace", () => {
+    const planned = planCycle(
+      "cycle-8",
+      [candidate],
+      authority,
+      "provider-a",
+      [source],
+      {
+        allowedScopes: ["project-1"],
+        allowedCapabilities: ["research"],
+        allowHumanGate: false,
+      },
+    );
+
+    expect(() => JSON.parse(serializeCycleTrace(planned.trace))).not.toThrow();
   });
 });
