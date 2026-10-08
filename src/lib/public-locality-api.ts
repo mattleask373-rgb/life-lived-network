@@ -109,7 +109,7 @@ export function toPublicLocalityPayload(
     ancestors: geography.ancestors.map(publicPlace),
     children: geography.children.map(publicPlace),
     siblings: geography.siblings.map(publicPlace),
-    entries: entries.map(publicEntry),
+    entries: realEntries.map(publicEntry),
     meta: {
       entryCount: realEntries.length,
       indexable: realEntries.length >= 3,
