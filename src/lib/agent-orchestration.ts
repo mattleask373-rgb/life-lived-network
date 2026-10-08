@@ -260,6 +260,7 @@ export function claimTask(
 
 /**
  * Record a heartbeat. Extends last_heartbeat; optionally extends lease.
+ * Rejects at or after expiry to match the durable SQL predicate lease_expiry > now().
  */
 export function heartbeatTask(
   task: AgentTaskEnvelope,
@@ -274,6 +275,13 @@ export function heartbeatTask(
   }
 
   const now = options?.now ?? new Date();
+  const leaseExpiryMs = new Date(task.claim.lease_expiry).getTime();
+  if (now.getTime() >= leaseExpiryMs) {
+    throw new Error(
+      `Task ${task.task_id} lease expired at ${task.claim.lease_expiry}; mark STALE and reclaim`,
+    );
+  }
+
   const nowStr = nowIso(now);
 
   let lease_expiry = task.claim.lease_expiry;
