@@ -31,8 +31,8 @@ export interface StreamExperiment {
   successSignals: readonly string[];
   failureSignals: readonly string[];
   budget: {
-    money: 0;
-    paidSpendAllowed: false;
+    money: number;
+    paidSpendAllowed: boolean;
   };
   humanApprovalRequired: boolean;
 }
@@ -41,7 +41,7 @@ export function validateIncomeStreamKit(stream: IncomeStreamKit): void {
   if (!stream.id || !stream.industry || !stream.customer || !stream.problem || !stream.value) {
     throw new Error("stream identity, customer, problem, and value are required");
   }
-  if (stream.autonomyCeiling !== "L0" && stream.autonomyCeiling !== "L1" && stream.autonomyCeiling !== "L2") {
+  if (!["L0", "L1", "L2"].includes(stream.autonomyCeiling)) {
     throw new Error("income streams are capped at L2 autonomy");
   }
   if (stream.humanGates.length === 0) throw new Error("human gates are required");
@@ -54,7 +54,9 @@ export function canRunStreamExperiment(
   experiment: StreamExperiment,
 ): boolean {
   validateIncomeStreamKit(stream);
+  if (stream.state !== "EXPERIMENTAL") return false;
   if (experiment.streamId !== stream.id) return false;
+  if (!Number.isFinite(experiment.budget.money) || experiment.budget.money < 0) return false;
   if (experiment.budget.money !== 0 || experiment.budget.paidSpendAllowed) return false;
   return experiment.humanApprovalRequired;
 }
