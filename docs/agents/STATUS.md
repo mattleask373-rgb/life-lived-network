@@ -5,6 +5,13 @@
 Repository evidence on `main`, GitHub Actions, open PRs, and canonical contracts are authoritative.
 No autonomous production merge/deploy is active.
 
+## 2026-10-08 PRODUCT / CONTROL RECONCILIATION
+
+- **PR #110 — bounded public locality API:** draft; adds a read-only JSON API over the existing canonical locality/world boundary. It does not add a second discovery engine or external-action authority.
+- **PR #110 Verify:** exact head `a30d93b05e5d64c25ff86bcd4aef83559d555873` failed at `bun install --frozen-lockfile`; lint/test/build were skipped. This is the existing lockfile gate tracked by **#72**, not a product-code failure.
+- **Control-plane reconciliation:** Phase 10/11/12 RPCs were found to reference durable `project_id` fields that the execution run/attempt tables lacked. PR #109 now includes migration `20261008040000_agent_execution_project_scope.sql`, which adds mandatory project scope before the result/dispatch RPC migrations and fails closed if existing execution rows lack scope.
+- **Control-plane status:** still NOT LIVE / HOSTED PROOF PENDING. No production executor, merge authority, deployment authority, or human-gate bypass is enabled.
+
 ## CURRENT QUEUE
 
 ### P0 / HUMAN-GATED CONTROL PLANE
