@@ -1,23 +1,27 @@
-# Specialist Lanes (Phase 5)
+# Specialist Lanes (Fleet process)
 
-Lanes exist only to reduce duplication and increase correctness. They are operating boundaries, not personas or silos.
+Lanes reduce duplication. They are operating boundaries, not personas.
 
-| Lane              | Owns                                                                 | Must not do                                      |
-|-------------------|----------------------------------------------------------------------|--------------------------------------------------|
-| ORCHESTRATOR      | Queue health, decomposition, claims, stale recovery, prioritisation, handoffs, status | Rewrite product architecture alone              |
-| PRODUCT / DOMAIN  | Capability, need, supply semantics, explainability, reciprocity, quiet states | Create second matching engine                    |
-| GEOGRAPHY / WORLD | Locality hierarchy, countries, timezones, service areas, LOCATED_IN / SERVES / AVAILABLE_IN / TRAVELS_THROUGH | City-specific hard-coding                        |
-| TRUST / SAFETY / PRIVACY | RLS, ownership, visibility, blocks, reports, moderation, regulated categories, secret handling | Weaken security to make tests pass               |
-| PROVIDER / DATA   | Adapter → normalise → provenance → freshness → policy → entity → discovery | Let provider fields become product model         |
-| UX                | Intent-first discovery, Local vs Traveler modes, cards, quiet states, human choice | Invent privacy from UI alone                     |
-| QA / EVALUATION   | Tests, adversarial suite, acceptance criteria, deterministic eval, fixture leakage | Delete tests to hide failures                    |
-| SECURITY          | Secrets, RLS audit, server/client boundaries                         | Force-push history                               |
-| REVIEWER          | Independent challenge of implementation (architecture, security, invariants) | Approve own work                                 |
+| Lane | Owns | Must not do |
+|------|------|-------------|
+| ORCHESTRATOR | Queue health, prioritisation, handoffs, status | Rewrite product architecture alone |
+| CONTROL_PLANE | Leases, fencing, recovery, runs/attempts, rehearsal | Grant production LIVE |
+| PRODUCT / DOMAIN | Capability, need, supply semantics, APIs | Create second matching engine |
+| GEOGRAPHY / WORLD | Locality hierarchy, service areas | City-specific hard-coding |
+| TRUST / SAFETY / PRIVACY | RLS, ownership, moderation, secrets | Weaken security to pass tests |
+| PROVIDER / DATA | Adapter → normalise → provenance → discovery | Provider fields as product model |
+| UX | Intent-first discovery, quiet states | Invent privacy from UI alone |
+| SEO / GROWTH | Meta, sitemaps, drafts, experiments | Fabricate rankings/revenue; auto-publish |
+| QA / EVALUATION | Tests, adversarial suite, acceptance | Delete tests to hide failures |
+| SECURITY | Secrets, RLS audit, server/client boundaries | Force-push history |
+| REVIEWER | Independent challenge | Approve own work |
+| **LOVABLE_SURFACE** | UI routes, visual polish, map chrome, cloud wiring *drafts* | Service-role in browser; invent inventory |
+| HUMAN | Merge, deploy, credentials, paid spend, LIVE activation | — |
 
-**Anti-silo rule**
-All agents work against the same repository, tests, task records, ADRs, shared domain contracts, and evidence.
+## Preferred loop
 
-**Grok bias:** sustained implementation, multi-file, long-running loops, integration.
-**ChatGPT bias:** independent architecture review, adversarial QA, invariant analysis, next-task packets, challenging completed work.
+**Grok builds control plane → ChatGPT challenges + product/SEO → Lovable surfaces UI → Grok/ChatGPT fix → tests prove → human integrates.**
 
-Desired loop: Grok builds → ChatGPT challenges → Grok fixes → tests prove → human integrates.
+## Anti-silo
+
+Same repository, tests, task records, evidence, and state vocabulary for all agents.
