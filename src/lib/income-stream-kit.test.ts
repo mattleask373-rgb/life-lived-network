@@ -43,6 +43,14 @@ describe("income stream kit", () => {
     })).toBe(false);
   });
 
+  it("rejects negative or non-experimental execution", () => {
+    expect(canRunStreamExperiment(stream, {
+      ...experiment,
+      budget: { money: -1, paidSpendAllowed: false },
+    })).toBe(false);
+    expect(canRunStreamExperiment({ ...stream, state: "KILLED" }, experiment)).toBe(false);
+  });
+
   it("requires explicit human approval before an experiment can run", () => {
     expect(canRunStreamExperiment(stream, experiment)).toBe(true);
     expect(canRunStreamExperiment(stream, {
