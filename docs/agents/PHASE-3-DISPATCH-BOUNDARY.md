@@ -1,35 +1,77 @@
-# Phase 3 Dispatch Boundary
+# Phase 3 — Supervisor Reconciliation + Dispatch Boundary
 
-**Status: IMPLEMENTED / HOSTED PROOF PENDING**
+**Status: IMPLEMENTED / HOSTED PROOF PENDING / NOT LIVE**
 
-The Phase 3 dispatch boundary connects supervisor reconciliation to the durable execution ledger without making the executor live.
+Phase 3 advances the 24/7 control plane one layer beyond provider-neutral
+execution (Phase 2). It adds two pure decision kernels and one server-only
+durable boundary.
 
-## Contract
+## 1. Supervisor selection (`reconcileSupervisor`)
 
-1. The authenticated server boundary supplies actor + run + workspace identity.
-2. The execution run must already exist and be ACTIVE.
-3. Run actor, workspace, and project scope must match the requested dispatch.
-4. The task must be READY and match workspace/project scope.
-5. Only L0-L2 tasks are eligible for this bounded automatic path.
-6. P0/P1 work remains human-gated.
-7. The task is atomically fenced with a new lease generation/token.
-8. Exactly one DISPATCHED attempt is created for a correlation id.
-9. Replayed correlation returns the existing attempt rather than creating a second attempt.
-10. An append-only audit record records the dispatch identity and scope.
+Pure function over durable task snapshots → explicit `DISPATCH` | `HOLD`.
+
+- READY only
+- workspace + project scope checks
+- autonomy policy (L0–L2)
+- human-gated risks (P0/P1 held)
+- active-attempt protection
+- lease-boundary protection (any existing lease state → HOLD)
+- deterministic correlation IDs (`dispatch:{runId}:{taskId}`)
+- idempotency via existing correlation set
+
+Never claims, never calls providers, never mutates storage.
+
+## 2. Crash recovery (`reconcileRecovery` + `authorizeReclaim`)
+
+Pure recovery decisions:
+
+- `MARK_STALE` when lease expired **and** heartbeat grace exceeded
+- `HOLD` for cancelled work, successful attempts (need verification),
+  missing project scope, or still-within-grace leases
+- `authorizeReclaim` permits `RECLAIM` **only** from authoritative `STALE`
+  status (never from CLAIMED / READY / BLOCKED directly)
+
+Stale marking and reclaim remain distinct lifecycle events. A stale worker
+is never revived by these functions.
+
+## 3. Durable dispatch boundary (`dispatch_agent_attempt` RPC + server adapter)
+
+Server-only, SECURITY DEFINER RPC:
+
+1. Authenticated execution context (actor + run + workspace) is supplied
+   upstream — this module never trusts browser-supplied actor ids.
+2. Run must exist and be ACTIVE; actor/workspace/project must match.
+3. Task must be READY and match scope.
+4. Autonomy L0–L2 only; P0/P1 rejected.
+5. Atomic lease fence (generation + token) and single DISPATCHED attempt
+   per correlation id (replay returns existing attempt).
+6. Append-only audit record.
 
 ## Explicit non-goals
 
-This boundary does not authenticate browser input by itself, invoke a provider, declare success, consume human approval, merge, deploy, mint production credentials, or modify discovery/matching.
+- Authenticate browser input
+- Invoke a provider
+- Declare DONE / ACCEPTED / INTEGRATED
+- Consume human approval
+- Merge / deploy
+- Mint production credentials
+- Modify discovery / matching
+- Live 24/7 executor activation
 
 ## Proof still required
 
-- hosted Supabase migration execution;
-- RLS and SECURITY DEFINER verification;
-- authenticated middleware-to-run creation integration;
-- concurrent dispatch race testing against the live database;
-- stale lease recovery;
-- provider execution wiring;
-- full CI on the exact head;
-- independent human review and merge.
+- Hosted Supabase migration execution + RLS / SECURITY DEFINER verification
+- Authenticated middleware → run creation integration
+- Concurrent dispatch + recovery race testing against the live database
+- Provider execution wiring (Phase 2 runtime)
+- Full CI green on the exact head
+- Independent human review and merge
 
-Until those are proven, the 24/7 executor remains **NOT LIVE**.
+Until those are proven the 24/7 executor remains **NOT LIVE**.
+
+## Lineage
+
+Stacked on Phase 2 provider-neutral execution and the authenticated durable
+control plane.
+
+Related: #97, #98, #101, #102, #103.
