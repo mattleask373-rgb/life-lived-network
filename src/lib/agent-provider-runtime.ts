@@ -89,11 +89,12 @@ export async function executeProviderAttempt(
   options.signal?.addEventListener("abort", onAbort, { once: true });
 
   let result: AgentExecutionResult;
+  let failureClass: ProviderFailureClass | undefined;
 
   try {
     const health: ProviderHealth = await provider.health();
     if (health.status === "unavailable") {
-      const failureClass: ProviderFailureClass = "PROVIDER_UNAVAILABLE";
+      failureClass = "PROVIDER_UNAVAILABLE";
       result = failureResult(
         task.task_id,
         provider.id,
@@ -105,6 +106,7 @@ export async function executeProviderAttempt(
       const issues = validateExecutionResult(result);
       if (issues.length > 0 || result.taskId !== task.task_id) {
         const details = issues.map((issue) => issue.code).join(", ");
+        failureClass = "PROVIDER_MALFORMED";
         result = failureResult(
           task.task_id,
           provider.id,
@@ -115,7 +117,7 @@ export async function executeProviderAttempt(
     }
   } catch (error) {
     const aborted = controller.signal.aborted;
-    const failureClass: ProviderFailureClass = aborted ? "PROVIDER_TIMEOUT" : classifyProviderError(error);
+    failureClass = aborted ? "PROVIDER_TIMEOUT" : classifyProviderError(error);
     const detail = error instanceof Error ? error.message : String(error);
     result = failureResult(
       task.task_id,
@@ -132,7 +134,7 @@ export async function executeProviderAttempt(
   return {
     result,
     providerId: provider.id,
-    ...(result.status === "FAILED" ? { failureClass: result.uncertainties[0]?.includes("PROVIDER_UNAVAILABLE") ? "PROVIDER_UNAVAILABLE" : undefined } : {}),
+    ...(failureClass ? { failureClass } : {}),
     startedAt: started.toISOString(),
     finishedAt: finished.toISOString(),
   };
