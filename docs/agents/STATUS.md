@@ -1,51 +1,75 @@
-# Agent System Status — 2026-10-07 (Hour 5 — Company OS)
+# Agent System Status — 2026-10-08 (Grok reconciliation)
 
-## NORTH STAR
+## SOURCE OF TRUTH
 
-**AI company in a box:** configure project → activate specialist team → continuous discover/build/verify/learn under bounded autonomy + human gates.
+Repository evidence on branches/PRs, GitHub Actions conclusions, and migrations are authoritative.
+**No autonomous production merge/deploy is active. Production executor is NOT LIVE.**
 
-## HOUR 5 IMPLEMENTED
+## STATE MODEL (do not collapse)
 
-| Module | Purpose |
-|--------|---------|
-| `agent-capability-registry.ts` | Role ≠ capability ≠ permission ≠ provider |
-| `agent-lifecycle.ts` | Agent instance lifecycle + health |
-| `agent-opportunity.ts` | SIGNAL→…→DECISION pipeline |
-| `agent-work-generator.ts` | CandidateWork (never auto-requirement) |
-| `agent-human-attention.ts` | Human offline decision queue |
-| `agent-provider-degradation.ts` | Failure policy without retry storms |
-| `agent-priority.ts` | Priority scoring; never waives safety |
-| `agent-org-memory.ts` | Durable knowledge vs chat |
-| `agent-evaluation-schema.ts` | Metrics schema (no fabricated data) |
-| `agent-company-os.test.ts` | Pure organisational tests |
-| `PROJECT-ISOLATION.md` | Cross-project boundary |
+`DESIGN → IMPLEMENTED → CI VERIFIED → HOSTED VERIFIED → REVIEWED → INTEGRATED → LIVE`
 
-## VERIFIED / NOT VERIFIED / BLOCKED
+## CONTROL-PLANE STACK (open drafts — not on main)
 
-| Item | Status |
-|------|--------|
-| Hour-5 pure modules + tests in repo | **IMPLEMENTED** |
-| CI on latest head | **NOT VERIFIED** (recent Verify runs failing — likely lint; needs isolation) |
-| Head Manager green head `2e9f873` | **VERIFIED** (historical) |
-| Live Supabase / multi-project tenancy | **NOT VERIFIED** |
-| Provider execute / prod webhook | **BLOCKED BY POLICY** |
-| Fabricated metrics | **FORBIDDEN** (schema only) |
+| PR / branch | Capability | State |
+|-------------|------------|--------|
+| #64 | Lease fencing / provider auth hardening | IMPLEMENTED / CI failed historically / NOT LIVE |
+| #96 | Authenticated execution identity contract | DESIGN–IMPLEMENTED / NOT LIVE |
+| #99 | Autonomy frontier supervisor contract | DESIGN / NOT LIVE |
+| #101 | Durable run/attempt ledger | IMPLEMENTED / NOT LIVE |
+| #102 | Phase 2 provider-neutral runtime | IMPLEMENTED / NOT LIVE |
+| #103 | Phase 3 supervisor reconcile + recovery | IMPLEMENTED / NOT LIVE |
+| #104 | Phase 9 evidence verification kernel | IMPLEMENTED / NOT LIVE |
+| #106 | Phase 10 durable attempt result RPC + gen/token fence | IMPLEMENTED / NOT LIVE |
+| #108 | Phase 11 attempt-result idempotency | IMPLEMENTED / NOT LIVE |
+| #109 | Phase 12 dispatch correlation scope fencing | IMPLEMENTED / NOT LIVE |
+| harden-attempt-completion-fencing | Pure attempt completion fencing | IMPLEMENTED / NOT LIVE |
+| ready-nonprod-runner / phase8 | Non-prod DRY_RUN rehearsal | IMPLEMENTED / NOT LIVE |
+| phase6-human-attention-queue | Human attention priority queue | IMPLEMENTED / NOT LIVE |
+| reclaim abandon (this branch) | Pure post-reclaim attempt ABANDON policy | IMPLEMENTED / NOT LIVE |
 
-## DELIBERATELY DISABLED
+**Main:** product app + canonical supply engine. Full agent control-plane stack is **not** integrated on main.
 
-- Provider `execute()`
-- Production Plane webhook
-- Autonomous main merge
+## CI TRUTH
 
-## NEXT HIGHEST-VALUE WORK
+Exact-head Verify runs for Phases 3, 9, 10, 11, 12 have **conclusion: failure** (install/lockfile / external registry class — not proven application-logic green).
 
-1. Restore CI green on current head (format/lint).
-2. Wire `projectId` into durable `agent_tasks` rows (migration + normaliser) — human-approved schema change.
-3. Staging smoke of claim lifecycle.
-4. Optional: adversarial role roster entries (red_team, skeptic) via factory.
-5. Mission Control read model for Lovable (consume pure summaries only).
+- PR #72 lockfile reconciliation remains a **human gate**.
+- Do **not** claim CI VERIFIED without a green workflow on an exact SHA.
 
-## SUGGESTED NEXT SPECIALIST
+## HOSTED SUPABASE
 
-- **ChatGPT / QA:** CI isolation + adversarial review of hour-5 contracts.
-- **Human:** staging smoke + decide when to persist opportunities/memory in Supabase.
+**HOSTED PROOF PENDING** for:
+
+- agent_* migrations applied on hosted project
+- RLS denial for anon/authenticated on execution tables
+- SECURITY DEFINER grants / search_path on dispatch + result RPCs
+- concurrent claim / reclaim / stale-result race
+
+## PRODUCT (main)
+
+- Canonical `findSupply()` / supply engine: live on main (sole discovery authority)
+- Ingest boundary: `src/lib/ingest/*`
+- SEO foundations: `src/lib/seo.ts` (canonical, indexability, sitemap helpers)
+- JSON-LD helpers: `src/lib/seo-jsonld.ts` (WebSite / Organization / BreadcrumbList — no fabricated ratings)
+
+## HUMAN GATES (unchanged)
+
+- Merge to main
+- Production deploy / credentials
+- Hosted migration apply + RLS proof
+- Production 24/7 executor activation
+- Paid ads / DNS / official social publish
+
+## NEXT SAFE MOVES
+
+1. Human: resolve #72 lockfile gate; re-run Verify on control-plane tip
+2. Wire `decideReclaimAbandon` into durable reclaim RPC (same transaction as gen rotation)
+3. Hosted non-prod proof of fencing + idempotency races
+4. Product vertical slices (API + SEO route wiring) without second discovery engine
+5. Integrate human-attention signals from HOLD / fence-reject / evidence-fail
+
+## MANTRA
+
+Maximum **verified** capability under bounded, explicit, auditable authority.
+`IMPLEMENTED ≠ LIVE`. `UNKNOWN` is valid.
