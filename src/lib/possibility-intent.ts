@@ -120,7 +120,8 @@ export function classifyPossibilityIntent(raw: string): PossibilityIntent {
   const giveHits = matchesAny(text, GIVE_PHRASES);
   const journeyHits = matchesAny(text, JOURNEY_PHRASES);
 
-  const scores: { kind: PossibilityIntentKind; hits: string[]; weight: number }[] = [
+  type Score = { kind: PossibilityIntentKind; hits: string[]; weight: number };
+  const scores: [Score, Score, Score, Score] = [
     { kind: "JOURNEY", hits: journeyHits, weight: journeyHits.length * 3 },
     { kind: "GIVE", hits: giveHits, weight: giveHits.length * 3 },
     { kind: "HELP", hits: helpHits, weight: helpHits.length * 3 },

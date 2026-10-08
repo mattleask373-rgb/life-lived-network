@@ -126,6 +126,22 @@ function AuthPage() {
 
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           {note ? <p className="text-sm text-muted-foreground">{note}</p> : null}
+          {mode === "up" || mode === "in" ? (
+            <button
+              type="button"
+              disabled={busy || !email}
+              onClick={async () => {
+                setError(null);
+                setNote(null);
+                const { error: err } = await supabase.auth.resend({ type: "signup", email });
+                if (err) setError("We couldn't resend that just now. Try again in a minute.");
+                else setNote("If that address is waiting to be confirmed, a fresh link is on its way.");
+              }}
+              className="focus-ink text-sm text-muted-foreground underline disabled:opacity-60"
+            >
+              Resend my confirmation email
+            </button>
+          ) : null}
 
           <button
             type="submit"
