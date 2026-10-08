@@ -149,6 +149,21 @@ describe("claim / lease / heartbeat", () => {
     expect(hb.claim!.last_heartbeat).toBe(t1.toISOString());
   });
 
+  it("accepts heartbeat before expiry but rejects at and after expiry", () => {
+    const t0 = new Date("2026-10-07T14:00:00.000Z");
+    const claimed = claimTask(readyTask(), "grok", { now: t0, leaseMs: 1000 });
+
+    expect(() =>
+      heartbeatTask(claimed, "grok", { now: new Date(t0.getTime() + 999) }),
+    ).not.toThrow();
+    expect(() =>
+      heartbeatTask(claimed, "grok", { now: new Date(t0.getTime() + 1000) }),
+    ).toThrow(/lease expired/);
+    expect(() =>
+      heartbeatTask(claimed, "grok", { now: new Date(t0.getTime() + 1001) }),
+    ).toThrow(/lease expired/);
+  });
+
   it("rejects heartbeat from non-owner", () => {
     const claimed = claimTask(readyTask(), "grok");
     expect(() => heartbeatTask(claimed, "chatgpt")).toThrow(/claimed by grok/);
@@ -204,6 +219,16 @@ describe("claim / lease / heartbeat", () => {
     expect(reclaimed.status).toBe("CLAIMED");
     expect(reclaimed.claim!.owner).toBe("chatgpt");
     expect(reclaimed.claim!.lease_start).toBe(farLater.toISOString());
+  });
+
+  it("rejects release by the previous owner after stale reclaim", () => {
+    const t0 = new Date("2026-10-07T10:00:00.000Z");
+    const claimed = claimTask(readyTask(), "grok", { now: t0, leaseMs: 1000 });
+    const farLater = new Date(t0.getTime() + 2 * 60 * 60 * 1000);
+    const reclaimed = reclaimTask(markStale(claimed, farLater), "chatgpt", { now: farLater });
+
+    expect(() => releaseTask(reclaimed, "grok")).toThrow(/claimed by chatgpt/);
+    expect(releaseTask(reclaimed, "chatgpt").status).toBe("READY");
   });
 
   it("does not mutate the original envelope", () => {
