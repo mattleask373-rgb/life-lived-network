@@ -29,7 +29,17 @@ export async function runBoundedSupervisorCycle(input: Readonly<{
   hostedSecurityProof: boolean;
   adapters: SupervisorCycleAdapters;
 }>): Promise<SupervisorCycleDecision> {
-  const scope = await resolveAuthoritativeAgentScope(input.actorId, input.adapters.lookupScope);
+  let scope: ControlPlaneScope;
+  try {
+    scope = await resolveAuthoritativeAgentScope(input.actorId, input.adapters.lookupScope);
+  } catch (error: unknown) {
+    return {
+      kind: "HOLD",
+      taskId: input.task.task_id,
+      providerId: input.provider.id,
+      reason: error instanceof Error ? error.message : "UNKNOWN: authoritative scope resolution failed",
+    };
+  }
   const durable = input.durableControlPlaneProven && await input.adapters.checkDurableControlPlane();
   const hosted = input.hostedSecurityProof && await input.adapters.checkHostedSecurity();
   const health = await input.adapters.readProviderHealth(input.provider.id);
