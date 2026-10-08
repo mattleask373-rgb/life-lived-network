@@ -159,6 +159,7 @@ const DOORS: {
     under: [
       { to: "/give", label: "I have an hour" },
       { to: "/help", label: "What you can do" },
+      { to: "/earn", label: "Ways to earn" },
       { to: "/conversations", label: "Conversations" },
     ],
   },

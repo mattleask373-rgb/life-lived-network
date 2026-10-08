@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ConversationsRouteImport } from './routes/conversations'
+import { Route as EarnRouteImport } from './routes/earn'
 import { Route as GiveRouteImport } from './routes/give'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as JourneyRouteImport } from './routes/journey'
@@ -40,6 +41,11 @@ const AuthRoute = AuthRouteImport.update({
 const ConversationsRoute = ConversationsRouteImport.update({
   id: '/conversations',
   path: '/conversations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EarnRoute = EarnRouteImport.update({
+  id: '/earn',
+  path: '/earn',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GiveRoute = GiveRouteImport.update({
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/conversations': typeof ConversationsRoute
+  '/earn': typeof EarnRoute
   '/give': typeof GiveRoute
   '/help': typeof HelpRoute
   '/journey': typeof JourneyRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/conversations': typeof ConversationsRoute
+  '/earn': typeof EarnRoute
   '/give': typeof GiveRoute
   '/help': typeof HelpRoute
   '/journey': typeof JourneyRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/conversations': typeof ConversationsRoute
+  '/earn': typeof EarnRoute
   '/give': typeof GiveRoute
   '/help': typeof HelpRoute
   '/journey': typeof JourneyRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/conversations'
+    | '/earn'
     | '/give'
     | '/help'
     | '/journey'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/conversations'
+    | '/earn'
     | '/give'
     | '/help'
     | '/journey'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/conversations'
+    | '/earn'
     | '/give'
     | '/help'
     | '/journey'
@@ -236,6 +248,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   ConversationsRoute: typeof ConversationsRoute
+  EarnRoute: typeof EarnRoute
   GiveRoute: typeof GiveRoute
   HelpRoute: typeof HelpRoute
   JourneyRoute: typeof JourneyRoute
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       path: '/conversations'
       fullPath: '/conversations'
       preLoaderRoute: typeof ConversationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/earn': {
+      id: '/earn'
+      path: '/earn'
+      fullPath: '/earn'
+      preLoaderRoute: typeof EarnRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/give': {
@@ -389,6 +409,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   ConversationsRoute: ConversationsRoute,
+  EarnRoute: EarnRoute,
   GiveRoute: GiveRoute,
   HelpRoute: HelpRoute,
   JourneyRoute: JourneyRoute,
