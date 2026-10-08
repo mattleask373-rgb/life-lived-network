@@ -1,3 +1,11 @@
+# Current branch handoff — 2026-10-08
+
+- This branch adds negative regression assertions that bare capability and a journey signal do not enter the `open_to_opportunities` band. The canonical authority remains `src/lib/supply-engine.ts` → `findSupply()`; no second matcher was introduced.
+- The older status text below predates current main and must not be treated as an accurate description of main. Current main's `findSupply()` implementation is live, as confirmed by the current main tree.
+- Hosted Verify for this branch has not been rerun after this test-only change; no local test run is claimed.
+
+---
+
 # Agent System Status — 2026-10-06 (post front-door)
 
 ## CURRENT QUEUE
