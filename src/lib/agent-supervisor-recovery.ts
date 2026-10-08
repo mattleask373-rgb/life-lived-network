@@ -93,7 +93,7 @@ export function authorizeReclaim(
   snapshot: Pick<RecoveryTaskSnapshot, "taskId" | "status" | "workspaceId" | "projectId">,
 ): RecoveryDecision {
   if (snapshot.status !== "READY" && snapshot.status !== "BLOCKED") {
-    return { kind: "HOLD", taskId: snapshot.taskId, reason: "reclaim requires a reconciled non-owned task" };
+    return { kind: "HOLD", taskId: snapshot.taskId, reason: "reclaim requires an authoritative STALE state" };
   }
   if (!snapshot.projectId?.trim()) {
     return { kind: "HOLD", taskId: snapshot.taskId, reason: "project scope is required for reclaim" };
@@ -103,6 +103,6 @@ export function authorizeReclaim(
     taskId: snapshot.taskId,
     workspaceId: snapshot.workspaceId,
     projectId: snapshot.projectId,
-    reason: "task is eligible for a fresh fenced ownership attempt",
+    reason: "task is stale and eligible for a fresh fenced ownership attempt",
   };
 }
