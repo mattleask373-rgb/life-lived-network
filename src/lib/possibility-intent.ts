@@ -120,28 +120,28 @@ export function classifyPossibilityIntent(raw: string): PossibilityIntent {
   const giveHits = matchesAny(text, GIVE_PHRASES);
   const journeyHits = matchesAny(text, JOURNEY_PHRASES);
 
-  const scores: { kind: PossibilityIntentKind; hits: string[]; weight: number }[] = [
-    { kind: "JOURNEY", hits: journeyHits, weight: journeyHits.length * 3 },
-    { kind: "GIVE", hits: giveHits, weight: giveHits.length * 3 },
-    { kind: "HELP", hits: helpHits, weight: helpHits.length * 3 },
-    { kind: "NEED", hits: needHits, weight: needHits.length * 3 },
-  ];
+  type Score = { kind: PossibilityIntentKind; hits: string[]; weight: number };
+  const journey: Score = { kind: "JOURNEY", hits: journeyHits, weight: journeyHits.length * 3 };
+  const give: Score = { kind: "GIVE", hits: giveHits, weight: giveHits.length * 3 };
+  const help: Score = { kind: "HELP", hits: helpHits, weight: helpHits.length * 3 };
+  const need: Score = { kind: "NEED", hits: needHits, weight: needHits.length * 3 };
+  const scores: Score[] = [journey, give, help, need];
 
   if (!needHits.length && /\bneed\b/.test(text)) {
-    scores[3].weight += 1;
-    scores[3].hits = ["need"];
+    need.weight += 1;
+    need.hits = ["need"];
   }
   if (!helpHits.length && /\b(can help|can do|can teach)\b/.test(text)) {
-    scores[2].weight += 2;
-    scores[2].hits = ["can help"];
+    help.weight += 2;
+    help.hits = ["can help"];
   }
   if (!giveHits.length && /\bvolunteer\b/.test(text)) {
-    scores[1].weight += 2;
-    scores[1].hits = ["volunteer"];
+    give.weight += 2;
+    give.hits = ["volunteer"];
   }
   if (!journeyHits.length && /\b(travel|travelling|traveling|trip)\b/.test(text)) {
-    scores[0].weight += 1;
-    scores[0].hits = ["travel"];
+    journey.weight += 1;
+    journey.hits = ["travel"];
   }
 
   scores.sort((a, b) => b.weight - a.weight);
