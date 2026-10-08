@@ -15,6 +15,7 @@ export interface Evidence {
   epistemic: EpistemicState;
   observedAt: string;
   attemptId?: string;
+  verifierId?: string;
 }
 
 export interface Opportunity {
@@ -62,6 +63,7 @@ export interface CycleTrace {
   task: CycleTask;
   authority: AuthorityContext;
   providerId: string;
+  verifierId?: string;
   producedEvidence?: Evidence;
   verification?: Evidence;
   realityDelta?: string;
@@ -205,11 +207,14 @@ export function verifyEvidence(
   if (verification.attemptId !== trace.authority.attemptId) {
     throw new Error("verification attempt does not match authority attempt");
   }
+  if (verification.source === trace.producedEvidence.source) {
+    throw new Error("verification must be independent of producing provider");
+  }
   assertNoCertaintyInflation(
     trace.producedEvidence.epistemic,
     verification.epistemic,
   );
-  return { ...trace, verification };
+  return { ...trace, verification, verifierId: verification.source };
 }
 
 export function completeLearning(
@@ -227,4 +232,24 @@ export function completeLearning(
     learning,
     nextCandidateId,
   };
+}
+
+
+export function assertCurrentAuthority(
+  expected: AuthorityContext,
+  observed: Pick<AuthorityContext, "actorId" | "runId" | "scope" | "leaseGeneration" | "attemptId">,
+): void {
+  if (
+    expected.actorId !== observed.actorId ||
+    expected.runId !== observed.runId ||
+    expected.scope !== observed.scope ||
+    expected.leaseGeneration !== observed.leaseGeneration ||
+    expected.attemptId !== observed.attemptId
+  ) {
+    throw new Error("stale or mismatched execution authority");
+  }
+}
+
+export function serializeCycleTrace(trace: CycleTrace): string {
+  return JSON.stringify(trace, null, 2);
 }
