@@ -8,12 +8,12 @@ const provider: OperationalProvider = { id: "grok", capabilities: ["implementati
 describe("bounded supervisor cycle", () => {
   it("stops before dispatch when scope authority is missing", async () => {
     const dispatch = vi.fn();
-    const result = await runBoundedSupervisorCycle({ actorId: "actor-1", task, provider, providerPolicy: { requireHumanFor: ["P0","P1"], excludeProviders: [] }, durableControlPlaneProven: true, hostedSecurityProof: true, adapters: { lookupScope: async () => null, checkDurableControlPlane: async () => true, checkHostedSecurity: async () => true, readProviderHealth: async () => ({ status: "available", checkedAt: "2026-10-08T17:00:00Z" }), hasActiveAttempt: async () => null, requestDispatch: dispatch } });
+    const result = await runBoundedSupervisorCycle({ actorId: "actor-1", task, provider, providerPolicy: { requireHumanFor: ["P0","P1"], excludeProviders: [] }, adapters: { lookupScope: async () => null, checkDurableControlPlane: async () => ({ status: "PROVEN" as const, evidenceRef: "test:durable", checkedAt: "2026-10-08T17:00:00Z" }), checkHostedSecurity: async () => ({ status: "PROVEN" as const, evidenceRef: "test:hosted", checkedAt: "2026-10-08T17:00:00Z" }), readProviderHealth: async () => ({ status: "available", checkedAt: "2026-10-08T17:00:00Z" }), hasActiveAttempt: async () => null, requestDispatch: dispatch } });
     expect(result.kind).toBe("HOLD"); expect(result.reason).toContain("no authoritative workspace/project scope"); expect(dispatch).not.toHaveBeenCalled();
   });
-  it("dispatches only after all injected proof gates pass", async () => {
+  it("dispatches only after all evidence-backed proof gates pass", async () => {
     const dispatch = vi.fn();
-    const result = await runBoundedSupervisorCycle({ actorId: "actor-1", task, provider, providerPolicy: { requireHumanFor: ["P0","P1"], excludeProviders: [] }, durableControlPlaneProven: true, hostedSecurityProof: true, adapters: { lookupScope: async () => ({ workspaceId: "workspace-1", projectId: "project-1" }), checkDurableControlPlane: async () => true, checkHostedSecurity: async () => true, readProviderHealth: async () => ({ status: "available", checkedAt: "2026-10-08T17:00:00Z" }), hasActiveAttempt: async () => null, requestDispatch: dispatch } });
+    const result = await runBoundedSupervisorCycle({ actorId: "actor-1", task, provider, providerPolicy: { requireHumanFor: ["P0","P1"], excludeProviders: [] }, adapters: { lookupScope: async () => ({ workspaceId: "workspace-1", projectId: "project-1" }), checkDurableControlPlane: async () => ({ status: "PROVEN" as const, evidenceRef: "test:durable", checkedAt: "2026-10-08T17:00:00Z" }), checkHostedSecurity: async () => ({ status: "PROVEN" as const, evidenceRef: "test:hosted", checkedAt: "2026-10-08T17:00:00Z" }), readProviderHealth: async () => ({ status: "available", checkedAt: "2026-10-08T17:00:00Z" }), hasActiveAttempt: async () => null, requestDispatch: dispatch } });
     expect(result.kind).toBe("DISPATCH_READY"); expect(dispatch).toHaveBeenCalledTimes(1);
   });
 });
