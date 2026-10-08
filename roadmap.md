@@ -138,3 +138,4 @@ indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
 
 - [x] `/earn`: paid asks from the canonical opportunity read, pay shown only as stated (integer cents), skill gaps counted from real asks.
 - [ ] Training providers, business exploration, community/housing pathways — need verified sources and a scope decision.
+- [ ] Auth page: resend signup confirmation email option.
