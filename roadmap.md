@@ -133,3 +133,8 @@ indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
 - Dated demonstration activity added for Kings Heath and Digbeth so "what's happening" is demonstrable.
 - Event dates formatted deterministically (no hydration mismatch).
 - Blockers unchanged: no Ticketmaster key; no genuine Guildhall details; no route/transport provider.
+
+## Income (stage 1 done)
+
+- [x] `/earn`: paid asks from the canonical opportunity read, pay shown only as stated (integer cents), skill gaps counted from real asks.
+- [ ] Training providers, business exploration, community/housing pathways — need verified sources and a scope decision.
