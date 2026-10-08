@@ -6,7 +6,7 @@
 - [x] Harden account restoration, async error states, detail-sheet accessibility and locality presentation.
 - [x] Make Road Trip stop restoration resilient and storage-safe.
 - [x] Clear test, typecheck, lint, build, security and desktop/mobile release gates.
-- [ ] Remove `.env` from repository tracking; it is ignored now, but repository-index changes are platform-managed.
+- [x] Remove `.env` from repository tracking; `.env.example` documents the required local configuration.
 - [x] Replace blank account loading with visible loading and recoverable read/session errors.
 - [x] Prevent failed world reads from appearing as honest empty-locality states.
 - [x] Keep locality-aware money/date formatting and provenance visible in saved Road Trip stops.
@@ -40,7 +40,7 @@
 ### Still honestly missing
 
 - Ticketmaster live events: waiting on TICKETMASTER_API_KEY.
-- The Guildhall's real hours, practitioners and booking pathway: waiting on the organisation.
+- The Guildhall's real hours, practitioners and booking pathway: not supplied.
 
 ## Kings Heath hub (done)
 
@@ -58,11 +58,7 @@ Blockers unchanged: Ticketmaster key absent; genuine Guildhall details not suppl
   somewhere instead of stacking pins. `src/lib/map-view.ts` is pure and tested.
 - Viewport and locality are kept apart: moving the map never moves the person.
   When the view settles over a known place, the map offers "Make this my area".
-- `/road-trip`: choose origin, destination, travel mode, date and interests;
-  corridor localities are worked out from the place index and answered by the
-  existing bounded world read. Grouped as before you set off / along your route /
-  a small detour / where you are heading, each card showing only reasons it can
-  prove. Tests: `src/lib/road-trip.test.ts`.
+- `/road-trip`: choose origin, destination, travel mode, date and interests; corridor localities are worked out from the place index and answered by the existing bounded world read. Grouped as before you set off / along your route / a small detour / where you are heading, each card showing only reasons it can prove. Tests: `src/lib/road-trip.test.ts`.
 - Routing is honest: no provider is connected, so straight-line distance is shown
   and detour times are labelled unavailable rather than estimated.
 - Road-trip discoveries now show every supported interest match, event timing,
