@@ -21,9 +21,9 @@ describe("earning", () => {
   });
 
   it("does not treat swaps or given time as paid", () => {
-    expect(
-      isPaidNeed({ intent: "paid_work", paymentType: "paid", paymentModel: "exchange" }),
-    ).toBe(false);
+    expect(isPaidNeed({ intent: "paid_work", paymentType: "paid", paymentModel: "exchange" })).toBe(
+      false,
+    );
     expect(
       isPaidNeed({ intent: "volunteering", paymentType: "unsure", paymentModel: "unpaid" }),
     ).toBe(false);
