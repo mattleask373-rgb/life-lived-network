@@ -156,12 +156,12 @@ describe("claim / lease / heartbeat", () => {
     expect(() =>
       heartbeatTask(claimed, "grok", { now: new Date(t0.getTime() + 999) }),
     ).not.toThrow();
-    expect(() =>
-      heartbeatTask(claimed, "grok", { now: new Date(t0.getTime() + 1000) }),
-    ).toThrow(/lease expired/);
-    expect(() =>
-      heartbeatTask(claimed, "grok", { now: new Date(t0.getTime() + 1001) }),
-    ).toThrow(/lease expired/);
+    expect(() => heartbeatTask(claimed, "grok", { now: new Date(t0.getTime() + 1000) })).toThrow(
+      /lease expired/,
+    );
+    expect(() => heartbeatTask(claimed, "grok", { now: new Date(t0.getTime() + 1001) })).toThrow(
+      /lease expired/,
+    );
   });
 
   it("rejects heartbeat from non-owner", () => {
