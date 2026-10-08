@@ -51,7 +51,17 @@ describe("agent supervisor recovery", () => {
     expect(decisions[0].reason).toContain("cannot be resurrected");
   });
 
-  it("does not reclaim directly from stale; stale must be reconciled first", () => {
+  it("holds successful attempts for verification instead of reclaim", () => {
+    const decisions = reconcileRecovery(
+      [{ ...base, activeAttemptStatus: "SUCCEEDED" }],
+      new Date("2026-10-08T12:00:00Z"),
+      0,
+    );
+    expect(decisions[0].kind).toBe("HOLD");
+    expect(decisions[0].reason).toContain("verification");
+  });
+
+  it("does not reclaim directly from CLAIMED; stale must be reconciled first", () => {
     const decision = authorizeReclaim({
       taskId: "task-1",
       status: "CLAIMED",
@@ -59,15 +69,50 @@ describe("agent supervisor recovery", () => {
       projectId: "project-1",
     });
     expect(decision.kind).toBe("HOLD");
+    expect(decision.reason).toContain("STALE");
   });
 
-  it("permits fresh reclaim only from STALE", () => {
+  it("does not reclaim from READY or BLOCKED without STALE", () => {
+    const ready = authorizeReclaim({
+      taskId: "task-1",
+      status: "READY",
+      workspaceId: "workspace-1",
+      projectId: "project-1",
+    });
+    const blocked = authorizeReclaim({
+      taskId: "task-1",
+      status: "BLOCKED",
+      workspaceId: "workspace-1",
+      projectId: "project-1",
+    });
+    expect(ready.kind).toBe("HOLD");
+    expect(blocked.kind).toBe("HOLD");
+  });
+
+  it("permits fresh reclaim only from authoritative STALE", () => {
     const decision = authorizeReclaim({
       taskId: "task-1",
       status: "STALE",
       workspaceId: "workspace-1",
       projectId: "project-1",
     });
-    expect(decision.kind).toBe("RECLAIM");
+    expect(decision).toEqual({
+      kind: "RECLAIM",
+      taskId: "task-1",
+      workspaceId: "workspace-1",
+      projectId: "project-1",
+      reason: "task is stale and eligible for a fresh fenced ownership attempt",
+    });
+  });
+
+  it("holds reclaim when project scope is missing", () => {
+    const decision = authorizeReclaim({
+      taskId: "task-1",
+      status: "STALE",
+      workspaceId: "workspace-1",
+      projectId: null,
+    });
+    expect(decision.kind).toBe("HOLD");
+    expect(decision.reason).toContain("project scope");
   });
 });

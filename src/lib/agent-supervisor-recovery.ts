@@ -11,7 +11,7 @@ export type RecoveryAttemptStatus =
 
 export type RecoveryTaskSnapshot = Readonly<{
   taskId: string;
-  status: "CLAIMED" | "IN_PROGRESS" | "VERIFYING" | "READY" | "BLOCKED" | "CANCELLED";
+  status: "CLAIMED" | "IN_PROGRESS" | "VERIFYING" | "READY" | "BLOCKED" | "STALE" | "CANCELLED";
   lease: LeaseSnapshot;
   activeAttemptId: string | null;
   activeAttemptStatus: RecoveryAttemptStatus | null;
@@ -88,12 +88,18 @@ export function reconcileRecovery(
  * Once the authoritative DB transition has moved a task to STALE, a separate
  * deterministic gate permits reclamation. This keeps stale marking and new
  * ownership as distinct lifecycle events.
+ *
+ * Reclaim is only allowed from the authoritative STALE status.
  */
 export function authorizeReclaim(
   snapshot: Pick<RecoveryTaskSnapshot, "taskId" | "status" | "workspaceId" | "projectId">,
 ): RecoveryDecision {
-  if (snapshot.status !== "READY" && snapshot.status !== "BLOCKED") {
-    return { kind: "HOLD", taskId: snapshot.taskId, reason: "reclaim requires an authoritative STALE state" };
+  if (snapshot.status !== "STALE") {
+    return {
+      kind: "HOLD",
+      taskId: snapshot.taskId,
+      reason: "reclaim requires an authoritative STALE state",
+    };
   }
   if (!snapshot.projectId?.trim()) {
     return { kind: "HOLD", taskId: snapshot.taskId, reason: "project scope is required for reclaim" };
