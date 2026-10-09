@@ -39,7 +39,7 @@ import {
   type TravelMode,
 } from "@/lib/road-trip";
 
-const title = "Plan a road trip — The Living World";
+const title = "Plan a road trip — Real World Atlas";
 const description =
   "Say where you are going and what interests you, and see what is genuinely happening along the way — events, practices, services and people's offered hours, each with its source.";
 

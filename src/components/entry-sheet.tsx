@@ -95,7 +95,7 @@ export function EntrySheet({
           {entry.demonstration ? (
             <p className="mt-2 rounded-lg border border-border bg-background p-3 text-xs text-muted-foreground">
               <span className="uppercase tracking-widest">Demonstration record</span> — this is
-              trial data showing how the Living World works here. It is not a real listing, and no
+              trial data showing how Real World Atlas works here. It is not a real listing, and no
               real person or place is being described.
             </p>
           ) : null}

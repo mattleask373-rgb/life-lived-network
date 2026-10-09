@@ -1,5 +1,5 @@
 /**
- * The public face of The Living World.
+ * The public face of Real World Atlas.
  *
  * One place decides what a public page tells a search engine, so no page
  * invents its own rules. Two things matter here:

@@ -1,5 +1,5 @@
 /**
- * The seam between the outside world and the Living World.
+ * The seam between the outside world and Real World Atlas.
  *
  * Only an adapter ever knows an outside source's shape. Everything past this
  * file works on `SourceEvent` — our words, our units, our timestamps — so the

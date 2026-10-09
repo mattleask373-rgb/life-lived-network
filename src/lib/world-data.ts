@@ -1,5 +1,5 @@
 /**
- * The domain vocabulary of the Living World.
+ * The domain vocabulary of Real World Atlas.
  *
  * Types, layers, honesty labels, and pure helpers — nothing else. There is no
  * data in this file: every helper works on entries it is handed, wherever they
@@ -108,7 +108,7 @@ export interface WorldEntry {
   qualificationNote?: string;
   /** Whether, and how, this can genuinely be booked. */
   bookingState?: "bookable" | "enquire" | "external" | "not_bookable";
-  /** Where booking actually happens, when it happens outside the Living World. */
+  /** Where booking actually happens, when it happens outside Real World Atlas. */
   bookingUrl?: string;
 }
 

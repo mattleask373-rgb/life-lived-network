@@ -30,7 +30,7 @@ import {
   type WorldEntry,
 } from "@/lib/world-data";
 
-const title = "The Living World — what's actually happening near you";
+const title = "Real World Atlas — what's actually happening near you";
 const description =
   "A living map of real work, music, food, nature, community projects and people open to meeting, across the UK and Ireland. Find something, then go and live it.";
 

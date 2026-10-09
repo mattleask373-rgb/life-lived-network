@@ -13,7 +13,7 @@ import { getWorld } from "@/lib/world.functions";
 import { nextStepFor, providerLine, servicePossibilities } from "@/lib/services";
 import { BAND_HEADING, BAND_ORDER, type SupplyBand, type SupplyResult } from "@/lib/supply-engine";
 
-const title = "Who could help — The Living World";
+const title = "Who could help — Real World Atlas";
 const description =
   "Real possibilities for a real need: people who've said they can help, community projects, freely offered hours, swaps, and travellers passing through — each one plainly labelled.";
 

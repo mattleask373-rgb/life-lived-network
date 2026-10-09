@@ -18,7 +18,7 @@ import { GROUP_HEADING, STATUS_LABEL, isOpen } from "@/lib/connection";
 import { REPORT_REASONS, type ReportReason } from "@/lib/safety";
 import { DataErrorState } from "@/components/data-state";
 
-const title = "Your conversations — The Living World";
+const title = "Your conversations — Real World Atlas";
 const description =
   "Quiet, contextual conversations about real things: what someone needed, where, and when. No inbox to keep up with, no contact details handed over.";
 

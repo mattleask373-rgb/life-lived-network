@@ -13,7 +13,7 @@ import { PAYMENT_MODELS } from "@/lib/needs";
 import { DataErrorState } from "@/components/data-state";
 import { eventDate, money } from "@/components/layer-colour";
 
-const title = "What could you help with? — The Living World";
+const title = "What could you help with? — Real World Atlas";
 const description =
   "Real things people near you have asked for, matched only against what you've actually said you can do, where you'd go and when you're free.";
 

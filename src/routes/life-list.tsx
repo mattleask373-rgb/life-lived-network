@@ -10,7 +10,7 @@ import { LIFE_LIST_SEEDS } from "@/lib/fixtures/world-entries";
 import type { WorldEntry } from "@/lib/world-data";
 import { DataErrorState, DataLoadingState } from "@/components/data-state";
 
-const title = "Your life list — The Living World";
+const title = "Your life list — Real World Atlas";
 const description =
   "The things you said why not to: places to go, people to meet, skills to learn and projects to help with. A private list, not a public performance.";
 

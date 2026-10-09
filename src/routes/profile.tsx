@@ -9,7 +9,7 @@ import { CapabilityPanel } from "@/components/capability-panel";
 import { ProfilePhoto } from "@/components/profile-photo";
 import { DataErrorState, DataLoadingState } from "@/components/data-state";
 
-const title = "Who you are — The Living World";
+const title = "Who you are — Real World Atlas";
 const description =
   "A profile that reads like a person: what you're interested in, what you could offer, and what you'd love to do. No followers, no scores.";
 
