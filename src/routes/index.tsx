@@ -10,6 +10,7 @@ import { PossibilityFrontDoor } from "@/components/possibility-front-door";
 import { ThreeHours } from "@/components/three-hours";
 import { DoSomethingToday } from "@/components/do-something-today";
 import { LayerIcon } from "@/components/layer-icon";
+import { TruthBanner } from "@/components/truth-banner";
 import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -126,6 +127,8 @@ function Home() {
         <div className="mt-5">
           <PlacePicker />
         </div>
+
+        <TruthBanner placeName={placeName} />
 
         <PossibilityFrontDoor />
 
