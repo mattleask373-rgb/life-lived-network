@@ -143,3 +143,10 @@ indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
 - [x] Vision audit first slice: trust chip on cards, home main action follows how busy the place is
 - [ ] Decide product name (Real World Atlas vs The Living World) — waiting on owner
 - [ ] Backend switch to the target project — waiting on owner decision (A/B/C)
+
+## 12-hour block, 2026-10-09 (handoff)
+
+- [x] User-facing name is "Real World Atlas" in page titles, header, locality pages and provenance label.
+- [x] Home map has a Map / List switch; list shows the same loaded entries with loading, error and empty states.
+- [ ] NOT VERIFIED (human, dashboard needed): private-schema exposure, RLS effectiveness, canonical backend project switch (options A/B/C).
+- [ ] Next: list view on locality page; /give vs /help intent copy; screen-reader pass on entry sheet; 375px visual QA screenshots; Ticketmaster key (blocked).

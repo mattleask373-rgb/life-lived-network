@@ -270,6 +270,7 @@ function Home() {
               onRetry={() => void refetchWorld()}
             />
           </div>
+          )}
           {exploredPlace ? (
             <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
               <span className="text-muted-foreground">
