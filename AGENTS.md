@@ -25,3 +25,5 @@ Architecture Decision Records live in **`docs/adr/`**.
 **Canonical possibility engine:** `src/lib/supply-engine.ts` — do not create a second one.
 
 **No autonomous merge to main. No force-push. Independent review required.**
+
+Outside agents (e.g. Grok) collaborate only via GitHub pull requests under `docs/agents/EXTERNAL-COLLABORATORS.md` — keeps Lovable-synced `main` stable.
