@@ -85,5 +85,7 @@ export function skillGaps(
       counts.set(key, row);
     }
   }
-  return [...counts.values()].sort((a, b) => b.askedBy - a.askedBy || a.label.localeCompare(b.label));
+  return [...counts.values()].sort(
+    (a, b) => b.askedBy - a.askedBy || a.label.localeCompare(b.label),
+  );
 }

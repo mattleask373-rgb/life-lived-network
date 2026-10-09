@@ -47,9 +47,13 @@ export async function generateDraft(text: string, hint: string | null): Promise<
   } catch (err) {
     const status = statusOf(err);
     console.error("draft-assist failed", status);
-    if (status === 429) return { ok: false, error: "Lots of people are drafting right now. Try again in a minute." };
+    if (status === 429)
+      return { ok: false, error: "Lots of people are drafting right now. Try again in a minute." };
     if (status === 402 || status === 403)
-      return { ok: false, error: "Drafting help is unavailable at the moment. You can still write it yourself." };
+      return {
+        ok: false,
+        error: "Drafting help is unavailable at the moment. You can still write it yourself.",
+      };
     return { ok: false, error: "We couldn't draft that. You can still write it yourself." };
   }
 }

@@ -15,13 +15,7 @@ const KIND_LABEL: Record<DraftKind, string> = {
  * nothing is filled in until you choose "Use this draft", and nothing is
  * posted until you post the form yourself.
  */
-export function DraftHelper({
-  hint,
-  onUse,
-}: {
-  hint: DraftKind;
-  onUse: (draft: Draft) => void;
-}) {
+export function DraftHelper({ hint, onUse }: { hint: DraftKind; onUse: (draft: Draft) => void }) {
   const draft = useServerFn(draftFromText);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -49,8 +43,8 @@ export function DraftHelper({
         <Sparkles aria-hidden size={18} /> Help me write it
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Describe it in your own words. AI tidies it into a draft for you to check — it only uses what
-        you wrote and never adds details.
+        Describe it in your own words. AI tidies it into a draft for you to check — it only uses
+        what you wrote and never adds details.
       </p>
       <label className="mt-3 grid gap-1 text-sm">
         <span className="sr-only">Your own words</span>
