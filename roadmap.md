@@ -139,3 +139,7 @@ indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
 - [x] `/earn`: paid asks from the canonical opportunity read, pay shown only as stated (integer cents), skill gaps counted from real asks.
 - [ ] Training providers, business exploration, community/housing pathways — need verified sources and a scope decision.
 - [x] Auth page: resend signup confirmation email option.
+
+- [x] Vision audit first slice: trust chip on cards, home main action follows how busy the place is
+- [ ] Decide product name (Real World Atlas vs The Living World) — waiting on owner
+- [ ] Backend switch to the target project — waiting on owner decision (A/B/C)
