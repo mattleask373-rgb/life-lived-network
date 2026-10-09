@@ -19,7 +19,7 @@ async function body(route: unknown): Promise<{ xml: string; res: Response }> {
   return { xml: await res.text(), res };
 }
 
-const locs = (xml: string) => [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+const locs = (xml: string) => [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1] ?? "");
 
 describe("public sitemap privacy", () => {
   it("pages sitemap lists exactly the public screens, nothing else", async () => {
