@@ -564,10 +564,10 @@ export const DEMO_ENTRIES: DemoEntry[] = [
     minutes: 120,
     cost: 30,
     summary:
-      "An example of a service booked somewhere else: the Living World shows what it is, where it is and what it costs, and the booking itself happens on the provider's own system.",
+      "An example of a service booked somewhere else: Real World Atlas shows what it is, where it is and what it costs, and the booking itself happens on the provider's own system.",
     details: [
       "Demonstration record — the booking address below is a fixture, not a real diary",
-      "Booking happens on the provider's own system, never inside the Living World",
+      "Booking happens on the provider's own system, never inside Real World Atlas",
       "No payment is handled here",
     ],
     social: "friendly",

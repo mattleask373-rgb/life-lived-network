@@ -10,7 +10,7 @@ import { FLEXIBILITIES, NEED_INTENTS, URGENCIES, type Need } from "@/lib/needs";
 import { fetchDefaultPlace } from "@/lib/places";
 import { money } from "@/components/layer-colour";
 
-const title = "What do you need? — The Living World";
+const title = "What do you need? — Real World Atlas";
 const description =
   "Say what you actually need — a gardener on Thursday, a hand with a community garden, someone to swap skills with — and see who nearby could genuinely help.";
 

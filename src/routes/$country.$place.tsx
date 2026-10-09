@@ -51,10 +51,10 @@ export const Route = createFileRoute("/$country/$place")({
     const label = wider ? `${name}, ${wider}` : name;
     const path = localityPath(geography.place);
     const current = entries.filter((entry) => !entry.demonstration);
-    const title = `${label} — what's happening and what's here | The Living World`;
+    const title = `${label} — what's happening and what's here | Real World Atlas`;
     const description = current.length
       ? `Real things happening in ${name}, the services and practices recorded there, and what people nearby have offered or asked for.`
-      : `${name} in The Living World. Nothing has been recorded here yet — add the first thing.`;
+      : `${name} in Real World Atlas. Nothing has been recorded here yet — add the first thing.`;
     // Until a page has something genuinely useful on it, it is not offered to
     // search engines. It still exists for anybody who arrives.
     return current.length >= 3
@@ -69,7 +69,7 @@ function Crumbs({ place, ancestors }: { place: PlaceBrief; ancestors: PlaceBrief
   return (
     <nav aria-label="Where this is" className="text-sm text-muted-foreground">
       <Link className="underline-offset-4 hover:underline" to="/">
-        The Living World
+        Real World Atlas
       </Link>
       {chain.map((step) => (
         <span key={step.id}>

@@ -258,7 +258,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
           : draft.band === "community"
             ? "community"
             : "internal_listing",
-        label: draft.personId ? "Stated by this person" : "Published in The Living World",
+        label: draft.personId ? "Stated by this person" : "Published in Real World Atlas",
         sourceId: draft.id,
       },
       constraints:

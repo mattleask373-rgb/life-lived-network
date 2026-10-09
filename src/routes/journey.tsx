@@ -11,7 +11,7 @@ import { fetchWorldEntries } from "@/lib/listings";
 import { useWorldContext } from "@/lib/world-context";
 import { DataErrorState } from "@/components/data-state";
 
-const title = "What could your journey become? — The Living World";
+const title = "What could your journey become? — Real World Atlas";
 const description =
   "Say how long you're staying, what you can spend and what you'd like to find. We arrange real opportunities, music, food and community projects into a few possible journeys.";
 

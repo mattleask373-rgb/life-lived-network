@@ -1,5 +1,5 @@
 /**
- * Turning outside data into Living World data, safely.
+ * Turning outside data into Real World Atlas data, safely.
  *
  * Everything an outside source says is untrusted: text may carry markup, links
  * may point anywhere, dates may be nonsense, coordinates may be in the sea.

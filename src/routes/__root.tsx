@@ -80,13 +80,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "The Living World — a real-life network" },
+      { title: "Real World Atlas — a real-life network" },
       {
         name: "description",
         content:
           "A living map of what people are actually doing near you: work, music, food, nature, community projects and people open to meeting.",
       },
-      { property: "og:title", content: "The Living World — a real-life network" },
+      { property: "og:title", content: "Real World Atlas — a real-life network" },
       {
         property: "og:description",
         content:
@@ -178,7 +178,7 @@ function SiteHeader() {
       <nav aria-label="Main" className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6">
         <div className="flex items-baseline justify-between gap-4">
           <Link to="/" className="min-w-0 truncate font-semibold tracking-tight">
-            The Living World
+            Real World Atlas
           </Link>
           <Link
             to={user ? "/profile" : "/auth"}

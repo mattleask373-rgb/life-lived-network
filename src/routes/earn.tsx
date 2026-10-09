@@ -9,7 +9,7 @@ import { describePay, isPaidNeed, skillGaps } from "@/lib/earning";
 import { DataErrorState } from "@/components/data-state";
 import { eventDate } from "@/components/layer-colour";
 
-const title = "Ways to earn — The Living World";
+const title = "Ways to earn — Real World Atlas";
 const description =
   "Paid work people near you have actually asked for, matched to what you've said you can do, and the skills those asks name that you haven't added yet.";
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 
-const title = "Join in — The Living World";
+const title = "Join in — Real World Atlas";
 const description =
   "Explore the map without an account. Make one when you want to save something, post something real, or meet someone.";
 

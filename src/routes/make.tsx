@@ -9,7 +9,7 @@ import { useWorldContext } from "@/lib/world-context";
 import { PlacePicker } from "@/components/place-picker";
 import { LAYERS, type LayerId, type TimeBand } from "@/lib/world-data";
 
-const title = "Make something happen — The Living World";
+const title = "Make something happen — Real World Atlas";
 const description =
   "Offer work, host an experience, put on an event, share a project, open a table or offer an hour of what you're good at.";
 

@@ -6,7 +6,7 @@ import { useSession } from "@/hooks/use-session";
 import { closeHour, createHour, fetchHours, type HourDirection } from "@/lib/hours";
 import { DataErrorState } from "@/components/data-state";
 
-const title = "What can you give? — The Living World";
+const title = "What can you give? — Real World Atlas";
 const description =
   "An hour of something useful: teaching, painting, photography, a garden, a language. Real people offering real hours, and people who'd love to learn.";
 
