@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { LAYERS, QUALITY_LABEL, relatedEntries, type WorldEntry } from "@/lib/world-data";
 import {
   asBookingState,
+  availabilityLine,
   BOOKING_LABEL,
   isService,
   nextStepFor,
@@ -133,13 +134,16 @@ export function EntrySheet({
           {service ? (
             <div className="mt-4 rounded-lg border border-border bg-background p-3 text-sm">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                Service or practice
+                Who provides this
               </p>
               <p className="mt-1">{providerLine(entry)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Stated by the provider. Real World Atlas has not checked these details.
+              </p>
               <p className="mt-1 text-muted-foreground">
                 {entry.place} · {entry.neighbourhood}
               </p>
-              <p className="mt-1 text-muted-foreground">Availability: {entry.when}</p>
+              <p className="mt-1 text-muted-foreground">{availabilityLine(entry)}</p>
               <p className="mt-1 text-muted-foreground">
                 {BOOKING_LABEL[asBookingState(entry.bookingState)]} ·{" "}
                 {money(entry.cost, entry.currency)}

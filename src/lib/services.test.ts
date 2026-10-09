@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   asBookingState,
+  availabilityLine,
   isService,
   nextStepFor,
   providerLine,
@@ -142,5 +143,16 @@ describe("services answering a need", () => {
     expect(servicePossibilities(world, { placeId: "place-kh", text: "therapy" }, 1)).toHaveLength(
       1,
     );
+  });
+});
+
+describe("provider-stated times", () => {
+  it("labels times as stated by the provider, never confirmed", () => {
+    expect(availabilityLine(entry({ when: "Weekday mornings" }))).toBe(
+      "Times as stated by the provider: Weekday mornings",
+    );
+  });
+  it("says times are not stated when empty", () => {
+    expect(availabilityLine(entry({ when: "  " }))).toBe("Times not stated");
   });
 });

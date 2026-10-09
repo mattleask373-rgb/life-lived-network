@@ -150,3 +150,11 @@ indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
 - [x] Home map has a Map / List switch; list shows the same loaded entries with loading, error and empty states.
 - [ ] NOT VERIFIED (human, dashboard needed): private-schema exposure, RLS effectiveness, canonical backend project switch (options A/B/C).
 - [ ] Next: list view on locality page; /give vs /help intent copy; screen-reader pass on entry sheet; 375px visual QA screenshots; Ticketmaster key (blocked).
+
+## Programme plan, 2026-10-09
+- [x] Service block: "Who provides this", provider-stated caveat, times labelled as stated / "Times not stated" (+ tests).
+- [ ] Owner: confirm canonical GitHub repo (life-lived-network vs -2) — blocks PR/agent work.
+- [ ] Owner: backend A/B/C; duplicate ADR 003 numbering; exposed-schema check (NOT VERIFIED).
+- [ ] Sitemap/public-metadata leak tests (private, blocked, reported, demo, expired).
+- [ ] Read-only grants/default-privileges audit, then gated remediation migration with rollback.
+- [ ] Pilot research: one town, one segment, ≥20 signals, 5–10 buyer conversations (owner-led outreach).
