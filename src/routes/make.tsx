@@ -8,6 +8,7 @@ import { currencySymbol } from "@/components/layer-colour";
 import { useWorldContext } from "@/lib/world-context";
 import { PlacePicker } from "@/components/place-picker";
 import { LAYERS, type LayerId, type TimeBand } from "@/lib/world-data";
+import { DraftHelper } from "@/components/draft-helper";
 
 const title = "Make something happen — Real World Atlas";
 const description =
@@ -211,6 +212,17 @@ function MakePage() {
 
         {kind ? (
           <form onSubmit={submit} className="mt-6 space-y-6">
+            <DraftHelper
+              hint={kind === "work" || kind === "skill" ? "offer" : "place"}
+              onUse={(d) =>
+                setForm((f) => ({
+                  ...f,
+                  title: d.title || f.title,
+                  summary: d.summary || f.summary,
+                  details: d.details.length ? d.details.join("\n") : f.details,
+                }))
+              }
+            />
             <div className="card-paper space-y-4 p-5">
               <label className="block text-sm">
                 <span className="text-muted-foreground">

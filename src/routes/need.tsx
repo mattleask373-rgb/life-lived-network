@@ -9,6 +9,7 @@ import { createNeed, getMyNeeds, getOpenNeeds } from "@/lib/needs.functions";
 import { FLEXIBILITIES, NEED_INTENTS, URGENCIES, type Need } from "@/lib/needs";
 import { fetchDefaultPlace } from "@/lib/places";
 import { money } from "@/components/layer-colour";
+import { DraftHelper } from "@/components/draft-helper";
 
 const title = "What do you need? — Real World Atlas";
 const description =
@@ -218,6 +219,17 @@ function NeedForm({
   return (
     <section className="card-paper mt-6 p-5">
       <h2 className="text-xl">Say what you need</h2>
+      <div className="mt-4">
+        <DraftHelper
+          hint="need"
+          onUse={(d) => {
+            if (d.category) setCategory(d.category);
+            if (d.title) setNeedTitle(d.title);
+            const body = [d.summary, ...d.details].filter(Boolean).join("\n");
+            if (body) setDescription(body);
+          }}
+        />
+      </div>
       <div className="mt-4 grid gap-4">
         <label className="grid gap-1 text-sm">
           What kind of thing is it?
