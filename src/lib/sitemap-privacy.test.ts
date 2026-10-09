@@ -25,7 +25,7 @@ describe("public sitemap privacy", () => {
   it("pages sitemap lists exactly the public screens, nothing else", async () => {
     const { xml, res } = await body(PagesRoute);
     expect(res.headers.get("content-type")).toContain("xml");
-    expect(locs(xml).sort()).toEqual(PUBLIC_PATHS.map((p) => `${SITE_ORIGIN}${p === "/" ? "/" : p}`).sort());
+    expect(locs(xml).sort()).toEqual(PUBLIC_PATHS.map((p) => `${SITE_ORIGIN}${p}`).sort());
   });
 
   it("never lists private, account, moderation or source screens", async () => {
