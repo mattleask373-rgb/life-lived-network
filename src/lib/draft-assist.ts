@@ -34,8 +34,14 @@ export function tidyDraft(d: Draft): Draft {
     title: t(d.title, 120),
     category: t(d.category, 40).toLowerCase(),
     summary: t(d.summary, 400),
-    details: d.details.map((x) => t(x, 200)).filter(Boolean).slice(0, 6),
-    missing: d.missing.map((x) => t(x, 120)).filter(Boolean).slice(0, 6),
+    details: d.details
+      .map((x) => t(x, 200))
+      .filter(Boolean)
+      .slice(0, 6),
+    missing: d.missing
+      .map((x) => t(x, 120))
+      .filter(Boolean)
+      .slice(0, 6),
   };
 }
 

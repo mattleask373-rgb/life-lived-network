@@ -31,8 +31,10 @@ export function EmptyPlace({
           <dt className="font-medium">What we know</dt>
           <dd className="text-muted-foreground">
             Nothing has been recorded here yet
-            {needCount ? `, apart from ${needCount === 1 ? "1 open need" : `${needCount} open needs`}` : ""}.
-            We'd rather say that than invent something.
+            {needCount
+              ? `, apart from ${needCount === 1 ? "1 open need" : `${needCount} open needs`}`
+              : ""}
+            . We'd rather say that than invent something.
           </dd>
         </div>
         <div>

@@ -15,14 +15,21 @@ describe("earning", () => {
   });
 
   it("never invents an amount when none was given", () => {
-    expect(describePay({ budget: null, budgetMax: null, currency: "GBP", paymentModel: "unknown" }))
-      .toBe("Pay not stated");
+    expect(
+      describePay({ budget: null, budgetMax: null, currency: "GBP", paymentModel: "unknown" }),
+    ).toBe("Pay not stated");
   });
 
   it("does not treat swaps or given time as paid", () => {
-    expect(isPaidNeed({ intent: "paid_work", paymentType: "paid", paymentModel: "exchange" })).toBe(false);
-    expect(isPaidNeed({ intent: "volunteering", paymentType: "unsure", paymentModel: "unpaid" })).toBe(false);
-    expect(isPaidNeed({ intent: "one_off_work", paymentType: "unsure", paymentModel: "fixed" })).toBe(true);
+    expect(isPaidNeed({ intent: "paid_work", paymentType: "paid", paymentModel: "exchange" })).toBe(
+      false,
+    );
+    expect(
+      isPaidNeed({ intent: "volunteering", paymentType: "unsure", paymentModel: "unpaid" }),
+    ).toBe(false);
+    expect(
+      isPaidNeed({ intent: "one_off_work", paymentType: "unsure", paymentModel: "fixed" }),
+    ).toBe(true);
   });
 
   it("counts gaps only from real needs, excluding what the person has", () => {
