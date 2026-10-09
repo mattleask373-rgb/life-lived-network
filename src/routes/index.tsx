@@ -207,7 +207,11 @@ function Home() {
           <div className="mt-3">
             <LayerFilter active={layers} onChange={setLayers} />
           </div>
-          <div role="group" aria-label="Show as" className="mt-3 inline-flex rounded-full border border-border bg-card p-1 text-sm">
+          <div
+            role="group"
+            aria-label="Show as"
+            className="mt-3 inline-flex rounded-full border border-border bg-card p-1 text-sm"
+          >
             {(["map", "list"] as const).map((m) => (
               <button
                 key={m}
@@ -223,11 +227,17 @@ function Home() {
           {mode === "list" ? (
             <div className="mt-3">
               {worldLoading ? (
-                <p role="status" className="text-sm text-muted-foreground">Looking…</p>
+                <p role="status" className="text-sm text-muted-foreground">
+                  Looking…
+                </p>
               ) : worldError ? (
                 <p role="alert" className="text-sm">
                   We couldn't load what's here.{" "}
-                  <button type="button" onClick={() => void refetchWorld()} className="focus-ink underline underline-offset-4">
+                  <button
+                    type="button"
+                    onClick={() => void refetchWorld()}
+                    className="focus-ink underline underline-offset-4"
+                  >
                     Try again
                   </button>
                 </p>
@@ -244,32 +254,32 @@ function Home() {
               )}
             </div>
           ) : (
-          <div className="mt-3 h-[62vh] min-h-80 sm:h-[30rem]">
-            <LivingMap
-              entries={entries}
-              activeId={open?.id}
-              onSelect={setOpen}
-              centre={place ? { lat: place.lat, lng: place.lng } : null}
-              centreName={place?.name}
-              area={
-                index && view
-                  ? (() => {
-                      const found = placeInView(index, view, place?.id ?? null);
-                      return found ? { name: found.name, slug: found.slug } : null;
-                    })()
-                  : null
-              }
-              onExploreArea={setExploredSlug}
-              onAdoptArea={(slug) => {
-                setPlaceSlug(slug);
-                setExploredSlug(null);
-              }}
-              onViewChange={setView}
-              loading={worldLoading}
-              error={worldError}
-              onRetry={() => void refetchWorld()}
-            />
-          </div>
+            <div className="mt-3 h-[62vh] min-h-80 sm:h-[30rem]">
+              <LivingMap
+                entries={entries}
+                activeId={open?.id}
+                onSelect={setOpen}
+                centre={place ? { lat: place.lat, lng: place.lng } : null}
+                centreName={place?.name}
+                area={
+                  index && view
+                    ? (() => {
+                        const found = placeInView(index, view, place?.id ?? null);
+                        return found ? { name: found.name, slug: found.slug } : null;
+                      })()
+                    : null
+                }
+                onExploreArea={setExploredSlug}
+                onAdoptArea={(slug) => {
+                  setPlaceSlug(slug);
+                  setExploredSlug(null);
+                }}
+                onViewChange={setView}
+                loading={worldLoading}
+                error={worldError}
+                onRetry={() => void refetchWorld()}
+              />
+            </div>
           )}
           {exploredPlace ? (
             <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
