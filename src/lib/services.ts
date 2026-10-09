@@ -167,6 +167,13 @@ function words(value: string): string[] {
 }
 
 /**
+ * @deprecated Excluded from the canonical Possibility pipeline (Slice 2).
+ *
+ * DO NOT use this function in the Need → Possibility → Connection flow or any
+ * user-facing possibility discovery experience. Canonical supply is governed
+ * exclusively by findSupply() in src/lib/supply-engine.ts.
+ * This is preserved strictly for legacy non-matching service reference/tests.
+ *
  * Services in the same locality that could answer a need. Deterministic and
  * explainable: same locality, an actual word in common, and never expired. No
  * scoring, no popularity, no ranking magic — booking state then title.
