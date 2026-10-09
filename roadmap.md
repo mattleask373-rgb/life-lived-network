@@ -158,3 +158,9 @@ indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
 - [ ] Sitemap/public-metadata leak tests (private, blocked, reported, demo, expired).
 - [ ] Read-only grants/default-privileges audit, then gated remediation migration with rollback.
 - [ ] Pilot research: one town, one segment, ≥20 signals, 5–10 buyer conversations (owner-led outreach).
+
+## Sitemap privacy regression tests (done, 2026-10-09)
+
+- `src/lib/sitemap-privacy.test.ts` calls the real public sitemap handlers and checks they list only the fixed public screens: no private screens, record ids, query strings or demonstration/blocked/reported entries.
+- Finding: sitemaps never read records today, so record-level leaks are not possible right now. If locality/service/provider/event sitemaps are added, they need their own eligibility tests (visibility, moderation, demo exclusion) before release.
+- Still open: page head/metadata for record detail views is not covered by these tests.
