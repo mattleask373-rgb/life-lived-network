@@ -6,6 +6,7 @@ import { LayerFilter } from "@/components/layer-filter";
 import { EntrySheet } from "@/components/entry-sheet";
 import { EntryCard } from "@/components/entry-card";
 import { PlacePicker } from "@/components/place-picker";
+import { EmptyPlace } from "@/components/data-state";
 import { PossibilityFrontDoor } from "@/components/possibility-front-door";
 import { ThreeHours } from "@/components/three-hours";
 import { DoSomethingToday } from "@/components/do-something-today";
@@ -94,6 +95,13 @@ function Home() {
             {regionName ? <span className="text-muted-foreground">, {regionName}</span> : null}
           </h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">{placeBlurb}</p>
+          <p role="status" className="mt-2 text-sm text-muted-foreground">
+            {worldLoading || loading
+              ? "Checking what's recorded here…"
+              : worldError
+                ? "We couldn't check what's recorded here."
+                : `${all.length === 1 ? "1 thing" : `${all.length} things`} recorded here · ${needCount === 1 ? "1 open need" : `${needCount} open needs`}`}
+          </p>
           <p className="mt-4 max-w-2xl text-base">
             Find real things to do, people who can help, and worthwhile stops along your way — then
             close the app and go live them.
@@ -164,35 +172,12 @@ function Home() {
         ) : null}
 
         {quiet ? (
-          <section className="card-paper mt-6 p-5">
-            <h2 className="text-xl">There isn't much here yet.</h2>
-            <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-              Nothing has been put into {placeName} so far, and we'd rather say that than invent
-              something. Look at somewhere wider — a county or a country — or put the first real
-              thing here yourself.
-            </p>
-            {ancestors.length ? (
-              <div className="mt-4 flex flex-wrap items-baseline gap-2">
-                <span className="text-sm text-muted-foreground">Step out to</span>
-                {ancestors.slice(0, 3).map((a) => (
-                  <button
-                    key={a.id}
-                    type="button"
-                    onClick={() => setPlaceSlug(a.slug)}
-                    className="focus-ink rounded-full border border-border bg-background px-3 py-1 text-sm text-muted-foreground hover:text-foreground"
-                  >
-                    {a.name}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-            <Link
-              to="/make"
-              className="focus-ink mt-4 inline-flex rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
-            >
-              Make something happen here
-            </Link>
-          </section>
+          <EmptyPlace
+            placeName={placeName}
+            needCount={needCount}
+            ancestors={ancestors.slice(0, 3)}
+            onStepOut={setPlaceSlug}
+          />
         ) : null}
 
         <section aria-labelledby="map-heading" className="mt-8">
