@@ -14,6 +14,7 @@ import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { fetchWorldEntries } from "@/lib/listings";
+import { densityOf } from "@/lib/trust";
 import { getOpenNeeds } from "@/lib/needs.functions";
 import { PLACE_FALLBACK } from "@/lib/places";
 import { placeInView, type MapView } from "@/lib/map-view";
@@ -97,12 +98,21 @@ function Home() {
             close the app and go live them.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <a
-              href="#map-heading"
-              className="focus-ink rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
-            >
-              Explore the map
-            </a>
+            {quiet ? (
+              <Link
+                to="/make"
+                className="focus-ink rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
+              >
+                Add the first real thing here
+              </Link>
+            ) : (
+              <a
+                href="#map-heading"
+                className="focus-ink rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
+              >
+                {densityOf(all.length) === "busy" ? "See what's on" : "Explore the map"}
+              </a>
+            )}
             <Link
               to="/road-trip"
               className="focus-ink rounded-full border border-border bg-card px-5 py-2.5 text-sm"

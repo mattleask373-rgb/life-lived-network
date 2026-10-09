@@ -2,6 +2,7 @@ import { LAYERS, type WorldEntry } from "@/lib/world-data";
 import { asBookingState, BOOKING_LABEL, isService, providerLine } from "@/lib/services";
 import { duration, eventDate, layerText, money } from "./layer-colour";
 import { LayerIcon } from "./layer-icon";
+import { TrustChip } from "./trust-chip";
 
 export function EntryCard({
   entry,
@@ -44,11 +45,7 @@ export function EntryCard({
             {BOOKING_LABEL[asBookingState(entry.bookingState)]}
           </span>
         ) : null}
-        {entry.demonstration ? (
-          <span className="inline-flex rounded-full border border-border px-2 py-0.5 text-[0.7rem] uppercase tracking-widest text-muted-foreground">
-            Demonstration
-          </span>
-        ) : null}
+        <TrustChip entry={entry} />
         {entry.origin === "source" && entry.sourceName ? (
           <span className="inline-flex rounded-full border border-border px-2 py-0.5 text-[0.7rem] text-muted-foreground">
             Listed by {entry.sourceName}
