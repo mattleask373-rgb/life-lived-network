@@ -133,6 +133,16 @@ export function qualificationLine(entry: WorldEntry): string {
   return "No qualification has been verified for this service";
 }
 
+/**
+ * Times a provider gave are what they said, not a confirmed slot. Empty or
+ * placeholder text becomes "Times not stated" rather than a guess.
+ */
+export function availabilityLine(entry: WorldEntry): string {
+  const when = entry.when?.trim();
+  if (!when) return "Times not stated";
+  return `Times as stated by the provider: ${when}`;
+}
+
 export interface ServiceQuery {
   /** The locality the need belongs to. A service elsewhere is not an answer. */
   placeId?: string | null;
