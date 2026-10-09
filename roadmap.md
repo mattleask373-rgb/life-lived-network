@@ -164,3 +164,10 @@ indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
 - `src/lib/sitemap-privacy.test.ts` calls the real public sitemap handlers and checks they list only the fixed public screens: no private screens, record ids, query strings or demonstration/blocked/reported entries.
 - Finding: sitemaps never read records today, so record-level leaks are not possible right now. If locality/service/provider/event sitemaps are added, they need their own eligibility tests (visibility, moderation, demo exclusion) before release.
 - Still open: page head/metadata for record detail views is not covered by these tests.
+
+## Lint formatting cleanup (done, 2026-10-09)
+
+- `bun run lint` before: 29 problems (21 errors, 8 warnings). All 21 errors were `prettier/prettier` formatting only.
+- Ran `bunx prettier --write` on only the 9 files with those errors: data-state.tsx, draft-helper.tsx, ai/run-id.ts, draft-assist.server.ts, draft-assist.ts, earning.test.ts, earning.ts, routes/auth.tsx, routes/earn.tsx. Diff reviewed: line wrapping only; one JSX full stop moved line with identical rendered text.
+- After: `bun run lint` 0 errors, 8 warnings (exit 0); `bunx tsgo --noEmit` clean; `bunx vitest run` 29 files / 230 tests passed; `bun run build` succeeded.
+- Remaining: 8 `react-refresh/only-export-components` warnings (dev hot-reload only, not auto-fixable; fixing means splitting files — left for a separate decision).
