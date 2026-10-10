@@ -15,6 +15,9 @@ import { createFileRoute, Link, notFound, redirect } from "@tanstack/react-route
 import { useMemo, useState } from "react";
 
 import { EntrySheet } from "@/components/entry-sheet";
+import { LayerFilter } from "@/components/layer-filter";
+import { LivingMap } from "@/components/living-map";
+import { LivingWorldSignal } from "@/components/living-world-signal";
 import { LocalityQuestions } from "@/components/locality-questions";
 import { WhatsHappening } from "@/components/whats-happening";
 import { WhatsHere } from "@/components/whats-here";
@@ -22,10 +25,11 @@ import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
 import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
+import { getLocalityDensityConfig } from "@/lib/locality-density";
 import { KIND_LABEL } from "@/lib/places";
 import { privatePage, publicPage } from "@/lib/seo";
 import { categoriesPresent } from "@/lib/service-taxonomy";
-import type { WorldEntry } from "@/lib/world-data";
+import { meaningfulVariety, type LayerId, type WorldEntry } from "@/lib/world-data";
 
 export function localityPath(place: Pick<PlaceBrief, "slug" | "countrySegment">): string {
   return `/${place.countrySegment || "gb"}/${place.slug}`;
@@ -115,6 +119,7 @@ function LocalityPage() {
   const { geography, entries } = Route.useLoaderData();
   const { place, ancestors, children, siblings } = geography;
   const [open, setOpen] = useState<WorldEntry | null>(null);
+  const [layers, setLayers] = useState<LayerId[]>([]);
   const { has, toggle } = useLifeList();
 
   const events = useMemo(() => upcomingEvents(entries), [entries]);
@@ -123,6 +128,15 @@ function LocalityPage() {
   const categories = useMemo(() => categoriesPresent(entries), [entries]);
   const questions = useMemo(() => localityQuestions(entries, 0), [entries]);
   const demonstrations = entries.filter((entry) => entry.demonstration).length;
+
+  const presentLayers = useMemo(
+    () => Array.from(new Set(entries.map((entry) => entry.layer))),
+    [entries],
+  );
+  const densityConfig = useMemo(
+    () => getLocalityDensityConfig(entries.length, presentLayers.length),
+    [entries.length, presentLayers.length],
+  );
 
   return (
     <main className="mx-auto w-full max-w-5xl px-5 pb-24 pt-8">
@@ -135,20 +149,91 @@ function LocalityPage() {
       </p>
       {place.blurb ? <p className="mt-3 max-w-2xl text-base">{place.blurb}</p> : null}
 
+      {/* Density-aware activity and quiet presentation */}
       {entries.length === 0 ? (
-        <p className="card-paper mt-6 max-w-2xl p-5 text-sm">
-          Nothing has been recorded in {place.name} yet. That is a fact about the record, not about
-          the place — it fills up as people here put real things on it.{" "}
-          <Link className="underline" to="/make">
-            Add the first thing
-          </Link>
-          .
-        </p>
+        <div className="mt-6 max-w-2xl">
+          <LivingWorldSignal
+            tone="quiet"
+            eyebrow="It's quiet here"
+            contributionLink={{
+              label: `Want to help make something happen in ${place.name}? Add the first thing to the map`,
+              to: "/make",
+            }}
+          >
+            <span>No dated activity or services recorded in {place.name} yet.</span>
+            <p className="mt-2 text-sm text-muted-foreground">
+              That describes the record, not the place. As residents and providers share genuine
+              activity, it appears here on the living map.
+            </p>
+          </LivingWorldSignal>
+        </div>
+      ) : densityConfig.promoteSignal ? (
+        <div className="mt-6 max-w-2xl">
+          <LivingWorldSignal
+            tone="sparse"
+            eyebrow="A few things recorded"
+            contributionLink={{
+              label: `Know something else happening in ${place.name}? Add it to the map`,
+              to: "/make",
+            }}
+          >
+            <span>
+              {entries.length === 1
+                ? `One real thing is recorded in ${place.name}.`
+                : `${entries.length} real things are recorded in ${place.name}.`}
+            </span>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Shown with real dates, places, and provenance. Explore below or add to the record.
+            </p>
+          </LivingWorldSignal>
+        </div>
       ) : (
         <div className="mt-6">
           <LocalityQuestions placeName={place.name} questions={questions} />
         </div>
       )}
+
+      {/* Map hero with density-scaled viewport height */}
+      <section aria-labelledby="locality-map-heading" className="mt-8 scroll-mt-6">
+        <div className="flex items-baseline justify-between gap-3">
+          <div>
+            <h2 id="locality-map-heading" className="text-2xl">
+              The living map
+            </h2>
+            <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+              {entries.length === 0
+                ? `Showing the geographic area of ${place.name}. Real records will appear here as they are added.`
+                : `See the real things recorded in ${place.name} together, then open one and decide what to do next.`}
+            </p>
+          </div>
+          <span className="shrink-0 text-sm text-muted-foreground">
+            {entries.length === 0 ? "0 recorded" : `${entries.length} recorded`}
+          </span>
+        </div>
+
+        {densityConfig.showLayerFilter ? (
+          <div className="mt-3">
+            <LayerFilter active={layers} onChange={setLayers} />
+          </div>
+        ) : null}
+
+        <div className={`mt-3 ${densityConfig.mapHeightClass} transition-[height] duration-200`}>
+          <LivingMap
+            entries={
+              layers.length
+                ? entries.filter((entry) => layers.includes(entry.layer))
+                : meaningfulVariety(entries)
+            }
+            activeId={open?.id}
+            onSelect={setOpen}
+            centre={{ lat: place.lat, lng: place.lng }}
+            centreName={place.name}
+          />
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Places are approximate. Nobody&apos;s exact location is shown.
+        </p>
+      </section>
 
       {demonstrations > 0 ? (
         <p className="mt-4 text-xs text-muted-foreground">
