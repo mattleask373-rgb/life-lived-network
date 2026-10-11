@@ -4,11 +4,16 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   CONTACT_STATUSES,
+  EXPERIMENTS,
+  PRICE_RESPONSES,
   TARGETS,
+  dueFollowUps,
+  experimentScorecard,
+  localToday,
   readTracker,
   scorecard,
   writeTracker,
-  type TrackerRow,
+  type PipelineRow as TrackerRow,
 } from "@/lib/partner-pilot";
 import { privatePage } from "@/lib/seo";
 
@@ -45,6 +50,9 @@ function TrackerPage() {
     rows && update(rows.map((r) => (r.id === id ? { ...r, ...p } : r)));
 
   const score = scorecard(rows ?? []);
+  const today = localToday();
+  const due = dueFollowUps(rows ?? [], today);
+  const experiments = experimentScorecard(rows ?? []);
 
   return (
     <main className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6">
@@ -84,6 +92,62 @@ function TrackerPage() {
         </p>
       </section>
 
+      <section className="card-paper p-5" aria-labelledby="due">
+        <h2 id="due" className="text-xl">
+          Follow-ups due
+        </h2>
+        {due.length === 0 ? (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Nothing due today. Set a follow-up date on an organisation to see it here.
+          </p>
+        ) : (
+          <ul className="mt-2 space-y-1 text-sm" aria-label="Follow-ups due">
+            {due.map((r) => (
+              <li key={r.id}>
+                <strong>{r.organisation}</strong> — {r.followUpDate}
+                {r.followUpDate! < today ? " (overdue)" : ""}
+                {r.nextAction ? `: ${r.nextAction}` : ""}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="card-paper p-5" aria-labelledby="exp">
+        <h2 id="exp" className="text-xl">
+          Revenue experiments
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Counts of what you've recorded, nothing more. A "yes" is not a payment or contract.
+        </p>
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="text-muted-foreground">
+                <th className="py-1 pr-3 font-normal">Experiment</th>
+                <th className="py-1 pr-3 font-normal">Orgs</th>
+                <th className="py-1 pr-3 font-normal">Interviews</th>
+                <th className="py-1 pr-3 font-normal">Price yes</th>
+                <th className="py-1 pr-3 font-normal">Maybe</th>
+                <th className="py-1 font-normal">No</th>
+              </tr>
+            </thead>
+            <tbody>
+              {experiments.map((e) => (
+                <tr key={e.name} className="border-t border-border">
+                  <td className="py-1 pr-3">{e.name}</td>
+                  <td className="py-1 pr-3">{e.organisations}</td>
+                  <td className="py-1 pr-3">{e.interviews}</td>
+                  <td className="py-1 pr-3">{e.priceYes}</td>
+                  <td className="py-1 pr-3">{e.priceMaybe}</td>
+                  <td className="py-1">{e.priceNo}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <section className="card-paper p-5" aria-labelledby="add">
         <h2 id="add" className="text-xl">
           Add an organisation
@@ -104,6 +168,10 @@ function TrackerPage() {
                 strongInterest: false,
                 priceCommitment: false,
                 notes: "",
+                nextAction: "",
+                followUpDate: "",
+                priceResponse: "not asked",
+                experiment: "Founding Local Partner",
               },
             ]);
             setOrg("");
@@ -140,9 +208,13 @@ function TrackerPage() {
           Loading…
         </p>
       ) : rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No organisations yet. Add the first one above when you start reaching out.
-        </p>
+        <div className="text-sm text-muted-foreground">
+          <p>No organisations yet. Add the first one above when you start reaching out.</p>
+          <p className="mt-2">
+            <span className="font-medium">Example template (not a real record):</span> "[Organisation]
+            · [Locality] · contacted · next action: send interview times · follow up in 5 days".
+          </p>
+        </div>
       ) : (
         <ul className="space-y-3" aria-label="Organisations">
           {rows.map((r) => (
@@ -198,6 +270,54 @@ function TrackerPage() {
                     {label}
                   </label>
                 ))}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <label className="text-sm">
+                  Next action
+                  <input
+                    value={r.nextAction ?? ""}
+                    maxLength={200}
+                    onChange={(e) => patch(r.id, { nextAction: e.target.value })}
+                    className={FIELD}
+                  />
+                </label>
+                <label className="text-sm">
+                  Follow-up date
+                  <input
+                    type="date"
+                    value={r.followUpDate ?? ""}
+                    onChange={(e) => patch(r.id, { followUpDate: e.target.value })}
+                    className={FIELD}
+                  />
+                </label>
+                <label className="text-sm">
+                  Answer to proposed price
+                  <select
+                    value={r.priceResponse ?? "not asked"}
+                    onChange={(e) =>
+                      patch(r.id, { priceResponse: e.target.value as TrackerRow["priceResponse"] })
+                    }
+                    className={FIELD}
+                  >
+                    {PRICE_RESPONSES.map((s) => (
+                      <option key={s}>{s}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-sm sm:col-span-3">
+                  Experiment
+                  <select
+                    value={r.experiment ?? "Founding Local Partner"}
+                    onChange={(e) =>
+                      patch(r.id, { experiment: e.target.value as TrackerRow["experiment"] })
+                    }
+                    className={FIELD}
+                  >
+                    {EXPERIMENTS.map((s) => (
+                      <option key={s}>{s}</option>
+                    ))}
+                  </select>
+                </label>
               </div>
               <label className="block text-sm">
                 Follow-up notes
