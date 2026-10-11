@@ -4,8 +4,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   PROPOSED_PRICE_CENTS,
+  dueFollowUps,
+  experimentScorecard,
   formatCents,
   interestInput,
+  localToday,
+  normaliseRow,
   interestSummary,
   scorecard,
   type TrackerRow,
@@ -65,6 +69,48 @@ describe("scorecard", () => {
         row({ status: "replied", strongInterest: true, priceCommitment: true }),
       ]),
     ).toEqual({ contacted: 2, interviews: 1, strongInterest: 1, priceCommitments: 1 });
+  });
+});
+
+describe("pipeline", () => {
+  it("normalises v1 rows without inventing outcomes and drops junk", () => {
+    const r = normaliseRow({
+      id: "a",
+      organisation: "Café",
+      status: "weird",
+      followUpDate: "soon",
+    });
+    expect(r).toMatchObject({
+      status: "not contacted",
+      priceResponse: "not asked",
+      followUpDate: "",
+      interviewed: false,
+      priceCommitment: false,
+    });
+    expect(normaliseRow({ id: "b", organisation: " " })).toBeNull();
+    expect(normaliseRow("x")).toBeNull();
+  });
+  it("lists due follow-ups oldest first, skipping declined and future", () => {
+    const rows = [
+      { id: "1", organisation: "A", followUpDate: "2026-10-12" },
+      { id: "2", organisation: "B", followUpDate: "2026-10-01" },
+      { id: "3", organisation: "C", followUpDate: "2026-10-05", status: "declined" },
+      { id: "4", organisation: "D", followUpDate: "2026-10-09" },
+    ].map((x) => normaliseRow(x)!);
+    expect(dueFollowUps(rows, "2026-10-11").map((r) => r.id)).toEqual(["2", "4"]);
+  });
+  it("experiment scorecard counts only recorded responses", () => {
+    const rows = [
+      { id: "1", organisation: "A", priceResponse: "yes (terms pending)", interviewed: true },
+      { id: "2", organisation: "B", priceResponse: "maybe", experiment: "Listing setup service" },
+    ].map((x) => normaliseRow(x)!);
+    const s = experimentScorecard(rows);
+    expect(s[0]).toMatchObject({ organisations: 1, interviews: 1, priceYes: 1 });
+    expect(s[1]).toMatchObject({ organisations: 1, priceMaybe: 1, priceYes: 0 });
+    expect(experimentScorecard([]).every((e) => e.organisations === 0)).toBe(true);
+  });
+  it("formats local dates", () => {
+    expect(localToday(new Date(2026, 0, 5))).toBe("2026-01-05");
   });
 });
 

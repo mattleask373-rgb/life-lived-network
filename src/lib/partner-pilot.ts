@@ -85,19 +85,95 @@ export function scorecard(rows: TrackerRow[]) {
   };
 }
 
+export const PRICE_RESPONSES = ["not asked", "yes (terms pending)", "maybe", "no"] as const;
+export const EXPERIMENTS = [
+  "Founding Local Partner",
+  "Listing setup service",
+  "Community/council pilot",
+  "Event organiser tools",
+] as const;
+
+/** Pipeline fields added later; optional so v1 rows still load. */
+export interface PipelineFields {
+  nextAction?: string;
+  /** YYYY-MM-DD, local date. */
+  followUpDate?: string;
+  priceResponse?: (typeof PRICE_RESPONSES)[number];
+  experiment?: (typeof EXPERIMENTS)[number];
+}
+export type PipelineRow = TrackerRow & PipelineFields;
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Coerce any stored value into a safe row, or drop it. Never invents values. */
+export function normaliseRow(raw: unknown): PipelineRow | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Partial<Record<keyof PipelineRow, unknown>>;
+  if (typeof r.id !== "string" || typeof r.organisation !== "string" || !r.organisation.trim())
+    return null;
+  const str = (v: unknown, max: number) => (typeof v === "string" ? v.slice(0, max) : "");
+  const oneOf = <T extends readonly string[]>(v: unknown, list: T): T[number] | undefined =>
+    list.includes(v as string) ? (v as T[number]) : undefined;
+  return {
+    id: r.id,
+    organisation: str(r.organisation, 120),
+    locality: str(r.locality, 120),
+    status: oneOf(r.status, CONTACT_STATUSES) ?? "not contacted",
+    interviewed: r.interviewed === true,
+    strongInterest: r.strongInterest === true,
+    priceCommitment: r.priceCommitment === true,
+    notes: str(r.notes, 2000),
+    nextAction: str(r.nextAction, 200),
+    followUpDate:
+      typeof r.followUpDate === "string" && DATE_RE.test(r.followUpDate) ? r.followUpDate : "",
+    priceResponse: oneOf(r.priceResponse, PRICE_RESPONSES) ?? "not asked",
+    experiment: oneOf(r.experiment, EXPERIMENTS) ?? "Founding Local Partner",
+  };
+}
+
+/** Rows with a follow-up date on or before today (YYYY-MM-DD), excluding declined. */
+export function dueFollowUps(rows: PipelineRow[], today: string): PipelineRow[] {
+  return rows
+    .filter((r) => r.followUpDate && r.followUpDate <= today && r.status !== "declined")
+    .sort((a, b) => (a.followUpDate ?? "").localeCompare(b.followUpDate ?? ""));
+}
+
+/** Per-experiment counts. Only counts what was recorded; zero means zero. */
+export function experimentScorecard(rows: PipelineRow[]) {
+  return EXPERIMENTS.map((name) => {
+    const rs = rows.filter((r) => (r.experiment ?? "Founding Local Partner") === name);
+    return {
+      name,
+      organisations: rs.length,
+      interviews: rs.filter((r) => r.interviewed).length,
+      priceYes: rs.filter((r) => r.priceResponse === "yes (terms pending)").length,
+      priceMaybe: rs.filter((r) => r.priceResponse === "maybe").length,
+      priceNo: rs.filter((r) => r.priceResponse === "no").length,
+    };
+  });
+}
+
+/** Local date as YYYY-MM-DD. */
+export function localToday(d = new Date()): string {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 const KEY = "rwa.partner-tracker.v1";
 
-export function readTracker(): TrackerRow[] {
+export function readTracker(): PipelineRow[] {
   if (typeof window === "undefined") return [];
   try {
     const parsed = JSON.parse(window.localStorage.getItem(KEY) ?? "[]") as unknown;
-    return Array.isArray(parsed) ? (parsed as TrackerRow[]) : [];
+    return Array.isArray(parsed)
+      ? parsed.map(normaliseRow).filter((r): r is PipelineRow => r !== null)
+      : [];
   } catch {
     return [];
   }
 }
 
-export function writeTracker(rows: TrackerRow[]): boolean {
+export function writeTracker(rows: PipelineRow[]): boolean {
   try {
     window.localStorage.setItem(KEY, JSON.stringify(rows));
     return true;
