@@ -92,7 +92,9 @@ describe("export", () => {
     expect(out.scopeNote).toMatch(/not a complete account export/);
   });
   it("reflects deletion: a deleted memory isn't in a later export", () => {
-    const before = buildExport("me", [{ name: "place_memories", rows: [{ id: "a" }, { id: "b" }] }]);
+    const before = buildExport("me", [
+      { name: "place_memories", rows: [{ id: "a" }, { id: "b" }] },
+    ]);
     const after = buildExport("me", [{ name: "place_memories", rows: [{ id: "b" }] }]);
     expect(before.data["place_memories"]).toHaveLength(2);
     expect(after.data["place_memories"]).toEqual([{ id: "b" }]);
@@ -124,7 +126,9 @@ describe("privacy boundaries", () => {
     expect(sql).not.toMatch(/TO anon/);
     expect(sql).toMatch(/CHECK \(visibility = 'private'\)/);
     for (const op of ["SELECT", "INSERT", "UPDATE", "DELETE"]) {
-      expect(sql).toMatch(new RegExp(`FOR ${op} TO authenticated[\\s\\S]*?auth\\.uid\\(\\) = user_id`));
+      expect(sql).toMatch(
+        new RegExp(`FOR ${op} TO authenticated[\\s\\S]*?auth\\.uid\\(\\) = user_id`),
+      );
     }
   });
 });

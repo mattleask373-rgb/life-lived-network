@@ -8,12 +8,7 @@ import { useWorldContext } from "@/lib/world-context";
 import { placePath, searchPlaces, type Place } from "@/lib/places";
 import { privatePage } from "@/lib/seo";
 import { DataErrorState, DataLoadingState } from "@/components/data-state";
-import {
-  deleteMemory,
-  exportMyData,
-  listMyMemories,
-  saveMemory,
-} from "@/lib/memories.functions";
+import { deleteMemory, exportMyData, listMyMemories, saveMemory } from "@/lib/memories.functions";
 import { MEMORY_NOTE_MAX, memoryInput, memoryWhen, type PlaceMemory } from "@/lib/memories";
 
 const title = "Places I've known — Real World Atlas";
@@ -33,8 +28,8 @@ function MemoriesPage() {
       <div className="mx-auto max-w-3xl px-4 pt-8 pb-20 sm:px-6">
         <h1 className="text-3xl sm:text-4xl">Places I've known</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Private to you. Nobody else can see these, and they're never used to suggest you to
-          anyone or to say you're somewhere now.
+          Private to you. Nobody else can see these, and they're never used to suggest you to anyone
+          or to say you're somewhere now.
         </p>
         {!ready ? (
           <div className="mt-8">
@@ -283,9 +278,7 @@ function MemoryForm({
             ))}
           </ul>
         ) : placeQuery.trim() && !placeId && index ? (
-          <p className="mt-1 text-xs text-muted-foreground">
-            No place on record matches that yet.
-          </p>
+          <p className="mt-1 text-xs text-muted-foreground">No place on record matches that yet.</p>
         ) : null}
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
