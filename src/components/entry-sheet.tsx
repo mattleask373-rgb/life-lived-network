@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { LAYERS, QUALITY_LABEL, relatedEntries, type WorldEntry } from "@/lib/world-data";
 import {
@@ -34,6 +35,13 @@ export function EntrySheet({
   const service = isService(entry);
   const step = nextStepFor(entry);
 
+  // Capture the element that had focus when the sheet opened so we can restore it on close.
+  // Required because this dialog is controlled and mounted programmatically (no DialogTrigger).
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
+  }, []);
+
   return (
     <Dialog
       open
@@ -44,6 +52,11 @@ export function EntrySheet({
       <DialogContent
         aria-describedby={undefined}
         className="paper-grain bottom-0 top-auto max-h-[88vh] w-full max-w-none translate-y-0 gap-0 overflow-y-auto rounded-t-2xl p-0 sm:bottom-auto sm:top-1/2 sm:max-w-lg sm:-translate-y-1/2 sm:rounded-lg"
+        onCloseAutoFocus={(event) => {
+          // Prevent Radix from moving focus to the body; restore the original trigger instead.
+          event.preventDefault();
+          previouslyFocusedRef.current?.focus?.();
+        }}
       >
         <div
           className={`relative border-b border-border ${entry.photos?.length ? "bg-muted" : "photo-placeholder h-32"}`}
@@ -138,7 +151,7 @@ export function EntrySheet({
               </p>
               <p className="mt-1">{providerLine(entry)}</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Stated by the provider. Real World Atlas has not checked these details.
+                Details as recorded. Real World Atlas has not independently verified them.
               </p>
               <p className="mt-1 text-muted-foreground">
                 {entry.place} · {entry.neighbourhood}
