@@ -7,6 +7,7 @@ import { EntrySheet } from "@/components/entry-sheet";
 import { EntryCard } from "@/components/entry-card";
 import { PlacePicker } from "@/components/place-picker";
 import { EmptyPlace } from "@/components/data-state";
+import { emptyListState } from "@/lib/discovery-empty";
 import { PossibilityFrontDoor } from "@/components/possibility-front-door";
 import { ThreeHours } from "@/components/three-hours";
 import { DoSomethingToday } from "@/components/do-something-today";
@@ -185,7 +186,7 @@ function Home() {
             <h2 id="map-heading" className="truncate text-xl">
               What's around you
             </h2>
-            <p className="shrink-0 text-sm text-muted-foreground">
+            <p role="status" aria-live="polite" className="shrink-0 text-sm text-muted-foreground">
               {worldLoading ? "Looking…" : `${entries.length} things`}
             </p>
           </div>
@@ -234,6 +235,18 @@ function Home() {
                     </li>
                   ))}
                 </ul>
+              ) : emptyListState(all.length, layers.length > 0) === "filtered-out" ? (
+                <p className="text-sm text-muted-foreground">
+                  Nothing matches these filters, but {all.length} other{" "}
+                  {all.length === 1 ? "thing is" : "things are"} recorded here.{" "}
+                  <button
+                    type="button"
+                    onClick={() => setLayers([])}
+                    className="focus-ink underline underline-offset-4"
+                  >
+                    Show everything
+                  </button>
+                </p>
               ) : (
                 <p className="text-sm text-muted-foreground">Nothing recorded here yet.</p>
               )}

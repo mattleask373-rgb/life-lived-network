@@ -17,7 +17,7 @@ export function LayerFilter({
         type="button"
         onClick={() => onChange([])}
         aria-pressed={active.length === 0}
-        className={`focus-ink rounded-full border px-3 py-1.5 text-sm transition-colors ${
+        className={`focus-ink min-h-11 rounded-full border px-3 py-1.5 text-sm transition-colors ${
           active.length === 0
             ? "border-transparent bg-primary text-primary-foreground"
             : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -33,7 +33,7 @@ export function LayerFilter({
             type="button"
             onClick={() => toggle(layer.id)}
             aria-pressed={on}
-            className={`focus-ink flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+            className={`focus-ink flex items-center gap-1.5 min-h-11 rounded-full border px-3 py-1.5 text-sm transition-colors ${
               on
                 ? "border-transparent bg-secondary text-secondary-foreground"
                 : "border-border bg-card text-muted-foreground hover:text-foreground"
