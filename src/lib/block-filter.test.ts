@@ -3,10 +3,15 @@ import { excludeBlocked } from "./block-filter";
 
 describe("excludeBlocked", () => {
   it("removes people either side of a block", () => {
-    const out = excludeBlocked(["a", "b", "c"], "me", [
-      { blocker_id: "me", blocked_id: "a" },
-      { blocker_id: "b", blocked_id: "me" },
-    ], false);
+    const out = excludeBlocked(
+      ["a", "b", "c"],
+      "me",
+      [
+        { blocker_id: "me", blocked_id: "a" },
+        { blocker_id: "b", blocked_id: "me" },
+      ],
+      false,
+    );
     expect([...out]).toEqual(["c"]);
   });
   it("ignores blocks that do not involve the creator", () => {
