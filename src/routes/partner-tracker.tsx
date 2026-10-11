@@ -296,7 +296,9 @@ function TrackerPage() {
                   <select
                     value={r.priceResponse ?? "not asked"}
                     onChange={(e) =>
-                      patch(r.id, { priceResponse: e.target.value as TrackerRow["priceResponse"] })
+                      patch(r.id, {
+                        priceResponse: e.target.value as NonNullable<TrackerRow["priceResponse"]>,
+                      })
                     }
                     className={FIELD}
                   >
@@ -310,7 +312,9 @@ function TrackerPage() {
                   <select
                     value={r.experiment ?? "Founding Local Partner"}
                     onChange={(e) =>
-                      patch(r.id, { experiment: e.target.value as TrackerRow["experiment"] })
+                      patch(r.id, {
+                        experiment: e.target.value as NonNullable<TrackerRow["experiment"]>,
+                      })
                     }
                     className={FIELD}
                   >
