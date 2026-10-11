@@ -211,8 +211,9 @@ function TrackerPage() {
         <div className="text-sm text-muted-foreground">
           <p>No organisations yet. Add the first one above when you start reaching out.</p>
           <p className="mt-2">
-            <span className="font-medium">Example template (not a real record):</span> "[Organisation]
-            · [Locality] · contacted · next action: send interview times · follow up in 5 days".
+            <span className="font-medium">Example template (not a real record):</span>{" "}
+            "[Organisation] · [Locality] · contacted · next action: send interview times · follow up
+            in 5 days".
           </p>
         </div>
       ) : (

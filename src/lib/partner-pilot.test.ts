@@ -74,7 +74,12 @@ describe("scorecard", () => {
 
 describe("pipeline", () => {
   it("normalises v1 rows without inventing outcomes and drops junk", () => {
-    const r = normaliseRow({ id: "a", organisation: "Café", status: "weird", followUpDate: "soon" });
+    const r = normaliseRow({
+      id: "a",
+      organisation: "Café",
+      status: "weird",
+      followUpDate: "soon",
+    });
     expect(r).toMatchObject({
       status: "not contacted",
       priceResponse: "not asked",

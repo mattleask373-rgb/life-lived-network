@@ -124,7 +124,8 @@ export function normaliseRow(raw: unknown): PipelineRow | null {
     priceCommitment: r.priceCommitment === true,
     notes: str(r.notes, 2000),
     nextAction: str(r.nextAction, 200),
-    followUpDate: typeof r.followUpDate === "string" && DATE_RE.test(r.followUpDate) ? r.followUpDate : "",
+    followUpDate:
+      typeof r.followUpDate === "string" && DATE_RE.test(r.followUpDate) ? r.followUpDate : "",
     priceResponse: oneOf(r.priceResponse, PRICE_RESPONSES) ?? "not asked",
     experiment: oneOf(r.experiment, EXPERIMENTS) ?? "Founding Local Partner",
   };
