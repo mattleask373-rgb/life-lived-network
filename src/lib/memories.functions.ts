@@ -96,7 +96,7 @@ export const exportMyData = createServerFn({ method: "GET" })
       (r) => r.error,
     );
     if (failed) throw new Error("Couldn't prepare your download. Nothing was partially saved.");
-    return buildExport(userId, [
+    const file = buildExport(userId, [
       { name: "place_memories", rows: memories.data ?? [] },
       { name: "profile", rows: profile.data ?? [] },
       { name: "capabilities", rows: capabilities.data ?? [] },
@@ -104,4 +104,6 @@ export const exportMyData = createServerFn({ method: "GET" })
       { name: "availability_windows", rows: availability.data ?? [] },
       { name: "saved_items", rows: saved.data ?? [] },
     ]);
+    // Sent as text so the download is exactly what the database returned.
+    return { exportedAt: file.exportedAt, json: JSON.stringify(file, null, 2) };
   });
