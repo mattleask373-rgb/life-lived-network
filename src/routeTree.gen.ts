@@ -20,6 +20,8 @@ import { Route as LifeListRouteImport } from './routes/life-list'
 import { Route as MakeRouteImport } from './routes/make'
 import { Route as MemoriesRouteImport } from './routes/memories'
 import { Route as ModerationRouteImport } from './routes/moderation'
+import { Route as PartnerTrackerRouteImport } from './routes/partner-tracker'
+import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RoadTripRouteImport } from './routes/road-trip'
 import { Route as SourcesRouteImport } from './routes/sources'
@@ -84,6 +86,16 @@ const ModerationRoute = ModerationRouteImport.update({
   path: '/moderation',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PartnerTrackerRoute = PartnerTrackerRouteImport.update({
+  id: '/partner-tracker',
+  path: '/partner-tracker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnersRoute = PartnersRouteImport.update({
+  id: '/partners',
+  path: '/partners',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -138,6 +150,8 @@ export interface FileRoutesByFullPath {
   '/make': typeof MakeRoute
   '/memories': typeof MemoriesRoute
   '/moderation': typeof ModerationRoute
+  '/partner-tracker': typeof PartnerTrackerRoute
+  '/partners': typeof PartnersRoute
   '/profile': typeof ProfileRoute
   '/road-trip': typeof RoadTripRoute
   '/sources': typeof SourcesRoute
@@ -159,6 +173,8 @@ export interface FileRoutesByTo {
   '/make': typeof MakeRoute
   '/memories': typeof MemoriesRoute
   '/moderation': typeof ModerationRoute
+  '/partner-tracker': typeof PartnerTrackerRoute
+  '/partners': typeof PartnersRoute
   '/profile': typeof ProfileRoute
   '/road-trip': typeof RoadTripRoute
   '/sources': typeof SourcesRoute
@@ -181,6 +197,8 @@ export interface FileRoutesById {
   '/make': typeof MakeRoute
   '/memories': typeof MemoriesRoute
   '/moderation': typeof ModerationRoute
+  '/partner-tracker': typeof PartnerTrackerRoute
+  '/partners': typeof PartnersRoute
   '/profile': typeof ProfileRoute
   '/road-trip': typeof RoadTripRoute
   '/sources': typeof SourcesRoute
@@ -204,6 +222,8 @@ export interface FileRouteTypes {
     | '/make'
     | '/memories'
     | '/moderation'
+    | '/partner-tracker'
+    | '/partners'
     | '/profile'
     | '/road-trip'
     | '/sources'
@@ -225,6 +245,8 @@ export interface FileRouteTypes {
     | '/make'
     | '/memories'
     | '/moderation'
+    | '/partner-tracker'
+    | '/partners'
     | '/profile'
     | '/road-trip'
     | '/sources'
@@ -246,6 +268,8 @@ export interface FileRouteTypes {
     | '/make'
     | '/memories'
     | '/moderation'
+    | '/partner-tracker'
+    | '/partners'
     | '/profile'
     | '/road-trip'
     | '/sources'
@@ -268,6 +292,8 @@ export interface RootRouteChildren {
   MakeRoute: typeof MakeRoute
   MemoriesRoute: typeof MemoriesRoute
   ModerationRoute: typeof ModerationRoute
+  PartnerTrackerRoute: typeof PartnerTrackerRoute
+  PartnersRoute: typeof PartnersRoute
   ProfileRoute: typeof ProfileRoute
   RoadTripRoute: typeof RoadTripRoute
   SourcesRoute: typeof SourcesRoute
@@ -357,6 +383,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModerationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/partner-tracker': {
+      id: '/partner-tracker'
+      path: '/partner-tracker'
+      fullPath: '/partner-tracker'
+      preLoaderRoute: typeof PartnerTrackerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partners': {
+      id: '/partners'
+      path: '/partners'
+      fullPath: '/partners'
+      preLoaderRoute: typeof PartnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -428,6 +468,8 @@ const rootRouteChildren: RootRouteChildren = {
   MakeRoute: MakeRoute,
   MemoriesRoute: MemoriesRoute,
   ModerationRoute: ModerationRoute,
+  PartnerTrackerRoute: PartnerTrackerRoute,
+  PartnersRoute: PartnersRoute,
   ProfileRoute: ProfileRoute,
   RoadTripRoute: RoadTripRoute,
   SourcesRoute: SourcesRoute,

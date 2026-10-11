@@ -109,6 +109,8 @@ export const PRIVATE_PATHS: readonly string[] = [
   "/moderation",
   "/sources",
   "/memories",
+  "/partners",
+  "/partner-tracker",
 ];
 
 export interface SitemapUrl {
