@@ -208,3 +208,10 @@ POTENTIAL RISK (not proven): suggestions are visible to anyone with a request li
 NOT VERIFIABLE here: table GRANTs effectiveness, exposed-schema settings, storage bucket policy for profile-photos.
 Checks: tsgo clean; lint 0 errors/8 warnings; vitest 33 files/240 passed; build OK.
 Human steps: confirm public suggestion visibility is intended; confirm grants/exposed schemas in backend settings.
+
+## 2026-10-11 — Detail panel touch targets (phone)
+Evidence (Playwright 375px): the item detail panel's Close button measured 16×16px; "Why not — save it" 36px and "Put the phone away and go" 38px tall — below 44px.
+Fix: `src/components/ui/dialog.tsx` close button 44×44 (shared by all pop-ups); `src/components/entry-sheet.tsx` both action buttons `min-h-11`. Re-measured: 44×44, 44, 44.
+Test: `src/lib/touch-targets.test.ts` (source-class guard; no DOM test library installed).
+Checks: tsgo clean; lint 0 errors/8 warnings; vitest 34 files/242 passed; build OK.
+Observed, not fixed: after Escape, focus lands on the page body rather than the item that opened the panel — next candidate.
