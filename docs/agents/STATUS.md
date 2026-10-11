@@ -1,4 +1,34 @@
-# Agent System Status — 2026-10-07 (control-tower reconciliation)
+# Agent System Status — 2026-10-08 (Sprint Milestone: Fencing & Expiry Reconciled)
+
+## SPRINT UPDATE (2026-10-08)
+
+### LANDED PRs & BRANCH STATUS
+
+- **PR #122 — feat/control-plane-fencing-alignment:** OPEN, GREEN on CI (GitHub Actions run `37846148591`, conclusion: success).
+  - Aligns pure TypeScript heartbeat evaluation with canonical lease semantics (`docs/agents/CLAIM-LEASE-HEARTBEAT.md`).
+  - Rejects post-expiry heartbeats (`now > lease_expiry`) while accepting boundary/pre-expiry heartbeats.
+  - Aligns `TaskLifecycleStatus` with durable PostgreSQL schema CHECK constraints (`20261007150000_agent_status_transitions.sql`), including `INTEGRATED`.
+  - Implements fencing fields (`lease_generation`, `lease_token`) and `canFence` validation, enforced across `heartbeatTask`, `releaseTask`, and `reclaimTask`.
+  - Comprehensive adversarial unit tests in `src/lib/agent-orchestration.test.ts` cover double-claim, post-expiry heartbeat, boundary heartbeat, stale generation, invalid token, release fencing, and reclaim increment/rotation.
+  - Full test suite: 27 test files, 238 tests passing (0 failures).
+  - Linter: `bun run lint` passed with 0 errors (8 pre-existing warnings).
+  - Build: `bun run build` completed cleanly (client, SSR, Nitro).
+  - Human review required; no autonomous merge to `main`.
+
+- **PR #120 — chore/remove-tracked-env-template:** OPEN, GREEN on CI.
+  - Stops tracking local `.env` file in git.
+  - Adds safe placeholder `.env.example`.
+  - Aligns Prettier formatting on earning routes and tests.
+  - Awaiting human review/merge.
+
+### REMAINING SECURITY GATES
+
+1. **Hosted Supabase Migrations & RLS:** Control-plane migrations (11 migrations on `phase3-supervisor-reconciliation` / `20261008100000_agent_control_plane_hosted_proof.sql`) require human application to the hosted Supabase environment.
+2. **Authenticated Actor Identity Binding:** Pure-TS caller `owner`/`actor` strings are not authenticated caller identities. Server-side session/JWT binding must be established in the server boundary before production execution.
+3. **Tenant / Project Scoping:** Database RPCs and tasks must be scoped to verified workspace/tenant boundaries.
+4. **Human Review Gates:** Autonomous merge to `main` is forbidden. PR #120 and PR #122 require human review and merge.
+
+---
 
 ## SOURCE OF TRUTH
 
@@ -8,6 +38,7 @@ No autonomous production merge/deploy is active.
 ## CURRENT QUEUE
 
 ### P0 / HUMAN-GATED CONTROL PLANE
+
 - **Persistent autonomous executor:** MISSING. The repository contains provider-neutral orchestration and lease/fencing contracts, but no evidence yet proves a durable authenticated executor loop.
 - **PR #61 — provider-neutral orchestration:** open; formatting fixes and lockfile reconciliation have been pushed. Fresh Verify is required.
 - **PR #62 — claim/lease/heartbeat:** open; formatting fixes and lockfile reconciliation have been pushed. Its lifecycle contract still requires reconciliation with durable `agent_tasks.status` and expiry/fencing semantics before integration.
@@ -16,12 +47,14 @@ No autonomous production merge/deploy is active.
 - **#74 — CONTROL-PLANE-01:** open human-gated follow-up for the missing/proven durable persistence boundary, authenticated fencing and RLS reconciliation.
 
 ### AI-NATIVE PROGRAMME
+
 - **PR #67 — ProgrammeState:** open; implementation is green on its prior head, but the current hosted Verify surface must be rechecked after branch/base reconciliation.
 - **PR #69 — Experiment Engine:** open draft; current head contains formatting/syntax fixes. Hosted Verify currently fails before lint/test/build on frozen-lockfile reconciliation in the PR merge context; no green claim until a fresh run passes.
 - **PR #72 — lockfile reconciliation:** open draft; one-line manifest fix to align `@lovable.dev/vite-tanstack-config` with the lockfile. Human action remains required; not merged.
 - **PR #73 — accepted experiment → bounded task adapter:** open draft; intentionally no execution/persistence/provider authority.
 
 ### PRODUCT / REAL-WORLD SURFACE
+
 - **Canonical supply engine:** REAL and live on main. `src/lib/supply-engine.ts` contains the real deterministic `findSupply()` implementation and regression tests. It is the sole possibility/discovery authority.
 - **Ingestion architecture:** `src/lib/ingest/*` remains the canonical provider-neutral boundary. PR #49 is the reconciliation anchor; PR #43's parallel `external-world.ts` path must be absorbed/retired before integration.
 - **Map/locality:** PR #54 visual language, #57 map-first locality integration, #60 sparse-locality progressive disclosure remain human-gated. #57 depends on #54; #58 depends on #49.
