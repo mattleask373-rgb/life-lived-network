@@ -138,7 +138,7 @@ export function EntrySheet({
               </p>
               <p className="mt-1">{providerLine(entry)}</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Stated by the provider. Real World Atlas has not checked these details.
+                Details as recorded. Real World Atlas has not independently verified them.
               </p>
               <p className="mt-1 text-muted-foreground">
                 {entry.place} · {entry.neighbourhood}
