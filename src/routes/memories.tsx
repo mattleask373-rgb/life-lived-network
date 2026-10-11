@@ -111,13 +111,9 @@ function Memories() {
       )}
 
       {query.isLoading ? (
-        <DataLoadingState label="Loading your places…" />
+        <DataLoadingState label="Loading your places…" className="" />
       ) : query.isError ? (
-        <DataErrorState
-          title="Couldn't load your places"
-          message="This is a connection problem, not an empty list."
-          onRetry={() => void query.refetch()}
-        />
+        <DataErrorState retry={() => void query.refetch()} className="" />
       ) : (query.data ?? []).length === 0 ? (
         <p className="card-paper p-5 text-sm text-muted-foreground">
           Nothing here yet. Add a place that's been part of your life — a town you grew up in, a

@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { LAYERS, QUALITY_LABEL, relatedEntries, type WorldEntry } from "@/lib/world-data";
 import {
@@ -33,6 +34,17 @@ export function EntrySheet({
   const related = relatedEntries(world, entry);
   const service = isService(entry);
   const step = nextStepFor(entry);
+  // Remember what had focus when the sheet first opened, so closing it puts
+  // keyboard and screen-reader users back where they were. The sheet unmounts
+  // on close, so the dialog's own focus return has nothing to return to.
+  const opener = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    return () => {
+      const target = opener.current;
+      if (target && target.isConnected) requestAnimationFrame(() => target.focus());
+    };
+  }, []);
 
   return (
     <Dialog
@@ -43,6 +55,13 @@ export function EntrySheet({
     >
       <DialogContent
         aria-describedby={undefined}
+        onCloseAutoFocus={(event) => {
+          const target = opener.current;
+          if (target && target.isConnected) {
+            event.preventDefault();
+            target.focus();
+          }
+        }}
         className="paper-grain bottom-0 top-auto max-h-[88vh] w-full max-w-none translate-y-0 gap-0 overflow-y-auto rounded-t-2xl p-0 sm:bottom-auto sm:top-1/2 sm:max-w-lg sm:-translate-y-1/2 sm:rounded-lg"
       >
         <div

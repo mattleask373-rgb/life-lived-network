@@ -146,6 +146,7 @@ const DOORS: {
     under: [
       { to: "/make", label: "Add something real" },
       { to: "/life-list", label: "Your life list" },
+      { to: "/memories", label: "Places I've known" },
     ],
   },
   {
