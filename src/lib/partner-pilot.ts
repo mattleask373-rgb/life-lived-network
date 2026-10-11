@@ -108,7 +108,7 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 /** Coerce any stored value into a safe row, or drop it. Never invents values. */
 export function normaliseRow(raw: unknown): PipelineRow | null {
   if (!raw || typeof raw !== "object") return null;
-  const r = raw as Record<string, unknown>;
+  const r = raw as Partial<Record<keyof PipelineRow, unknown>>;
   if (typeof r.id !== "string" || typeof r.organisation !== "string" || !r.organisation.trim())
     return null;
   const str = (v: unknown, max: number) => (typeof v === "string" ? v.slice(0, max) : "");
