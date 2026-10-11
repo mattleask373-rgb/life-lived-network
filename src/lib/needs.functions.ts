@@ -112,8 +112,10 @@ export const getOpenNeeds = createServerFn({ method: "GET" })
  * then handed to the engine, which does the honest labelling.
  */
 export const findSupplyForNeed = createServerFn({ method: "GET" })
-  .inputValidator((input: { needId: string }) => needIdInput.parse(input))
+  // A malformed id is simply not a need: the page shows "not found", not a crash.
+  .inputValidator((input: { needId: string }) => needIdInput.safeParse(input).data ?? null)
   .handler(async ({ data }): Promise<SupplyAnswer | null> => {
+    if (!data) return null;
     const { publicServerClient } = await import("./supabase-public.server");
     const supabase = publicServerClient();
 
