@@ -175,4 +175,7 @@ indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
 ## 2026-10-11 push
 - [x] Place pages show their own "couldn't load" (with retry) and "place not on record" screens instead of a blank/generic page.
 - [x] README: Bun commands and environment variable names (no values).
-- [ ] Next: default error/not-found on router; RLS policy review (needs human sign-off); entitlement seam (needs pricing decision).
+- [x] App-wide boundaries: inspected — the top-level page already catches errors and missing pages for every page, so router defaults would be redundant. Instead restyled both screens to the site look (paper background, 44px focus-visible buttons, error announced to screen readers, "Back to the map").
+- [x] README secrets list corrected: LOVABLE_API_KEY (provided by Lovable), TICKETMASTER_API_KEY (optional, added by owner) — names only.
+- Checks 2026-10-11: `bunx tsgo --noEmit` clean; `bun run lint` 0 errors / 8 warnings (existing); `bunx vitest run` 29 files / 230 passed; `bun run build` succeeded; Playwright 375px: `/nope-xyz` shows "This page isn't here", `/gb/not-a-real-place` shows "We don't have this place on record". Error screens (retry) not triggered live.
+- [ ] Next: RLS policy review (needs human sign-off); entitlement seam (needs pricing decision).
