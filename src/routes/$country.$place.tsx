@@ -11,7 +11,7 @@
  * locality with nothing in it is not offered to search engines.
  */
 
-import { createFileRoute, Link, notFound, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, redirect, useRouter } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import { EntrySheet } from "@/components/entry-sheet";
@@ -86,7 +86,10 @@ function LocalityError({ reset }: { reset: () => void }) {
           >
             Try again
           </button>
-          <Link to="/" className="focus-ink min-h-11 rounded-full border border-border px-5 py-2.5 text-sm">
+          <Link
+            to="/"
+            className="focus-ink min-h-11 rounded-full border border-border px-5 py-2.5 text-sm"
+          >
             Back to the map
           </Link>
         </div>
@@ -113,11 +116,6 @@ function LocalityNotFound() {
     </main>
   );
 }
-
-const _unused = createFileRoute; // keep import list stable
-void _unused;
-({
-});
 
 function Crumbs({ place, ancestors }: { place: PlaceBrief; ancestors: PlaceBrief[] }) {
   const chain = [...ancestors].reverse();
