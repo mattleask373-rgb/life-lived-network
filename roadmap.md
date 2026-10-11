@@ -192,3 +192,9 @@ Top risks (need human review, no change made):
 Checks: tsgo clean; lint 0 errors/8 existing warnings; vitest 31 files/235 passed; build succeeded.
 - [x] Found & fixed pre-existing dead end: `/need` page had a child (`/need/$id`) but no outlet, so opening any individual request showed the blank "What do you need?" form. Renamed `src/routes/need.tsx` → `src/routes/need.index.tsx` (route `/need/`); `/need` links unchanged. Server render of `/need/<id>` now returns the request page. Browser check in the sandbox preview still showed the locality "not on record" screen after load — likely a stale preview bundle; NEEDS MANUAL CHECK on a real request link. No public needs exist in data to test with.
 - Checks after rename: build succeeded; tsgo clean; lint 0 errors/8 warnings; vitest 31/235 passed.
+
+## 2026-10-11 sprint close-out
+- Trust-boundary audit: closed. Top 3 risks unchanged (see above); all need human sign-off, no policy change made.
+- [x] Verified live (Playwright, 1280px): `/need/<unknown uuid>` now shows "That need isn't here any more." — the request page, not the form or locality screen. Earlier result was a stale preview.
+- [x] Regression test `src/lib/route-structure.test.ts` keeps `/need/` and `/need/$id` as siblings.
+- Still needs a human: RLS/grant/exposed-schema review; real request with public data not tested.
