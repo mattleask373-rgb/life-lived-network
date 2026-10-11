@@ -7,6 +7,7 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { needIdInput } from "./server-inputs";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 import {
@@ -111,7 +112,7 @@ export const getOpenNeeds = createServerFn({ method: "GET" })
  * then handed to the engine, which does the honest labelling.
  */
 export const findSupplyForNeed = createServerFn({ method: "GET" })
-  .inputValidator((input: { needId: string }) => input)
+  .inputValidator((input: { needId: string }) => needIdInput.parse(input))
   .handler(async ({ data }): Promise<SupplyAnswer | null> => {
     const { publicServerClient } = await import("./supabase-public.server");
     const supabase = publicServerClient();

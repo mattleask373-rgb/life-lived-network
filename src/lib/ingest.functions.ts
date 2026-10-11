@@ -8,6 +8,7 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { refreshSourceInput } from "./server-inputs";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 import type { IngestOutcome, SourceRow } from "./ingest/contract";
@@ -110,7 +111,7 @@ export interface RefreshInput {
  */
 export const refreshSource = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: RefreshInput) => input)
+  .inputValidator((input: RefreshInput) => refreshSourceInput.parse(input))
   .handler(async ({ data, context }): Promise<IngestOutcome> => {
     await assertReviewer(context as never);
 

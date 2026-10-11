@@ -7,6 +7,7 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { moveConnectionInput } from "./server-inputs";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 import {
@@ -92,7 +93,9 @@ export const sendConnectionRequest = createServerFn({ method: "POST" })
 /** Accept, decline, or take it back. Only the right side can do each one. */
 export const moveConnectionRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string; status: ConnectionStatus }) => input)
+  .inputValidator((input: { id: string; status: ConnectionStatus }) =>
+    moveConnectionInput.parse(input),
+  )
   .handler(async ({ data, context }): Promise<ConnectionRequest> => {
     const { data: current, error: readError } = await context.supabase
       .from("connection_requests")
