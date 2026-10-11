@@ -62,6 +62,61 @@ export const Route = createFileRoute("/$country/$place")({
       : privatePage({ path, title, description });
   },
   component: LocalityPage,
+  errorComponent: LocalityError,
+  notFoundComponent: LocalityNotFound,
+});
+
+function LocalityError({ reset }: { reset: () => void }) {
+  const router = useRouter();
+  return (
+    <main className="paper-grain min-h-screen">
+      <div role="alert" className="mx-auto max-w-md px-4 pt-16 pb-20 text-center sm:px-6">
+        <h1 className="text-2xl">We couldn't load this place just now</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          This is a connection problem on our side, not a sign the place is empty.
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              void router.invalidate();
+              reset();
+            }}
+            className="focus-ink min-h-11 rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
+          >
+            Try again
+          </button>
+          <Link to="/" className="focus-ink min-h-11 rounded-full border border-border px-5 py-2.5 text-sm">
+            Back to the map
+          </Link>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function LocalityNotFound() {
+  return (
+    <main className="paper-grain min-h-screen">
+      <div className="mx-auto max-w-md px-4 pt-16 pb-20 text-center sm:px-6">
+        <h1 className="text-2xl">We don't have this place on record</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          The address may be mistyped, or the place hasn't been added to Real World Atlas yet.
+        </p>
+        <Link
+          to="/"
+          className="focus-ink mt-6 inline-block min-h-11 rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
+        >
+          Back to the map
+        </Link>
+      </div>
+    </main>
+  );
+}
+
+const _unused = createFileRoute; // keep import list stable
+void _unused;
+({
 });
 
 function Crumbs({ place, ancestors }: { place: PlaceBrief; ancestors: PlaceBrief[] }) {
