@@ -27,3 +27,5 @@ Architecture Decision Records live in **`docs/adr/`**.
 **No autonomous merge to main. No force-push. Independent review required.**
 
 Outside agents (e.g. Grok) collaborate only via GitHub pull requests under `docs/agents/EXTERNAL-COLLABORATORS.md` — keeps Lovable-synced `main` stable.
+
+- Place memories (`place_memories`) are owner-only and never feed `findSupply()`, discovery, matching or sitemaps — a remembered place is not presence, availability or a service area.

@@ -791,6 +791,50 @@ export type Database = {
         }
         Relationships: []
       }
+      place_memories: {
+        Row: {
+          created_at: string
+          ended_on: string | null
+          id: string
+          note: string
+          place_id: string
+          started_on: string | null
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          ended_on?: string | null
+          id?: string
+          note?: string
+          place_id: string
+          started_on?: string | null
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          ended_on?: string | null
+          id?: string
+          note?: string
+          place_id?: string
+          started_on?: string | null
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "place_memories_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       places: {
         Row: {
           blurb: string

@@ -215,3 +215,12 @@ Fix: `src/components/ui/dialog.tsx` close button 44×44 (shared by all pop-ups);
 Test: `src/lib/touch-targets.test.ts` (source-class guard; no DOM test library installed).
 Checks: tsgo clean; lint 0 errors/8 warnings; vitest 34 files/242 passed; build OK.
 Observed, not fixed: after Escape, focus lands on the page body rather than the item that opened the panel — next candidate.
+
+## Lifelong map MVP (2026-10-11, owner-approved scope)
+
+- [x] Private "Places I've known" (`place_memories`, owner-only rules, visibility locked to private). Page `/memories` with add/edit/delete, link to the existing place page for "what's there now". No new discovery logic.
+- [x] Partial, labelled data download (memories, profile, capabilities, service areas, availability, saved items).
+- [x] Item detail panel returns keyboard focus to what opened it.
+- [x] Database isolation check (two users + visitor, rolled back): other user sees/edits/deletes 0 rows; visitor denied; "public" rejected.
+- Checks: tsgo clean; lint 0 errors / 8 warnings; vitest 35 files / 254 passed; build succeeded.
+- [ ] Not yet: browser check of /memories while signed in; focus return seen in a real browser; imports (phase 2); conversations/requests/reports in the export.

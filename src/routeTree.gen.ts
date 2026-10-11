@@ -18,6 +18,7 @@ import { Route as HelpRouteImport } from './routes/help'
 import { Route as JourneyRouteImport } from './routes/journey'
 import { Route as LifeListRouteImport } from './routes/life-list'
 import { Route as MakeRouteImport } from './routes/make'
+import { Route as MemoriesRouteImport } from './routes/memories'
 import { Route as ModerationRouteImport } from './routes/moderation'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RoadTripRouteImport } from './routes/road-trip'
@@ -71,6 +72,11 @@ const LifeListRoute = LifeListRouteImport.update({
 const MakeRoute = MakeRouteImport.update({
   id: '/make',
   path: '/make',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MemoriesRoute = MemoriesRouteImport.update({
+  id: '/memories',
+  path: '/memories',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ModerationRoute = ModerationRouteImport.update({
@@ -130,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/journey': typeof JourneyRoute
   '/life-list': typeof LifeListRoute
   '/make': typeof MakeRoute
+  '/memories': typeof MemoriesRoute
   '/moderation': typeof ModerationRoute
   '/profile': typeof ProfileRoute
   '/road-trip': typeof RoadTripRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/journey': typeof JourneyRoute
   '/life-list': typeof LifeListRoute
   '/make': typeof MakeRoute
+  '/memories': typeof MemoriesRoute
   '/moderation': typeof ModerationRoute
   '/profile': typeof ProfileRoute
   '/road-trip': typeof RoadTripRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/journey': typeof JourneyRoute
   '/life-list': typeof LifeListRoute
   '/make': typeof MakeRoute
+  '/memories': typeof MemoriesRoute
   '/moderation': typeof ModerationRoute
   '/profile': typeof ProfileRoute
   '/road-trip': typeof RoadTripRoute
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
     | '/journey'
     | '/life-list'
     | '/make'
+    | '/memories'
     | '/moderation'
     | '/profile'
     | '/road-trip'
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
     | '/journey'
     | '/life-list'
     | '/make'
+    | '/memories'
     | '/moderation'
     | '/profile'
     | '/road-trip'
@@ -233,6 +244,7 @@ export interface FileRouteTypes {
     | '/journey'
     | '/life-list'
     | '/make'
+    | '/memories'
     | '/moderation'
     | '/profile'
     | '/road-trip'
@@ -254,6 +266,7 @@ export interface RootRouteChildren {
   JourneyRoute: typeof JourneyRoute
   LifeListRoute: typeof LifeListRoute
   MakeRoute: typeof MakeRoute
+  MemoriesRoute: typeof MemoriesRoute
   ModerationRoute: typeof ModerationRoute
   ProfileRoute: typeof ProfileRoute
   RoadTripRoute: typeof RoadTripRoute
@@ -328,6 +341,13 @@ declare module '@tanstack/react-router' {
       path: '/make'
       fullPath: '/make'
       preLoaderRoute: typeof MakeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/memories': {
+      id: '/memories'
+      path: '/memories'
+      fullPath: '/memories'
+      preLoaderRoute: typeof MemoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/moderation': {
@@ -406,6 +426,7 @@ const rootRouteChildren: RootRouteChildren = {
   JourneyRoute: JourneyRoute,
   LifeListRoute: LifeListRoute,
   MakeRoute: MakeRoute,
+  MemoriesRoute: MemoriesRoute,
   ModerationRoute: ModerationRoute,
   ProfileRoute: ProfileRoute,
   RoadTripRoute: RoadTripRoute,
