@@ -153,16 +153,18 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
       for (const a of areas ?? []) userIds.add(a.user_id);
     }
 
-    // Anyone either side of a block never appears to the other.
+    // Anyone either side of a block never appears to the other. If the block
+    // list can't be read, show no people rather than risk showing a blocked one.
     if (userIds.size) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: blocks } = await supabaseAdmin
+      const { data: blocks, error: blockError } = await supabaseAdmin
         .from("user_blocks")
         .select("blocker_id, blocked_id")
         .or(`blocker_id.eq.${need.creatorId},blocked_id.eq.${need.creatorId}`);
-      for (const block of blocks ?? []) {
-        userIds.delete(block.blocker_id === need.creatorId ? block.blocked_id : block.blocker_id);
-      }
+      const { excludeBlocked } = await import("./block-filter");
+      const kept = excludeBlocked(userIds, need.creatorId, blocks, Boolean(blockError));
+      userIds.clear();
+      for (const id of kept) userIds.add(id);
     }
 
     const people: PersonCandidate[] = [];
