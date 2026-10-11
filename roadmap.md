@@ -181,3 +181,14 @@ indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
 - [ ] Next: RLS policy review (needs human sign-off); entitlement seam (needs pricing decision).
 - [x] Home list: when filters hide everything, it now says "Nothing matches these filters, but N other things are recorded here" with a "Show everything" reset, instead of falsely saying "Nothing recorded here yet". Count is announced to screen readers; filter buttons are 44px tall. Files: src/routes/index.tsx, src/components/layer-filter.tsx, src/lib/discovery-empty.ts(+test).
 - Checks 2026-10-11 (2): tsgo clean; lint 0 errors / 8 existing warnings; vitest 30 files / 232 passed; build succeeded. Playwright 375px: all 8 filter buttons 44px; preview data has entries in every layer so the filtered-out message was not seen live (covered by unit test).
+
+## 2026-10-11 trust-boundary audit (bounded, code-level)
+Facts (verified in code): every write/private server action uses sign-in checks; `listSources`/`refreshSource` call `assertReviewer` before the admin client; database linter reported no issues.
+Fixed: `moveConnectionRequest`, `findSupplyForNeed`, `refreshSource` passed caller input through unchecked. They now validate ids (uuid), status (known values), slug and day range (`src/lib/server-inputs.ts` + test). A malformed need id returns "not found".
+Top risks (need human review, no change made):
+1. `findSupplyForNeed` is public (no sign-in) and returns people candidates for any need anonymous visitors can read; exposure depends entirely on `needs`/`profiles`/`service_areas`/`person_capabilities` row-level policies — NOT VERIFIED end-to-end.
+2. Admin-client reads inside public paths (`world.functions.ts` provenance, `findSupplyForNeed` blocks) bypass row-level rules; currently field-limited, but any edit there can leak. Needs owner sign-off before widening.
+3. Exposed-schema settings and grant effectiveness: NOT VERIFIED (no settings evidence). Human approval needed for any policy/grant change.
+Checks: tsgo clean; lint 0 errors/8 existing warnings; vitest 31 files/235 passed; build succeeded.
+- [x] Found & fixed pre-existing dead end: `/need` page had a child (`/need/$id`) but no outlet, so opening any individual request showed the blank "What do you need?" form. Renamed `src/routes/need.tsx` → `src/routes/need.index.tsx` (route `/need/`); `/need` links unchanged. Server render of `/need/<id>` now returns the request page. Browser check in the sandbox preview still showed the locality "not on record" screen after load — likely a stale preview bundle; NEEDS MANUAL CHECK on a real request link. No public needs exist in data to test with.
+- Checks after rename: build succeeded; tsgo clean; lint 0 errors/8 warnings; vitest 31/235 passed.

@@ -19,11 +19,11 @@ import { Route as JourneyRouteImport } from './routes/journey'
 import { Route as LifeListRouteImport } from './routes/life-list'
 import { Route as MakeRouteImport } from './routes/make'
 import { Route as ModerationRouteImport } from './routes/moderation'
-import { Route as NeedRouteImport } from './routes/need'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RoadTripRouteImport } from './routes/road-trip'
 import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as CountryPlaceRouteImport } from './routes/$country.$place'
+import { Route as NeedIndexRouteImport } from './routes/need.index'
 import { Route as NeedIdRouteImport } from './routes/need.$id'
 import { Route as ApiPublicSitemapPagesDotxmlRouteImport } from './routes/api/public/sitemap-pages[.]xml'
 import { Route as ApiPublicSitemapDotxmlRouteImport } from './routes/api/public/sitemap[.]xml'
@@ -78,11 +78,6 @@ const ModerationRoute = ModerationRouteImport.update({
   path: '/moderation',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NeedRoute = NeedRouteImport.update({
-  id: '/need',
-  path: '/need',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -103,10 +98,15 @@ const CountryPlaceRoute = CountryPlaceRouteImport.update({
   path: '/$country/$place',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NeedIndexRoute = NeedIndexRouteImport.update({
+  id: '/need/',
+  path: '/need/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NeedIdRoute = NeedIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => NeedRoute,
+  id: '/need/$id',
+  path: '/need/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicSitemapPagesDotxmlRoute =
   ApiPublicSitemapPagesDotxmlRouteImport.update({
@@ -131,12 +131,12 @@ export interface FileRoutesByFullPath {
   '/life-list': typeof LifeListRoute
   '/make': typeof MakeRoute
   '/moderation': typeof ModerationRoute
-  '/need': typeof NeedRouteWithChildren
   '/profile': typeof ProfileRoute
   '/road-trip': typeof RoadTripRoute
   '/sources': typeof SourcesRoute
   '/$country/$place': typeof CountryPlaceRoute
   '/need/$id': typeof NeedIdRoute
+  '/need/': typeof NeedIndexRoute
   '/api/public/sitemap-pages.xml': typeof ApiPublicSitemapPagesDotxmlRoute
   '/api/public/sitemap.xml': typeof ApiPublicSitemapDotxmlRoute
 }
@@ -151,12 +151,12 @@ export interface FileRoutesByTo {
   '/life-list': typeof LifeListRoute
   '/make': typeof MakeRoute
   '/moderation': typeof ModerationRoute
-  '/need': typeof NeedRouteWithChildren
   '/profile': typeof ProfileRoute
   '/road-trip': typeof RoadTripRoute
   '/sources': typeof SourcesRoute
   '/$country/$place': typeof CountryPlaceRoute
   '/need/$id': typeof NeedIdRoute
+  '/need': typeof NeedIndexRoute
   '/api/public/sitemap-pages.xml': typeof ApiPublicSitemapPagesDotxmlRoute
   '/api/public/sitemap.xml': typeof ApiPublicSitemapDotxmlRoute
 }
@@ -172,12 +172,12 @@ export interface FileRoutesById {
   '/life-list': typeof LifeListRoute
   '/make': typeof MakeRoute
   '/moderation': typeof ModerationRoute
-  '/need': typeof NeedRouteWithChildren
   '/profile': typeof ProfileRoute
   '/road-trip': typeof RoadTripRoute
   '/sources': typeof SourcesRoute
   '/$country/$place': typeof CountryPlaceRoute
   '/need/$id': typeof NeedIdRoute
+  '/need/': typeof NeedIndexRoute
   '/api/public/sitemap-pages.xml': typeof ApiPublicSitemapPagesDotxmlRoute
   '/api/public/sitemap.xml': typeof ApiPublicSitemapDotxmlRoute
 }
@@ -194,12 +194,12 @@ export interface FileRouteTypes {
     | '/life-list'
     | '/make'
     | '/moderation'
-    | '/need'
     | '/profile'
     | '/road-trip'
     | '/sources'
     | '/$country/$place'
     | '/need/$id'
+    | '/need/'
     | '/api/public/sitemap-pages.xml'
     | '/api/public/sitemap.xml'
   fileRoutesByTo: FileRoutesByTo
@@ -214,12 +214,12 @@ export interface FileRouteTypes {
     | '/life-list'
     | '/make'
     | '/moderation'
-    | '/need'
     | '/profile'
     | '/road-trip'
     | '/sources'
     | '/$country/$place'
     | '/need/$id'
+    | '/need'
     | '/api/public/sitemap-pages.xml'
     | '/api/public/sitemap.xml'
   id:
@@ -234,12 +234,12 @@ export interface FileRouteTypes {
     | '/life-list'
     | '/make'
     | '/moderation'
-    | '/need'
     | '/profile'
     | '/road-trip'
     | '/sources'
     | '/$country/$place'
     | '/need/$id'
+    | '/need/'
     | '/api/public/sitemap-pages.xml'
     | '/api/public/sitemap.xml'
   fileRoutesById: FileRoutesById
@@ -255,11 +255,12 @@ export interface RootRouteChildren {
   LifeListRoute: typeof LifeListRoute
   MakeRoute: typeof MakeRoute
   ModerationRoute: typeof ModerationRoute
-  NeedRoute: typeof NeedRouteWithChildren
   ProfileRoute: typeof ProfileRoute
   RoadTripRoute: typeof RoadTripRoute
   SourcesRoute: typeof SourcesRoute
   CountryPlaceRoute: typeof CountryPlaceRoute
+  NeedIdRoute: typeof NeedIdRoute
+  NeedIndexRoute: typeof NeedIndexRoute
   ApiPublicSitemapPagesDotxmlRoute: typeof ApiPublicSitemapPagesDotxmlRoute
   ApiPublicSitemapDotxmlRoute: typeof ApiPublicSitemapDotxmlRoute
 }
@@ -336,13 +337,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModerationRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/need': {
-      id: '/need'
-      path: '/need'
-      fullPath: '/need'
-      preLoaderRoute: typeof NeedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -371,12 +365,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CountryPlaceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/need/': {
+      id: '/need/'
+      path: '/need'
+      fullPath: '/need/'
+      preLoaderRoute: typeof NeedIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/need/$id': {
       id: '/need/$id'
-      path: '/$id'
+      path: '/need/$id'
       fullPath: '/need/$id'
       preLoaderRoute: typeof NeedIdRouteImport
-      parentRoute: typeof NeedRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/sitemap-pages.xml': {
       id: '/api/public/sitemap-pages.xml'
@@ -395,16 +396,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface NeedRouteChildren {
-  NeedIdRoute: typeof NeedIdRoute
-}
-
-const NeedRouteChildren: NeedRouteChildren = {
-  NeedIdRoute: NeedIdRoute,
-}
-
-const NeedRouteWithChildren = NeedRoute._addFileChildren(NeedRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
@@ -416,11 +407,12 @@ const rootRouteChildren: RootRouteChildren = {
   LifeListRoute: LifeListRoute,
   MakeRoute: MakeRoute,
   ModerationRoute: ModerationRoute,
-  NeedRoute: NeedRouteWithChildren,
   ProfileRoute: ProfileRoute,
   RoadTripRoute: RoadTripRoute,
   SourcesRoute: SourcesRoute,
   CountryPlaceRoute: CountryPlaceRoute,
+  NeedIdRoute: NeedIdRoute,
+  NeedIndexRoute: NeedIndexRoute,
   ApiPublicSitemapPagesDotxmlRoute: ApiPublicSitemapPagesDotxmlRoute,
   ApiPublicSitemapDotxmlRoute: ApiPublicSitemapDotxmlRoute,
 }

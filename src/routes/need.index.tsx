@@ -15,7 +15,7 @@ const title = "What do you need? — Real World Atlas";
 const description =
   "Say what you actually need — a gardener on Thursday, a hand with a community garden, someone to swap skills with — and see who nearby could genuinely help.";
 
-export const Route = createFileRoute("/need")({
+export const Route = createFileRoute("/need/")({
   head: () => privatePage({ path: "", title, description }),
   component: NeedPage,
 });
