@@ -224,3 +224,10 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - [x] Database isolation check (two users + visitor, rolled back): other user sees/edits/deletes 0 rows; visitor denied; "public" rejected.
 - Checks: tsgo clean; lint 0 errors / 8 warnings; vitest 35 files / 254 passed; build succeeded.
 - [ ] Not yet: browser check of /memories while signed in; focus return seen in a real browser; imports (phase 2); conversations/requests/reports in the export.
+
+## Founding Local Partner pilot (2026-10-11, validation only)
+- [x] `/partners`: proposed-pilot disclosure (€19/month = hypothesis, integer cents), deliverable-only benefits, asks, terms to confirm, private-data promise, interest form with consent. Submissions are NOT sent or saved (prototype); the person gets a copyable summary.
+- [x] `/partner-tracker`: internal scorecard + targets (labelled hypotheses), stored only in this browser.
+- Both noindex and in PRIVATE_PATHS. No payments, backend, schema or auth changes.
+- [ ] Blocked on approval: storing interest submissions in the database (needs a new table) and a follow-up contact route.
+- [ ] My Places full slice: plan awaiting approval (schema addition, location precision).

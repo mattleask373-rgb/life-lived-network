@@ -76,7 +76,11 @@ describe("pilot boundaries", () => {
     }
   });
   it("no payments, server calls or backend writes in the pilot code", () => {
-    for (const f of ["../routes/partners.tsx", "../routes/partner-tracker.tsx", "partner-pilot.ts"]) {
+    for (const f of [
+      "../routes/partners.tsx",
+      "../routes/partner-tracker.tsx",
+      "partner-pilot.ts",
+    ]) {
       const src = readFileSync(join(__dirname, f), "utf8");
       expect(src).not.toMatch(/stripe|checkout|createServerFn|supabase|fetch\(/i);
     }

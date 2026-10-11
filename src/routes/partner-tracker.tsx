@@ -58,7 +58,9 @@ function TrackerPage() {
       </header>
 
       <section className="card-paper p-5" aria-labelledby="score">
-        <h2 id="score" className="text-xl">Scorecard</h2>
+        <h2 id="score" className="text-xl">
+          Scorecard
+        </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Targets are our own working guesses for this pilot, not industry benchmarks.
         </p>
@@ -83,7 +85,9 @@ function TrackerPage() {
       </section>
 
       <section className="card-paper p-5" aria-labelledby="add">
-        <h2 id="add" className="text-xl">Add an organisation</h2>
+        <h2 id="add" className="text-xl">
+          Add an organisation
+        </h2>
         <form
           className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto]"
           onSubmit={(e) => {
@@ -108,7 +112,12 @@ function TrackerPage() {
         >
           <label className="text-sm">
             Organisation
-            <input value={org} onChange={(e) => setOrg(e.target.value)} className={FIELD} required />
+            <input
+              value={org}
+              onChange={(e) => setOrg(e.target.value)}
+              className={FIELD}
+              required
+            />
           </label>
           <label className="text-sm">
             Locality
@@ -127,7 +136,9 @@ function TrackerPage() {
       ) : null}
 
       {rows === null ? (
-        <p role="status" className="text-sm text-muted-foreground">Loading…</p>
+        <p role="status" className="text-sm text-muted-foreground">
+          Loading…
+        </p>
       ) : rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           No organisations yet. Add the first one above when you start reaching out.

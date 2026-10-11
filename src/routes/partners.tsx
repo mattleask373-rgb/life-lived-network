@@ -34,10 +34,7 @@ function PartnersPage() {
   const price = formatCents(PROPOSED_PRICE_CENTS);
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-4 py-8 sm:px-6">
-      <p
-        role="note"
-        className="rounded-lg border border-primary/40 bg-card px-4 py-3 text-sm"
-      >
+      <p role="note" className="rounded-lg border border-primary/40 bg-card px-4 py-3 text-sm">
         <strong>Proposed pilot — not yet launched.</strong> Nothing here is for sale. {price}/month
         is an idea we're testing, not an active subscription, and no one can be charged.
       </p>
@@ -48,14 +45,16 @@ function PartnersPage() {
         </p>
         <h1 className="mt-1 text-3xl sm:text-4xl">Help shape how people find real local places</h1>
         <p className="mt-3 text-muted-foreground">
-          Real World Atlas is a map of what's really happening in a place: real organisations,
-          real events, real needs. We're looking for a small group of local organisations to tell
-          us what would genuinely help them, before we build or charge for anything.
+          Real World Atlas is a map of what's really happening in a place: real organisations, real
+          events, real needs. We're looking for a small group of local organisations to tell us what
+          would genuinely help them, before we build or charge for anything.
         </p>
       </header>
 
       <section className="card-paper p-5" aria-labelledby="offer">
-        <h2 id="offer" className="text-xl">What a founding partner might get</h2>
+        <h2 id="offer" className="text-xl">
+          What a founding partner might get
+        </h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm">
           <li>
             A place on the map for your organisation, using the listing features that exist today.
@@ -74,7 +73,9 @@ function PartnersPage() {
       </section>
 
       <section className="card-paper p-5" aria-labelledby="ask">
-        <h2 id="ask" className="text-xl">What we'd ask of you</h2>
+        <h2 id="ask" className="text-xl">
+          What we'd ask of you
+        </h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm">
           <li>A 20-minute conversation about how people find you today.</li>
           <li>Honest feedback on a draft listing and on the proposed price.</li>
@@ -87,7 +88,9 @@ function PartnersPage() {
       </section>
 
       <section className="card-paper p-5" aria-labelledby="trust">
-        <h2 id="trust" className="text-xl">Our promise about private data</h2>
+        <h2 id="trust" className="text-xl">
+          Our promise about private data
+        </h2>
         <p className="mt-2 text-sm">
           The private places people record in their own atlas are never sold, never used for
           advertising and never used to target anyone on behalf of partners.
@@ -136,11 +139,13 @@ function InterestForm() {
   if (status.kind === "done") {
     return (
       <section className="card-paper p-5" aria-labelledby="done" role="status">
-        <h2 id="done" className="text-xl">Thank you. One honest note.</h2>
+        <h2 id="done" className="text-xl">
+          Thank you. One honest note.
+        </h2>
         <p className="mt-2 text-sm">
           This is a preview. <strong>Your details have not been sent or saved anywhere.</strong>{" "}
-          Please copy them below and keep them; we'll share a way to send them once the pilot
-          team is ready to follow up.
+          Please copy them below and keep them; we'll share a way to send them once the pilot team
+          is ready to follow up.
         </p>
         <pre className="mt-3 whitespace-pre-wrap rounded-lg border border-border bg-background p-3 text-xs">
           {status.summary}
@@ -168,7 +173,11 @@ function InterestForm() {
           </Button>
         </div>
         <p aria-live="polite" className="mt-2 text-sm text-muted-foreground">
-          {copied === "yes" ? "Copied." : copied === "no" ? "Couldn't copy — please select the text." : ""}
+          {copied === "yes"
+            ? "Copied."
+            : copied === "no"
+              ? "Couldn't copy — please select the text."
+              : ""}
         </p>
       </section>
     );
@@ -187,7 +196,9 @@ function InterestForm() {
 
   return (
     <section className="card-paper p-5" aria-labelledby="interest">
-      <h2 id="interest" className="text-xl">Express interest or ask for a 20-minute chat</h2>
+      <h2 id="interest" className="text-xl">
+        Express interest or ask for a 20-minute chat
+      </h2>
       <p className="mt-1 text-sm text-muted-foreground">
         Non-binding. This doesn't sign you up, and nothing is charged. Please don't include
         sensitive personal details.
@@ -205,12 +216,25 @@ function InterestForm() {
         </label>
         <label className="block text-sm">
           Your name
-          <input name="contactName" maxLength={80} autoComplete="name" className={FIELD} {...a11y("contactName")} />
+          <input
+            name="contactName"
+            maxLength={80}
+            autoComplete="name"
+            className={FIELD}
+            {...a11y("contactName")}
+          />
           {err("contactName")}
         </label>
         <label className="block text-sm">
           Email
-          <input name="email" type="email" maxLength={255} autoComplete="email" className={FIELD} {...a11y("email")} />
+          <input
+            name="email"
+            type="email"
+            maxLength={255}
+            autoComplete="email"
+            className={FIELD}
+            {...a11y("email")}
+          />
           {err("email")}
         </label>
         <label className="block text-sm">
@@ -232,7 +256,13 @@ function InterestForm() {
         </label>
         <label className="block text-sm sm:col-span-2">
           How do people find you today, and what's hard about it?
-          <textarea name="challenge" rows={3} maxLength={600} className={FIELD} {...a11y("challenge")} />
+          <textarea
+            name="challenge"
+            rows={3}
+            maxLength={600}
+            className={FIELD}
+            {...a11y("challenge")}
+          />
           {err("challenge")}
         </label>
         <label className="block text-sm sm:col-span-2">

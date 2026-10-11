@@ -29,11 +29,7 @@ export const interestInput = z.object({
   email: z.string().trim().email("That email doesn't look right").max(255),
   locality: z.string().trim().min(1, "Which town or neighbourhood?").max(120),
   orgType: z.enum(ORG_TYPES, { message: "Choose the closest type" }),
-  challenge: z
-    .string()
-    .trim()
-    .min(1, "Tell us briefly how people find you today")
-    .max(600),
+  challenge: z.string().trim().min(1, "Tell us briefly how people find you today").max(600),
   notes: z.string().trim().max(1000).default(""),
   consent: z.literal(true, { message: "We need your permission to follow up" }),
 });
@@ -58,12 +54,7 @@ export function interestSummary(i: z.output<typeof interestInput>): string {
 
 // ---------- Internal tracker (this device only) ----------
 
-export const CONTACT_STATUSES = [
-  "not contacted",
-  "contacted",
-  "replied",
-  "declined",
-] as const;
+export const CONTACT_STATUSES = ["not contacted", "contacted", "replied", "declined"] as const;
 
 export interface TrackerRow {
   id: string;
