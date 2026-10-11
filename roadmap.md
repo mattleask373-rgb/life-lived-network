@@ -198,3 +198,13 @@ Checks: tsgo clean; lint 0 errors/8 existing warnings; vitest 31 files/235 passe
 - [x] Verified live (Playwright, 1280px): `/need/<unknown uuid>` now shows "That need isn't here any more." — the request page, not the form or locality screen. Earlier result was a stale preview.
 - [x] Regression test `src/lib/route-structure.test.ts` keeps `/need/` and `/need/$id` as siblings.
 - Still needs a human: RLS/grant/exposed-schema review; real request with public data not tested.
+
+## 2026-10-11 — Privacy boundary: suggested helpers on public requests
+Trace: `/need/$id` (`src/routes/need.$id.tsx`) → `findSupplyForNeed` (`src/lib/needs.functions.ts`, public, no sign-in) → `publicServerClient()` (anon key, RLS applies) reads needs, profiles, person_capabilities, service_areas, availability_windows, opportunity_preferences, contribution_preferences, journeys/journey_places, listings, hour_offers → `findSupply()`.
+Elevated (admin) credential use in this path: (1) `user_blocks` read to hide blocked people; (2) `signPhotos` signs profile-photo paths only for people already shown.
+VERIFIED (read-only policy query, 2026-10-11): anon SELECT policies exist that hide private rows — needs (public/local_discovery + open), profiles (discoverable), capabilities/service areas/availability/preferences/contributions (visibility <> private + discoverable profile; availability also unexpired), journeys (public + opted-in + active + unexpired).
+PROVEN GAP (fixed): a failed block-list read was ignored, so blocked people could appear. Now fails closed via `src/lib/block-filter.ts` `excludeBlocked` (3 tests).
+POTENTIAL RISK (not proven): suggestions are visible to anyone with a request link, by design of the current policies — needs owner decision. `findSupply()` does not itself check visibility; it relies on RLS.
+NOT VERIFIABLE here: table GRANTs effectiveness, exposed-schema settings, storage bucket policy for profile-photos.
+Checks: tsgo clean; lint 0 errors/8 warnings; vitest 33 files/240 passed; build OK.
+Human steps: confirm public suggestion visibility is intended; confirm grants/exposed schemas in backend settings.
