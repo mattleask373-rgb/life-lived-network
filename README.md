@@ -2725,11 +2725,25 @@ Continue developing this project in the [Lovable editor](https://lovable.dev/pro
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Prefer working locally? This project uses [Bun](https://bun.sh) (CI runs `bun install --frozen-lockfile`).
 
 ```sh
 git clone <this-repository-url>
 cd <repository-name>
-npm i
-npm run dev
+bun install
+bun run dev        # local dev server
+bun run lint       # eslint + prettier check
+bun run test       # vitest
+bun run build      # production build
+bunx tsgo --noEmit # type check
 ```
+
+### Environment
+
+The backend is Lovable Cloud. `.env` is managed by Lovable and holds only
+publishable values: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`,
+`VITE_SUPABASE_PROJECT_ID` (browser) and `SUPABASE_URL`,
+`SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_PROJECT_ID` (server). Private keys
+(for example the AI gateway key) are injected by Lovable as server secrets and
+must never be committed. Do not hand-edit generated files under
+`src/integrations/supabase/`.

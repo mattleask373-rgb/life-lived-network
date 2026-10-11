@@ -171,3 +171,8 @@ indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
 - Ran `bunx prettier --write` on only the 9 files with those errors: data-state.tsx, draft-helper.tsx, ai/run-id.ts, draft-assist.server.ts, draft-assist.ts, earning.test.ts, earning.ts, routes/auth.tsx, routes/earn.tsx. Diff reviewed: line wrapping only; one JSX full stop moved line with identical rendered text.
 - After: `bun run lint` 0 errors, 8 warnings (exit 0); `bunx tsgo --noEmit` clean; `bunx vitest run` 29 files / 230 tests passed; `bun run build` succeeded.
 - Remaining: 8 `react-refresh/only-export-components` warnings (dev hot-reload only, not auto-fixable; fixing means splitting files — left for a separate decision).
+
+## 2026-10-11 push
+- [x] Place pages show their own "couldn't load" (with retry) and "place not on record" screens instead of a blank/generic page.
+- [x] README: Bun commands and environment variable names (no values).
+- [ ] Next: default error/not-found on router; RLS policy review (needs human sign-off); entitlement seam (needs pricing decision).
