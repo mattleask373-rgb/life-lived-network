@@ -2743,7 +2743,9 @@ bunx tsgo --noEmit # type check
 The backend is Lovable Cloud. `.env` is managed by Lovable and holds only
 publishable values: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`,
 `VITE_SUPABASE_PROJECT_ID` (browser) and `SUPABASE_URL`,
-`SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_PROJECT_ID` (server). Private keys
-(for example the AI gateway key) are injected by Lovable as server secrets and
-must never be committed. Do not hand-edit generated files under
+`SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_PROJECT_ID` (server). Private keys are
+server-only secrets read via `process.env` inside server code and must never be
+committed: `LOVABLE_API_KEY` (AI draft helper; provided by Lovable) and
+`TICKETMASTER_API_KEY` (optional event import; added in Project Settings →
+Secrets). Do not hand-edit generated files under
 `src/integrations/supabase/`.

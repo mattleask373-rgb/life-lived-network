@@ -15,25 +15,24 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { WorldProvider } from "../lib/world-context";
 import { useSession } from "../hooks/use-session";
 
+const BOUNDARY_BUTTON =
+  "focus-ink inline-flex min-h-11 items-center justify-center rounded-full px-5 py-2.5 text-sm";
+
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <main className="paper-grain flex min-h-screen items-center justify-center px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+        <h1 className="text-3xl">This page isn't here</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          The address may be mistyped, or the page has moved. Nothing has been lost.
         </p>
         <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
+          <Link to="/" className={`${BOUNDARY_BUTTON} bg-primary text-primary-foreground`}>
+            Back to the map
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -45,33 +44,30 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
+    <main className="paper-grain flex min-h-screen items-center justify-center px-4">
+      <div role="alert" className="max-w-md text-center">
+        <h1 className="text-2xl">This page didn't load</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          Something went wrong on our side. Trying again usually fixes it.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           <button
+            type="button"
             onClick={() => {
-              router.invalidate();
+              void router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className={`${BOUNDARY_BUTTON} bg-primary text-primary-foreground`}
           >
             Try again
           </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
+          {/* A full reload, so a broken client state cannot block the way home. */}
+          <a href="/" className={`${BOUNDARY_BUTTON} border border-border bg-card`}>
+            Back to the map
           </a>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 
