@@ -97,6 +97,48 @@ function PartnersPage() {
         </p>
       </section>
 
+      <section className="card-paper p-5" aria-labelledby="next">
+        <h2 id="next" className="text-xl">
+          What happens next
+        </h2>
+        <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm">
+          <li>You fill in the short form below. It takes about two minutes.</li>
+          <li>You keep a copy of your details; this preview doesn't send them anywhere yet.</li>
+          <li>When the pilot team is ready, we arrange a 20-minute conversation.</li>
+          <li>Any trial terms are written down for you before you decide anything.</li>
+        </ol>
+      </section>
+
+      <section className="card-paper p-5" aria-labelledby="faq">
+        <h2 id="faq" className="text-xl">
+          Common questions
+        </h2>
+        <dl className="mt-3 space-y-3 text-sm">
+          <div>
+            <dt className="font-medium">Will I be charged?</dt>
+            <dd className="text-muted-foreground">
+              No. There is no way to pay today, and the price is only an idea we're testing.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-medium">Is expressing interest a commitment?</dt>
+            <dd className="text-muted-foreground">
+              No. It's non-binding, and you can say no at any point.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-medium">Will this bring me customers?</dt>
+            <dd className="text-muted-foreground">
+              We can't promise that, and we won't. The pilot is about learning what genuinely helps.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-medium">Do you use people's private places to target customers?</dt>
+            <dd className="text-muted-foreground">Never. Private places stay private.</dd>
+          </div>
+        </dl>
+      </section>
+
       <InterestForm />
     </main>
   );
