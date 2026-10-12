@@ -177,7 +177,7 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
     // trial records stays quiet rather than borrowing someone else's.
     if (offset === 0) {
       const slugs = new Set(insideSlugs);
-      if (slugs.size || fixturesAllowed()) {
+      if (fixturesAllowed()) {
         const { DEMO_ENTRIES } = await import("./fixtures/world-entries");
         const matching = slugs.size
           ? DEMO_ENTRIES.filter((entry) => slugs.has(entry.placeSlug))
