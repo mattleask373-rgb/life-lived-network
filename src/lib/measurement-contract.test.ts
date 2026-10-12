@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  validateMeasurementEvent,
-  type MeasurementEvent,
-} from "./measurement-contract";
+import { validateMeasurementEvent, type MeasurementEvent } from "./measurement-contract";
 
 const timestamp = "2026-10-12T18:30:00.000Z";
 
