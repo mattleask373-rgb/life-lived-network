@@ -20,7 +20,7 @@ async function body(route: unknown): Promise<{ xml: string; res: Response }> {
   return { xml: await res.text(), res };
 }
 
-const locs = (xml: string) => [...xml.matchAll(/<loc>([^<]+)<\\/loc>/g)].map((m) => m[1] ?? "");
+const locs = (xml: string) => [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1] ?? "");
 
 describe("public sitemap privacy", () => {
   it("pages sitemap lists exactly the public screens, nothing else", async () => {
@@ -38,7 +38,7 @@ describe("public sitemap privacy", () => {
 
   it("robots.txt disallows every route marked private", () => {
     const robots = readFileSync(new URL("../../public/robots.txt", import.meta.url), "utf8");
-    const rules = robots.split(/\\r?\\n/);
+    const rules = robots.split(/\r?\n/);
     for (const path of PRIVATE_PATHS) expect(rules).toContain(`Disallow: ${path}`);
   });
 
