@@ -40,7 +40,7 @@ export function ticketmasterQuery(query: LocalityQuery): URLSearchParams {
   const params = new URLSearchParams();
   const country = query.countryCode.trim().toUpperCase().slice(0, 2);
   if (country) params.set("countryCode", country);
-  const hasValidCoordinates =
+  if (
     typeof query.lat === "number" &&
     Number.isFinite(query.lat) &&
     query.lat >= -90 &&
@@ -48,8 +48,8 @@ export function ticketmasterQuery(query: LocalityQuery): URLSearchParams {
     typeof query.lng === "number" &&
     Number.isFinite(query.lng) &&
     query.lng >= -180 &&
-    query.lng <= 180;
-  if (hasValidCoordinates) {
+    query.lng <= 180
+  ) {
     params.set("latlong", `${query.lat.toFixed(4)},${query.lng.toFixed(4)}`);
     // The source works in radius, not in localities, so coverage around a
     // locality centre is approximate. We keep that fact rather than hide it.
