@@ -108,9 +108,9 @@ function modifyingTablePattern(table: string): RegExp {
 }
 
 function touchedApplicationTables(content: string): string[] {
-  return KNOWN_APPLICATION_TABLES
-    .filter((table) => modifyingTablePattern(table).test(content))
-    .sort();
+  return KNOWN_APPLICATION_TABLES.filter((table) =>
+    modifyingTablePattern(table).test(content),
+  ).sort();
 }
 
 function changesRls(content: string): boolean {
@@ -138,10 +138,9 @@ describe("Pending migration inventory", () => {
         filename + " needs a tracking issue",
       ).toBeGreaterThan(0);
       expect(record.purpose.trim().length, filename + " needs a stated purpose").toBeGreaterThan(0);
-      expect(
-        record.requiresIndependentReview,
-        filename + " requires independent review",
-      ).toBe(true);
+      expect(record.requiresIndependentReview, filename + " requires independent review").toBe(
+        true,
+      );
       expect(record.affectedTables).toEqual(touchedApplicationTables(content));
       expect(record.changesRls).toBe(changesRls(content));
       expect(record.changesPrivileges).toBe(changesPrivileges(content));
