@@ -33,6 +33,12 @@ describe("supply engine", () => {
     expect(answer.quiet).toBe(false);
   });
 
+  it("does not surface an offer whose place is unknown for a place-scoped need", () => {
+    const unplaced = { ...gardenerOfferEntry, placeId: undefined };
+    const answer = findSupply({ need: gardenerNeed, people: [], entries: [unplaced] });
+    expect(bands(answer.results)).not.toContain("direct");
+  });
+
   it("keeps a bare capability out of the availability band", () => {
     const answer = findSupply({ need: gardenerNeed, people: [latentGardener], entries: [] });
     expect(bands(answer.results)).toEqual(["local_capability"]);
