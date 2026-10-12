@@ -33,7 +33,6 @@ const validNeedDraft = () => ({
   visibility: "local_discovery",
 });
 
-
 const id = "7d1f0b8e-3c1a-4c55-9b0e-2a6f3e1d9c10";
 
 describe("server action inputs", () => {
@@ -66,7 +65,9 @@ describe("createNeedInput runtime boundary", () => {
 
   it("rejects oversized text, oversized arrays, invalid numeric values, and unknown enums", () => {
     expect(() => createNeedInput.parse({ ...validNeedDraft(), title: "x".repeat(201) })).toThrow();
-    expect(() => createNeedInput.parse({ ...validNeedDraft(), description: "x".repeat(4001) })).toThrow();
+    expect(
+      () => createNeedInput.parse({ ...validNeedDraft(), description: "x".repeat(4001) }),
+    ).toThrow();
     expect(() =>
       createNeedInput.parse({
         ...validNeedDraft(),
@@ -126,7 +127,10 @@ describe("canonical place normalization for a posted need", () => {
     const parsed = createNeedInput.parse(validNeedDraft());
     expect(() => canonicalizeNeedPlace(parsed, null)).toThrow(/valid locality/i);
     expect(() =>
-      canonicalizeNeedPlace(parsed, { ...canonicalPlace, id: "99999999-9999-4999-9999-999999999999" }),
+      canonicalizeNeedPlace(parsed, {
+        ...canonicalPlace,
+        id: "99999999-9999-4999-9999-999999999999",
+      }),
     ).toThrow(/valid locality/i);
   });
 
