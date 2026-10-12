@@ -36,6 +36,7 @@ DECLARE
   need_place_text text;
   need_starts_at timestamptz;
   need_timezone text;
+  need_expires_at timestamptz;
 BEGIN
   IF current_user IN ('postgres', 'service_role', 'supabase_admin') THEN
     RETURN NEW;
@@ -46,14 +47,16 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
 
-  SELECT n.creator_id, n.status, n.title, n.place_text, n.starts_at, n.timezone
-    INTO need_creator, need_status, need_title, need_place_text, need_starts_at, need_timezone
+  SELECT n.creator_id, n.status, n.title, n.place_text, n.starts_at, n.timezone, n.expires_at
+    INTO need_creator, need_status, need_title, need_place_text, need_starts_at, need_timezone, need_expires_at
     FROM public.needs AS n
    WHERE n.id = NEW.need_id;
 
   -- The query intentionally runs as the caller, so needs RLS remains in force.
   -- A private/unavailable need, missing need, or closed need fails closed.
-  IF NOT FOUND OR need_status IS DISTINCT FROM 'open' THEN
+  IF NOT FOUND
+     OR need_status IS DISTINCT FROM 'open'
+     OR (need_expires_at IS NOT NULL AND need_expires_at <= now()) THEN
     RAISE EXCEPTION 'That need is not available for a connection request'
       USING ERRCODE = '42501';
   END IF;
