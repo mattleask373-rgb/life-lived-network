@@ -13,6 +13,7 @@ import {
   placeBySlug,
   placePath,
   searchPlaces,
+  splitPlaceFromQuery,
   type Place,
 } from "./places";
 import { DEMO_ENTRIES } from "./fixtures/world-entries";
@@ -129,6 +130,44 @@ describe("place hierarchy", () => {
     expect(searchPlaces(index, "birm").map((p) => p.id)).toEqual(["bham"]);
     expect(searchPlaces(index, "newtown").map((p) => p.id)).toEqual(["newtown-hfd", "newtown-wm"]);
     expect(searchPlaces(index, "  ")).toEqual([]);
+  });
+
+  it("whole-text place search finds nothing for intent plus place (the gap)", () => {
+    expect(searchPlaces(index, "Drake Birmingham")).toEqual([]);
+  });
+});
+
+describe("splitting a place out of free text", () => {
+  const withBrixton = buildPlaceIndex([
+    ...places,
+    place({ id: "brx", name: "Brixton", slug: "brixton", kind: "neighbourhood", parent_id: "gb" }),
+  ]);
+
+  it("keeps both the intent and the locality", () => {
+    expect(splitPlaceFromQuery(withBrixton, "Drake Birmingham")).toMatchObject({
+      place: { id: "bham" },
+      rest: "Drake",
+    });
+    expect(splitPlaceFromQuery(withBrixton, "gardener Brixton")).toMatchObject({
+      place: { id: "brx" },
+      rest: "gardener",
+    });
+    expect(splitPlaceFromQuery(withBrixton, "I need a gardener in Brixton").rest).toBe(
+      "I need a gardener",
+    );
+  });
+
+  it("never guesses a place from a partial word", () => {
+    const r = splitPlaceFromQuery(withBrixton, "gardener Brix");
+    expect(r.place).toBeNull();
+    expect(r.rest).toBe("gardener Brix");
+  });
+
+  it("returns the text unchanged when no place is named", () => {
+    expect(splitPlaceFromQuery(withBrixton, "  a gardener  ")).toEqual({
+      place: null,
+      rest: "a gardener",
+    });
   });
 });
 
