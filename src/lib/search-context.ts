@@ -74,7 +74,10 @@ export function planFrontDoor(index: PlaceIndex | null, text: string): FrontDoor
  * title, summary, details or host. No synonyms, no scoring, order unchanged.
  */
 export function filterEntriesByText(entries: WorldEntry[], q: string | undefined): WorldEntry[] {
-  const words = (q ?? "").toLowerCase().split(/\s+/).filter((w) => w.length > 1);
+  const words = (q ?? "")
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((w) => w.length > 1);
   if (!words.length) return [];
   return entries.filter((entry) => {
     const hay = [entry.title, entry.summary, entry.host, ...(entry.details ?? [])]

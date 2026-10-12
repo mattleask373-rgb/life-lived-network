@@ -30,7 +30,11 @@ export function PossibilityFrontDoor() {
     e.preventDefault();
     const plan = planFrontDoor(index, text);
     if (plan.kind === "locality") {
-      void navigate({ to: "/$country/$place", params: plan.target.params, search: plan.target.search });
+      void navigate({
+        to: "/$country/$place",
+        params: plan.target.params,
+        search: plan.target.search,
+      });
       return;
     }
     if (plan.kind === "ambiguous") {
@@ -87,7 +91,9 @@ export function PossibilityFrontDoor() {
 
       {choose ? (
         <div className="mt-3 text-sm" role="status">
-          <p className="text-muted-foreground">More than one place has that name. Which did you mean?</p>
+          <p className="text-muted-foreground">
+            More than one place has that name. Which did you mean?
+          </p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {choose.choices.map(({ place, target }) => (
               <li key={place.id}>

@@ -200,15 +200,23 @@ function LocalityPage() {
           {textMatches.length ? (
             <>
               <p className="mt-1 text-muted-foreground">
-                {textMatches.length === 1 ? "One record here contains" : `${textMatches.length} records here contain`}{" "}
+                {textMatches.length === 1
+                  ? "One record here contains"
+                  : `${textMatches.length} records here contain`}{" "}
                 those words. This is a plain text match on what was recorded, not a recommendation.
               </p>
               <ul className="mt-3 space-y-2">
                 {textMatches.slice(0, 12).map((entry) => (
                   <li key={entry.id}>
-                    <button className="text-left underline-offset-4 hover:underline" onClick={() => setOpen(entry)} type="button">
+                    <button
+                      className="text-left underline-offset-4 hover:underline"
+                      onClick={() => setOpen(entry)}
+                      type="button"
+                    >
                       {entry.title}
-                      {entry.demonstration ? <span className="text-muted-foreground"> (trial data)</span> : null}
+                      {entry.demonstration ? (
+                        <span className="text-muted-foreground"> (trial data)</span>
+                      ) : null}
                     </button>
                   </li>
                 ))}
@@ -216,7 +224,8 @@ function LocalityPage() {
             </>
           ) : (
             <p className="mt-1 text-muted-foreground">
-              Nothing recorded here contains those words. That doesn&apos;t mean it isn&apos;t here — everything recorded in {place.name} is below.
+              Nothing recorded here contains those words. That doesn&apos;t mean it isn&apos;t here
+              — everything recorded in {place.name} is below.
             </p>
           )}
         </section>
