@@ -141,6 +141,7 @@ function NeedForm({
   currency,
   lat,
   lng,
+  typed,
   onDone,
 }: {
   placeId: string | null;
