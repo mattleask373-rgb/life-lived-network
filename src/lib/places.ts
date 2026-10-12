@@ -288,32 +288,37 @@ export function searchPlaces(index: PlaceIndex, query: string, limit = 12): Plac
  * Split free text such as "gardener Brixton" or "Drake Birmingham" into the
  * place it names and what is left. Only an exact place-name match on whole
  * words counts — never a guess — and the longest name wins, so the user's
- * intent words are kept intact rather than dropped. No match means
- * `place: null` and the full text is returned unchanged.
+ * intent words are kept intact. When that name belongs to more than one place
+ * (two Newtowns), `place` is null and every candidate is returned so the person
+ * can choose. No match: `place: null`, no candidates, text unchanged.
  */
 export function splitPlaceFromQuery(
   index: PlaceIndex,
   text: string,
-): { place: Place | null; rest: string } {
+): { place: Place | null; candidates: Place[]; rest: string } {
   const words = text.trim().split(/\s+/).filter(Boolean);
   const lower = words.map((w) => w.toLowerCase().replace(/[.,!?]+$/, ""));
-  let best: { place: Place; start: number; len: number } | null = null;
+  let best: { hits: Place[]; start: number; len: number } | null = null;
   for (let len = Math.min(4, lower.length); len >= 1 && !best; len--) {
     for (let start = 0; start + len <= lower.length; start++) {
       const phrase = lower.slice(start, start + len).join(" ");
       const hits = index.places.filter((p) => p.name.toLowerCase() === phrase);
       if (!hits.length) continue;
-      hits.sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]);
-      best = { place: hits[0]!, start, len };
+      hits.sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind] || a.id.localeCompare(b.id));
+      best = { hits, start, len };
       break;
     }
   }
-  if (!best) return { place: null, rest: words.join(" ") };
+  if (!best) return { place: null, candidates: [], rest: words.join(" ") };
   const rest = [...words.slice(0, best.start), ...words.slice(best.start + best.len)]
     .join(" ")
     .replace(/\s+(in|near|around|at)$/i, "")
     .trim();
-  return { place: best.place, rest };
+  return {
+    place: best.hits.length === 1 ? best.hits[0]! : null,
+    candidates: best.hits,
+    rest,
+  };
 }
 
 /** "Lisbon, Portugal" / "Birmingham, West Midlands" — whatever depth we know. */
