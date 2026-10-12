@@ -101,3 +101,31 @@ describe("filterEntriesByText", () => {
     expect(filterEntriesByText(entries, "")).toEqual([]);
   });
 });
+
+describe("need doorway keeps typed text", () => {
+  it("'I need a gardener' round-trips to /need with q and from", async () => {
+    const { classifyPossibilityIntent } = await import("./possibility-intent");
+    const { intentTarget } = await import("./search-context");
+    const text = "I need a gardener";
+    expect(planFrontDoor(index, text).kind).toBe("none");
+    const intent = classifyPossibilityIntent(text);
+    expect(intent.href).toBe("/need");
+    const t = intentTarget(intent.href, text);
+    expect(t.to).toBe("/need");
+    expect(roundTrip({ ...t.search })).toEqual({ q: text, from: text });
+  });
+  it("other doorways are unchanged and carry no search", async () => {
+    const { intentTarget } = await import("./search-context");
+    expect(intentTarget("/help", "I can help")).toEqual({ to: "/help" });
+    expect(intentTarget("/give", "x")).toEqual({ to: "/give" });
+    expect(intentTarget("/journey", "x")).toEqual({ to: "/journey" });
+  });
+  it("blank text adds no params, so plain /need links are unchanged", async () => {
+    const { intentTarget } = await import("./search-context");
+    expect(intentTarget("/need", "   ")).toEqual({ to: "/need" });
+    expect(parseQuerySearch({})).toEqual({});
+  });
+  it("a named place still wins over the need doorway", () => {
+    expect(planFrontDoor(index, "I need a gardener in Brixton").kind).toBe("locality");
+  });
+});
