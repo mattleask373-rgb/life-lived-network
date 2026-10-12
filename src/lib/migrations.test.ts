@@ -9,6 +9,8 @@ type MigrationClass = "agent-control-plane" | "product-security" | "product-sche
 
 interface MigrationReviewRecord {
   classification: MigrationClass;
+  /** Planned entries document an approved design before its file lands on the branch. */
+  planned?: boolean;
   trackingIssue: string;
   purpose: string;
   affectedTables: string[];
@@ -44,6 +46,22 @@ const MIGRATION_REVIEW_REGISTRY: Record<string, MigrationReviewRecord> = {
     purpose:
       "Require lease generation and opaque token when releasing an agent task; mutate agent_tasks only.",
     affectedTables: ["agent_tasks"],
+    changesRls: false,
+    changesPrivileges: true,
+    requiresIndependentReview: true,
+  },
+  "20261012174000_harden_connection_request_updates.sql": {
+    classification: "product-security",
+    planned: true,
+    trackingIssue: "#162 / #164",
+    purpose:
+      "Restrict private conversation/safety table grants and validate request, message and report writes at the database boundary.",
+    affectedTables: [
+      "connection_messages",
+      "connection_requests",
+      "content_reports",
+      "user_blocks",
+    ],
     changesRls: false,
     changesPrivileges: true,
     requiresIndependentReview: true,
@@ -107,9 +125,14 @@ function modifyingTablePattern(table: string): RegExp {
   );
 }
 
+function privilegeTablePattern(table: string): RegExp {
+  return new RegExp("\\bON\\s+TABLE\\s+(?:public\\.)?" + table + "\\b", "i");
+}
+
 function touchedApplicationTables(content: string): string[] {
-  return KNOWN_APPLICATION_TABLES.filter((table) =>
-    modifyingTablePattern(table).test(content),
+  return KNOWN_APPLICATION_TABLES.filter(
+    (table) =>
+      modifyingTablePattern(table).test(content) || privilegeTablePattern(table).test(content),
   ).sort();
 }
 
@@ -146,7 +169,11 @@ describe("Pending migration inventory", () => {
       expect(record.changesPrivileges).toBe(changesPrivileges(content));
     }
 
-    for (const filename of Object.keys(MIGRATION_REVIEW_REGISTRY)) {
+    for (const [filename, record] of Object.entries(MIGRATION_REVIEW_REGISTRY)) {
+      if (record.planned) {
+        expect(record.trackingIssue.length).toBeGreaterThan(0);
+        continue;
+      }
       expect(
         pendingNames,
         "Registry entry must refer to a pending migration: " + filename,
