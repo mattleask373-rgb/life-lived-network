@@ -251,12 +251,10 @@ describe("Ticketmaster query numeric bounds", () => {
     expect(
       ticketmasterQuery({ ...validWindow, ...coords, radiusKm: Number.NaN }).get("radius"),
     ).toBe("15");
-    expect(
-      ticketmasterQuery({ ...validWindow, ...coords, radiusKm: 0.2 }).get("radius"),
-    ).toBe("1");
-    expect(
-      ticketmasterQuery({ ...validWindow, ...coords, radiusKm: 22.6 }).get("radius"),
-    ).toBe("23");
+    expect(ticketmasterQuery({ ...validWindow, ...coords, radiusKm: 0.2 }).get("radius")).toBe("1");
+    expect(ticketmasterQuery({ ...validWindow, ...coords, radiusKm: 22.6 }).get("radius")).toBe(
+      "23",
+    );
   });
 });
 
