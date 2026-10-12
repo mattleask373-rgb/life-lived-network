@@ -7,8 +7,12 @@
  */
 
 export function fixturesAllowed(): boolean {
+  // The production boundary is absolute: an accidental environment override
+  // must never make demonstration records appear in live locality results.
+  if (process.env["NODE_ENV"] === "production") return false;
+
   const explicit = process.env["WORLD_FIXTURES"];
   if (explicit === "true") return true;
   if (explicit === "false") return false;
-  return process.env["NODE_ENV"] !== "production";
+  return true;
 }
