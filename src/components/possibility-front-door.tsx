@@ -10,11 +10,16 @@ import {
   FRONT_DOOR_ACTIONS,
   type PossibilityIntent,
 } from "@/lib/possibility-intent";
+import { planFrontDoor, type FrontDoorPlan } from "@/lib/search-context";
+import { placePath } from "@/lib/places";
+import { useWorldContext } from "@/lib/world-context";
 
 export function PossibilityFrontDoor() {
   const [text, setText] = useState("");
   const [submitted, setSubmitted] = useState<PossibilityIntent | null>(null);
   const navigate = useNavigate();
+  const { index } = useWorldContext();
+  const [choose, setChoose] = useState<Extract<FrontDoorPlan, { kind: "ambiguous" }> | null>(null);
 
   const preview = useMemo(() => {
     if (!text.trim()) return null;
@@ -23,6 +28,15 @@ export function PossibilityFrontDoor() {
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const plan = planFrontDoor(index, text);
+    if (plan.kind === "locality") {
+      void navigate({ to: "/$country/$place", params: plan.target.params, search: plan.target.search });
+      return;
+    }
+    if (plan.kind === "ambiguous") {
+      setChoose(plan);
+      return;
+    }
     const intent = classifyPossibilityIntent(text);
     setSubmitted(intent);
     if (intent.kind !== "DISCOVER" && intent.certainty !== "unclear") {
@@ -49,6 +63,7 @@ export function PossibilityFrontDoor() {
             onChange={(e) => {
               setText(e.target.value);
               setSubmitted(null);
+              setChoose(null);
             }}
             placeholder="e.g. I need a gardener · I can help with painting · I'm travelling"
             className="focus-ink w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
@@ -68,6 +83,26 @@ export function PossibilityFrontDoor() {
           We&apos;d take you to <strong className="text-foreground">{preview.label}</strong>
           {preview.certainty === "clear" ? "." : " — does that sound right?"}
         </p>
+      ) : null}
+
+      {choose ? (
+        <div className="mt-3 text-sm" role="status">
+          <p className="text-muted-foreground">More than one place has that name. Which did you mean?</p>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {choose.choices.map(({ place, target }) => (
+              <li key={place.id}>
+                <Link
+                  className="focus-ink inline-flex min-h-11 items-center rounded-full border border-border px-4"
+                  params={target.params}
+                  search={target.search}
+                  to="/$country/$place"
+                >
+                  {index ? placePath(index, place.id) : place.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
 
       {submitted && submitted.kind === "DISCOVER" ? (

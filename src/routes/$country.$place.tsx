@@ -25,6 +25,7 @@ import { contributions, localityQuestions, providerGroups, upcomingEvents } from
 import { KIND_LABEL } from "@/lib/places";
 import { privatePage, publicPage } from "@/lib/seo";
 import { categoriesPresent } from "@/lib/service-taxonomy";
+import { filterEntriesByText, parseQuerySearch } from "@/lib/search-context";
 import type { WorldEntry } from "@/lib/world-data";
 
 export function localityPath(place: Pick<PlaceBrief, "slug" | "countrySegment">): string {
@@ -32,6 +33,7 @@ export function localityPath(place: Pick<PlaceBrief, "slug" | "countrySegment">)
 }
 
 export const Route = createFileRoute("/$country/$place")({
+  validateSearch: parseQuerySearch,
   loader: async ({ params }) => {
     const geography = await getLocality({ data: { slug: params.place } });
     if (!geography) throw notFound();
@@ -169,6 +171,8 @@ function LocalityPage() {
   const { place, ancestors, children, siblings } = geography;
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle } = useLifeList();
+  const { q } = Route.useSearch();
+  const textMatches = useMemo(() => filterEntriesByText(entries, q), [entries, q]);
 
   const events = useMemo(() => upcomingEvents(entries), [entries]);
   const groups = useMemo(() => providerGroups(entries), [entries]);
@@ -187,6 +191,36 @@ function LocalityPage() {
         {ancestors[0] ? ` in ${ancestors[0].name}` : ""}
       </p>
       {place.blurb ? <p className="mt-3 max-w-2xl text-base">{place.blurb}</p> : null}
+
+      {q ? (
+        <section aria-label="Your search" className="card-paper mt-6 max-w-2xl p-5 text-sm">
+          <p>
+            You searched for <strong>&ldquo;{q}&rdquo;</strong> in {place.name}.
+          </p>
+          {textMatches.length ? (
+            <>
+              <p className="mt-1 text-muted-foreground">
+                {textMatches.length === 1 ? "One record here contains" : `${textMatches.length} records here contain`}{" "}
+                those words. This is a plain text match on what was recorded, not a recommendation.
+              </p>
+              <ul className="mt-3 space-y-2">
+                {textMatches.slice(0, 12).map((entry) => (
+                  <li key={entry.id}>
+                    <button className="text-left underline-offset-4 hover:underline" onClick={() => setOpen(entry)} type="button">
+                      {entry.title}
+                      {entry.demonstration ? <span className="text-muted-foreground"> (trial data)</span> : null}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className="mt-1 text-muted-foreground">
+              Nothing recorded here contains those words. That doesn&apos;t mean it isn&apos;t here — everything recorded in {place.name} is below.
+            </p>
+          )}
+        </section>
+      ) : null}
 
       {entries.length === 0 ? (
         <p className="card-paper mt-6 max-w-2xl p-5 text-sm">
