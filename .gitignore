@@ -31,5 +31,7 @@ dist-ssr
 *.sln
 *.sw?
 
+# Environment files — never commit secrets or local config
 .env
-.env.*.local
+.env.*
+!.env.example
