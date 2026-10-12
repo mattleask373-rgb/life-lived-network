@@ -21,7 +21,10 @@ describe("bounded public open-needs place scope", () => {
   });
 
   it("rejects 401 IDs instead of dropping the locality filter", () => {
-    const ids = Array.from({ length: MAX_OPEN_NEEDS_PLACE_IDS + 1 }, (_, index) => `place-${index}`);
+    const ids = Array.from(
+      { length: MAX_OPEN_NEEDS_PLACE_IDS + 1 },
+      (_, index) => `place-${index}`,
+    );
     expect(() => boundedOpenNeedsPlaceScope(ids)).toThrow(/safe query bound/i);
   });
 
