@@ -31,7 +31,19 @@ export function localityPath(place: Pick<PlaceBrief, "slug" | "countrySegment">)
   return `/${place.countrySegment || "gb"}/${place.slug}`;
 }
 
+export interface LocalitySearchParams {
+  intent?: string;
+  subject?: string;
+  timeframe?: string;
+}
+
 export const Route = createFileRoute("/$country/$place")({
+  validateSearch: (search: Record<string, unknown>): LocalitySearchParams => ({
+    intent: typeof search.intent === "string" && search.intent ? search.intent : undefined,
+    subject: typeof search.subject === "string" && search.subject ? search.subject : undefined,
+    timeframe:
+      typeof search.timeframe === "string" && search.timeframe ? search.timeframe : undefined,
+  }),
   loader: async ({ params }) => {
     const geography = await getLocality({ data: { slug: params.place } });
     if (!geography) throw notFound();
@@ -166,6 +178,7 @@ function PlaceLinks({ title, places }: { title: string; places: PlaceBrief[] }) 
 
 function LocalityPage() {
   const { geography, entries } = Route.useLoaderData();
+  const search = Route.useSearch();
   const { place, ancestors, children, siblings } = geography;
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle } = useLifeList();
@@ -180,6 +193,44 @@ function LocalityPage() {
   return (
     <main className="mx-auto w-full max-w-5xl px-5 pb-24 pt-8">
       <Crumbs ancestors={ancestors} place={place} />
+
+      {search.subject || search.intent || search.timeframe ? (
+        <section
+          aria-label="Search context"
+          className="card-paper mt-4 border border-primary/20 bg-primary/5 p-4 text-sm"
+        >
+          <p className="font-medium text-foreground">
+            Looking for:{" "}
+            <span className="font-normal text-muted-foreground">
+              {[
+                search.subject,
+                search.intent ? search.intent.replace(/_/g, " ") : null,
+                search.timeframe ? search.timeframe.replace(/_/g, " ") : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            This page shows verified, recorded activity in {place.name}. Real World Atlas never
+            invents matching supply.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              to="/need"
+              search={{
+                placeId: place.id,
+                placeName: place.name,
+                subject: search.subject ?? undefined,
+                intent: search.intent === "local_service" ? "paid_work" : undefined,
+              }}
+              className="focus-ink inline-flex rounded-full bg-primary px-3.5 py-1.5 text-xs text-primary-foreground"
+            >
+              Post this as a need in {place.name} →
+            </Link>
+          </div>
+        </section>
+      ) : null}
 
       <h1 className="mt-3 text-4xl leading-tight">{place.name}</h1>
       <p className="mt-1 text-sm text-muted-foreground">
