@@ -7,7 +7,7 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
-import { needIdInput } from "./server-inputs";
+import { canonicalizeNeedPlace, createNeedInput, needIdInput } from "./server-inputs";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 import {
@@ -54,11 +54,30 @@ export interface NeedDraft {
 
 export const createNeed = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: NeedDraft) => input)
+  .inputValidator((input: NeedDraft) => createNeedInput.parse(input))
   .handler(async ({ data, context }) => {
+    let canonicalPlace = null;
+    if (data.place_id !== null) {
+      const { data: placeRow, error: placeError } = await context.supabase
+        .from("places")
+        .select("id, name, lat, lng, timezone, currency")
+        .eq("id", data.place_id)
+        .maybeSingle();
+      if (placeError) throw placeError;
+      if (!placeRow) throw new Error("Choose a valid locality before posting a need.");
+      canonicalPlace = {
+        id: placeRow.id,
+        name: placeRow.name,
+        lat: placeRow.lat === null ? null : Number(placeRow.lat),
+        lng: placeRow.lng === null ? null : Number(placeRow.lng),
+        timezone: placeRow.timezone,
+        currency: placeRow.currency,
+      };
+    }
+    const safeData = canonicalizeNeedPlace(data, canonicalPlace);
     const { data: row, error } = await context.supabase
       .from("needs")
-      .insert({ ...data, creator_id: context.userId })
+      .insert({ ...safeData, creator_id: context.userId })
       .select("id")
       .single();
     if (error) throw error;
