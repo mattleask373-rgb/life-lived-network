@@ -190,6 +190,7 @@ function entry(over: Partial<WorldEntry> & { id: string; title: string }): World
   return {
     layer: "work",
     place: "Kings Heath",
+    placeId: PLACE_KINGS_HEATH,
     neighbourhood: "Kings Heath",
     x: 50,
     y: 50,

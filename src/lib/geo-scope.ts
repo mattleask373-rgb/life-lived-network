@@ -68,9 +68,13 @@ export function geographicReach(
   return null;
 }
 
-/** A listing or hour offer sits in scope when its place is inside the need's place. */
+/**
+ * A listing or hour offer sits in scope when its place is inside the need's
+ * place. An entry whose place is unknown fails closed for a place-scoped need:
+ * unknown is never "here".
+ */
 export function entryInScope(entryPlaceId: string | null, geo: NeedGeography): boolean {
   if (!geo.placeId) return true;
-  if (!entryPlaceId) return true;
+  if (!entryPlaceId) return false;
   return geo.localPlaceIds.includes(entryPlaceId);
 }
