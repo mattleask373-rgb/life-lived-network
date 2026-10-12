@@ -67,4 +67,13 @@ describe("how far a need reaches", () => {
     expect(entryInScope("kings-heath", geo)).toBe(true);
     expect(entryInScope("herefordshire", geo)).toBe(false);
   });
+
+  it("never treats an entry with an unknown place as being inside the area", () => {
+    expect(entryInScope(null, needGeography(INDEX, "birmingham"))).toBe(false);
+    expect(entryInScope(null, exactGeography("birmingham"))).toBe(false);
+  });
+
+  it("leaves entries unfiltered when the need itself has no place", () => {
+    expect(entryInScope(null, needGeography(INDEX, null))).toBe(true);
+  });
 });
