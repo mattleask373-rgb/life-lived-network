@@ -275,7 +275,7 @@ export const blockConnectionPerson = createServerFn({ method: "POST" })
       .from("user_blocks")
       .upsert(
         { blocker_id: context.userId, blocked_id: blockedId },
-        { onConflict: "blocker_id,blocked_id" },
+        { onConflict: "blocker_id,blocked_id", ignoreDuplicates: true },
       );
     if (blockError) throw blockError;
     return { blocked: true };
