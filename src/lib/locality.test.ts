@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 
 import { contributions, localityQuestions, providerGroups, upcomingEvents } from "./locality";
 import type { WorldEntry } from "./world-data";
@@ -79,5 +80,27 @@ describe("a locality read as one thing", () => {
     const questions = localityQuestions([entry({})], 3, NOW);
     expect(questions.find((q) => q.id === "needed")?.count).toBe(3);
     expect(questions.find((q) => q.id === "possible")?.count).toBe(1);
+  });
+
+  it("does not turn an unchecked needs read into zero", () => {
+    const unavailable = localityQuestions([], { state: "unavailable" }, NOW);
+    expect(unavailable.find((q) => q.id === "needed")).toMatchObject({
+      count: null,
+      unit: "couldn't be checked",
+    });
+    expect(unavailable.filter((q) => q.id !== "needed").every((q) => q.count === 0)).toBe(true);
+
+    const checking = localityQuestions([entry({})], { state: "checking" }, NOW);
+    expect(checking.find((q) => q.id === "needed")).toMatchObject({
+      count: null,
+      unit: "still checking",
+    });
+    expect(checking.find((q) => q.id === "possible")?.count).toBe(1);
+  });
+
+  it("the public place page does not hard-code zero open needs", () => {
+    const src = readFileSync("src/routes/$country.$place.tsx", "utf8");
+    expect(src).not.toMatch(/localityQuestions\(entries,\s*0\)/);
+    expect(src).toContain("getOpenNeedsCount");
   });
 });
