@@ -36,6 +36,9 @@ describe("conversation security migration contract", () => {
     expect(migration).toContain(
       "GRANT UPDATE (status, resolution, review_note, reviewed_at, reviewed_by)\n  ON TABLE public.content_reports TO authenticated;",
     );
+    expect(migration).toMatch(
+      /GRANT INSERT \(\s*reporter_id,\s*reported_user_id,\s*subject_type,\s*subject_id,\s*reason,\s*note\s*\) ON TABLE public\.content_reports TO authenticated;/i,
+    );
   });
 
   it("validates request insert ownership, need state, direction and canonical context", () => {
@@ -99,6 +102,8 @@ describe("conversation security migration contract", () => {
       "REVOKE ALL ON FUNCTION private.guard_connection_request_status_transition()",
     );
     expect(migration).toContain("REVOKE ALL ON FUNCTION private.guard_connection_message_insert()");
+    expect(migration).toContain("REVOKE ALL ON FUNCTION private.guard_connection_request_insert()");
+    expect(migration).toContain("REVOKE ALL ON FUNCTION private.guard_content_report_insert()");
     expect(migration).toMatch(/FROM PUBLIC, anon, authenticated;/i);
   });
 });
