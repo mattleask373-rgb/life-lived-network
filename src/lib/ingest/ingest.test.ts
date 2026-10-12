@@ -168,6 +168,49 @@ describe("the same adapter for every locality", () => {
   });
 });
 
+describe("Ticketmaster query time bounds", () => {
+  const validWindow = {
+    countryCode: "GB",
+    startsAfter: "2099-01-01T00:00:00Z",
+    endsBefore: "2099-01-02T00:00:00Z",
+  };
+
+  it("rejects an invalid start instead of silently substituting the current time", () => {
+    expect(() => ticketmasterQuery({ ...validWindow, startsAfter: "not-a-date" })).toThrow(
+      "startsAfter must be a valid date/time",
+    );
+  });
+
+  it("rejects an invalid end instead of silently substituting the current time", () => {
+    expect(() => ticketmasterQuery({ ...validWindow, endsBefore: "not-a-date" })).toThrow(
+      "endsBefore must be a valid date/time",
+    );
+  });
+
+  it("requires a strictly increasing time window", () => {
+    expect(() =>
+      ticketmasterQuery({ ...validWindow, endsBefore: validWindow.startsAfter }),
+    ).toThrow("endsBefore must be after startsAfter");
+    expect(() =>
+      ticketmasterQuery({
+        ...validWindow,
+        startsAfter: "2099-01-03T00:00:00Z",
+        endsBefore: "2099-01-02T00:00:00Z",
+      }),
+    ).toThrow("endsBefore must be after startsAfter");
+  });
+
+  it("normalizes explicit offsets to UTC without inventing precision", () => {
+    const params = ticketmasterQuery({
+      ...validWindow,
+      startsAfter: "2099-01-01T01:00:00+01:00",
+      endsBefore: "2099-01-02T01:00:00+01:00",
+    });
+    expect(params.get("startDateTime")).toBe("2099-01-01T00:00:00Z");
+    expect(params.get("endDateTime")).toBe("2099-01-02T00:00:00Z");
+  });
+});
+
 describe("making outside text safe", () => {
   it("strips markup and control characters", () => {
     expect(plainText("<script>bad()</script>Hello <b>there</b>")).toBe("Hello there");
