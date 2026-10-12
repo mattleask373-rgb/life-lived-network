@@ -166,6 +166,7 @@ describe("splitting a place out of free text", () => {
   it("returns the text unchanged when no place is named", () => {
     expect(splitPlaceFromQuery(withBrixton, "  a gardener  ")).toEqual({
       place: null,
+      candidates: [],
       rest: "a gardener",
     });
   });
