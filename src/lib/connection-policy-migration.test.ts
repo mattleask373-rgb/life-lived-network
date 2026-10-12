@@ -27,7 +27,9 @@ describe("conversation security migration contract", () => {
     expect(migration).toContain(
       "GRANT INSERT (request_id, sender_id, body)\n  ON TABLE public.connection_messages TO authenticated;",
     );
-    expect(migration).not.toContain("  context_title,\n  context_place,\n  context_when\n) ON TABLE public.connection_requests TO authenticated;");
+    expect(migration).not.toContain(
+      "  context_title,\n  context_place,\n  context_when\n) ON TABLE public.connection_requests TO authenticated;",
+    );
     expect(migration).toContain(
       "GRANT SELECT, DELETE ON TABLE public.user_blocks TO authenticated;",
     );
@@ -42,12 +44,8 @@ describe("conversation security migration contract", () => {
     );
     expect(migration).toContain("NEW.sender_id IS DISTINCT FROM actor");
     expect(migration).toContain("need_status IS DISTINCT FROM 'open'");
-    expect(migration).toContain(
-      "IF NEW.recipient_id IS DISTINCT FROM need_creator THEN",
-    );
-    expect(migration).toContain(
-      "IF actor IS DISTINCT FROM need_creator THEN",
-    );
+    expect(migration).toContain("IF NEW.recipient_id IS DISTINCT FROM need_creator THEN");
+    expect(migration).toContain("IF actor IS DISTINCT FROM need_creator THEN");
     expect(migration).toContain("NEW.context_title := need_title;");
     expect(migration).toContain(
       "NEW.context_place := COALESCE(NULLIF(need_place_text, ''), 'Nearby');",
