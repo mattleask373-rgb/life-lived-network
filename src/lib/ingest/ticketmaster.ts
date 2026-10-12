@@ -54,9 +54,7 @@ export function ticketmasterQuery(query: LocalityQuery): URLSearchParams {
     // The source works in radius, not in localities, so coverage around a
     // locality centre is approximate. We keep that fact rather than hide it.
     const requestedRadius =
-      typeof query.radiusKm === "number" && Number.isFinite(query.radiusKm)
-        ? query.radiusKm
-        : 15;
+      typeof query.radiusKm === "number" && Number.isFinite(query.radiusKm) ? query.radiusKm : 15;
     params.set("radius", String(Math.max(1, Math.round(requestedRadius))));
     params.set("unit", "km");
   }
