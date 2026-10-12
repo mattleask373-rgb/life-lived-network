@@ -7,7 +7,7 @@ import { EntrySheet } from "@/components/entry-sheet";
 import { EntryCard } from "@/components/entry-card";
 import { PlacePicker } from "@/components/place-picker";
 import { EmptyPlace } from "@/components/data-state";
-import { emptyListState } from "@/lib/discovery-empty";
+import { emptyListState, homeRecordedStatus } from "@/lib/discovery-empty";
 import { PossibilityFrontDoor } from "@/components/possibility-front-door";
 import { ThreeHours } from "@/components/three-hours";
 import { DoSomethingToday } from "@/components/do-something-today";
@@ -24,7 +24,13 @@ import { useWorldContext } from "@/lib/world-context";
 import { LocalityQuestions } from "@/components/locality-questions";
 import { WhatsHappening } from "@/components/whats-happening";
 import { WhatsHere } from "@/components/whats-here";
-import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
+import {
+  contributions,
+  localityQuestions,
+  providerGroups,
+  upcomingEvents,
+  type OpenNeedsAnswer,
+} from "@/lib/locality";
 import {
   activitySnapshot,
   meaningfulVariety,
@@ -64,7 +70,12 @@ function Home() {
     queryFn: () => fetchWorldEntries({ placeId: discoveryPlace?.id ?? null }),
   });
   const openNeedsFn = useServerFn(getOpenNeeds);
-  const { data: openNeeds } = useQuery({
+  const {
+    data: openNeeds,
+    isError: needsError,
+    isSuccess: needsReady,
+    refetch: refetchNeeds,
+  } = useQuery({
     queryKey: ["open-needs", place?.id ?? null],
     enabled: Boolean(place),
     queryFn: () => openNeedsFn({ data: { placeId: place?.id ?? null } }),
@@ -83,9 +94,22 @@ function Home() {
   const events = useMemo(() => upcomingEvents(all), [all]);
   const groups = useMemo(() => providerGroups(all), [all]);
   const given = useMemo(() => contributions(all), [all]);
-  const needCount = openNeeds?.length ?? 0;
-  const questions = useMemo(() => localityQuestions(all, needCount), [all, needCount]);
+  const knownNeedCount = place && needsReady ? (openNeeds?.length ?? null) : null;
+  const needsAnswer: OpenNeedsAnswer =
+    needsError || (!loading && !place)
+      ? { state: "unavailable" }
+      : knownNeedCount === null
+        ? { state: "checking" }
+        : { state: "known", count: knownNeedCount };
+  const questions = localityQuestions(all, needsAnswer);
   const quiet = !worldLoading && !loading && !worldError && all.length === 0;
+  const recordedStatus = homeRecordedStatus({
+    checking: worldLoading || loading,
+    worldFailed: worldError,
+    recorded: all.length,
+    openNeeds: knownNeedCount,
+    needsFailed: needsError || (!loading && !place),
+  });
 
   return (
     <main className="paper-grain min-h-screen">
@@ -97,11 +121,19 @@ function Home() {
           </h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">{placeBlurb}</p>
           <p role="status" className="mt-2 text-sm text-muted-foreground">
-            {worldLoading || loading
-              ? "Checking what's recorded here…"
-              : worldError
-                ? "We couldn't check what's recorded here."
-                : `${all.length === 1 ? "1 thing" : `${all.length} things`} recorded here · ${needCount === 1 ? "1 open need" : `${needCount} open needs`}`}
+            {recordedStatus}
+            {needsError ? (
+              <>
+                {" "}
+                <button
+                  type="button"
+                  onClick={() => void refetchNeeds()}
+                  className="focus-ink underline underline-offset-4"
+                >
+                  Try again
+                </button>
+              </>
+            ) : null}
           </p>
           <p className="mt-4 max-w-2xl text-base">
             Find real things to do, people who can help, and worthwhile stops along your way — then
@@ -175,7 +207,8 @@ function Home() {
         {quiet ? (
           <EmptyPlace
             placeName={placeName}
-            needCount={needCount}
+            needCount={knownNeedCount}
+            needsState={needsAnswer.state}
             ancestors={ancestors.slice(0, 3)}
             onStepOut={setPlaceSlug}
           />
@@ -322,8 +355,8 @@ function Home() {
               to="/need"
               className="focus-ink rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
             >
-              {needCount
-                ? `${needCount} ${needCount === 1 ? "thing" : "things"} people have asked for`
+              {knownNeedCount
+                ? `${knownNeedCount} ${knownNeedCount === 1 ? "thing" : "things"} people have asked for`
                 : "Ask for something yourself"}
             </Link>
             <Link

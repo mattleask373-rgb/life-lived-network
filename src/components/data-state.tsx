@@ -8,14 +8,25 @@ import { Button } from "@/components/ui/button";
 export function EmptyPlace({
   placeName,
   needCount,
+  needsState = "known",
   ancestors,
   onStepOut,
 }: {
   placeName: string;
-  needCount: number;
+  /** Known open-need count. Ignored unless needsState is "known". */
+  needCount: number | null;
+  needsState?: "known" | "checking" | "unavailable";
   ancestors: { id: string; slug: string; name: string }[];
   onStepOut: (slug: string) => void;
 }) {
+  const needsClause =
+    needsState === "checking"
+      ? ". Still checking open needs"
+      : needsState === "unavailable"
+        ? ". Open needs could not be checked"
+        : needCount
+          ? `, apart from ${needCount === 1 ? "1 open need" : `${needCount} open needs`}`
+          : "";
   const actions = [
     { to: "/make", label: "Add something real", hint: "A place, event, project or service" },
     { to: "/need", label: "Ask for help", hint: "Post something you need" },
@@ -31,10 +42,7 @@ export function EmptyPlace({
           <dt className="font-medium">What we know</dt>
           <dd className="text-muted-foreground">
             Nothing has been recorded here yet
-            {needCount
-              ? `, apart from ${needCount === 1 ? "1 open need" : `${needCount} open needs`}`
-              : ""}
-            . We'd rather say that than invent something.
+            {needsClause}. We'd rather say that than invent something.
           </dd>
         </div>
         <div>
