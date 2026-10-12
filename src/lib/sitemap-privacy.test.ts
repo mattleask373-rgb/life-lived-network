@@ -13,7 +13,7 @@ import { Route as PagesRoute } from "@/routes/api/public/sitemap-pages[.]xml";
  */
 type Handler = () => Response | Promise<Response>;
 const handler = (route: unknown): Handler =>
-  (route as { options: { server: { handlers: { GET: Handler } } }).options.server.handlers.GET;
+  (route as { options: { server: { handlers: { GET: Handler } } } }).options.server.handlers.GET;
 
 async function body(route: unknown): Promise<{ xml: string; res: Response }> {
   const res = await handler(route)();
