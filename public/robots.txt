@@ -10,5 +10,8 @@ Disallow: /need
 Disallow: /help
 Disallow: /moderation
 Disallow: /sources
+Disallow: /memories
+Disallow: /partners
+Disallow: /partner-tracker
 
 Sitemap: https://life-lived-network.lovable.app/api/public/sitemap.xml
