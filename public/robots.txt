@@ -3,7 +3,7 @@ Allow: /
 
 # Personal, private and internal screens. Nothing useful for a search engine,
 # and nothing anyone else should be shown. These must stay in sync with
-# PRIVATE_PATHS in src/lib/seo.ts.
+# PRIVATE_PATHS in src/lib/seo.ts. robots.txt is crawler policy, not access control.
 Disallow: /auth
 Disallow: /profile
 Disallow: /conversations
@@ -16,4 +16,7 @@ Disallow: /partners
 Disallow: /partner-tracker
 Disallow: /earn
 
-Sitemap: https://life-lived-network.lovable.app/api/public/sitemap.xml
+# Static sitemap for deploy reliability. Dynamic /api/public/sitemap.xml remains
+# for environments that serve TanStack Start server routes; both list only
+# PUBLIC_PATHS.
+Sitemap: https://life-lived-network.lovable.app/sitemap.xml

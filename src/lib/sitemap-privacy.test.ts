@@ -42,6 +42,19 @@ describe("public sitemap privacy", () => {
     for (const path of PRIVATE_PATHS) expect(rules).toContain(`Disallow: ${path}`);
   });
 
+  it("robots.txt names the static sitemap for deploy reliability", () => {
+    const robots = readFileSync(new URL("../../public/robots.txt", import.meta.url), "utf8");
+    expect(robots).toContain(`Sitemap: ${SITE_ORIGIN}/sitemap.xml`);
+  });
+
+  it("static public/sitemap.xml lists exactly the public screens", () => {
+    const sitemap = readFileSync(new URL("../../public/sitemap.xml", import.meta.url), "utf8");
+    expect(locs(sitemap).sort()).toEqual(PUBLIC_PATHS.map((p) => `${SITE_ORIGIN}${p}`).sort());
+    for (const path of PRIVATE_PATHS) {
+      expect(locs(sitemap)).not.toContain(`${SITE_ORIGIN}${path}`);
+    }
+  });
+
   it("contains no record-level addresses, ids or query strings", async () => {
     const { xml } = await body(PagesRoute);
     for (const loc of locs(xml)) {
