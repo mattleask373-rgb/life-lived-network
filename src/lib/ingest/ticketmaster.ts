@@ -47,17 +47,24 @@ export function ticketmasterQuery(query: LocalityQuery): URLSearchParams {
     params.set("radius", String(Math.max(1, Math.round(query.radiusKm ?? 15))));
     params.set("unit", "km");
   }
-  params.set("startDateTime", isoSeconds(query.startsAfter));
-  params.set("endDateTime", isoSeconds(query.endsBefore));
+  const startsAfter = isoSeconds(query.startsAfter, "startsAfter");
+  const endsBefore = isoSeconds(query.endsBefore, "endsBefore");
+  if (Date.parse(endsBefore) <= Date.parse(startsAfter)) {
+    throw new RangeError("endsBefore must be after startsAfter");
+  }
+  params.set("startDateTime", startsAfter);
+  params.set("endDateTime", endsBefore);
   params.set("size", String(Math.min(Math.max(query.size ?? 50, 1), 100)));
   params.set("page", String(Math.max(query.page ?? 0, 0)));
   params.set("sort", "date,asc");
   return params;
 }
 
-function isoSeconds(value: string): string {
+function isoSeconds(value: string, field: "startsAfter" | "endsBefore"): string {
   const time = new Date(value);
-  if (Number.isNaN(time.getTime())) return new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+  if (Number.isNaN(time.getTime())) {
+    throw new RangeError(`${field} must be a valid date/time`);
+  }
   return time.toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
