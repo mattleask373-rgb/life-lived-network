@@ -1,4 +1,6 @@
 import { privatePage } from "@/lib/seo";
+import { FrontDoorContext } from "@/components/front-door-context";
+import { parseQuerySearch } from "@/lib/search-context";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -19,6 +21,7 @@ const description =
 
 export const Route = createFileRoute("/help")({
   head: () => privatePage({ path: "", title, description }),
+  validateSearch: parseQuerySearch,
   component: HelpPage,
 });
 
@@ -89,6 +92,7 @@ function Offer({ needId, askerId }: { needId: string; askerId: string }) {
 
 function HelpPage() {
   const { user, ready } = useSession();
+  const { from } = Route.useSearch();
   const load = useServerFn(getMyOpportunities);
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["opportunities", "mine"],
@@ -103,6 +107,11 @@ function HelpPage() {
         Nothing here is guessed. It comes from what you've said you can do, the places you said
         you'd go, and the times you said you're free. Change any of those and this changes.
       </p>
+
+      <FrontDoorContext
+        from={from}
+        guidance="These words are context only. They have not changed your profile or implied availability; your suggestions still come from what you have actually recorded."
+      />
 
       {ready && !user ? (
         <p className="card-paper mt-6 p-5 text-sm">
