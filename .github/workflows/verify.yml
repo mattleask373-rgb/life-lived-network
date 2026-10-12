@@ -30,7 +30,8 @@ jobs:
           echo "### Supabase Preview & Branching Verification" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Git Target:** \`${BRANCH_NAME}\` (\`${HEAD_SHA:0:7}\`)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Production Database Safety:** Fenced. No migrations applied to production (\`csgngcnaqeoxyopvnzjo\`) in CI." >> $GITHUB_STEP_SUMMARY
+          echo "- **Migration Execution:** This Verify workflow does not run a database migration/push command." >> $GITHUB_STEP_SUMMARY
+          echo "- **Safety Limit:** This status report does not prove external deploy paths are fenced from production; review environment protections and deployment workflows separately." >> $GITHUB_STEP_SUMMARY
 
           # Query GitHub check runs for Supabase integration status
           CHECK_RUNS=$(gh api "repos/${{ github.repository }}/commits/${HEAD_SHA}/check-runs" 2>/dev/null || echo '{"check_runs":[]}')
