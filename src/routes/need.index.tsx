@@ -15,13 +15,28 @@ const title = "What do you need? — Real World Atlas";
 const description =
   "Say what you actually need — a gardener on Thursday, a hand with a community garden, someone to swap skills with — and see who nearby could genuinely help.";
 
+export interface NeedSearchParams {
+  placeId?: string;
+  placeName?: string;
+  subject?: string;
+  intent?: string;
+}
+
 export const Route = createFileRoute("/need/")({
+  validateSearch: (search: Record<string, unknown>): NeedSearchParams => ({
+    placeId: typeof search.placeId === "string" && search.placeId ? search.placeId : undefined,
+    placeName:
+      typeof search.placeName === "string" && search.placeName ? search.placeName : undefined,
+    subject: typeof search.subject === "string" && search.subject ? search.subject : undefined,
+    intent: typeof search.intent === "string" && search.intent ? search.intent : undefined,
+  }),
   head: () => privatePage({ path: "", title, description }),
   component: NeedPage,
 });
 
 function NeedPage() {
   const { user, ready } = useSession();
+  const search = Route.useSearch();
   const qc = useQueryClient();
   const openNeeds = useServerFn(getOpenNeeds);
   const myNeeds = useServerFn(getMyNeeds);
@@ -54,12 +69,14 @@ function NeedPage() {
 
         {ready && user ? (
           <NeedForm
-            placeId={place?.place.id ?? null}
-            placeName={place?.place.name ?? ""}
+            placeId={search.placeId ?? place?.place.id ?? null}
+            placeName={search.placeName ?? place?.place.name ?? ""}
             timezone={place?.place.timezone ?? "UTC"}
             currency={place?.place.currency ?? "EUR"}
             lat={place?.place.lat ?? null}
             lng={place?.place.lng ?? null}
+            initialTitle={search.subject ?? ""}
+            initialIntent={search.intent ?? "paid_work"}
             onDone={() => qc.invalidateQueries({ queryKey: ["needs"] })}
           />
         ) : (
@@ -136,6 +153,8 @@ function NeedForm({
   currency,
   lat,
   lng,
+  initialTitle = "",
+  initialIntent = "paid_work",
   onDone,
 }: {
   placeId: string | null;
@@ -144,13 +163,15 @@ function NeedForm({
   currency: string;
   lat: number | null;
   lng: number | null;
+  initialTitle?: string;
+  initialIntent?: string;
   onDone: () => void;
 }) {
   const submit = useServerFn(createNeed);
   const [category, setCategory] = useState("");
-  const [needTitle, setNeedTitle] = useState("");
+  const [needTitle, setNeedTitle] = useState(initialTitle);
   const [description, setDescription] = useState("");
-  const [intent, setIntent] = useState("paid_work");
+  const [intent, setIntent] = useState(initialIntent);
   const [when, setWhen] = useState("");
   const [minutes, setMinutes] = useState(120);
   const [budget, setBudget] = useState("");

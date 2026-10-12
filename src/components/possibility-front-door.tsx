@@ -1,6 +1,7 @@
 /**
  * Possibility Front Door — UX entry only.
- * Routes intent to existing product doorways. Never runs the supply engine.
+ * Routes intent and preserves search/locality context to existing product doorways.
+ * Never runs the supply engine or invents candidate availability.
  */
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -10,11 +11,19 @@ import {
   FRONT_DOOR_ACTIONS,
   type PossibilityIntent,
 } from "@/lib/possibility-intent";
+import { parseSearchIntent } from "@/lib/search-intent";
+import { useWorldContext } from "@/lib/world-context";
 
 export function PossibilityFrontDoor() {
   const [text, setText] = useState("");
   const [submitted, setSubmitted] = useState<PossibilityIntent | null>(null);
   const navigate = useNavigate();
+  const { index } = useWorldContext();
+
+  const searchIntent = useMemo(() => {
+    if (!text.trim()) return null;
+    return parseSearchIntent(text, index);
+  }, [text, index]);
 
   const preview = useMemo(() => {
     if (!text.trim()) return null;
@@ -23,6 +32,16 @@ export function PossibilityFrontDoor() {
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!text.trim()) return;
+
+    if (searchIntent && searchIntent.certainty !== "unclear") {
+      void navigate({
+        to: searchIntent.targetRoute.to,
+        search: searchIntent.targetRoute.search,
+      });
+      return;
+    }
+
     const intent = classifyPossibilityIntent(text);
     setSubmitted(intent);
     if (intent.kind !== "DISCOVER" && intent.certainty !== "unclear") {
@@ -50,7 +69,7 @@ export function PossibilityFrontDoor() {
               setText(e.target.value);
               setSubmitted(null);
             }}
-            placeholder="e.g. I need a gardener · I can help with painting · I'm travelling"
+            placeholder="e.g. I need a gardener in Brixton · Live music in Birmingham · Painting"
             className="focus-ink w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
             autoComplete="off"
           />
@@ -63,7 +82,28 @@ export function PossibilityFrontDoor() {
         </button>
       </form>
 
-      {preview && text.trim() && preview.kind !== "DISCOVER" ? (
+      {searchIntent && text.trim() && searchIntent.certainty !== "unclear" ? (
+        <p className="mt-3 text-sm text-muted-foreground" role="status">
+          {searchIntent.locality ? (
+            <>
+              We&apos;ll take you to{" "}
+              <strong className="text-foreground">{searchIntent.locality.place.name}</strong>
+              {searchIntent.subject ? (
+                <>
+                  {" "}
+                  looking for <strong className="text-foreground">{searchIntent.subject}</strong>
+                </>
+              ) : null}
+              {searchIntent.timeframe ? <> ({searchIntent.timeframe.replace(/_/g, " ")})</> : null}.
+            </>
+          ) : preview && preview.kind !== "DISCOVER" ? (
+            <>
+              We&apos;d take you to <strong className="text-foreground">{preview.label}</strong>
+              {preview.certainty === "clear" ? "." : " — does that sound right?"}
+            </>
+          ) : null}
+        </p>
+      ) : preview && text.trim() && preview.kind !== "DISCOVER" ? (
         <p className="mt-3 text-sm text-muted-foreground" role="status">
           We&apos;d take you to <strong className="text-foreground">{preview.label}</strong>
           {preview.certainty === "clear" ? "." : " — does that sound right?"}
