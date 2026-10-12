@@ -54,7 +54,6 @@ describe("server action inputs", () => {
   });
 });
 
-
 describe("createNeedInput runtime boundary", () => {
   it("accepts valid values, trims bounded text, and normalises category", () => {
     const parsed = createNeedInput.parse(validNeedDraft());
@@ -65,8 +64,8 @@ describe("createNeedInput runtime boundary", () => {
 
   it("rejects oversized text, oversized arrays, invalid numeric values, and unknown enums", () => {
     expect(() => createNeedInput.parse({ ...validNeedDraft(), title: "x".repeat(201) })).toThrow();
-    expect(
-      () => createNeedInput.parse({ ...validNeedDraft(), description: "x".repeat(4001) }),
+    expect(() =>
+      createNeedInput.parse({ ...validNeedDraft(), description: "x".repeat(4001) }),
     ).toThrow();
     expect(() =>
       createNeedInput.parse({
