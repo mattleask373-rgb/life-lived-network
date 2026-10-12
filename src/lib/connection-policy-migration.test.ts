@@ -85,19 +85,13 @@ describe("conversation security migration contract", () => {
   });
 
   it("validates report identity and target against a real participant connection", () => {
-    expect(migration).toContain(
-      "CREATE OR REPLACE FUNCTION private.guard_content_report_insert()",
-    );
+    expect(migration).toContain("CREATE OR REPLACE FUNCTION private.guard_content_report_insert()");
     expect(migration).toContain("NEW.reporter_id IS DISTINCT FROM actor");
-    expect(migration).toContain(
-      "NEW.subject_type IS DISTINCT FROM 'connection_request'",
-    );
+    expect(migration).toContain("NEW.subject_type IS DISTINCT FROM 'connection_request'");
     expect(migration).toContain("IF actor = request_sender THEN");
     expect(migration).toContain("expected_reported_user := request_recipient;");
     expect(migration).toContain("expected_reported_user := request_sender;");
-    expect(migration).toContain(
-      "NEW.reported_user_id IS DISTINCT FROM expected_reported_user",
-    );
+    expect(migration).toContain("NEW.reported_user_id IS DISTINCT FROM expected_reported_user");
     expect(migration).toContain("NEW.status := 'submitted';");
     expect(migration).toContain("CREATE TRIGGER content_reports_insert_guard");
   });
