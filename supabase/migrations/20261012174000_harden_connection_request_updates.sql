@@ -232,6 +232,80 @@ CREATE TRIGGER connection_messages_insert_guard
   FOR EACH ROW
   EXECUTE FUNCTION private.guard_connection_message_insert();
 
+-- Reports: direct table writes must not allow fabricated accusations about an
+-- unrelated account. The only currently implemented client report path is a
+-- private connection request; future subject types need their own explicit
+-- validation path rather than silently inheriting this grant.
+CREATE OR REPLACE FUNCTION private.guard_content_report_insert()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $function$
+DECLARE
+  actor uuid := auth.uid();
+  request_sender uuid;
+  request_recipient uuid;
+  expected_reported_user uuid;
+BEGIN
+  IF current_user IN ('postgres', 'service_role', 'supabase_admin') THEN
+    RETURN NEW;
+  END IF;
+
+  IF actor IS NULL OR NEW.reporter_id IS DISTINCT FROM actor THEN
+    RAISE EXCEPTION 'A report must be filed by the authenticated account'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF NEW.subject_type IS DISTINCT FROM 'connection_request' THEN
+    RAISE EXCEPTION 'This report subject type is not available through the client API'
+      USING ERRCODE = '42501';
+  END IF;
+
+  SELECT r.sender_id, r.recipient_id
+    INTO request_sender, request_recipient
+    FROM public.connection_requests AS r
+   WHERE r.id = NEW.subject_id;
+
+  -- The SELECT runs under the caller's row policies. A missing, hidden,
+  -- blocked or unrelated request is treated as unavailable.
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'That conversation is not available for reporting'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF actor = request_sender THEN
+    expected_reported_user := request_recipient;
+  ELSIF actor = request_recipient THEN
+    expected_reported_user := request_sender;
+  ELSE
+    RAISE EXCEPTION 'Only a conversation participant may report it'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF NEW.reported_user_id IS DISTINCT FROM expected_reported_user THEN
+    RAISE EXCEPTION 'The report target must be the other conversation participant'
+      USING ERRCODE = '42501';
+  END IF;
+
+  -- Keep the same bounds and status contract as the authenticated server path.
+  NEW.note := left(COALESCE(NEW.note, ''), 1000);
+  NEW.status := 'submitted';
+
+  RETURN NEW;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION private.guard_content_report_insert()
+  FROM PUBLIC, anon, authenticated;
+
+DROP TRIGGER IF EXISTS content_reports_insert_guard
+  ON public.content_reports;
+
+CREATE TRIGGER content_reports_insert_guard
+  BEFORE INSERT ON public.content_reports
+  FOR EACH ROW
+  EXECUTE FUNCTION private.guard_content_report_insert();
+
 -- Blocks: users can see/create/remove their own block records, but cannot edit
 -- block identities or timestamps. App-side upsert uses ignoreDuplicates.
 GRANT SELECT, DELETE ON TABLE public.user_blocks TO authenticated;
