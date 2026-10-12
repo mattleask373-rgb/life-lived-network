@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import { PRIVATE_PATHS, PUBLIC_PATHS, SITE_ORIGIN } from "./seo";
@@ -12,14 +13,14 @@ import { Route as PagesRoute } from "@/routes/api/public/sitemap-pages[.]xml";
  */
 type Handler = () => Response | Promise<Response>;
 const handler = (route: unknown): Handler =>
-  (route as { options: { server: { handlers: { GET: Handler } } } }).options.server.handlers.GET;
+  (route as { options: { server: { handlers: { GET: Handler } } }).options.server.handlers.GET;
 
 async function body(route: unknown): Promise<{ xml: string; res: Response }> {
   const res = await handler(route)();
   return { xml: await res.text(), res };
 }
 
-const locs = (xml: string) => [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1] ?? "");
+const locs = (xml: string) => [...xml.matchAll(/<loc>([^<]+)<\\/loc>/g)].map((m) => m[1] ?? "");
 
 describe("public sitemap privacy", () => {
   it("pages sitemap lists exactly the public screens, nothing else", async () => {
@@ -33,6 +34,12 @@ describe("public sitemap privacy", () => {
     for (const path of PRIVATE_PATHS) {
       expect(locs(xml)).not.toContain(`${SITE_ORIGIN}${path}`);
     }
+  });
+
+  it("robots.txt disallows every route marked private", () => {
+    const robots = readFileSync(new URL("../../public/robots.txt", import.meta.url), "utf8");
+    const rules = robots.split(/\\r?\\n/);
+    for (const path of PRIVATE_PATHS) expect(rules).toContain(`Disallow: ${path}`);
   });
 
   it("contains no record-level addresses, ids or query strings", async () => {
