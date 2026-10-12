@@ -44,6 +44,9 @@ describe("conversation security migration contract", () => {
     );
     expect(migration).toContain("NEW.sender_id IS DISTINCT FROM actor");
     expect(migration).toContain("need_status IS DISTINCT FROM 'open'");
+    expect(migration).toContain(
+      "(need_expires_at IS NOT NULL AND need_expires_at <= now())",
+    );
     expect(migration).toContain("IF NEW.recipient_id IS DISTINCT FROM need_creator THEN");
     expect(migration).toContain("IF actor IS DISTINCT FROM need_creator THEN");
     expect(migration).toContain("NEW.context_title := need_title;");
