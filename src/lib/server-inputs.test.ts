@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { moveConnectionInput, needIdInput, refreshSourceInput } from "./server-inputs";
-import { canonicalizeNeedPlace, createNeedInput } from "./server-inputs";
+import {
+  canonicalizeNeedPlace,
+  createNeedInput,
+  moveConnectionInput,
+  needIdInput,
+  refreshSourceInput,
+} from "./server-inputs";
 
 const placeId = "8a7d1b6c-5f4e-4a32-9c10-1b2d3e4f5a60";
 
