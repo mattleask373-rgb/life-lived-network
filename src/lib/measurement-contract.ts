@@ -173,7 +173,8 @@ export type MeasurementValidationError =
   | "missing_or_extra_fields"
   | "invalid_field";
 
-export type MeasurementValidation = { valid: true; event: MeasurementEvent }
+export type MeasurementValidation =
+  { valid: true; event: MeasurementEvent }
   | { valid: false; reason: MeasurementValidationError };
 
 type EnumValues = readonly string[];
@@ -190,8 +191,7 @@ function hasExactFields(value: Record<string, unknown>, fields: readonly string[
   const actual = Object.keys(value).sort();
   const expected = [...fields].sort();
   return (
-    actual.length === expected.length &&
-    actual.every((field, index) => field === expected[index])
+    actual.length === expected.length && actual.every((field, index) => field === expected[index])
   );
 }
 
