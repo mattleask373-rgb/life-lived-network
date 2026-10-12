@@ -53,6 +53,14 @@ describe("public sitemap privacy", () => {
     expect(xml.toLowerCase()).not.toMatch(/demo|blocked|reported|fixture/);
   });
 
+  it("includes every route calling privatePage in PRIVATE_PATHS", () => {
+    // Assert known private routes like /earn, /memories, /profile are present
+    expect(PRIVATE_PATHS).toContain("/earn");
+    expect(PRIVATE_PATHS).toContain("/memories");
+    expect(PRIVATE_PATHS).toContain("/profile");
+    expect(PRIVATE_PATHS).toContain("/conversations");
+  });
+
   it("index names only the pages sitemap", async () => {
     const { xml } = await body(IndexRoute);
     expect(locs(xml)).toEqual([`${SITE_ORIGIN}/api/public/sitemap-pages.xml`]);
