@@ -174,8 +174,7 @@ export type MeasurementValidationError =
   | "invalid_field";
 
 export type MeasurementValidation =
-  { valid: true; event: MeasurementEvent }
-  | { valid: false; reason: MeasurementValidationError };
+  { valid: true; event: MeasurementEvent } | { valid: false; reason: MeasurementValidationError };
 
 type EnumValues = readonly string[];
 
