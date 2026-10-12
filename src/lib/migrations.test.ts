@@ -31,7 +31,8 @@ const MIGRATION_REVIEW_REGISTRY: Record<string, MigrationReviewRecord> = {
   "20261007171000_remove_unfenced_heartbeat.sql": {
     classification: "agent-control-plane",
     trackingIssue: "#33 / #47",
-    purpose: "Remove the legacy unfenced heartbeat overload and restrict tokenized heartbeat execution to service_role.",
+    purpose:
+      "Remove the legacy unfenced heartbeat overload and restrict tokenized heartbeat execution to service_role.",
     affectedTables: [],
     changesRls: false,
     changesPrivileges: true,
@@ -40,7 +41,8 @@ const MIGRATION_REVIEW_REGISTRY: Record<string, MigrationReviewRecord> = {
   "20261007172000_fence_release.sql": {
     classification: "agent-control-plane",
     trackingIssue: "#33 / #47",
-    purpose: "Require lease generation and opaque token when releasing an agent task; mutate agent_tasks only.",
+    purpose:
+      "Require lease generation and opaque token when releasing an agent task; mutate agent_tasks only.",
     affectedTables: ["agent_tasks"],
     changesRls: false,
     changesPrivileges: true,
@@ -106,7 +108,9 @@ function modifyingTablePattern(table: string): RegExp {
 }
 
 function touchedApplicationTables(content: string): string[] {
-  return KNOWN_APPLICATION_TABLES.filter((table) => modifyingTablePattern(table).test(content)).sort();
+  return KNOWN_APPLICATION_TABLES
+    .filter((table) => modifyingTablePattern(table).test(content))
+    .sort();
 }
 
 function changesRls(content: string): boolean {
@@ -129,20 +133,25 @@ describe("Pending migration inventory", () => {
     for (const { filename, content } of pending) {
       const record = MIGRATION_REVIEW_REGISTRY[filename];
       expect(record, "Pending migration needs a risk classification: " + filename).toBeDefined();
-      expect(record.trackingIssue.trim().length, filename + " needs a tracking issue").toBeGreaterThan(
-        0,
-      );
+      expect(
+        record.trackingIssue.trim().length,
+        filename + " needs a tracking issue",
+      ).toBeGreaterThan(0);
       expect(record.purpose.trim().length, filename + " needs a stated purpose").toBeGreaterThan(0);
-      expect(record.requiresIndependentReview, filename + " requires independent review").toBe(true);
+      expect(
+        record.requiresIndependentReview,
+        filename + " requires independent review",
+      ).toBe(true);
       expect(record.affectedTables).toEqual(touchedApplicationTables(content));
       expect(record.changesRls).toBe(changesRls(content));
       expect(record.changesPrivileges).toBe(changesPrivileges(content));
     }
 
     for (const filename of Object.keys(MIGRATION_REVIEW_REGISTRY)) {
-      expect(pendingNames, "Registry entry must refer to a pending migration: " + filename).toContain(
-        filename,
-      );
+      expect(
+        pendingNames,
+        "Registry entry must refer to a pending migration: " + filename,
+      ).toContain(filename);
     }
   });
 });
