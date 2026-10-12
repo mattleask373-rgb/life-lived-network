@@ -173,8 +173,7 @@ export type MeasurementValidationError =
   | "missing_or_extra_fields"
   | "invalid_field";
 
-export type MeasurementValidation =
-  | { valid: true; event: MeasurementEvent }
+export type MeasurementValidation = { valid: true; event: MeasurementEvent }
   | { valid: false; reason: MeasurementValidationError };
 
 type EnumValues = readonly string[];
@@ -190,7 +189,10 @@ function isOneOf<T extends EnumValues>(value: unknown, choices: T): value is T[n
 function hasExactFields(value: Record<string, unknown>, fields: readonly string[]): boolean {
   const actual = Object.keys(value).sort();
   const expected = [...fields].sort();
-  return actual.length === expected.length && actual.every((field, index) => field === expected[index]);
+  return (
+    actual.length === expected.length &&
+    actual.every((field, index) => field === expected[index])
+  );
 }
 
 function hasBase(value: Record<string, unknown>): boolean {
@@ -232,17 +234,23 @@ export function validateMeasurementEvent(input: unknown): MeasurementValidation 
     case "locality_resolved":
       fields = ["schemaVersion", "occurredAt", "type", "outcome", "placeKind"];
       fieldsAreValid =
-        isOneOf(input.outcome, LOCALITY_OUTCOMES) &&
-        isOneOf(input.placeKind, PLACE_KIND_BUCKETS);
+        isOneOf(input.outcome, LOCALITY_OUTCOMES) && isOneOf(input.placeKind, PLACE_KIND_BUCKETS);
       break;
     case "intent_resolved":
       fields = ["schemaVersion", "occurredAt", "type", "intentFamily", "certainty"];
       fieldsAreValid =
-        isOneOf(input.intentFamily, INTENT_FAMILIES) &&
-        isOneOf(input.certainty, CERTAINTIES);
+        isOneOf(input.intentFamily, INTENT_FAMILIES) && isOneOf(input.certainty, CERTAINTIES);
       break;
     case "discovery_result":
-      fields = ["schemaVersion", "occurredAt", "type", "surface", "resultCount", "dataState", "freshness"];
+      fields = [
+        "schemaVersion",
+        "occurredAt",
+        "type",
+        "surface",
+        "resultCount",
+        "dataState",
+        "freshness",
+      ];
       fieldsAreValid =
         isOneOf(input.surface, MEASUREMENT_SURFACES) &&
         isOneOf(input.resultCount, RESULT_COUNT_BUCKETS) &&
@@ -252,14 +260,12 @@ export function validateMeasurementEvent(input: unknown): MeasurementValidation 
     case "quiet_result":
       fields = ["schemaVersion", "occurredAt", "type", "surface", "reason"];
       fieldsAreValid =
-        isOneOf(input.surface, MEASUREMENT_SURFACES) &&
-        isOneOf(input.reason, QUIET_REASONS);
+        isOneOf(input.surface, MEASUREMENT_SURFACES) && isOneOf(input.reason, QUIET_REASONS);
       break;
     case "action_selected":
       fields = ["schemaVersion", "occurredAt", "type", "surface", "action"];
       fieldsAreValid =
-        isOneOf(input.surface, MEASUREMENT_SURFACES) &&
-        isOneOf(input.action, MEASUREMENT_ACTIONS);
+        isOneOf(input.surface, MEASUREMENT_SURFACES) && isOneOf(input.action, MEASUREMENT_ACTIONS);
       break;
     case "connection_started":
       fields = ["schemaVersion", "occurredAt", "type", "direction"];
