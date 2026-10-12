@@ -168,6 +168,96 @@ describe("the same adapter for every locality", () => {
   });
 });
 
+describe("Ticketmaster query time bounds", () => {
+  const validWindow = {
+    countryCode: "GB",
+    startsAfter: "2099-01-01T00:00:00Z",
+    endsBefore: "2099-01-02T00:00:00Z",
+  };
+
+  it("rejects an invalid start instead of silently substituting the current time", () => {
+    expect(() => ticketmasterQuery({ ...validWindow, startsAfter: "not-a-date" })).toThrow(
+      "startsAfter must be a valid date/time",
+    );
+  });
+
+  it("rejects an invalid end instead of silently substituting the current time", () => {
+    expect(() => ticketmasterQuery({ ...validWindow, endsBefore: "not-a-date" })).toThrow(
+      "endsBefore must be a valid date/time",
+    );
+  });
+
+  it("requires a strictly increasing time window", () => {
+    expect(() =>
+      ticketmasterQuery({ ...validWindow, endsBefore: validWindow.startsAfter }),
+    ).toThrow("endsBefore must be after startsAfter");
+    expect(() =>
+      ticketmasterQuery({
+        ...validWindow,
+        startsAfter: "2099-01-03T00:00:00Z",
+        endsBefore: "2099-01-02T00:00:00Z",
+      }),
+    ).toThrow("endsBefore must be after startsAfter");
+  });
+
+  it("normalizes explicit offsets to UTC without inventing precision", () => {
+    const params = ticketmasterQuery({
+      ...validWindow,
+      startsAfter: "2099-01-01T01:00:00+01:00",
+      endsBefore: "2099-01-02T01:00:00+01:00",
+    });
+    expect(params.get("startDateTime")).toBe("2099-01-01T00:00:00Z");
+    expect(params.get("endDateTime")).toBe("2099-01-02T00:00:00Z");
+  });
+});
+
+describe("Ticketmaster query numeric bounds", () => {
+  const validWindow = {
+    countryCode: "GB",
+    startsAfter: "2099-01-01T00:00:00Z",
+    endsBefore: "2099-01-02T00:00:00Z",
+  };
+
+  it("keeps pagination finite, integral, and within bounds", () => {
+    expect(
+      ticketmasterQuery({
+        ...validWindow,
+        size: Number.NaN,
+        page: Number.POSITIVE_INFINITY,
+      }).get("size"),
+    ).toBe("50");
+    expect(ticketmasterQuery({ ...validWindow, size: 4.9, page: 2.8 }).get("size")).toBe("4");
+    expect(ticketmasterQuery({ ...validWindow, size: 1000, page: -8 }).get("size")).toBe("100");
+    expect(ticketmasterQuery({ ...validWindow, size: 0, page: Number.NaN }).get("page")).toBe("0");
+    expect(ticketmasterQuery({ ...validWindow, size: 0 }).get("size")).toBe("1");
+  });
+
+  it("omits invalid coordinates rather than serializing invalid geography", () => {
+    for (const [lat, lng] of [
+      [Number.NaN, 0],
+      [91, 0],
+      [0, 181],
+      [Number.POSITIVE_INFINITY, 0],
+    ]) {
+      const params = ticketmasterQuery({ ...validWindow, lat, lng });
+      expect(params.get("latlong")).toBeNull();
+      expect(params.get("radius")).toBeNull();
+      expect(params.get("unit")).toBeNull();
+    }
+  });
+
+  it("defaults non-finite radius values and keeps radius at least one kilometre", () => {
+    const coords = { lat: 52.48, lng: -1.9 };
+    expect(
+      ticketmasterQuery({ ...validWindow, ...coords, radiusKm: Number.NaN }).get("radius"),
+    ).toBe("15");
+    expect(ticketmasterQuery({ ...validWindow, ...coords, radiusKm: 0.2 }).get("radius")).toBe("1");
+    expect(ticketmasterQuery({ ...validWindow, ...coords, radiusKm: 22.6 }).get("radius")).toBe(
+      "23",
+    );
+  });
+});
+
 describe("making outside text safe", () => {
   it("strips markup and control characters", () => {
     expect(plainText("<script>bad()</script>Hello <b>there</b>")).toBe("Hello there");

@@ -40,24 +40,46 @@ export function ticketmasterQuery(query: LocalityQuery): URLSearchParams {
   const params = new URLSearchParams();
   const country = query.countryCode.trim().toUpperCase().slice(0, 2);
   if (country) params.set("countryCode", country);
-  if (typeof query.lat === "number" && typeof query.lng === "number") {
+  if (
+    typeof query.lat === "number" &&
+    Number.isFinite(query.lat) &&
+    query.lat >= -90 &&
+    query.lat <= 90 &&
+    typeof query.lng === "number" &&
+    Number.isFinite(query.lng) &&
+    query.lng >= -180 &&
+    query.lng <= 180
+  ) {
     params.set("latlong", `${query.lat.toFixed(4)},${query.lng.toFixed(4)}`);
     // The source works in radius, not in localities, so coverage around a
     // locality centre is approximate. We keep that fact rather than hide it.
-    params.set("radius", String(Math.max(1, Math.round(query.radiusKm ?? 15))));
+    const requestedRadius =
+      typeof query.radiusKm === "number" && Number.isFinite(query.radiusKm) ? query.radiusKm : 15;
+    params.set("radius", String(Math.max(1, Math.round(requestedRadius))));
     params.set("unit", "km");
   }
-  params.set("startDateTime", isoSeconds(query.startsAfter));
-  params.set("endDateTime", isoSeconds(query.endsBefore));
-  params.set("size", String(Math.min(Math.max(query.size ?? 50, 1), 100)));
-  params.set("page", String(Math.max(query.page ?? 0, 0)));
+  const startsAfter = isoSeconds(query.startsAfter, "startsAfter");
+  const endsBefore = isoSeconds(query.endsBefore, "endsBefore");
+  if (Date.parse(endsBefore) <= Date.parse(startsAfter)) {
+    throw new RangeError("endsBefore must be after startsAfter");
+  }
+  params.set("startDateTime", startsAfter);
+  params.set("endDateTime", endsBefore);
+  const requestedSize =
+    typeof query.size === "number" && Number.isFinite(query.size) ? Math.floor(query.size) : 50;
+  const requestedPage =
+    typeof query.page === "number" && Number.isFinite(query.page) ? Math.floor(query.page) : 0;
+  params.set("size", String(Math.min(Math.max(requestedSize, 1), 100)));
+  params.set("page", String(Math.max(requestedPage, 0)));
   params.set("sort", "date,asc");
   return params;
 }
 
-function isoSeconds(value: string): string {
+function isoSeconds(value: string, field: "startsAfter" | "endsBefore"): string {
   const time = new Date(value);
-  if (Number.isNaN(time.getTime())) return new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+  if (Number.isNaN(time.getTime())) {
+    throw new RangeError(`${field} must be a valid date/time`);
+  }
   return time.toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
