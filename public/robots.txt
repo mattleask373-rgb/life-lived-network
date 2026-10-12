@@ -15,4 +15,4 @@ Disallow: /partners
 Disallow: /partner-tracker
 Disallow: /earn
 
-Sitemap: https://life-lived-network.lovable.app/api/public/sitemap.xml
+Sitemap: https://life-lived-network.lovable.app/sitemap.xml
