@@ -12,7 +12,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 import {
   canMove,
-  contextFromNeed,
   isOpen,
   roleFor,
   rowToMessage,
@@ -71,7 +70,6 @@ export const sendConnectionRequest = createServerFn({ method: "POST" })
       throw new Error("An offer of help goes to the person who asked.");
     }
 
-    const snapshot = contextFromNeed(need);
     const { data: row, error } = await context.supabase
       .from("connection_requests")
       .insert({
@@ -80,9 +78,6 @@ export const sendConnectionRequest = createServerFn({ method: "POST" })
         recipient_id: data.recipientId,
         direction: data.direction,
         note: (data.note ?? "").slice(0, MAX_NOTE),
-        context_title: snapshot.title,
-        context_place: snapshot.place,
-        context_when: snapshot.when,
       })
       .select("*")
       .single();
