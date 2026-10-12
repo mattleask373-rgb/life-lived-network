@@ -175,15 +175,12 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
     // The trial layer, only on the first page, only for the locality being
     // looked at, and only ever labelled as a demonstration. A locality with no
     // trial records stays quiet rather than borrowing someone else's.
-    if (offset === 0) {
-      const slugs = new Set(insideSlugs);
-      if (slugs.size || fixturesAllowed()) {
-        const { DEMO_ENTRIES } = await import("./fixtures/world-entries");
-        const matching = slugs.size
-          ? DEMO_ENTRIES.filter((entry) => slugs.has(entry.placeSlug))
-          : DEMO_ENTRIES;
-        if (matching.length) return { ...page, items: [...page.items, ...matching] };
-      }
+    // Production never receives demonstration records, whatever is selected.
+    if (offset === 0 && fixturesAllowed()) {
+      const { DEMO_ENTRIES } = await import("./fixtures/world-entries");
+      const { demoEntriesFor } = await import("./data/demo-layer");
+      const matching = demoEntriesFor(DEMO_ENTRIES, new Set(insideSlugs), true);
+      if (matching.length) return { ...page, items: [...page.items, ...matching] };
     }
     return page;
   } catch (error) {
