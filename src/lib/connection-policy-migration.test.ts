@@ -34,18 +34,14 @@ describe("conversation request security migration contract", () => {
     expect(migration).toContain(
       "IF actor = OLD.recipient_id AND NEW.status IN ('accepted', 'declined') THEN",
     );
-    expect(migration).toContain(
-      "IF actor = OLD.sender_id AND NEW.status = 'withdrawn' THEN",
-    );
+    expect(migration).toContain("IF actor = OLD.sender_id AND NEW.status = 'withdrawn' THEN");
   });
 
   it("guards immutable request identity and captured need context", () => {
     expect(migration).toMatch(
       /NEW\.sender_id,[\s\S]+?NEW\.recipient_id,[\s\S]+?NEW\.context_title,[\s\S]+?NEW\.context_place,[\s\S]+?NEW\.context_when,[\s\S]+?IS DISTINCT FROM ROW/i,
     );
-    expect(migration).toContain(
-      "CREATE TRIGGER connection_requests_status_guard",
-    );
+    expect(migration).toContain("CREATE TRIGGER connection_requests_status_guard");
   });
 
   it("keeps the guard function private and not directly executable by API roles", () => {
