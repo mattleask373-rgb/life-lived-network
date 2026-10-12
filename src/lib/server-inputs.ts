@@ -48,7 +48,12 @@ const timestampInput = z.string().datetime().nullable();
  */
 export const createNeedInput = z
   .object({
-    category: z.string().trim().min(1).max(100).transform((value) => value.toLowerCase()),
+    category: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100)
+      .transform((value) => value.toLowerCase()),
     title: z.string().trim().min(1).max(200),
     description: z.string().trim().max(4000),
     intent: z.enum([
