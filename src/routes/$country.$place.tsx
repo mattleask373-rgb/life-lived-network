@@ -23,7 +23,7 @@ import { WhatsHere } from "@/components/whats-here";
 import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
-import { getOpenNeeds } from "@/lib/needs.functions";
+import { getOpenNeedsCount } from "@/lib/needs.functions";
 import {
   contributions,
   localityQuestions,
@@ -183,15 +183,15 @@ function LocalityPage() {
   const groups = useMemo(() => providerGroups(entries), [entries]);
   const offers = useMemo(() => contributions(entries), [entries]);
   const categories = useMemo(() => categoriesPresent(entries), [entries]);
-  const openNeedsFn = useServerFn(getOpenNeeds);
-  const needs = useQuery({
-    queryKey: ["open-needs", place.id],
-    queryFn: () => openNeedsFn({ data: { placeId: place.id } }),
+  const openNeedsCountFn = useServerFn(getOpenNeedsCount);
+  const needsCount = useQuery({
+    queryKey: ["open-needs-count", place.id],
+    queryFn: () => openNeedsCountFn({ data: { placeId: place.id } }),
   });
-  const needsAnswer: OpenNeedsAnswer = needs.isError
+  const needsAnswer: OpenNeedsAnswer = needsCount.isError
     ? { state: "unavailable" }
-    : needs.isSuccess
-      ? { state: "known", count: needs.data.length }
+    : needsCount.isSuccess
+      ? { state: "known", count: needsCount.data }
       : { state: "checking" };
   const questions = localityQuestions(entries, needsAnswer);
   const demonstrations = entries.filter((entry) => entry.demonstration).length;

@@ -101,6 +101,6 @@ describe("a locality read as one thing", () => {
   it("the public place page does not hard-code zero open needs", () => {
     const src = readFileSync("src/routes/$country.$place.tsx", "utf8");
     expect(src).not.toMatch(/localityQuestions\(entries,\s*0\)/);
-    expect(src).toContain("getOpenNeeds");
+    expect(src).toContain("getOpenNeedsCount");
   });
 });
