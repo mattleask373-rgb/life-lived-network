@@ -219,7 +219,13 @@ describe("Ticketmaster query numeric bounds", () => {
   };
 
   it("keeps pagination finite, integral, and within bounds", () => {
-    expect(ticketmasterQuery({ ...validWindow, size: Number.NaN, page: Number.POSITIVE_INFINITY }).get("size")).toBe("50");
+    expect(
+      ticketmasterQuery({
+        ...validWindow,
+        size: Number.NaN,
+        page: Number.POSITIVE_INFINITY,
+      }).get("size"),
+    ).toBe("50");
     expect(ticketmasterQuery({ ...validWindow, size: 4.9, page: 2.8 }).get("size")).toBe("4");
     expect(ticketmasterQuery({ ...validWindow, size: 1000, page: -8 }).get("size")).toBe("100");
     expect(ticketmasterQuery({ ...validWindow, size: 0, page: Number.NaN }).get("page")).toBe("0");
@@ -242,9 +248,15 @@ describe("Ticketmaster query numeric bounds", () => {
 
   it("defaults non-finite radius values and keeps radius at least one kilometre", () => {
     const coords = { lat: 52.48, lng: -1.9 };
-    expect(ticketmasterQuery({ ...validWindow, ...coords, radiusKm: Number.NaN }).get("radius")).toBe("15");
-    expect(ticketmasterQuery({ ...validWindow, ...coords, radiusKm: 0.2 }).get("radius")).toBe("1");
-    expect(ticketmasterQuery({ ...validWindow, ...coords, radiusKm: 22.6 }).get("radius")).toBe("23");
+    expect(
+      ticketmasterQuery({ ...validWindow, ...coords, radiusKm: Number.NaN }).get("radius"),
+    ).toBe("15");
+    expect(
+      ticketmasterQuery({ ...validWindow, ...coords, radiusKm: 0.2 }).get("radius"),
+    ).toBe("1");
+    expect(
+      ticketmasterQuery({ ...validWindow, ...coords, radiusKm: 22.6 }).get("radius"),
+    ).toBe("23");
   });
 });
 
