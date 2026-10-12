@@ -17,7 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { fetchWorldEntries } from "@/lib/listings";
 import { densityOf } from "@/lib/trust";
-import { getOpenNeeds } from "@/lib/needs.functions";
+import { getOpenNeedsCount } from "@/lib/needs.functions";
 import { PLACE_FALLBACK } from "@/lib/places";
 import { placeInView, type MapView } from "@/lib/map-view";
 import { useWorldContext } from "@/lib/world-context";
@@ -69,16 +69,16 @@ function Home() {
     enabled: Boolean(discoveryPlace),
     queryFn: () => fetchWorldEntries({ placeId: discoveryPlace?.id ?? null }),
   });
-  const openNeedsFn = useServerFn(getOpenNeeds);
+  const openNeedsCountFn = useServerFn(getOpenNeedsCount);
   const {
-    data: openNeeds,
+    data: openNeedsCount,
     isError: needsError,
     isSuccess: needsReady,
     refetch: refetchNeeds,
   } = useQuery({
-    queryKey: ["open-needs", place?.id ?? null],
+    queryKey: ["open-needs-count", place?.id ?? null],
     enabled: Boolean(place),
-    queryFn: () => openNeedsFn({ data: { placeId: place?.id ?? null } }),
+    queryFn: () => openNeedsCountFn({ data: { placeId: place!.id } }),
   });
 
   const all = useMemo(() => world ?? [], [world]);
@@ -94,7 +94,7 @@ function Home() {
   const events = useMemo(() => upcomingEvents(all), [all]);
   const groups = useMemo(() => providerGroups(all), [all]);
   const given = useMemo(() => contributions(all), [all]);
-  const knownNeedCount = place && needsReady ? (openNeeds?.length ?? null) : null;
+  const knownNeedCount = place && needsReady ? (openNeedsCount ?? null) : null;
   const needsAnswer: OpenNeedsAnswer =
     needsError || (!loading && !place)
       ? { state: "unavailable" }
