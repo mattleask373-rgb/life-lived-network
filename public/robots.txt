@@ -2,7 +2,8 @@ User-agent: *
 Allow: /
 
 # Personal, private and internal screens. Nothing useful for a search engine,
-# and nothing anyone else should be shown.
+# and nothing anyone else should be shown. These must stay in sync with
+# PRIVATE_PATHS in src/lib/seo.ts.
 Disallow: /auth
 Disallow: /profile
 Disallow: /conversations
@@ -15,4 +16,4 @@ Disallow: /partners
 Disallow: /partner-tracker
 Disallow: /earn
 
-Sitemap: https://life-lived-network.lovable.app/sitemap.xml
+Sitemap: https://life-lived-network.lovable.app/api/public/sitemap.xml
