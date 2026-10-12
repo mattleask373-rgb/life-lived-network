@@ -34,7 +34,7 @@ describe("supply engine", () => {
   });
 
   it("does not surface an offer whose place is unknown for a place-scoped need", () => {
-    const unplaced = { ...gardenerOfferEntry, placeId: undefined };
+    const unplaced = { ...gardenerOfferEntry, placeId: null };
     const answer = findSupply({ need: gardenerNeed, people: [], entries: [unplaced] });
     expect(bands(answer.results)).not.toContain("direct");
   });
