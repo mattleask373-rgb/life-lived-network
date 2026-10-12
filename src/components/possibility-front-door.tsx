@@ -10,7 +10,7 @@ import {
   FRONT_DOOR_ACTIONS,
   type PossibilityIntent,
 } from "@/lib/possibility-intent";
-import { planFrontDoor, type FrontDoorPlan } from "@/lib/search-context";
+import { intentTarget, planFrontDoor, type FrontDoorPlan } from "@/lib/search-context";
 import { placePath } from "@/lib/places";
 import { useWorldContext } from "@/lib/world-context";
 
@@ -44,7 +44,8 @@ export function PossibilityFrontDoor() {
     const intent = classifyPossibilityIntent(text);
     setSubmitted(intent);
     if (intent.kind !== "DISCOVER" && intent.certainty !== "unclear") {
-      void navigate({ to: intent.href });
+      const target = intentTarget(intent.href, text);
+      void navigate(target.search ? { to: target.to, search: target.search } : { to: target.to });
     }
   }
 

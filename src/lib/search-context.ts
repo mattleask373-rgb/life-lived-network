@@ -86,3 +86,15 @@ export function filterEntriesByText(entries: WorldEntry[], q: string | undefined
     return words.every((w) => hay.includes(w));
   });
 }
+
+/** Where a no-place intent goes. Only /need accepts retained text so far. */
+export type IntentHref = "/need" | "/help" | "/give" | "/journey" | "/";
+
+export function intentTarget(
+  href: IntentHref,
+  text: string,
+): { to: IntentHref; search?: QuerySearch } {
+  if (href !== "/need") return { to: href };
+  const search = parseQuerySearch({ q: text, from: text });
+  return Object.keys(search).length ? { to: href, search } : { to: href };
+}

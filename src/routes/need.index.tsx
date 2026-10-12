@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { parseQuerySearch } from "@/lib/search-context";
 
 import { useSession } from "@/hooks/use-session";
 import { createNeed, getMyNeeds, getOpenNeeds } from "@/lib/needs.functions";
@@ -17,11 +18,14 @@ const description =
 
 export const Route = createFileRoute("/need/")({
   head: () => privatePage({ path: "", title, description }),
+  validateSearch: parseQuerySearch,
   component: NeedPage,
 });
 
 function NeedPage() {
   const { user, ready } = useSession();
+  const { from } = Route.useSearch();
+  const typed = from ?? "";
   const qc = useQueryClient();
   const openNeeds = useServerFn(getOpenNeeds);
   const myNeeds = useServerFn(getMyNeeds);
@@ -60,6 +64,7 @@ function NeedPage() {
             currency={place?.place.currency ?? "EUR"}
             lat={place?.place.lat ?? null}
             lng={place?.place.lng ?? null}
+            typed={typed}
             onDone={() => qc.invalidateQueries({ queryKey: ["needs"] })}
           />
         ) : (
@@ -144,11 +149,12 @@ function NeedForm({
   currency: string;
   lat: number | null;
   lng: number | null;
+  typed: string;
   onDone: () => void;
 }) {
   const submit = useServerFn(createNeed);
   const [category, setCategory] = useState("");
-  const [needTitle, setNeedTitle] = useState("");
+  const [needTitle, setNeedTitle] = useState(typed);
   const [description, setDescription] = useState("");
   const [intent, setIntent] = useState("paid_work");
   const [when, setWhen] = useState("");
@@ -243,6 +249,12 @@ function NeedForm({
 
         <label className="grid gap-1 text-sm">
           In one line
+          {typed ? (
+            <span className="text-xs text-muted-foreground">
+              Filled in from what you typed. Change it as you like — nothing is saved until you
+              press save.
+            </span>
+          ) : null}
           <input
             value={needTitle}
             onChange={(e) => setNeedTitle(e.target.value)}
