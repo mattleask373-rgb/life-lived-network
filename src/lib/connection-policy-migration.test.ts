@@ -57,9 +57,7 @@ describe("conversation security migration contract", () => {
     expect(migration).toContain(
       "REVOKE ALL ON FUNCTION private.guard_connection_request_status_transition()",
     );
-    expect(migration).toContain(
-      "REVOKE ALL ON FUNCTION private.guard_connection_message_insert()",
-    );
+    expect(migration).toContain("REVOKE ALL ON FUNCTION private.guard_connection_message_insert()");
     expect(migration).toMatch(/FROM PUBLIC, anon, authenticated;/i);
   });
 });
