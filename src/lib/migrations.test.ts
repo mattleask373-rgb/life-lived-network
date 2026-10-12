@@ -18,16 +18,14 @@ interface MigrationReviewRecord {
 }
 
 /**
- * Classification inventory, not an approval to apply migrations.
+ * This is a classification inventory, not approval to apply a migration.
  *
- * Any newly-added migration after the known production baseline must be
- * described here so reviewers can see its intent and risk. Product-security
- * migrations are a valid category: they must not be blanket-rejected just
- * because they intentionally repair RLS, grants or application tables.
+ * New migrations after the known production baseline must declare their intent
+ * and risk here. Product-security migrations are valid: they must not be
+ * blanket-rejected merely because they repair grants, RLS or app tables.
  *
- * This static test does not prove what database a deploy system targets or
- * that a human approval occurred. Those are environment/branch-protection
- * controls, and remain separate release gates.
+ * Static tests cannot prove which database a deploy path targets or that a
+ * human approved a change. Those remain separate environment/review gates.
  */
 const MIGRATION_REVIEW_REGISTRY: Record<string, MigrationReviewRecord> = {
   "20261007171000_remove_unfenced_heartbeat.sql": {
@@ -75,6 +73,8 @@ const PROTECTED_PRODUCTION_TABLES = [
   "user_roles",
 ];
 
+const KNOWN_APPLICATION_TABLES = [...PROTECTED_PRODUCTION_TABLES, "agent_tasks"];
+
 interface PendingMigration {
   filename: string;
   content: string;
@@ -87,7 +87,7 @@ function getPendingMigrations(): PendingMigration[] {
   const baselineIndex = files.indexOf(PRODUCTION_BASELINE_MIGRATION);
 
   if (baselineIndex === -1) {
-    throw new Error(`Production baseline migration not found in ${MIGRATIONS_DIR}`);
+    throw new Error("Production baseline migration not found in " + MIGRATIONS_DIR);
   }
 
   return files.slice(baselineIndex + 1).map((filename) => ({
@@ -98,9 +98,23 @@ function getPendingMigrations(): PendingMigration[] {
 
 function modifyingTablePattern(table: string): RegExp {
   return new RegExp(
-    `\\\\b(?:ALTER\\\\s+TABLE|DROP\\\\s+TABLE|TRUNCATE(?:\\\\s+TABLE)?|INSERT\\\\s+INTO|UPDATE|DELETE\\\\s+FROM)\\\\s+(?:public\\\\.)?${table}\\\\b`,
+    "\\b(?:ALTER\\s+TABLE|DROP\\s+TABLE|TRUNCATE(?:\\s+TABLE)?|INSERT\\s+INTO|UPDATE|DELETE\\s+FROM)\\s+(?:public\\.)?" +
+      table +
+      "\\b",
     "i",
   );
+}
+
+function touchedApplicationTables(content: string): string[] {
+  return KNOWN_APPLICATION_TABLES.filter((table) => modifyingTablePattern(table).test(content)).sort();
+}
+
+function changesRls(content: string): boolean {
+  return /\b(?:CREATE|ALTER|DROP)\s+POLICY\b|\bDISABLE\s+ROW\s+LEVEL\s+SECURITY\b/i.test(content);
+}
+
+function changesPrivileges(content: string): boolean {
+  return /\b(?:GRANT|REVOKE)\b|\bALTER\s+DEFAULT\s+PRIVILEGES\b/i.test(content);
 }
 
 describe("Pending migration inventory", () => {
@@ -112,16 +126,21 @@ describe("Pending migration inventory", () => {
     expect(pendingNames).toContain("20261007171000_remove_unfenced_heartbeat.sql");
     expect(pendingNames).toContain("20261007172000_fence_release.sql");
 
-    for (const filename of pendingNames) {
+    for (const { filename, content } of pending) {
       const record = MIGRATION_REVIEW_REGISTRY[filename];
-      expect(record, `Pending migration ${filename} needs an explicit risk classification`).toBeDefined();
-      expect(record.trackingIssue.trim().length, `${filename} needs a tracking issue`).toBeGreaterThan(0);
-      expect(record.purpose.trim().length, `${filename} needs a stated purpose`).toBeGreaterThan(0);
-      expect(record.requiresIndependentReview, `${filename} requires independent review`).toBe(true);
+      expect(record, "Pending migration needs a risk classification: " + filename).toBeDefined();
+      expect(record.trackingIssue.trim().length, filename + " needs a tracking issue").toBeGreaterThan(
+        0,
+      );
+      expect(record.purpose.trim().length, filename + " needs a stated purpose").toBeGreaterThan(0);
+      expect(record.requiresIndependentReview, filename + " requires independent review").toBe(true);
+      expect(record.affectedTables).toEqual(touchedApplicationTables(content));
+      expect(record.changesRls).toBe(changesRls(content));
+      expect(record.changesPrivileges).toBe(changesPrivileges(content));
     }
 
     for (const filename of Object.keys(MIGRATION_REVIEW_REGISTRY)) {
-      expect(pendingNames, `Registry entry ${filename} must refer to a pending migration`).toContain(
+      expect(pendingNames, "Registry entry must refer to a pending migration: " + filename).toContain(
         filename,
       );
     }
@@ -138,7 +157,7 @@ describe("Agent control-plane migration isolation", () => {
       for (const table of PROTECTED_PRODUCTION_TABLES) {
         expect(
           modifyingTablePattern(table).test(content),
-          `Agent-control-plane migration ${filename} modifies protected application table '${table}'`,
+          "Agent-control-plane migration " + filename + " modifies protected table " + table,
         ).toBe(false);
       }
     }
@@ -146,13 +165,13 @@ describe("Agent control-plane migration isolation", () => {
 
   it("limits agent-control-plane UPDATE statements to agent_tasks", () => {
     for (const { filename, content } of pending) {
-      const updateMatches = [...content.matchAll(/\\bUPDATE\\s+([a-zA-Z0-9_.]+)/gi)];
+      const updateMatches = [...content.matchAll(/\bUPDATE\s+([a-zA-Z0-9_.]+)/gi)];
 
       for (const match of updateMatches) {
-        const targetTable = match[1].toLowerCase().replace(/^public\\./, "");
+        const targetTable = match[1].toLowerCase().replace(/^public\./, "");
         expect(
           targetTable,
-          `Agent-control-plane migration ${filename} attempts UPDATE on '${targetTable}'`,
+          "Agent-control-plane migration " + filename + " attempts UPDATE on " + targetTable,
         ).toBe("agent_tasks");
       }
     }
@@ -160,31 +179,61 @@ describe("Agent control-plane migration isolation", () => {
 
   it("does not create, alter or drop RLS policies from the agent-control-plane category", () => {
     const policyPatterns = [
-      /\\bCREATE\\s+POLICY\\b/i,
-      /\\bALTER\\s+POLICY\\b/i,
-      /\\bDROP\\s+POLICY\\b/i,
-      /\\bDISABLE\\s+ROW\\s+LEVEL\\s+SECURITY\\b/i,
+      /\bCREATE\s+POLICY\b/i,
+      /\bALTER\s+POLICY\b/i,
+      /\bDROP\s+POLICY\b/i,
+      /\bDISABLE\s+ROW\s+LEVEL\s+SECURITY\b/i,
     ];
 
     for (const { filename, content } of pending) {
       for (const pattern of policyPatterns) {
         expect(
           pattern.test(content),
-          `Agent-control-plane migration ${filename} changes RLS: matched ${pattern}`,
+          "Agent-control-plane migration " + filename + " changes RLS: " + pattern,
         ).toBe(false);
       }
     }
   });
 });
 
+describe("Migration detector regression tests", () => {
+  it("recognizes protected-table DDL and DML statements", () => {
+    const statements = [
+      "ALTER TABLE public.connection_requests ADD COLUMN reviewed boolean",
+      "DROP TABLE connection_requests",
+      "TRUNCATE TABLE public.connection_requests",
+      "INSERT INTO public.connection_requests (id) VALUES ('x')",
+      "UPDATE public.connection_requests SET status = 'sent'",
+      "DELETE FROM public.connection_requests WHERE true",
+    ];
+
+    for (const statement of statements) {
+      expect(modifyingTablePattern("connection_requests").test(statement), statement).toBe(true);
+    }
+  });
+
+  it("does not treat a different table or the agent_tasks control plane as a protected-table change", () => {
+    expect(
+      modifyingTablePattern("connection_requests").test(
+        "UPDATE public.agent_tasks SET status = 'READY'",
+      ),
+    ).toBe(false);
+    expect(
+      modifyingTablePattern("connection_requests").test(
+        "UPDATE public.connection_requests_archive SET status = 'sent'",
+      ),
+    ).toBe(false);
+  });
+});
+
 describe("SECURITY DEFINER migration review", () => {
   it("requires every pending SECURITY DEFINER function to revoke PUBLIC execute", () => {
     for (const { filename, content } of getPendingMigrations()) {
-      if (!/\\bSECURITY\\s+DEFINER\\b/i.test(content)) continue;
+      if (!/\bSECURITY\s+DEFINER\b/i.test(content)) continue;
 
       expect(
-        /REVOKE\\s+ALL\\s+ON\\s+FUNCTION[\\s\\S]+?FROM\\s+PUBLIC/i.test(content),
-        `Migration ${filename} defines SECURITY DEFINER but does not revoke PUBLIC execute`,
+        /REVOKE\s+ALL\s+ON\s+FUNCTION[\s\S]+?FROM\s+PUBLIC/i.test(content),
+        "Migration " + filename + " defines SECURITY DEFINER but does not revoke PUBLIC execute",
       ).toBe(true);
     }
   });
