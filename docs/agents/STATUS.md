@@ -1,4 +1,44 @@
-# Agent System Status — 2026-10-07 (control-tower reconciliation)
+# Agent System Status — 2026-10-12 (current repo recheck)
+
+> **Snapshot:** 2026-10-12. **Current `main` head at recheck:** `7aca99a037bfabda9170dc6fb8e8f612a3d26b55`.
+> This is repository/CI metadata, not proof of a production deployment, hosted database state, or continuous agent execution.
+> The previous 2026-10-07 snapshot is retained below as historical context; use this top section for today's queue.
+
+## Executive state
+
+- **Persistent authenticated executor: NOT PROVEN / NOT ACTIVE.** GitHub issues and PRs coordinate reviewable work; they do not establish a durable worker loop. Issue [#74](https://github.com/mattleask373-rgb/life-lived-network/issues/74) is the human-gated control-plane reconciliation.
+- **Canonical discovery:** `src/lib/supply-engine.ts` / `findSupply()` remains the only discovery/matching authority. Private `place_memories` are not public inventory, presence, availability, or service-area evidence.
+- **Current-main environment hygiene:** the root `.env` remains tracked on `main`; earlier inspection found six Supabase project/URL/publishable-key variable names and did not find a service-role/Lovable API-key pattern. This is not a claim that repository history has been fully scanned or that publishing the file is desirable. PRs #120 and #127 propose overlapping cleanup; do not merge both blindly.
+- **Lovable write containment:** Issue [#133](https://github.com/mattleask373-rgb/life-lived-network/issues/133) tracks a generated-type bot commit to `main` during a nominally read-only audit. Keep Lovable write-capable operations paused during this sprint; a human should decide whether the PostgREST generated-type change is correct.
+- **GitHub Discussions:** the available GitHub connector in this session does not expose Discussion creation/list/post actions. The working dispatch record is [Issue #125](https://github.com/mattleask373-rgb/life-lived-network/issues/125), not a claim that a Discussion was created. Mirror the queue to a real repository Discussion when an authorized client can do so.
+
+## Live PR board (metadata rechecked 2026-10-12)
+
+| Workstream | Current observed state | Next safe action |
+|---|---|---|
+| [#113 experiments + sitemap contracts](https://github.com/mattleask373-rgb/life-lived-network/pull/113) | Open, non-draft; head `066372281075911f58dd30c924a2576202d44867`; recorded Verify #640 failed at `bun run lint` with 23 Prettier errors and 8 warnings. Tests/build were skipped. Base is behind current `main`. | Reconcile branch/base through the approved non-history-rewriting workflow; keep formatting changes scoped; obtain fresh lint, tests and build at the resulting exact head. |
+| [#120 env cleanup](https://github.com/mattleask373-rgb/life-lived-network/pull/120) | Open, non-draft; head `10409b7acb6e765deab1b557e24c9db671d19dd0`; overlaps #127 and includes broader roadmap changes. Prior recorded Verify reported success on its head, but base is stale and this is not merge authorization. | Compare every changed path with #127 and recheck exact-head CI/base before review. |
+| [#127 focused env hygiene](https://github.com/mattleask373-rgb/life-lived-network/pull/127) | Open draft; head `49d405b7015cc9a2e144ebc52aa818218db75622`; Verify #721 passed on the recorded head. Base is stale; history scan remains outstanding. | Prefer focused scope if independently reviewed; recheck base/head and history scan. Do not merge together with #120. |
+| [#129 crawler/private-route policy](https://github.com/mattleask373-rgb/life-lived-network/pull/129) | Open draft; head `4f4f812497bb01cc8db7c8f074481e75036069ab`; Verify #734 passed on the recorded head. Actual published robots/sitemap behavior remains unverified. | Run a read-only live HTTP audit; record URLs, UTC check time, status/redirects and response evidence. |
+| [#131 world fixture gate](https://github.com/mattleask373-rgb/life-lived-network/pull/131) | Open draft; head `05be6077778d36ca2067c4bded99fe400365d39a`; prior Verify passed on that head. Current review flagged a possible test gap at the world-reader/discovery-response boundary (not proof of a leak). | Add focused response-level regression coverage if the owner confirms scope; rerun full Verify on new head. |
+| [#134 Ticketmaster rights/readiness plan](https://github.com/mattleask373-rgb/life-lived-network/pull/134) | Open draft; docs-only plan. It does not prove live credentials, a licence, live ingestion, or production integration. | Keep offline fixture work separate; human rights/terms gate before live API access. |
+| [#135 agent coordination templates](https://github.com/mattleask373-rgb/life-lived-network/pull/135) | Open draft; documentation/template only, static review; not on `main`. | Human review; verify GitHub Discussion form/category behavior in the UI before claiming the Discussion workflow is operational. |
+| [#61 provider-neutral control plane](https://github.com/mattleask373-rgb/life-lived-network/pull/61) | Open, `mergeable=false`; head `3945d3f3d79326b3d045ef28ddbf5e07dc630e2a`. Current-head PR-run lookup returned no run from the connector (absence of evidence, not a pass). | Reconcile branch lineage and obtain fresh Verify evidence. |
+| [#62 claim/lease/heartbeat](https://github.com/mattleask373-rgb/life-lived-network/pull/62) | Open, `mergeable=false`; head `7acb5cbe06f87e8ae4b4a4b534d0dd092907753e`; base is PR #61's branch. | Reconcile lifecycle semantics and identity binding; fresh Verify required. |
+| [#64 lease fencing/provider authorization](https://github.com/mattleask373-rgb/life-lived-network/pull/64) | Open, `mergeable=false`; head `8de13494adcd118ed58bd9b49c253dd29364b01b`. Current-head PR-run lookup returned no run from the connector. | Prove authenticated actor/run binding, project/tenant scope and approval identity; no RLS/grant/migration changes without human review. |
+| [#67 / #69 / #72 / #73 programme & execution contracts](https://github.com/mattleask373-rgb/life-lived-network/issues/74) | Open branches with older base SHAs. The latest recorded control-tower note reports frozen-lockfile failures for #67/#69/#73 and a green Verify for #72's recorded head; all need current-head/base reconciliation. | Re-read current workflow evidence before using any pass/fail as release status; preserve dependencies and do not activate execution. |
+
+## Active parallel dispatch
+
+The current claim-before-code work queue and shared handoff contract live in [Issue #125](https://github.com/mattleask373-rgb/life-lived-network/issues/125). Current lanes: (1) #113 branch/CI repair, (2) #131 world-reader regression coverage, (3) #129 live SEO audit, (4) #74 control-plane identity/scope analysis, (5) #120/#127/#129/#135 non-overlap triage, and (6) authorized repository-history secret scan. An agent is not considered active or complete without a verifiable claim/artifact.
+
+## Human gates remain mandatory
+
+No autonomous merge/deploy; no force-push/history rewrite; no production data access, schema/RLS/grant changes, credential rotation, live provider integration, external contact, paid spend or production task execution without the approval required by repository policy. Continue independent branch-only work and post exact commit/CI evidence in the owning Issue or PR. Silence is not approval.
+
+---
+
+## Historical snapshot — 2026-10-07 (retained for context)
 
 ## SOURCE OF TRUTH
 
@@ -52,3 +92,5 @@ No autonomous production merge/deploy is active.
 2. Reconcile #62's lifecycle model with the durable SQL status contract and authenticated fencing boundaries before any integration.
 3. Reconcile #43 into #49's canonical ingest boundary; preserve useful fixture/normalization/freshness/provenance evidence while retiring the parallel architecture.
 4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
+
+
