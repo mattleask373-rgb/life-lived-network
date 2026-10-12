@@ -17,11 +17,91 @@ GRANT INSERT (
   sender_id,
   recipient_id,
   direction,
-  note,
-  context_title,
-  context_place,
-  context_when
+  note
 ) ON TABLE public.connection_requests TO authenticated;
+
+-- A table INSERT policy only checks the actor and block relation. Enforce the
+-- application-level need/recipient/direction contract here too, and create the
+-- frozen context from the actual need row rather than trusting client input.
+CREATE OR REPLACE FUNCTION private.guard_connection_request_insert()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $function$
+DECLARE
+  actor uuid := auth.uid();
+  need_creator uuid;
+  need_status text;
+  need_title text;
+  need_place_text text;
+  need_starts_at timestamptz;
+  need_timezone text;
+BEGIN
+  IF current_user IN ('postgres', 'service_role', 'supabase_admin') THEN
+    RETURN NEW;
+  END IF;
+
+  IF actor IS NULL OR NEW.sender_id IS DISTINCT FROM actor THEN
+    RAISE EXCEPTION 'A connection request must be sent by the authenticated account'
+      USING ERRCODE = '42501';
+  END IF;
+
+  SELECT n.creator_id, n.status, n.title, n.place_text, n.starts_at, n.timezone
+    INTO need_creator, need_status, need_title, need_place_text, need_starts_at, need_timezone
+    FROM public.needs AS n
+   WHERE n.id = NEW.need_id;
+
+  -- The query intentionally runs as the caller, so needs RLS remains in force.
+  -- A private/unavailable need, missing need, or closed need fails closed.
+  IF NOT FOUND OR need_status IS DISTINCT FROM 'open' THEN
+    RAISE EXCEPTION 'That need is not available for a connection request'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF NEW.direction = 'offer' THEN
+    IF NEW.recipient_id IS DISTINCT FROM need_creator THEN
+      RAISE EXCEPTION 'An offer must go to the person who posted the need'
+        USING ERRCODE = '42501';
+    END IF;
+  ELSIF NEW.direction = 'invite' THEN
+    IF actor IS DISTINCT FROM need_creator THEN
+      RAISE EXCEPTION 'Only the person who posted the need may invite someone'
+        USING ERRCODE = '42501';
+    END IF;
+  ELSE
+    RAISE EXCEPTION 'A valid connection request direction is required'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF char_length(COALESCE(NEW.note, '')) > 600 THEN
+    RAISE EXCEPTION 'The connection request note is too long'
+      USING ERRCODE = '22001';
+  END IF;
+
+  -- Frozen context is derived here. Client-supplied context columns are not
+  -- granted for INSERT, and cannot be used to spoof the subject of a request.
+  NEW.context_title := need_title;
+  NEW.context_place := COALESCE(NULLIF(need_place_text, ''), 'Nearby');
+  NEW.context_when := CASE
+    WHEN need_starts_at IS NULL THEN 'Time still to agree'
+    ELSE to_char(need_starts_at AT TIME ZONE 'UTC', 'Dy, DD Mon YYYY')
+      || ' (' || need_timezone || ')'
+  END;
+
+  RETURN NEW;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION private.guard_connection_request_insert()
+  FROM PUBLIC, anon, authenticated;
+
+DROP TRIGGER IF EXISTS connection_requests_insert_guard
+  ON public.connection_requests;
+
+CREATE TRIGGER connection_requests_insert_guard
+  BEFORE INSERT ON public.connection_requests
+  FOR EACH ROW
+  EXECUTE FUNCTION private.guard_connection_request_insert();
 GRANT UPDATE (status) ON TABLE public.connection_requests TO authenticated;
 
 CREATE OR REPLACE FUNCTION private.guard_connection_request_status_transition()
