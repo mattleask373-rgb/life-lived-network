@@ -19,3 +19,34 @@ jobs:
       - run: bun run lint
       - run: bun run test
       - run: bun run build
+
+      - name: Report Supabase preview branch status
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+        run: |
+          echo "### Supabase Preview & Branching Verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Git Target:** \`${BRANCH_NAME}\` (\`${HEAD_SHA:0:7}\`)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Production Database Safety:** Fenced. No migrations applied to production (\`csgngcnaqeoxyopvnzjo\`) in CI." >> $GITHUB_STEP_SUMMARY
+
+          # Query GitHub check runs for Supabase integration status
+          CHECK_RUNS=$(gh api "repos/${{ github.repository }}/commits/${HEAD_SHA}/check-runs" 2>/dev/null || echo '{"check_runs":[]}')
+          SUPABASE_NAME=$(echo "$CHECK_RUNS" | jq -r '.check_runs[] | select(.name | test("Supabase"; "i")) | .name' 2>/dev/null | head -n 1 || true)
+
+          if [ -n "$SUPABASE_NAME" ]; then
+            STATUS=$(echo "$CHECK_RUNS" | jq -r --arg n "$SUPABASE_NAME" '.check_runs[] | select(.name == $n) | .status' | head -n 1)
+            CONCLUSION=$(echo "$CHECK_RUNS" | jq -r --arg n "$SUPABASE_NAME" '.check_runs[] | select(.name == $n) | .conclusion' | head -n 1)
+            SUMMARY=$(echo "$CHECK_RUNS" | jq -r --arg n "$SUPABASE_NAME" '.check_runs[] | select(.name == $n) | .output.summary' | head -n 1)
+
+            echo "- **Supabase Check:** \`${SUPABASE_NAME}\` — Status: \`${STATUS}\`, Conclusion: \`${CONCLUSION}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Summary:** ${SUMMARY}" >> $GITHUB_STEP_SUMMARY
+            echo "Supabase check detected: ${SUPABASE_NAME} (${STATUS}/${CONCLUSION})"
+            echo "Summary: ${SUMMARY}"
+          else
+            echo "- **Supabase Branch Association:** None detected on this commit." >> $GITHUB_STEP_SUMMARY
+            echo "- **Note:** To associate preview databases, enable Branching in Supabase Dashboard -> Integrations -> GitHub." >> $GITHUB_STEP_SUMMARY
+            echo "No Supabase check run associated with commit ${HEAD_SHA}."
+          fi
