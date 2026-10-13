@@ -1,67 +1,85 @@
-# My Places: first complete version
+# Living World: east-coast Australia pilot, read-only audit and slice plan
 
-## Audit: what already exists (checked this session)
-- **Framework and sign-in:** the app's existing setup and sign-in. Every action on private places requires sign-in, and the four server actions (list, save, delete, export) each require it.
-- **Private places page:** `/memories` ("Places I've known"), in the main menu and kept out of the sitemap. It has a list, add and edit, delete with a basic browser pop-up, and a JSON download.
-- **Database table** `place_memories`:
-  - It is linked to a known locality, not raw coordinates, with optional full dates and a note of up to 2,000 characters.
-  - Visibility is locked to private.
-  - The database rules let each owner read, add, edit and delete only their own places; signed-out visitors have no access.
-  - An earlier two-account check passed.
-- **Map:** the app's own hand-drawn map, with no paid map provider. Places come from the app's list of localities, each with a centre point.
-- **Discovery:** the place page uses the single discovery engine, `findSupply()`, and shows trust labels.
-- **Tests:** 35 files and 254 tests, all passing. The type check is clean.
+Status: plan only. No edits, commits, syncs, publishes or database changes were made.
 
-## Gaps against the brief
-- No memory type (lived, visited, worked, meaningful), no tags, and no approximate period such as a year or month.
-- No map view of my places, and no search or filters.
-- No detail page for a single memory with a separate discovery section.
-- No Data and Privacy page, no documented export format, and no note on how to delete an account.
-- Duplicate saves are not prevented, and the private-by-default notice before the first save could be clearer.
+## 1. Project identity and branch evidence
+| Item | State | Evidence |
+|---|---|---|
+| Project | Real World Atlas / Living World, published at life-lived-network.lovable.app | project URLs |
+| HEAD | `5f06fc336a748cf37c6a06ac272bee4a387bd745` | `git rev-parse HEAD` (observed) |
+| Local branch | `edit/edt-cb2afebf-…` (a Lovable edit branch, not GitHub) | `git branch --show-current` (observed) |
+| Remotes | Only Lovable internal storage (git + s3). No GitHub remote | `git remote -v` (observed) |
+| GitHub sync target | UNKNOWN from here. Earlier evidence (#133, your check) shows it writes to `main` | your earlier report |
+| Required check "verify" | Workflow job is named `verify` in `.github/workflows/verify.yml` (observed). Whether branch protection requires it: UNKNOWN | file only |
 
-## Proposed slice (the smallest complete version)
-1. **Database addition** (adds fields only; nothing removed or renamed):
-   - `memory_type`: one of the four types, default "meaningful".
-   - `tags`: up to 10 short tags, default empty.
-   - `date_precision`: day, month or year, default day.
-   - `place_label`: an optional name in the person's own words, default empty.
-   - Owner-only access and private-only visibility stay as they are.
-2. **My Places (`/memories`):**
-   - Map and List switch. The map plots the centre of each place's locality.
-   - Search by place or note, plus a filter by type.
-   - Cards show place, period and type.
-   - A friendly first-use screen.
-   - An "Add a place" button.
-3. **Add and edit form:**
-   - Fields: locality picker (required), type, start and end dates with day/month/year choice, tags and note.
-   - Shown before the first save: "Private by default."
-   - The Save button locks while saving, so a double tap can't create two entries.
-   - Clear saving, success and error messages.
-4. **Place detail (`/memories/$id`):**
-   - The private memory, with edit, delete (an in-app confirmation) and privacy status ("Only you").
-   - A separately boxed section, "What's on in [place] now". It uses the existing discovery engine and shows only real records, their source and freshness, or an honest empty state with a link to the place page.
-5. **Data and Privacy (`/privacy-data`):**
-   - Download my data.
-   - A plain field-by-field list of what is exported.
-   - The documented JSON format, version 2.
-   - Delete all my places, with confirmation.
-   - Explains that full account deletion is not yet supported in-app and how to request it.
-   - The download is created on request and is never stored at a public address.
-6. **Tests:**
-   - Input checks for type, tags, precision and date order.
-   - Export covers only the owner's records, is complete for memories and matches the documented format.
-   - Edit and delete only work on the owner's own records.
-   - A source check that every new server action requires sign-in.
-   - A live two-account database check, rolled back afterwards: signed-out visitors and other accounts can't read, edit or delete someone's places.
-   - A phone-width (375px) browser check of the screens a signed-out visitor sees.
+To fix (owner, in GitHub/Lovable settings): switch the Lovable GitHub branch to a non-main working branch, protect `main` (PR required, required status check exactly `verify`, no direct pushes, including for the Lovable app), then confirm with one harmless commit that it lands on the working branch.
 
-## Kept out on purpose
-- Free-typed coordinates or exact addresses. The approved MVP stores locality-level location only, for privacy. The "optional address" in the brief becomes the person's own `place_label`, which is never matched to a map location.
-- Imports, sharing, photos and live GPS.
+## 2. Reusable capabilities (observed in code)
+- **Map:** `src/components/living-map.tsx`, `src/lib/map-view.ts` (quiet/sparse/medium/dense).
+- **Feed/list:** `whats-here.tsx`, `whats-happening.tsx`, `entry-card.tsx`, `entry-sheet.tsx` (details plus provider block), `trust-chip.tsx` / `src/lib/trust.ts`.
+- **Search:** `possibility-front-door.tsx`, `src/lib/search-context.ts`, `splitPlaceFromQuery` in `places.ts`; `/need` keeps the typed text.
+- **Posting:** `/make` (listings), `/give` and `/earn` (hour_offers), `/need` (needs), `/profile` (capabilities, availability, service areas).
+- **Contact:** `/conversations`, using connection_requests and connection_messages with user_blocks. Consent-based and saved to the database. It is tied to a **need** (`need_id` is required).
+- **Moderation:** `/moderation`, content_reports, `is_safety_reviewer`.
+- **Discovery:** `findSupply()` only. Ingestion: `src/lib/ingest/*` (Ticketmaster key missing, so live events are off).
 
-## Checks after building
-`bunx tsgo --noEmit`, `bun run lint`, `bunx vitest run` and `bun run build`, plus a Playwright check at 375px and 1280px. The signed-in flows will be checked with a test sign-in if one is available; otherwise they will be reported as not checked. Nothing is published.
+## 3. Routes and data for a local vertical slice
+`/`, `/$country/$place`, `/make`, `/need`, `/need/$id`, `/conversations`, `/moderation`, `/sources`, sitemaps. Tables: places (read-only to users), listings (status, starts/ends_at, origin, demonstration flag), needs (status, expires_at), connection_*.
 
-## Decisions
-- Is the database addition above approved?
-- Should location stay at locality level only, as the plan recommends, instead of the exact coordinates the brief mentions?
+## 4. Smallest end-to-end slice (proposed)
+```text
+browse /au/<town> -> open entry sheet -> create listing in /make
+ -> see it on map + list for that town -> "Ask about this" via connection request
+ -> owner withdraws/expires it -> it disappears from map, list and sitemap
+```
+Two hard dependencies stand in the way:
+- **No Australian towns found.** A text search for Agnes Water, Yamba, Forster and Airlie Beach found nothing in the code or migrations. The live `places` table was not queried this turn: UNKNOWN. `places` cannot be written by users, so adding a town needs an approved data migration.
+- **Contact needs a need.** `connection_requests.need_id` is NOT NULL, so contacting someone about a *listing* has no authorised path today. That needs a schema/RLS change, or a decision to reuse needs.
+
+## 5. UX gaps and acceptance criteria
+- A quiet town shows an honest empty state and ways to contribute (check at 375px).
+- A new listing shows "Stated by provider" or "Not stated", plus its freshness.
+- Withdraw/expire is visible to the owner only and takes effect right away; check whether the owner controls exist in `/make`: UNKNOWN (status field observed, controls not traced).
+- Keyboard and screen-reader access for the map/list switch; 44px touch targets (an existing test).
+- Acceptance tests:
+  - A created listing appears for its own place only.
+  - A withdrawn or expired listing is gone from the map, the list, `findSupply` and the sitemap.
+  - Another account cannot edit it.
+  - Demonstration records never appear in production.
+
+## 6. Frontend-only vs needs backend review
+- **Frontend-only:**
+  - empty states
+  - trust labels
+  - withdraw UI, if the status update is already allowed by the current rules
+  - feed/map coordination
+  - search carry-through for help/give/journey
+- **Backend/schema/RLS review:**
+  - adding the AU pilot town
+  - listing-based contact
+  - expiry enforcement (needs a cron or a query filter, to be checked)
+  - spam limits
+  - removing signed-out grants (open from the earlier audit)
+
+## 7. Mock or seemingly complete features
+- `src/lib/fixtures/world-entries.ts` (704 lines) and `people-and-needs.ts`: demonstration only, gated by `fixturesAllowed()`.
+- The ingestion fixture source.
+- `/partners` form: not saved, and says so.
+- `/partner-tracker`: browser-only.
+- Live events: off, because the key is missing.
+- The production locality data is probably UK only (inferred from the place tests); AU coverage is UNKNOWN.
+
+## 8. First bounded task and blockers
+**First task (still read-only):**
+- run a read-only query of `places` for AU rows and listing counts per status
+- trace the withdraw/expire paths in `/make` and the listing filters
+- then write a short pilot-town comparison of the four towns: population, seasonality, existing listing sources, licensing terms. This is research only, with cited sources and no invented figures.
+
+**Blockers:**
+1. The sync branch must move off `main`, and `verify` must be a required check (owner).
+2. Adding an AU pilot town needs approval for a data migration.
+3. Listing-based contact needs a schema/RLS decision.
+4. GitHub PR visibility is UNKNOWN from this workspace.
+5. `.env` is still tracked; removing it needs a person.
+
+Invariants kept: `findSupply()` stays the only matcher, `ingest/*` stays the only ingestion path, nothing is invented, no payments, no deployment.
