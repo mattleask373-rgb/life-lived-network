@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { PRIVATE_PATHS, PUBLIC_PATHS, SITE_ORIGIN } from "./seo";
+import { PRIVATE_PATHS, PUBLIC_PATHS, SITE_ORIGIN, robotsTxt } from "./seo";
 import { Route as IndexRoute } from "@/routes/api/public/sitemap[.]xml";
 import { Route as PagesRoute } from "@/routes/api/public/sitemap-pages[.]xml";
+import { Route as RobotsRoute } from "@/routes/robots[.]txt";
 
 /**
  * Regression guard: the public sitemaps list fixed public screens only.
@@ -53,6 +54,19 @@ describe("public sitemap privacy", () => {
     for (const path of PRIVATE_PATHS) {
       expect(locs(sitemap)).not.toContain(`${SITE_ORIGIN}${path}`);
     }
+  });
+
+  it("generated robotsTxt matches the static public/robots.txt", () => {
+    const staticRobots = readFileSync(new URL("../../public/robots.txt", import.meta.url), "utf8");
+    expect(robotsTxt()).toBe(staticRobots);
+  });
+
+  it("dynamic /robots.txt route serves the generated policy", async () => {
+    const { xml: text, res } = await body(RobotsRoute);
+    expect(res.headers.get("content-type")).toContain("text/plain");
+    expect(text).toBe(robotsTxt());
+    for (const path of PRIVATE_PATHS) expect(text).toContain(`Disallow: ${path}`);
+    expect(text).toContain(`Sitemap: ${SITE_ORIGIN}/sitemap.xml`);
   });
 
   it("contains no record-level addresses, ids or query strings", async () => {
