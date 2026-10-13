@@ -52,3 +52,30 @@ No autonomous production merge/deploy is active.
 2. Reconcile #62's lifecycle model with the durable SQL status contract and authenticated fencing boundaries before any integration.
 3. Reconcile #43 into #49's canonical ingest boundary; preserve useful fixture/normalization/freshness/provenance evidence while retiring the parallel architecture.
 4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
+
+## COORDINATION SNAPSHOT — 2026-10-13 (Grok cycle)
+
+### Verified main
+- HEAD: 5f06fc336a748cf37c6a06ac272bee4a387bd745 ("Wired need front-door flow", lovable-dev[bot])
+- Issue #125 open as coordination hub (agent-coordination label).
+- Issue #133 open: human decision required on lovable-dev[bot] type-version write to main (Postgrest 14.5→14.17). No auto-revert.
+
+### Highest-priority open green PRs awaiting human review (do not duplicate)
+- **#157** chore(security): remove tracked .env on current main base — non-draft, base current main, Verify **PASS** (runs 38302368234 / 38302363931), 3 files only (.env remove, .env.example placeholder, .gitignore). Supersedes older #127/#120. mergeable_state blocked (review needed). History scrub NOT performed.
+- **#154** fix(discovery): report exact open needs and fail closed by place — non-draft, base current main, Verify **PASS**, exact count + fail-closed scope guard. findSupply() untouched.
+- **#163** fix(discovery): require explicit service area for supply matches — non-draft, base current main, Verify **PASS**. Residence ≠ service area. Canonical findSupply() only.
+- **#129** seo: keep private routes out of crawler paths — **draft**, base current main, Verify **PASS**. Updates public/robots.txt + tests to match PRIVATE_PATHS (adds /memories /partners /partner-tracker /earn etc.).
+
+### Live SEO evidence (this cycle, 2026-10-13)
+- https://life-lived-network.lovable.app/robots.txt → platform blanket Allow for Googlebot/Bingbot/Twitterbot/facebookexternalhit/* . **No Disallow rules, no Sitemap.** HTTP 200. Repo public/robots.txt has Disallows + Sitemap line but is not served.
+- https://life-lived-network.lovable.app/sitemap.xml → app 404 page.
+- https://life-lived-network.lovable.app/api/public/sitemap.xml → app 404 page.
+- Gap persists until platform/static serving or deploy of #129 + route for sitemap is confirmed. No fabricated pages added.
+
+### Other
+- #156 test(routes): auth guards — open, green on older base (behind), test-only.
+- #131 fixtures closed; related #165 open for production fixture policy tests.
+- No autonomous merge, no force-push, no production DB/RLS changes this cycle.
+
+### Next owner
+Human review/merge of #157 (hygiene) then #154/#163 (discovery honesty). Independent follow-up: reconcile live robots/sitemap serving on Lovable platform vs repo public/ files.
