@@ -1,54 +1,54 @@
-# Agent System Status — 2026-10-07 (control-tower reconciliation)
+# Agent System Status — 2026-10-14 (Grok discrete coordination snapshot)
 
 ## SOURCE OF TRUTH
 
-Repository evidence on `main`, GitHub Actions, open PRs, and canonical contracts are authoritative.
-No autonomous production merge/deploy is active.
+Repository evidence on `main` (SHA `5f06fc336a748cf37c6a06ac272bee4a387bd745`), GitHub Actions Verify runs, open PRs with exact-head CI, and canonical contracts (`AGENTS.md`, `src/lib/supply-engine.ts`) are authoritative.
+No autonomous production merge, force-push, deploy, or DB/RLS/credential change is active or authorized.
 
-## CURRENT QUEUE
+## VERIFIED CURRENT STATE (evidence or UNKNOWN / NOT RUN)
 
-### P0 / HUMAN-GATED CONTROL PLANE
-- **Persistent autonomous executor:** MISSING. The repository contains provider-neutral orchestration and lease/fencing contracts, but no evidence yet proves a durable authenticated executor loop.
-- **PR #61 — provider-neutral orchestration:** open; formatting fixes and lockfile reconciliation have been pushed. Fresh Verify is required.
-- **PR #62 — claim/lease/heartbeat:** open; formatting fixes and lockfile reconciliation have been pushed. Its lifecycle contract still requires reconciliation with durable `agent_tasks.status` and expiry/fencing semantics before integration.
-- **PR #64 — lease fencing / provider authorization hardening:** open; package/lockfile reconciliation pushed. Known security gates remain: authenticated owner/run binding, approval_id-bound human integration, tenant/project scoping, and live Supabase migration/RLS verification.
-- **No production execution authority, autonomous merge, or deploy authority is enabled by this status file.**
-- **#74 — CONTROL-PLANE-01:** open human-gated follow-up for the missing/proven durable persistence boundary, authenticated fencing and RLS reconciliation.
+- **main HEAD:** `5f06fc336a748cf37c6a06ac272bee4a387bd745` ("Wired need front-door flow").
+- Tracked root `.env` still present on main (project identifiers + publishable keys only; no service-role or secret keys observed in current blob). History scrub **NOT RUN**.
+- **Issue #125** (coordination sprint): open. This file is a durable companion snapshot; comments on #125 are the primary coordination surface (Discussions tooling unavailable).
+- **Issue #133** (Lovable types.ts PostgrestVersion write to main during read-only audit): open. Human decision required (keep or reviewed-revert). No auto-action.
 
-### AI-NATIVE PROGRAMME
-- **PR #67 — ProgrammeState:** open; implementation is green on its prior head, but the current hosted Verify surface must be rechecked after branch/base reconciliation.
-- **PR #69 — Experiment Engine:** open draft; current head contains formatting/syntax fixes. Hosted Verify currently fails before lint/test/build on frozen-lockfile reconciliation in the PR merge context; no green claim until a fresh run passes.
-- **PR #72 — lockfile reconciliation:** open draft; one-line manifest fix to align `@lovable.dev/vite-tanstack-config` with the lockfile. Human action remains required; not merged.
-- **PR #73 — accepted experiment → bounded task adapter:** open draft; intentionally no execution/persistence/provider authority.
+### Highest-priority open PRs awaiting human review (exact-head Verify = success; Supabase Preview skipped; mergeable_state typically blocked pending review)
 
-### PRODUCT / REAL-WORLD SURFACE
-- **Canonical supply engine:** REAL and live on main. `src/lib/supply-engine.ts` contains the real deterministic `findSupply()` implementation and regression tests. It is the sole possibility/discovery authority.
-- **Ingestion architecture:** `src/lib/ingest/*` remains the canonical provider-neutral boundary. PR #49 is the reconciliation anchor; PR #43's parallel `external-world.ts` path must be absorbed/retired before integration.
-- **Map/locality:** PR #54 visual language, #57 map-first locality integration, #60 sparse-locality progressive disclosure remain human-gated. #57 depends on #54; #58 depends on #49.
-- **Journey trust:** PR #59 hardens stale/cancelled journey eligibility and remains human-gated.
-- **Search context:** PR #52 preserves search intent into canonical locality discovery without creating a second matcher.
+| PR | Title | Draft | Notes |
+|----|-------|-------|-------|
+| #157 | chore(security): remove tracked .env on current main base | false | P0 hygiene. 3 files (`.env` removed, `.env.example` placeholders, `.gitignore`). |
+| #163 | fix(discovery): require explicit service area for supply matches | false | P0 discovery honesty. Residence ≠ service area. |
+| #154 | fix(discovery): report exact open needs and fail closed by place | false | Exact counts + fail-closed place scope. |
+| #156 | test(routes): add regression tests verifying private route auth guards | false | Source-level for #132. Not a live browser matrix. |
+| #129 | seo: keep private routes out of crawler paths | true | Repo robots/sitemap alignment + tests. Live origin still platform-default. |
 
-## VERIFIED CURRENT FINDINGS
+Older fixture/discovery PRs (#131/#155) closed unmerged (superseded). Green CI necessary, not sufficient.
 
-- Main no longer has the historical supply-engine stub; the canonical implementation and tests are present.
-- No second matcher/ranker/discovery engine is authorized.
-- Unknown/absence remains distinct from real-world absence.
-- No fabricated inventory, availability, demand, learner capability, or external-world activity is permitted.
-- Human gates remain required for production autonomy, security/RLS/privacy, irreversible semantics, external side effects, legal/commercial consequences, and consequential learner decisions.
+### Live SEO gap (reconfirmed via HTTP this cycle)
 
-## CI / DRIFT
+- https://life-lived-network.lovable.app/robots.txt : HTTP 200, platform blanket `Allow: /` for listed bots + `*`. **Zero Disallow rules, no Sitemap line.**
+- https://life-lived-network.lovable.app/sitemap.xml : returns app 404 page.
+- Repo `public/robots.txt` (and #129 enhancements) are not served by the live origin. Publishing/deploy gap. Full crawl/indexation **NOT RUN**.
 
-- PR #61 latest failed Verify because lint ran and reported formatting-only Prettier errors; those files have now been formatted. A subsequent run must also clear the frozen-lockfile mismatch.
-- PR #62 latest failed Verify on formatting-only Prettier errors; those files have now been formatted. No new Verify result is yet evidenced.
-- PR #64 latest Verify failed at `bun install --frozen-lockfile`; its branch declared `@lovable.dev/vite-tanstack-config` 2.25.x while the lockfile resolves 2.26.0. Manifest reconciliation has been pushed.
-- PR #67 latest observed Verify failed at frozen-lockfile because its branch manifest still differed from the lockfile in the hosted merge context. This is a CI/base-drift issue, not a ProgrammeState behaviour failure.
-- PR #69 latest observed Verify failed at frozen-lockfile in the hosted PR merge context. The head manifest already declares 2.26.0; fresh hosted verification is required to determine whether the merge ref still inherits a stale manifest/lock combination.
-- PR #72 Verify is green on its exact head, but the fix is not merged.
-- Product PRs #54/#43/#49 are based on an older main lineage; #52/#57/#58 are intentionally dependent/diverged. Do not flatten those dependencies without review.
+## INVARIANTS (unchanged)
 
-## NEXT
+- `findSupply()` in `src/lib/supply-engine.ts` is the sole discovery/matching authority. No second engine.
+- `place_memories` are owner-only and never feed discovery, matching, or sitemaps.
+- No fabricated inventory, availability, users, traction, or revenue.
+- Outside agents (including Grok) collaborate only via draft PRs on `agent/grok/*` or focused chore/fix branches.
+- No autonomous merge to `main`. No force-push.
 
-1. Re-run/observe fresh Verify on #61/#62/#64 after formatting + manifest reconciliation; diagnose only remaining behavioural/security failures.
-2. Reconcile #62's lifecycle model with the durable SQL status contract and authenticated fencing boundaries before any integration.
-3. Reconcile #43 into #49's canonical ingest boundary; preserve useful fixture/normalization/freshness/provenance evidence while retiring the parallel architecture.
-4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
+## NEXT HUMAN ACTIONS (priority order)
+
+1. Independent review + merge decision on #157 (env hygiene P0).
+2. Review + merge #163 (service-area honesty P0) and #154 (exact open needs).
+3. Decide #133 (keep/revert generated types; investigate Lovable write-to-main).
+4. After merges: Lovable publish and re-verify live robots.txt / sitemap.xml.
+5. Review remaining green tests (#156) and SEO source (#129).
+
+## UNKNOWN / NOT RUN
+
+Live RLS/grants effectiveness, repository-history secret scan, production fixture behaviour, signed-out private-route browser matrix (#132), post-publish robots serving: all UNKNOWN. No production DB queries or credential changes performed.
+
+---
+*Snapshot generated by discrete Grok coordination cycle. Evidence or it did not happen. Next cycle should recheck after human action.*
