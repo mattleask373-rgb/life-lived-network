@@ -1,4 +1,49 @@
-# Agent System Status — 2026-10-07 (control-tower reconciliation)
+# Agent System Status — 2026-10-16 (coordination cycle snapshot)
+
+## SOURCE OF TRUTH
+
+Repository evidence on `main`, GitHub Actions, open PRs, and canonical contracts are authoritative.
+No autonomous production merge/deploy is active.
+
+## CURRENT QUEUE (2026-10-16)
+
+### P0 / HUMAN-GATED
+- **Env hygiene:** PR #157 (chore/security: remove tracked .env on current main base) is open, non-draft, Verify PASS on head d7b4c594 (runs 38302368234 / 38302363931), base = current main 5f06fc33. Scope: untrack .env, add placeholder .env.example, tighten .gitignore. History scrub NOT RUN. Awaiting human review (mergeable_state=blocked). Highest priority.
+- **Discovery honesty:** PR #154 (fix/discovery: report exact open needs and fail closed by place) open, non-draft, Verify PASS, base current main. Exact counts, fail-closed scopes.
+- **Auth/private routes:** PR #156 (test/routes: add regression tests verifying private route auth guards) open, non-draft, Verify PASS on head 6182d3de. Source-level guards only; manual browser matrix in #132 still NOT RUN.
+- **SEO private paths:** PR #129 (seo: keep private routes out of crawler paths) open draft, Verify PASS. Aligns robots Disallow with PRIVATE_PATHS.
+- **Lovable incident #133:** open. Commit 7aca99a on main changed only PostgrestVersion 14.5→14.17 in types.ts during a read-only request. Human keep-or-reviewed-revert decision required. No auto-action.
+
+### LIVE SEO GAP (fresh probe 2026-10-16)
+- Live https://life-lived-network.lovable.app/robots.txt returns platform default (Googlebot/Bingbot/Twitterbot/facebookexternalhit/* all Allow: /). Zero Disallow rules, no Sitemap line.
+- Live https://life-lived-network.lovable.app/sitemap.xml and /api/public/sitemap.xml both return app 404 page.
+- Repo main public/robots.txt contains Disallows for /auth /profile /conversations /need /help /moderation /sources plus Sitemap line. PR #129 extends further.
+- Deployment/publish gap: live origin is not serving current repository robots/sitemap content. NOT RUN for full crawl or indexation evidence.
+
+### OTHER
+- Main HEAD: 5f06fc336a748cf37c6a06ac272bee4a387bd745 ("Wired need front-door flow", 2026-10-12).
+- Tracked root .env still present on main (publishable keys observed in prior scans; no service-role key found). No .env.example on main.
+- findSupply() remains the sole discovery engine. place_memories owner-only.
+- No fabricated inventory, availability, users, traction, or revenue.
+
+## VERIFIED CURRENT FINDINGS
+
+- Canonical findSupply() present and sole authority.
+- Unknown/absence distinct from real-world absence.
+- Human gates required for production autonomy, security/RLS/privacy, irreversible semantics, external side effects.
+- Live SEO surface does not match repository robots policy (deployment gap).
+
+## NEXT
+
+1. Human review of green PR #157 (env hygiene) — highest value, lowest risk.
+2. Human decision on #133 type version change.
+3. After #157 merge or equivalent, reconcile and review #154 / #156 / #129.
+4. Address live SEO publish gap (robots/sitemap) only after human-approved publish from reviewed code.
+5. No autonomous merge, force-push, or production DB/RLS changes.
+
+---
+
+# Historical: Agent System Status — 2026-10-07 (control-tower reconciliation)
 
 ## SOURCE OF TRUTH
 
