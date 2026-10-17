@@ -5,6 +5,7 @@ import { PRIVATE_PATHS, PUBLIC_PATHS, SITE_ORIGIN, robotsTxt } from "./seo";
 import { Route as IndexRoute } from "@/routes/api/public/sitemap[.]xml";
 import { Route as PagesRoute } from "@/routes/api/public/sitemap-pages[.]xml";
 import { Route as RobotsRoute } from "@/routes/robots[.]txt";
+import { Route as SitemapRoute } from "@/routes/sitemap[.]xml";
 
 /**
  * Regression guard: the public sitemaps list fixed public screens only.
@@ -86,6 +87,16 @@ describe("public sitemap privacy", () => {
     expect(PRIVATE_PATHS).toContain("/memories");
     expect(PRIVATE_PATHS).toContain("/profile");
     expect(PRIVATE_PATHS).toContain("/conversations");
+  });
+
+
+  it("dynamic /sitemap.xml route lists exactly the public screens", async () => {
+    const { xml, res } = await body(SitemapRoute);
+    expect(res.headers.get("content-type")).toContain("xml");
+    expect(locs(xml).sort()).toEqual(PUBLIC_PATHS.map((p) => `${SITE_ORIGIN}${p}`).sort());
+    for (const path of PRIVATE_PATHS) {
+      expect(locs(xml)).not.toContain(`${SITE_ORIGIN}${path}`);
+    }
   });
 
   it("index names only the pages sitemap", async () => {
