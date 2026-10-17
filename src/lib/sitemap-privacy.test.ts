@@ -89,7 +89,6 @@ describe("public sitemap privacy", () => {
     expect(PRIVATE_PATHS).toContain("/conversations");
   });
 
-
   it("dynamic /sitemap.xml route lists exactly the public screens", async () => {
     const { xml, res } = await body(SitemapRoute);
     expect(res.headers.get("content-type")).toContain("xml");
