@@ -16,7 +16,7 @@ Disallow: /partners
 Disallow: /partner-tracker
 Disallow: /earn
 
-# Static sitemap for deploy reliability. Dynamic /api/public/sitemap.xml remains
-# for environments that serve TanStack Start server routes; both list only
+# Static and dynamic /sitemap.xml for deploy reliability. Dynamic /api/public/sitemap.xml remains
+# for environments that serve TanStack Start server routes; all list only
 # PUBLIC_PATHS.
 Sitemap: https://life-lived-network.lovable.app/sitemap.xml
