@@ -61,3 +61,11 @@ No autonomous production merge/deploy is active.
 - Added `docs/launch/AUSTRALIA-STAGING-VALIDATION.md` with official source candidates and the outstanding crosswalk/approval steps. No Australia records or coordinates are seeded. Byron Bay requires NSW source review; Agnes Water and Port Douglas require source-row confirmation from Queensland's gazetteer.
 - **Launch blocker:** the existing `Place` type requires one timezone per row, which needs a clear country-level semantic before an Australia country row is created. Do not assign one zone to all Australia or guess a coordinate/datum.
 - No production import, write, schema/RLS/grant change, deployment, or live-market claim.
+
+
+## PR #175 Verify repair — 2026-10-19
+
+- Canonical baseline for this task: `main` at `f2de6d8d76bdabbd98639f4bf4837573c96587cc`; PR #175 head before the fix: `c0e1938b8e3d64d2a52c86252993eb0222ee1522`.
+- Exact hosted Verify runs `39330526786` and `39330526939` both failed at `bun run lint`, not at frozen-lockfile installation. `bun install --frozen-lockfile` completed successfully (473 packages installed). The only errors were two Prettier rules in `src/lib/place-staging.ts` at lines 183 and 206. No test or build result was reached.
+- Formatting-only fix committed on `feat/place-staging-validation`: `660fcd1b2a3423d84ea27307daf01032e56b3f10`. No feature, dependency, or lockfile changes.
+- Fresh exact-head Verify is pending at the time of this status update. Do not claim green until the new workflow run completes.
