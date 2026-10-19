@@ -1,3 +1,5 @@
+import type { WorkOpportunity } from "./work-opportunities";
+
 /**
  * The domain vocabulary of Real World Atlas.
  *
@@ -62,6 +64,12 @@ export interface WorldEntry {
   outdoors: boolean;
   /** True when a real person on the platform posted this, not demo content. */
   community?: boolean;
+  /**
+   * Explicit work/volunteer details when available. Optional metadata does not
+   * imply persistence; ingestion must validate it before public use.
+   */
+  workOpportunity?: WorkOpportunity;
+
   /** How trustworthy the information is right now. */
   quality?: DataQuality;
   /** What kind of thing this is, for community-posted entries. */
