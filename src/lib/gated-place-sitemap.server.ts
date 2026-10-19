@@ -1,7 +1,7 @@
 /**
  * Server-side data adapter for the dynamic place-page sitemap.
  * Uses the canonical public world read; there is no direct listings query or
- * alternative matcher. An incomplete bounded scan returns no dynamic paths.
+ * alternative matcher. An incomplete or failed scan returns no dynamic paths.
  */
 import { fetchWorld } from "./listings";
 import { loadPlaceIndex } from "./place-index.server";
@@ -13,12 +13,18 @@ const PAGE_LIMIT = 200;
 const MAX_SCAN_PAGES = 100;
 
 export async function getGatedPlaceSitemapPaths(): Promise<string[]> {
-  const [index, entries] = await Promise.all([
-    loadPlaceIndex(publicServerClient()),
-    readAllPublicEntries(),
-  ]);
-  if (!entries) return [];
-  return buildGatedPlaceSitemapPaths(index, entries);
+  try {
+    const [index, entries] = await Promise.all([
+      loadPlaceIndex(publicServerClient()),
+      readAllPublicEntries(),
+    ]);
+    if (!entries) return [];
+    return buildGatedPlaceSitemapPaths(index, entries);
+  } catch {
+    // Keep the fixed public screens sitemap available when the dynamic read fails.
+    // Unknown/incomplete records can never widen crawler exposure.
+    return [];
+  }
 }
 
 async function readAllPublicEntries(): Promise<WorldEntry[] | null> {
