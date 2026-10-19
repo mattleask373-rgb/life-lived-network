@@ -180,7 +180,9 @@ export function normalizeStagedPlaceBatch(
     if (!result.success) {
       addIssue(
         rowIndex,
-        typeof value === "object" && value !== null && "sourceKey" in value &&
+        typeof value === "object" &&
+          value !== null &&
+          "sourceKey" in value &&
           typeof value.sourceKey === "string"
           ? value.sourceKey
           : undefined,
@@ -203,7 +205,12 @@ export function normalizeStagedPlaceBatch(
     const { rowIndex, data } = item;
     const previousKey = firstKeyIndex.get(data.sourceKey);
     if (previousKey !== undefined) {
-      addIssue(rowIndex, data.sourceKey, "duplicate_source_key", "Source key appears more than once");
+      addIssue(
+        rowIndex,
+        data.sourceKey,
+        "duplicate_source_key",
+        "Source key appears more than once",
+      );
       addIssue(
         previousKey,
         data.sourceKey,
