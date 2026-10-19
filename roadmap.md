@@ -239,3 +239,9 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - Official source candidates and outstanding country/parent/timezone decisions are recorded in `docs/launch/AUSTRALIA-STAGING-VALIDATION.md`.
 - Pilot geography is not seeded yet: no source-row coordinate crosswalk or founder-approved hierarchy has been imported. The source review and a disposable-DB diff/rollback proof remain required before any actual staging import.
 - Australia remains **NOT LIVE**; no current jobs, people, events, venues or services are claimed.
+
+
+## PR #175 place staging validator — Verify repair (2026-10-19)
+
+- The exact pre-fix head `c0e1938b8e3d64d2a52c86252993eb0222ee1522` installed dependencies with `bun install --frozen-lockfile` successfully; both hosted Verify runs failed only at `bun run lint` on two Prettier-only lines in `src/lib/place-staging.ts`.
+- Formatting-only repair commit: `660fcd1b2a3423d84ea27307daf01032e56b3f10`. No package manifest or lockfile was touched. Await fresh exact-head hosted Verify before marking the gate green.
