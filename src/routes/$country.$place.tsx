@@ -11,10 +11,18 @@
  * locality with nothing in it is not offered to search engines.
  */
 
-import { createFileRoute, Link, notFound, redirect, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  notFound,
+  redirect,
+  useNavigate,
+  useRouter,
+} from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import { EntrySheet } from "@/components/entry-sheet";
+import { EmptyPlace } from "@/components/data-state";
 import { LocalityQuestions } from "@/components/locality-questions";
 import { WhatsHappening } from "@/components/whats-happening";
 import { WhatsHere } from "@/components/whats-here";
@@ -27,6 +35,11 @@ import { privatePage, publicPage } from "@/lib/seo";
 import { evaluateIndexability } from "@/lib/seo-indexability";
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import { filterEntriesByText, parseQuerySearch } from "@/lib/search-context";
+import {
+  applyTravellerFilters,
+  TRAVELLER_FILTERS,
+  type TravellerFilterId,
+} from "@/lib/traveller-filters";
 import type { WorldEntry } from "@/lib/world-data";
 
 export function localityPath(place: Pick<PlaceBrief, "slug" | "countrySegment">): string {
@@ -210,16 +223,22 @@ function PlaceLinks({ title, places }: { title: string; places: PlaceBrief[] }) 
 }
 
 function LocalityPage() {
+  const navigate = useNavigate();
   const { geography, entries } = Route.useLoaderData();
   const { place, ancestors, children, siblings } = geography;
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle } = useLifeList();
   const { q } = Route.useSearch();
   const textMatches = useMemo(() => filterEntriesByText(entries, q), [entries, q]);
+  const [quickFilters, setQuickFilters] = useState<TravellerFilterId[]>([]);
 
-  const events = useMemo(() => upcomingEvents(entries), [entries]);
-  const groups = useMemo(() => providerGroups(entries), [entries]);
-  const offers = useMemo(() => contributions(entries), [entries]);
+  const filtered = useMemo(
+    () => applyTravellerFilters(entries, quickFilters),
+    [entries, quickFilters],
+  );
+  const events = useMemo(() => upcomingEvents(filtered), [filtered]);
+  const groups = useMemo(() => providerGroups(filtered), [filtered]);
+  const offers = useMemo(() => contributions(filtered), [filtered]);
   const categories = useMemo(() => categoriesPresent(entries), [entries]);
   const questions = useMemo(() => localityQuestions(entries, 0), [entries]);
   const demonstrations = entries.filter((entry) => entry.demonstration).length;
@@ -275,17 +294,75 @@ function LocalityPage() {
       ) : null}
 
       {entries.length === 0 ? (
-        <p className="card-paper mt-6 max-w-2xl p-5 text-sm">
-          Nothing has been recorded in {place.name} yet. That is a fact about the record, not about
-          the place — it fills up as people here put real things on it.{" "}
-          <Link className="underline" to="/make">
-            Add the first thing
-          </Link>
-          .
-        </p>
+        <EmptyPlace
+          placeName={place.name}
+          needCount={0}
+          ancestors={ancestors.slice(0, 3)}
+          onStepOut={(slug) => {
+            const target = ancestors.find((a) => a.slug === slug);
+            if (target) {
+              void navigate({
+                to: "/$country/$place",
+                params: { country: target.countrySegment || "gb", place: target.slug },
+              });
+            }
+          }}
+        />
       ) : (
         <div className="mt-6">
           <LocalityQuestions placeName={place.name} questions={questions} />
+
+          <div className="mt-6">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h2 className="text-sm uppercase tracking-widest text-muted-foreground">
+                Narrow it down
+              </h2>
+              <p role="status" aria-live="polite" className="text-xs text-muted-foreground">
+                {quickFilters.length
+                  ? `${filtered.length} of ${entries.length} ${
+                      entries.length === 1 ? "thing" : "things"
+                    } match`
+                  : ""}
+              </p>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Quick filters">
+              {TRAVELLER_FILTERS.map((filter) => {
+                const on = quickFilters.includes(filter.id);
+                return (
+                  <button
+                    key={filter.id}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() =>
+                      setQuickFilters((prev) =>
+                        on ? prev.filter((x) => x !== filter.id) : [...prev, filter.id],
+                      )
+                    }
+                    className={`focus-ink min-h-11 rounded-full border px-4 py-2 text-sm transition-colors ${
+                      on
+                        ? "border-transparent bg-secondary text-secondary-foreground"
+                        : "border-border bg-card text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {filter.label}
+                  </button>
+                );
+              })}
+            </div>
+            {quickFilters.length && filtered.length === 0 ? (
+              <p className="mt-3 max-w-xl text-sm text-muted-foreground">
+                Nothing here matches that combination — but {entries.length}{" "}
+                {entries.length === 1 ? "thing is" : "things are"} recorded in {place.name}.{" "}
+                <button
+                  type="button"
+                  onClick={() => setQuickFilters([])}
+                  className="focus-ink underline underline-offset-4"
+                >
+                  Show everything
+                </button>
+              </p>
+            ) : null}
+          </div>
         </div>
       )}
 
