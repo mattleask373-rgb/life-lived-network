@@ -237,14 +237,10 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 
 - A pure staging validator is under review on `feat/place-staging-validation`; it reports hierarchy/data/provenance/rights errors without generating IDs, writing rows or publishing URLs.
 - Official source candidates and outstanding country/parent/timezone decisions are recorded in `docs/launch/AUSTRALIA-STAGING-VALIDATION.md`.
-- Pilot geography is not seeded yet: no source-row coordinate crosswalk or founder-approved hierarchy has been imported. The source review and a disposable-DB diff/rollback proof remain required before any actual staging import.
+- Pilot geography is not seeded: no source-row coordinate crosswalk or founder-approved hierarchy has been imported. Source review and disposable-DB diff/rollback proof remain required before any staging import.
 - Australia remains **NOT LIVE**; no current jobs, people, events, venues or services are claimed.
 
+## PR #175 Verify repair — 2026-10-19
 
-## PR #175 place staging validator — Verify repair (2026-10-19)
-
-- The exact pre-fix head `c0e1938b8e3d64d2a52c86252993eb0222ee1522` installed dependencies with `bun install --frozen-lockfile` successfully; both hosted Verify runs failed only at `bun run lint` on two Prettier-only lines in `src/lib/place-staging.ts`.
-- Formatting-only repair commit: `660fcd1b2a3423d84ea27307daf01032e56b3f10`. No package manifest or lockfile was touched. Await fresh exact-head hosted Verify before marking the gate green.
-
-
-- Verification update: push Verify on `8c1461d08b50f3721cc1d4788eb36d667daa74f4` passed ([run 39334870150](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39334870150)). The paired PR-context run failed only on formatting in `src/lib/geo-scope.test.ts` as seen against the older merge base `0c56cc299825dea5996323506e7a1cc9266975c8`; current `main` is `f2de6d8d76bdabbd98639f4bf4837573c96587cc` and has the formatted test. Fresh PR-context Verify is required before this gate is green.
+- Pre-fix head `c0e1938b8e3d64d2a52c86252993eb0222ee1522` installed dependencies successfully and failed only two Prettier rules in `src/lib/place-staging.ts`. Formatting-only fix: `660fcd1b2a3423d84ea27307daf01032e56b3f10`.
+- Push Verify passed on `8c1461d08b50f3721cc1d4788eb36d667daa74f4` (run [39334870150](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39334870150)). The PR merge-context run failed at a Prettier-only discrepancy in `src/lib/geo-scope.test.ts` from older base `0c56cc299825dea5996323506e7a1cc9266975c8`. Current main `f2de6d8d76bdabbd98639f4bf4837573c96587cc` is now integrated into the feature branch; fresh PR-context Verify is required before the PR is considered green.

@@ -58,17 +58,13 @@ No autonomous production merge/deploy is active.
 
 - Added a pure, bounded `normalizeStagedPlaceBatch()` pipeline and tests for stable source-key identity, unique slugs, complete parent references, acyclic hierarchy, IANA timezone syntax, coordinate bounds, country/currency codes, source provenance, freshness, rights clearance, and deterministic output.
 - The report never creates canonical database IDs or writes data; every row remains `not_published`. Even an eligible report is only eligible for a separately approved disposable-database preview.
-- Added `docs/launch/AUSTRALIA-STAGING-VALIDATION.md` with official source candidates and the outstanding crosswalk/approval steps. No Australia records or coordinates are seeded. Byron Bay requires NSW source review; Agnes Water and Port Douglas require source-row confirmation from Queensland's gazetteer.
-- **Launch blocker:** the existing `Place` type requires one timezone per row, which needs a clear country-level semantic before an Australia country row is created. Do not assign one zone to all Australia or guess a coordinate/datum.
+- Added `docs/launch/AUSTRALIA-STAGING-VALIDATION.md` with official source candidates and outstanding crosswalk/approval steps. No Australia records or coordinates are seeded. Byron Bay requires NSW source review; Agnes Water and Port Douglas require source-row confirmation from Queensland's gazetteer.
+- **Launch blocker:** the existing `Place` type requires one timezone per row; country-level timezone semantics must be resolved before creating an Australia country row. Do not assign one zone to all Australia or guess a coordinate/datum.
 - No production import, write, schema/RLS/grant change, deployment, or live-market claim.
-
 
 ## PR #175 Verify repair — 2026-10-19
 
-- Canonical baseline for this task: `main` at `f2de6d8d76bdabbd98639f4bf4837573c96587cc`; PR #175 head before the fix: `c0e1938b8e3d64d2a52c86252993eb0222ee1522`.
-- Exact hosted Verify runs `39330526786` and `39330526939` both failed at `bun run lint`, not at frozen-lockfile installation. `bun install --frozen-lockfile` completed successfully (473 packages installed). The only errors were two Prettier rules in `src/lib/place-staging.ts` at lines 183 and 206. No test or build result was reached.
-- Formatting-only fix committed on `feat/place-staging-validation`: `660fcd1b2a3423d84ea27307daf01032e56b3f10`. No feature, dependency, or lockfile changes.
-- Fresh exact-head Verify is pending at the time of this status update. Do not claim green until the new workflow run completes.
-
-
-- Verification update (2026-10-19 22:26Z): push Verify on `8c1461d08b50f3721cc1d4788eb36d667daa74f4` passed (run [39334870150](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39334870150)); PR merge-context Verify failed at lint on `src/lib/geo-scope.test.ts` formatting inherited from the event's older base SHA `0c56cc299825dea5996323506e7a1cc9266975c8`. The canonical `main` ref is now `f2de6d8d76bdabbd98639f4bf4837573c96587cc`, where that test has already been updated. Trigger a fresh PR-context Verify against the current base before claiming the PR fully green.
+- Canonical base now verified: `main` at `f2de6d8d76bdabbd98639f4bf4837573c96587cc`. The PR head before base integration was `a99acaa7fcd9b8877f4100246137423f85b7c55a`.
+- Exact pre-fix Verify runs `39330526786` and `39330526939` failed at `bun run lint`; frozen-lockfile installation passed (473 packages installed). The only errors on that head were two Prettier rules in `src/lib/place-staging.ts` (lines 183 and 206). No tests/build were reached.
+- Formatting-only repair: `660fcd1b2a3423d84ea27307daf01032e56b3f10`. No feature, dependency, or lockfile changes.
+- Push Verify on `8c1461d08b50f3721cc1d4788eb36d667daa74f4` passed at run `39334870150`. The paired PR merge-context run `39334870715` failed on Prettier formatting in `src/lib/geo-scope.test.ts` against the older merge base `0c56cc299825dea5996323506e7a1cc9266975c8`. This branch now incorporates current main as a merge commit so verification uses the canonical baseline. Await the new exact-head PR Verify before marking the gate green.
