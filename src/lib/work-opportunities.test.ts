@@ -42,20 +42,41 @@ describe("work opportunity contract", () => {
 
   it("rejects fractional, zero, and negative stated pay", () => {
     for (const amountCents of [12.5, 0, -100]) {
-      expect(() => parseWorkOpportunity(opportunity({
-        compensation: { status: "stated_paid", amountCents, currency: "AUD", basis: "hour" },
-      }))).toThrow();
+      expect(() =>
+        parseWorkOpportunity(
+          opportunity({
+            compensation: {
+              status: "stated_paid",
+              amountCents,
+              currency: "AUD",
+              basis: "hour",
+            },
+          }),
+        ),
+      ).toThrow();
     }
   });
 
   it("keeps unknown pay distinct from explicitly unpaid work", () => {
-    expect(parseWorkOpportunity(opportunity({
-      compensation: { status: "not_stated" },
-    })).compensation).toEqual({ status: "not_stated" });
-    expect(parseWorkOpportunity(opportunity({
-      engagementKind: "volunteering",
-      compensation: { status: "explicitly_unpaid", classification: "volunteering" },
-    })).compensation).toEqual({
+    expect(
+      parseWorkOpportunity(
+        opportunity({
+          compensation: { status: "not_stated" },
+        }),
+      ).compensation,
+    ).toEqual({ status: "not_stated" });
+
+    expect(
+      parseWorkOpportunity(
+        opportunity({
+          engagementKind: "volunteering",
+          compensation: {
+            status: "explicitly_unpaid",
+            classification: "volunteering",
+          },
+        }),
+      ).compensation,
+    ).toEqual({
       status: "explicitly_unpaid",
       classification: "volunteering",
     });
@@ -74,40 +95,81 @@ describe("work opportunity contract", () => {
   });
 
   it("requires human market-policy review and rights clearance before publication", () => {
-    expect(() => parseWorkOpportunity(opportunity({ policyReviewStatus: "review_required" }))).toThrow();
-    expect(() => parseWorkOpportunity(opportunity({ rightsStatus: "unreviewed" }))).toThrow();
-    expect(isPublishableWorkOpportunity(opportunity({
-      policyReviewStatus: "review_required",
-      publicationStatus: "review_required",
-      rightsStatus: "unreviewed",
-    }))).toBe(false);
+    expect(() =>
+      parseWorkOpportunity(
+        opportunity({ policyReviewStatus: "review_required" }),
+      ),
+    ).toThrow();
+    expect(() =>
+      parseWorkOpportunity(
+        opportunity({ rightsStatus: "unreviewed" }),
+      ),
+    ).toThrow();
+    expect(
+      isPublishableWorkOpportunity(
+        opportunity({
+          policyReviewStatus: "review_required",
+          publicationStatus: "review_required",
+          rightsStatus: "unreviewed",
+        }),
+      ),
+    ).toBe(false);
   });
 
   it("rejects reversed dates and invalid calendar dates", () => {
-    expect(() => parseWorkOpportunity(opportunity({
-      startDate: "2026-11-04",
-      endDate: "2026-11-03",
-    }))).toThrow();
-    expect(() => parseWorkOpportunity(opportunity({ startDate: "2026-02-30" }))).toThrow();
+    expect(() =>
+      parseWorkOpportunity(
+        opportunity({
+          startDate: "2026-11-04",
+          endDate: "2026-11-03",
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      parseWorkOpportunity(
+        opportunity({ startDate: "2026-02-30" }),
+      ),
+    ).toThrow();
   });
 
   it("requires a jurisdiction code and a currency-code shape", () => {
-    expect(() => parseWorkOpportunity(opportunity({ jurisdictionCountryCode: "AUS" }))).toThrow();
-    expect(() => parseWorkOpportunity(opportunity({
-      compensation: { status: "stated_paid", amountCents: 100, currency: "AU", basis: "hour" },
-    }))).toThrow();
+    expect(() =>
+      parseWorkOpportunity(
+        opportunity({ jurisdictionCountryCode: "AUS" }),
+      ),
+    ).toThrow();
+    expect(() =>
+      parseWorkOpportunity(
+        opportunity({
+          compensation: {
+            status: "stated_paid",
+            amountCents: 100,
+            currency: "AU",
+            basis: "hour",
+          },
+        }),
+      ),
+    ).toThrow();
   });
 
   it("rejects unknown fields instead of silently accepting schema drift", () => {
-    expect(() => parseWorkOpportunity(opportunity({ assumedAvailability: true }))).toThrow();
+    expect(() =>
+      parseWorkOpportunity(
+        opportunity({ assumedAvailability: true }),
+      ),
+    ).toThrow();
   });
 
   it("only surfaces reviewed and rights-cleared published records", () => {
     expect(isPublishableWorkOpportunity(opportunity())).toBe(true);
-    expect(isPublishableWorkOpportunity(opportunity({
-      publicationStatus: "draft",
-      policyReviewStatus: "not_reviewed",
-      rightsStatus: "unreviewed",
-    }))).toBe(false);
+    expect(
+      isPublishableWorkOpportunity(
+        opportunity({
+          publicationStatus: "draft",
+          policyReviewStatus: "not_reviewed",
+          rightsStatus: "unreviewed",
+        }),
+      ),
+    ).toBe(false);
   });
 });
