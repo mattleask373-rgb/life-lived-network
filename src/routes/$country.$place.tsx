@@ -259,10 +259,10 @@ function LocalityPage() {
 
       {categories.length ? (
         <section className="mt-10">
-          <h2 className="text-2xl">Kinds of service recorded here</h2>
+          <h2 className="text-2xl">Kinds of service and work recorded here</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Grouped from what each listing actually says about itself. A kind with nothing in it is
-            not listed.
+            Grouped from what each listing actually says about itself. Work appears only when
+            engagement type, source rights and market-policy review are explicitly recorded.
           </p>
           <ul className="mt-3 flex flex-wrap gap-2">
             {categories.map(({ category, entries: list, demonstrationOnly }) => (
