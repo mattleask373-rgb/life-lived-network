@@ -97,6 +97,7 @@ export function workOpportunityFacts(
 /** A card can appear publicly only for a real, current, approved, rights-cleared record. */
 export function hasPublicWorkOpportunity(entry: WorldEntry): boolean {
   return (
+    entry.layer === "work" &&
     !entry.demonstration &&
     !entry.cancellation &&
     entry.quality !== "expired" &&
