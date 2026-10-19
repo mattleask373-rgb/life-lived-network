@@ -38,9 +38,9 @@ export interface AustraliaStagingDraft {
 const SOURCE_CANDIDATES = {
   australia:
     "https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs/edition-4-july-2026-june-2031/access-and-downloads/digital-boundary-files",
-  nsw:
-    "https://www.nsw.gov.au/environment-land-and-water/spatial-data-and-mapping/foundation-spatial-data-framework/place-names",
-  queensland: "https://www.data.qld.gov.au/dataset/place-names-gazetteer-queensland-txt-file/resource/414391b9-7943-4fc3-a237-a1ac57b75aab",
+  nsw: "https://www.nsw.gov.au/environment-land-and-water/spatial-data-and-mapping/foundation-spatial-data-framework/place-names",
+  queensland:
+    "https://www.data.qld.gov.au/dataset/place-names-gazetteer-queensland-txt-file/resource/414391b9-7943-4fc3-a237-a1ac57b75aab",
 } as const;
 
 function draft(
