@@ -4,7 +4,9 @@ import { parseNeedSearch } from "./need-prefill";
 
 describe("need prefill query", () => {
   it("retains bounded title and category as editable prefill only", () => {
-    expect(parseNeedSearch({ from: "  Find work   like this ", category: "  Garden   maintenance " })).toEqual({
+    expect(
+      parseNeedSearch({ from: "  Find work   like this ", category: "  Garden   maintenance " }),
+    ).toEqual({
       from: "Find work like this",
       category: "Garden maintenance",
     });
