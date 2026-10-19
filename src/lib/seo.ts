@@ -111,6 +111,7 @@ export const PRIVATE_PATHS: readonly string[] = [
   "/memories",
   "/partners",
   "/partner-tracker",
+  "/earn",
 ];
 
 export interface SitemapUrl {
@@ -154,3 +155,27 @@ export const XML_HEADERS = {
   "Content-Type": "application/xml; charset=utf-8",
   "Cache-Control": "public, max-age=3600",
 };
+
+/**
+ * Crawler policy generated from the single PRIVATE_PATHS source of truth.
+ * robots.txt is not access control. Static public/robots.txt must match this
+ * output so both the static deploy path and the server route stay aligned.
+ */
+export function robotsTxt(): string {
+  const lines = [
+    "User-agent: *",
+    "Allow: /",
+    "",
+    "# Personal, private and internal screens. Nothing useful for a search engine,",
+    "# and nothing anyone else should be shown. These must stay in sync with",
+    "# PRIVATE_PATHS in src/lib/seo.ts. robots.txt is crawler policy, not access control.",
+    ...PRIVATE_PATHS.map((path) => `Disallow: ${path}`),
+    "",
+    "# Static and dynamic /sitemap.xml for deploy reliability. Dynamic /api/public/sitemap.xml remains",
+    "# for environments that serve TanStack Start server routes; all list only",
+    "# PUBLIC_PATHS.",
+    `Sitemap: ${SITE_ORIGIN}/sitemap.xml`,
+    "",
+  ];
+  return lines.join("\n");
+}
