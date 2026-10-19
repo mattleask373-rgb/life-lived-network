@@ -131,8 +131,8 @@ const CountryPlaceRoute = CountryPlaceRouteImport.update({
 } as any)
 const CountryPlaceServiceRoute = CountryPlaceServiceRouteImport.update({
   id: '/$country/$place/$service',
-  path: '/$country/$place/$service',
-  getParentRoute: () => rootRouteImport,
+  path: '/$service',
+  getParentRoute: () => CountryPlaceRoute,
 } as any)
 const NeedIndexRoute = NeedIndexRouteImport.update({
   id: '/need/',
@@ -175,7 +175,7 @@ export interface FileRoutesByFullPath {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sources': typeof SourcesRoute
-  '/$country/$place': typeof CountryPlaceRoute
+  '/$country/$place': typeof CountryPlaceRouteWithChildren
   '/$country/$place/$service': typeof CountryPlaceServiceRoute
   '/need/$id': typeof NeedIdRoute
   '/need/': typeof NeedIndexRoute
@@ -201,7 +201,7 @@ export interface FileRoutesByTo {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sources': typeof SourcesRoute
-  '/$country/$place': typeof CountryPlaceRoute
+  '/$country/$place': typeof CountryPlaceRouteWithChildren
   '/$country/$place/$service': typeof CountryPlaceServiceRoute
   '/need/$id': typeof NeedIdRoute
   '/need': typeof NeedIndexRoute
@@ -228,7 +228,7 @@ export interface FileRoutesById {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sources': typeof SourcesRoute
-  '/$country/$place': typeof CountryPlaceRoute
+  '/$country/$place': typeof CountryPlaceRouteWithChildren
   '/$country/$place/$service': typeof CountryPlaceServiceRoute
   '/need/$id': typeof NeedIdRoute
   '/need/': typeof NeedIndexRoute
@@ -335,8 +335,7 @@ export interface RootRouteChildren {
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SourcesRoute: typeof SourcesRoute
-  CountryPlaceRoute: typeof CountryPlaceRoute
-  CountryPlaceServiceRoute: typeof CountryPlaceServiceRoute
+  CountryPlaceRoute: typeof CountryPlaceRouteWithChildren
   NeedIdRoute: typeof NeedIdRoute
   NeedIndexRoute: typeof NeedIndexRoute
   ApiPublicSitemapPagesDotxmlRoute: typeof ApiPublicSitemapPagesDotxmlRoute
@@ -480,10 +479,10 @@ declare module '@tanstack/react-router' {
     }
     '/$country/$place/$service': {
       id: '/$country/$place/$service'
-      path: '/$country/$place/$service'
+      path: '/$service'
       fullPath: '/$country/$place/$service'
       preLoaderRoute: typeof CountryPlaceServiceRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof CountryPlaceRouteImport
     }
     '/need/': {
       id: '/need/'
@@ -516,6 +515,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface CountryPlaceRouteChildren {
+  CountryPlaceServiceRoute: typeof CountryPlaceServiceRoute
+}
+
+const CountryPlaceRouteChildren: CountryPlaceRouteChildren = {
+  CountryPlaceServiceRoute: CountryPlaceServiceRoute,
+}
+
+const CountryPlaceRouteWithChildren = CountryPlaceRoute._addFileChildren(
+  CountryPlaceRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
@@ -535,7 +546,7 @@ const rootRouteChildren: RootRouteChildren = {
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SourcesRoute: SourcesRoute,
-  CountryPlaceRoute: CountryPlaceRoute,
+  CountryPlaceRoute: CountryPlaceRouteWithChildren,
   CountryPlaceServiceRoute: CountryPlaceServiceRoute,
   NeedIdRoute: NeedIdRoute,
   NeedIndexRoute: NeedIndexRoute,
