@@ -32,7 +32,8 @@ import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
 import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
 import { KIND_LABEL } from "@/lib/places";
 import { privatePage, publicPage } from "@/lib/seo";
-import { evaluateIndexability } from "@/lib/seo-indexability";
+import { evaluateLocalityPage } from "@/lib/locality-indexability";
+import { breadcrumbListSchema, safeJsonLd } from "@/lib/structured-data";
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import { filterEntriesByText, parseQuerySearch } from "@/lib/search-context";
 import {
@@ -67,47 +68,7 @@ export const Route = createFileRoute("/$country/$place")({
     const wider = geography.ancestors[0]?.name;
     const label = wider ? `${name}, ${wider}` : name;
     const path = localityPath(place);
-    const realEntries = entries.filter((entry) => !entry.demonstration);
-    const now = Date.now();
-    const recordsFresh = realEntries.every((entry) => {
-      if (
-        entry.quality === "expired" ||
-        entry.quality === "may have changed" ||
-        Boolean(entry.cancellation)
-      ) {
-        return false;
-      }
-      const startsAt = entry.startsAt ? Date.parse(entry.startsAt) : undefined;
-      const endsAt = entry.endsAt ? Date.parse(entry.endsAt) : undefined;
-      if (startsAt !== undefined && !Number.isFinite(startsAt)) return false;
-      if (endsAt !== undefined && !Number.isFinite(endsAt)) return false;
-      const expiry = endsAt ?? startsAt;
-      return expiry === undefined || expiry >= now;
-    });
-    const provenancePresent = realEntries.every((entry) => {
-      if (entry.origin === "resident") return true;
-      return (
-        (entry.origin === "source" || entry.origin === "confirmed") &&
-        Boolean(entry.sourceName?.trim() && entry.sourceUrl?.trim())
-      );
-    });
-    const gate = evaluateIndexability({
-      pageKind: "locality",
-      published: true,
-      placeValid:
-        Boolean(place.id.trim()) &&
-        /^[a-z]{2}$/.test(place.countrySegment) &&
-        /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(place.slug),
-      publishedRecordCount: realEntries.length,
-      demonstrationOnly: entries.length > 0 && realEntries.length === 0,
-      informationComplete: Boolean(place.name.trim() && place.blurb.trim()),
-      recordsFresh,
-      provenancePresent,
-      // This SSR route always renders a root breadcrumb and a link back to the map.
-      internalLinksPresent: true,
-      // getLocality + fetchWorldEntries read the existing public locality surface.
-      policyAllowed: true,
-    });
+    const gate = evaluateLocalityPage({ place, entries });
     const title = `${label} — what's happening and what's here | Real World Atlas`;
     const description =
       gate.status === "INDEXABLE"
@@ -243,8 +204,21 @@ function LocalityPage() {
   const questions = useMemo(() => localityQuestions(entries, 0), [entries]);
   const demonstrations = entries.filter((entry) => entry.demonstration).length;
 
+  const breadcrumbItems = [
+    { name: "Real World Atlas", path: "/" },
+    ...[...ancestors].reverse().map((ancestor) => ({
+      name: ancestor.name,
+      path: localityPath(ancestor),
+    })),
+    { name: place.name, path: localityPath(place) },
+  ];
+
   return (
     <main className="mx-auto w-full max-w-5xl px-5 pb-24 pt-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbListSchema(breadcrumbItems)) }}
+      />
       <Crumbs ancestors={ancestors} place={place} />
 
       <h1 className="mt-3 text-4xl leading-tight">{place.name}</h1>

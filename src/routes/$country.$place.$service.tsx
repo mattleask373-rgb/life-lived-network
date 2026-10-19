@@ -16,6 +16,7 @@ import {
   serviceLocalityPath,
 } from "@/lib/service-locality";
 import { privatePage, publicPage } from "@/lib/seo";
+import { breadcrumbListSchema, safeJsonLd } from "@/lib/structured-data";
 import { BOOKING_LABEL, nextStepFor, providerLine, qualificationLine } from "@/lib/services";
 import { QUALITY_LABEL, type WorldEntry } from "@/lib/world-data";
 
@@ -141,9 +142,18 @@ function ServiceLocalityPage() {
     ({ category: sibling }) => sibling.slug !== category.slug,
   );
   const gate = evaluateServiceLocalityPage({ place, serviceSlug: category.slug, entries });
+  const breadcrumbItems = [
+    { name: "Real World Atlas", path: "/" },
+    { name: place.name, path: localityPath(place) },
+    { name: category.label, path: serviceLocalityPath(place, category.slug) },
+  ];
 
   return (
     <main className="mx-auto w-full max-w-5xl px-5 pb-24 pt-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbListSchema(breadcrumbItems)) }}
+      />
       <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
         <Link className="underline-offset-4 hover:underline" to="/">
           Real World Atlas
