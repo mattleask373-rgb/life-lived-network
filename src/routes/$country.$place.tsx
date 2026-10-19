@@ -13,6 +13,8 @@
 
 import { createFileRoute, Link, notFound, redirect, useRouter } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 
 import { EntrySheet } from "@/components/entry-sheet";
 import { LocalityQuestions } from "@/components/locality-questions";
@@ -21,7 +23,14 @@ import { WhatsHere } from "@/components/whats-here";
 import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
-import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
+import { getOpenNeedsCount } from "@/lib/needs.functions";
+import {
+  contributions,
+  localityQuestions,
+  providerGroups,
+  upcomingEvents,
+  type OpenNeedsAnswer,
+} from "@/lib/locality";
 import { KIND_LABEL } from "@/lib/places";
 import { privatePage, publicPage } from "@/lib/seo";
 import { categoriesPresent } from "@/lib/service-taxonomy";
@@ -178,7 +187,17 @@ function LocalityPage() {
   const groups = useMemo(() => providerGroups(entries), [entries]);
   const offers = useMemo(() => contributions(entries), [entries]);
   const categories = useMemo(() => categoriesPresent(entries), [entries]);
-  const questions = useMemo(() => localityQuestions(entries, 0), [entries]);
+  const openNeedsCountFn = useServerFn(getOpenNeedsCount);
+  const needsCount = useQuery({
+    queryKey: ["open-needs-count", place.id],
+    queryFn: () => openNeedsCountFn({ data: { placeId: place.id } }),
+  });
+  const needsAnswer: OpenNeedsAnswer = needsCount.isError
+    ? { state: "unavailable" }
+    : needsCount.isSuccess
+      ? { state: "known", count: needsCount.data }
+      : { state: "checking" };
+  const questions = localityQuestions(entries, needsAnswer);
   const demonstrations = entries.filter((entry) => entry.demonstration).length;
 
   return (
