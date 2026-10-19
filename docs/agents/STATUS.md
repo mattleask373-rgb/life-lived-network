@@ -52,3 +52,16 @@ No autonomous production merge/deploy is active.
 2. Reconcile #62's lifecycle model with the durable SQL status contract and authenticated fencing boundaries before any integration.
 3. Reconcile #43 into #49's canonical ingest boundary; preserve useful fixture/normalization/freshness/provenance evidence while retiring the parallel architecture.
 4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
+
+## 2026-10-19 — current verified execution snapshot
+
+Canonical repository: `mattleask373-rgb/life-lived-network`. Current `main` baseline: `f2de6d8d76bdabbd98639f4bf4837573c96587cc`. No PR has been merged or deployed in this execution slice.
+
+- **PR #175 — place staging validator:** open, not merged. Exact head `2d53309078fe9813efcd5a31ed341c5ae8e45876`. PR Verify passed: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335580094 . Push Verify passed: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335578622 . No Australian place inventory has been seeded.
+- **PR #173 — gated locality/service-locality:** open, not merged. Exact head `534274a556b67d1d4455cd2c2a7111a19119c1c8`. PR Verify passed: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335386006 . Push Verify passed: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335376736 . Dynamic locality/service sitemap candidates are still outstanding; the current sitemap lists static public screens only.
+- **PR #176 — reviewed opportunity surfaces:** open, not merged. Code-bearing head `5814e64049779cc1c37ea501ac0a9152437006a0` passed exact-head PR Verify (install, lint, tests and build): https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39337115684 . Exact-head push Verify passed: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39337107458 . The subsequent docs-only commit will need its own fresh exact-head Verify; PR body is the authority for the final head/run links.
+- **PR #174 — work opportunity contract:** remains open/unmerged and is based on an older lineage. #176 is the clean current-main opportunity-surface continuation; human review should resolve duplicate scope before merging either.
+- **Opportunity publication boundary:** `work_opportunity` remains optional and is parsed at the existing listing normalisation seam. Missing/invalid/unreviewed rights or jurisdiction-policy approval means no public opportunity card. No editor, migration, feed activation, real opportunities or second matcher has been introduced. `findSupply()` remains the discovery authority.
+- **Not established:** local shell/browser verification, live sitemap HTTP behavior, live inventory suitability, disposable database proof, legal review, or deployed production behavior. Supabase Preview is skipped when a PR has no associated Supabase branch.
+
+Human decisions remain required for review/merge/deployment, real source-rights and jurisdiction approval, trusted authorship/storage of opportunity review facts, and Australia hierarchy/timezone/provenance semantics.

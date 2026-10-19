@@ -231,3 +231,17 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - Both noindex and in PRIVATE_PATHS. No payments, backend, schema or auth changes.
 - [ ] Blocked on approval: storing interest submissions in the database (needs a new table) and a follow-up contact route.
 - [ ] My Places full slice: plan awaiting approval (schema addition, location precision).
+
+## 2026-10-19 — limited-pilot gating: verified progress, remaining work
+
+Canonical base for this slice: `f2de6d8d76bdabbd98639f4bf4837573c96587cc`. Changes remain on focused feature branches; nothing is merged or deployed.
+
+- [x] PR #175 place-staging validator is open and exact-head Verify-green at `2d53309078fe9813efcd5a31ed341c5ae8e45876` (install/lint/tests/build): [PR Verify](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335580094), [push Verify](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335578622). No AU place data was seeded.
+- [x] PR #173 adds server-rendered locality and service-locality routes using the shared indexability gate. Exact head `534274a556b67d1d4455cd2c2a7111a19119c1c8` is Verify-green: [PR Verify](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335386006), [push Verify](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335376736).
+- [x] PR #176 adds an optional strict work-opportunity contract, safe facts presentation, listing-boundary rejection of invalid/unapproved payloads, and locality cards. Code-bearing head `5814e64049779cc1c37ea501ac0a9152437006a0` passed frozen install, lint, tests and build: [PR Verify](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39337115684), [push Verify](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39337107458). Final documentation head requires a fresh run.
+- [ ] Add truthful `BreadcrumbList` JSON-LD to locality and service-locality pages; do not add `Event` or `LocalBusiness` JSON-LD without complete real, published, non-demonstration records.
+- [ ] Add dynamic locality/service sitemap candidate enumeration with `evaluateIndexability().sitemapEligible` as the only inclusion gate and endpoint boundary tests for thin, demo, private, unpublished and invalid paths.
+- [ ] Add minimal enquiry/lead actions with explicit pending/success/error outcomes only after connecting them to the existing safe need/connection flow; no new persistent schema has been approved.
+- [ ] Stage Byron Bay, Agnes Water, and Port Douglas plus required parents as `not_published` only after hierarchy/timezone/currency/provenance fields are defined by a reviewed staging contract. No real listing/coordinates are inferred.
+
+Open decisions: trusted authority for policy/rights approval fields and opportunity persistence; market-specific compensation/legal review; locality hierarchy and timezone interpretation; source licensing. Live sitemap responses, browser/mobile behavior, deployed SEO, database authority, and production write paths have not been verified in this session.
