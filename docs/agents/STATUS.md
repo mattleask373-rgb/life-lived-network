@@ -1,54 +1,66 @@
-# Agent System Status — 2026-10-07 (control-tower reconciliation)
+# Agent System Status — 2026-10-19 (Australia Phase One readiness audit)
 
 ## SOURCE OF TRUTH
 
-Repository evidence on `main`, GitHub Actions, open PRs, and canonical contracts are authoritative.
+Repository evidence on `main` @ `5f06fc336a748cf37c6a06ac272bee4a387bd745`, GitHub Actions, open PRs, and canonical contracts are authoritative.
 No autonomous production merge/deploy is active.
 
-## CURRENT QUEUE
+Full readiness report: `docs/release/AUSTRALIA-PHASE1-READINESS.md`
 
-### P0 / HUMAN-GATED CONTROL PLANE
-- **Persistent autonomous executor:** MISSING. The repository contains provider-neutral orchestration and lease/fencing contracts, but no evidence yet proves a durable authenticated executor loop.
-- **PR #61 — provider-neutral orchestration:** open; formatting fixes and lockfile reconciliation have been pushed. Fresh Verify is required.
-- **PR #62 — claim/lease/heartbeat:** open; formatting fixes and lockfile reconciliation have been pushed. Its lifecycle contract still requires reconciliation with durable `agent_tasks.status` and expiry/fencing semantics before integration.
-- **PR #64 — lease fencing / provider authorization hardening:** open; package/lockfile reconciliation pushed. Known security gates remain: authenticated owner/run binding, approval_id-bound human integration, tenant/project scoping, and live Supabase migration/RLS verification.
-- **No production execution authority, autonomous merge, or deploy authority is enabled by this status file.**
-- **#74 — CONTROL-PLANE-01:** open human-gated follow-up for the missing/proven durable persistence boundary, authenticated fencing and RLS reconciliation.
+## CURRENT P0 QUEUE (Australia Phase One)
 
-### AI-NATIVE PROGRAMME
-- **PR #67 — ProgrammeState:** open; implementation is green on its prior head, but the current hosted Verify surface must be rechecked after branch/base reconciliation.
-- **PR #69 — Experiment Engine:** open draft; current head contains formatting/syntax fixes. Hosted Verify currently fails before lint/test/build on frozen-lockfile reconciliation in the PR merge context; no green claim until a fresh run passes.
-- **PR #72 — lockfile reconciliation:** open draft; one-line manifest fix to align `@lovable.dev/vite-tanstack-config` with the lockfile. Human action remains required; not merged.
-- **PR #73 — accepted experiment → bounded task adapter:** open draft; intentionally no execution/persistence/provider authority.
+These are the only items that block a truthful pilot. All are human-gated.
 
-### PRODUCT / REAL-WORLD SURFACE
-- **Canonical supply engine:** REAL and live on main. `src/lib/supply-engine.ts` contains the real deterministic `findSupply()` implementation and regression tests. It is the sole possibility/discovery authority.
-- **Ingestion architecture:** `src/lib/ingest/*` remains the canonical provider-neutral boundary. PR #49 is the reconciliation anchor; PR #43's parallel `external-world.ts` path must be absorbed/retired before integration.
-- **Map/locality:** PR #54 visual language, #57 map-first locality integration, #60 sparse-locality progressive disclosure remain human-gated. #57 depends on #54; #58 depends on #49.
-- **Journey trust:** PR #59 hardens stale/cancelled journey eligibility and remains human-gated.
-- **Search context:** PR #52 preserves search intent into canonical locality discovery without creating a second matcher.
+1. **#157** — Remove tracked `.env`, add `.env.example`, harden ignore rules.  
+   Status: open, non-draft, green Verify reported on prior heads. Mergeable currently blocked (reviews/protection).
 
-## VERIFIED CURRENT FINDINGS
+2. **#163** — Require explicit service area for supply matches (remove residence-as-reach).  
+   Status: open, green Verify on exact head `3fb33ac0…`. Core invariant fix.
 
-- Main no longer has the historical supply-engine stub; the canonical implementation and tests are present.
-- No second matcher/ranker/discovery engine is authorized.
-- Unknown/absence remains distinct from real-world absence.
-- No fabricated inventory, availability, demand, learner capability, or external-world activity is permitted.
-- Human gates remain required for production autonomy, security/RLS/privacy, irreversible semantics, external side effects, legal/commercial consequences, and consequential learner decisions.
+3. **#154** — Exact open-need counts + fail-closed place scoping.  
+   Status: open, green Verify reported.
 
-## CI / DRIFT
+4. **#169** — Runtime validation of need submissions + canonical place derivation.  
+   Status: open, green Verify on head `d7006d4d…`. Touches same file as #154 — coordinate.
 
-- PR #61 latest failed Verify because lint ran and reported formatting-only Prettier errors; those files have now been formatted. A subsequent run must also clear the frozen-lockfile mismatch.
-- PR #62 latest failed Verify on formatting-only Prettier errors; those files have now been formatted. No new Verify result is yet evidenced.
-- PR #64 latest Verify failed at `bun install --frozen-lockfile`; its branch declared `@lovable.dev/vite-tanstack-config` 2.25.x while the lockfile resolves 2.26.0. Manifest reconciliation has been pushed.
-- PR #67 latest observed Verify failed at frozen-lockfile because its branch manifest still differed from the lockfile in the hosted merge context. This is a CI/base-drift issue, not a ProgrammeState behaviour failure.
-- PR #69 latest observed Verify failed at frozen-lockfile in the hosted PR merge context. The head manifest already declares 2.26.0; fresh hosted verification is required to determine whether the merge ref still inherits a stale manifest/lock combination.
-- PR #72 Verify is green on its exact head, but the fix is not merged.
-- Product PRs #54/#43/#49 are based on an older main lineage; #52/#57/#58 are intentionally dependent/diverged. Do not flatten those dependencies without review.
+5. **#162** (draft) + **#161** — Conversation least-privilege grants, state-machine triggers, policy tests.  
+   Status: open. Requires independent SQL review + disposable two-account verification before any migration is applied.
 
-## NEXT
+## SUPPORTING P1 (honest pilot UX / regression coverage)
 
-1. Re-run/observe fresh Verify on #61/#62/#64 after formatting + manifest reconciliation; diagnose only remaining behavioural/security failures.
-2. Reconcile #62's lifecycle model with the durable SQL status contract and authenticated fencing boundaries before any integration.
-3. Reconcile #43 into #49's canonical ingest boundary; preserve useful fixture/normalization/freshness/provenance evidence while retiring the parallel architecture.
-4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
+- #156 private-route auth guards (tests)
+- #129 private-route robots.txt alignment
+- #165 production-fixture policy coverage
+- #158 honest quiet-locality feedback
+- #160 / #166 search context preservation
+- #168 privacy-safe measurement contract
+- #153 event-ingest query validation
+- Issue #132 launch-QA / two-account matrix (still open)
+- Issue #164 database-permissions
+
+## PRODUCT / REAL-WORLD SURFACE (unchanged principles)
+
+- **Canonical supply engine:** REAL and live on main. `src/lib/supply-engine.ts` — sole possibility/discovery authority. Do not create a second matcher.
+- **Geography:** Country-agnostic hierarchy in `src/lib/places.ts`. Default slug `uk-and-ireland`. Australia (or any new market) is data, not code branching.
+- **Invariants:** LIVING IN PLACE ≠ SERVING PLACE remains violated on main until #163 lands. All other hard invariants in `docs/agents/INVARIANTS.md` still apply.
+- **No fabrication:** Fixtures must not leak; unknown must not become confirmed; quiet preferred over invented activity.
+
+## CI / DRIFT NOTES
+
+- Verify workflow (install / lint / test / build) is the gate.
+- Several key PRs report green Verify on their exact heads.
+- `mergeable_state: blocked` observed on P0 PRs — almost certainly required reviews or branch protection. Human action required.
+- Older control-plane / agent-orchestration PRs remain out of scope for Australia Phase One and stay human-gated.
+
+## NEXT ACTIONS (ordered)
+
+1. Founder / reviewer: prioritise independent review of #157 and #163.
+2. Coordinate merge of #154 and #169 (shared surface).
+3. Complete SQL + disposable-DB proof for #162 before any migration consideration.
+4. Verify (or load) genuine Australian place hierarchy via approved aggregate checks only.
+5. Close or explicitly waive remaining #132 matrix items.
+6. No claim of launch readiness until the definition of done in the readiness report is met.
+
+## SAFETY
+
+No autonomous merge to main. No force-push. No production schema/RLS/secret changes without separate explicit founder approval. External collaborators (including this Grok session) work only via reviewable PRs on `agent/grok/*` branches.
