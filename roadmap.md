@@ -231,3 +231,11 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - Both noindex and in PRIVATE_PATHS. No payments, backend, schema or auth changes.
 - [ ] Blocked on approval: storing interest submissions in the database (needs a new table) and a follow-up contact route.
 - [ ] My Places full slice: plan awaiting approval (schema addition, location precision).
+
+
+## Traveller and local work opportunity representation — foundation (2026-10-19)
+
+- Added a typed optional work-opportunity detail contract and an explicit work/volunteer taxonomy group on `feat/work-opportunity-contract` (review pending; not merged).
+- Short-term categories cover hospitality shifts, event work and seasonal work. Existing gardening, cleaning and odd-job categories remain canonical. Longer-term/professional role labels are included without implying qualification, availability or legal classification.
+- The model records pay in integer cents plus currency/basis; date window/duration; accommodation; transport notes; skill requirements; host expectations; conditions; jurisdiction; provenance/rights; and human policy/publication states.
+- Still open: persistent storage and owner editing; public enquiry/contact flow; road-trip integration; real partner ingestion and rights approvals; UX for pay/conditions and volunteer-versus-work context. No external feed is activated and no live work inventory is claimed.
