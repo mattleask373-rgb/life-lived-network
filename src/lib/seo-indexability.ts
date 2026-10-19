@@ -8,9 +8,7 @@
 export type PublicPageKind = "locality" | "service" | "provider" | "event";
 
 export type IndexabilityStatus =
-  | "INDEXABLE"
-  | "INDEXABLE_WITH_LIMITATIONS"
-  | "NOINDEX"
+  "INDEXABLE" | "INDEXABLE_WITH_LIMITATIONS" | "NOINDEX"
   | "NOT_PUBLISHED";
 
 export type IndexabilityReason =
@@ -59,10 +57,7 @@ export interface IndexabilityDecision {
 
 const DEFAULT_MINIMUM_PUBLISHED_RECORDS = 3;
 
-function decision(
-  status: IndexabilityStatus,
-  reasons: IndexabilityReason[],
-): IndexabilityDecision {
+function decision(status: IndexabilityStatus, reasons: IndexabilityReason[]): IndexabilityDecision {
   return {
     status,
     reasons,
