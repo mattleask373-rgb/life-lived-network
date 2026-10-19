@@ -13,6 +13,7 @@ import {
 } from "@/lib/services";
 import { duration, eventDate, layerText, money } from "./layer-colour";
 import { LayerIcon } from "./layer-icon";
+import { WorkOpportunityFacts } from "./work-opportunity-facts";
 
 export function EntrySheet({
   entry,
@@ -147,6 +148,7 @@ export function EntrySheet({
           </dl>
 
           <p className="mt-4 leading-relaxed">{entry.summary}</p>
+          <WorkOpportunityFacts entry={entry} />
 
           {/* A service: what it is, who provides it, where, when, what it costs,
               and the one next step that is actually true. */}
