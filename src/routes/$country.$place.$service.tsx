@@ -64,7 +64,12 @@ function SafeExternalLink({ href, children }: { href: string; children: string }
     const url = new URL(href);
     if (url.protocol !== "https:" && url.protocol !== "http:") return null;
     return (
-      <a href={url.toString()} target="_blank" rel="noreferrer noopener" className="underline underline-offset-4">
+      <a
+        href={url.toString()}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="underline underline-offset-4"
+      >
         {children}
       </a>
     );
@@ -81,7 +86,9 @@ function ServiceRecord({ entry }: { entry: WorldEntry }) {
       {entry.summary.trim() ? <p className="mt-2 text-sm">{entry.summary}</p> : null}
       <p className="mt-2 text-sm text-muted-foreground">
         {entry.place}
-        {entry.neighbourhood && entry.neighbourhood !== entry.place ? ` · ${entry.neighbourhood}` : ""}
+        {entry.neighbourhood && entry.neighbourhood !== entry.place
+          ? ` · ${entry.neighbourhood}`
+          : ""}
       </p>
       {entry.organisation || entry.providerNote ? (
         <p className="mt-2 text-sm">{providerLine(entry)}</p>
@@ -105,7 +112,9 @@ function ServiceRecord({ entry }: { entry: WorldEntry }) {
         </p>
       ) : null}
       <div className="mt-3 text-sm">
-        <p>{entry.bookingState ? BOOKING_LABEL[entry.bookingState] : "Booking status not recorded"}</p>
+        <p>
+          {entry.bookingState ? BOOKING_LABEL[entry.bookingState] : "Booking status not recorded"}
+        </p>
         {step.href ? (
           <p className="mt-1">
             <SafeExternalLink href={step.href}>{step.label}</SafeExternalLink>
@@ -151,21 +160,32 @@ function ServiceLocalityPage() {
         <span className="text-foreground">{category.label}</span>
       </nav>
 
-      <h1 className="mt-4 text-4xl leading-tight">{category.label} in {place.name}</h1>
+      <h1 className="mt-4 text-4xl leading-tight">
+        {category.label} in {place.name}
+      </h1>
       <p className="mt-3 max-w-2xl text-base">
         This page shows service records connected to {place.name}. Details, provider names,
-        qualifications, times and booking pathways are shown only when they have been recorded.
-        A listing is not a guarantee of availability or qualification.
+        qualifications, times and booking pathways are shown only when they have been recorded. A
+        listing is not a guarantee of availability or qualification.
       </p>
 
       {services.length ? (
         <>
           <p className="mt-4 text-sm text-muted-foreground">
-            {services.length === 1 ? "One current service record is" : `${services.length} current service records are`} on record.
-            {gate.status !== "INDEXABLE" ? " This page is not yet eligible for search indexing." : ""}
+            {services.length === 1
+              ? "One current service record is"
+              : `${services.length} current service records are`}{" "}
+            {gate.status !== "INDEXABLE"
+              ? "This page is not yet eligible for search indexing."
+              : ""}
           </p>
-          <section aria-label={`${category.label} records`} className="mt-4 grid gap-4 md:grid-cols-2">
-            {services.map((entry) => <ServiceRecord key={entry.id} entry={entry} />)}
+          <section
+            aria-label={`${category.label} records`}
+            className="mt-4 grid gap-4 md:grid-cols-2"
+          >
+            {services.map((entry) => (
+              <ServiceRecord key={entry.id} entry={entry} />
+            ))}
           </section>
         </>
       ) : (
@@ -181,8 +201,12 @@ function ServiceLocalityPage() {
             shared quality gate. No listing, price, time or availability has been inferred.
           </p>
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-            <Link className="underline underline-offset-4" to="/need">Describe what you need</Link>
-            <Link className="underline underline-offset-4" to="/make">Add something you know about</Link>
+            <Link className="underline underline-offset-4" to="/need">
+              Describe what you need
+            </Link>
+            <Link className="underline underline-offset-4" to="/make">
+              Add something you know about
+            </Link>
           </div>
         </section>
       )}
@@ -214,7 +238,8 @@ function ServiceLocalityPage() {
         <section className="mt-10">
           <h2 className="text-xl">Explore the wider area</h2>
           <p className="mt-2 text-sm">
-            This is the nearest parent locality currently recorded for {place.name}: {ancestors[0].name}.
+            This is the nearest parent locality currently recorded for {place.name}:{" "}
+            {ancestors[0].name}.
           </p>
           <Link
             className="mt-2 inline-block underline underline-offset-4"
@@ -229,13 +254,19 @@ function ServiceLocalityPage() {
       <section className="mt-10 card-paper p-5">
         <h2 className="text-xl">Plan what to do next</h2>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          The map, journey planner and road-trip view use the existing discovery surfaces.
-          They do not imply that a service or opportunity is available here.
+          The map, journey planner and road-trip view use the existing discovery surfaces. They do
+          not imply that a service or opportunity is available here.
         </p>
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-          <Link className="underline underline-offset-4" to="/">Open the living map</Link>
-          <Link className="underline underline-offset-4" to="/journey">Explore a few hours</Link>
-          <Link className="underline underline-offset-4" to="/road-trip">Explore a road trip</Link>
+          <Link className="underline underline-offset-4" to="/">
+            Open the living map
+          </Link>
+          <Link className="underline underline-offset-4" to="/journey">
+            Explore a few hours
+          </Link>
+          <Link className="underline underline-offset-4" to="/road-trip">
+            Explore a road trip
+          </Link>
           <Link
             className="underline underline-offset-4"
             params={{ country: place.countrySegment || "gb", place: place.slug }}
