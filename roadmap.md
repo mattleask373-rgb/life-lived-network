@@ -257,5 +257,5 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - [x] No coordinates or retrieval/license facts are fabricated: coordinates are null, provenance/license/version/retrievedAt placeholders remain null, source rights are unreviewed, and every hierarchy decision is unapproved.
 - [x] Test proves the candidate rows do **not** pass `normalizeStagedPlaceBatch()` until actual provenance/retrieval/licensing fields exist.
 - [ ] Still required: source-verified administrative parent crosswalk, human-approved hierarchy, actual source-file retrieval/version/checksum and licence review, timezone candidate validation and country-level timezone semantics, then coordinate/reference-system verification. Australia remains NOT LIVE.
-- Branch is PR #175's existing feature branch; hosted Verify must pass on the final scaffold SHA before claiming this slice green.
+- Code head `c61ae168ca2da5aed307ed2278fdd8e3599e1a8c` passed [PR Verify 39338628239](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39338628239) and [push Verify 39338624483](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39338624483), including install/lint/tests/build. The next documentation-only commit requires a fresh exact-head Verify.
 
