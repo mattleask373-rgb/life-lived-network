@@ -390,7 +390,7 @@ function NeedForm({
           <div className="rounded-lg border border-border bg-background p-3 text-sm" role="status">
             <p className="font-medium">Your request has been saved.</p>
             <p className="mt-1 text-muted-foreground">
-              It will use the existing local matching flow; it has not messaged a listed source directly.
+              It uses the existing local matching flow. It has not messaged the listed source.
             </p>
             <Link
               to="/need/$id"
