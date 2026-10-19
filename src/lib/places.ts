@@ -33,14 +33,34 @@ export interface Place {
   blurb: string;
 }
 
-/** The world the app opens on. A place record like any other, not a constant. */
-export const DEFAULT_PLACE_SLUG = "uk-and-ireland";
+/** Legacy pilot default, used when no deployment-specific locality is configured. */
+const LEGACY_DEFAULT_PLACE_SLUG = "uk-and-ireland";
 
-/** Used only while the real place record is still loading. */
+/**
+ * Normalise the optional build-time default locality.
+ * It must resolve to a canonical `places` row before it can be selected;
+ * this helper never invents or seeds a place.
+ */
+export function normaliseConfiguredPlaceSlug(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const slug = value.trim().toLowerCase();
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? slug : null;
+}
+
+export const CONFIGURED_DEFAULT_PLACE_SLUG = normaliseConfiguredPlaceSlug(
+  import.meta.env.VITE_DEFAULT_PLACE_SLUG,
+);
+
+/** Configurable per deployment; UK/Ireland remains the backwards-compatible default. */
+export const DEFAULT_PLACE_SLUG =
+  CONFIGURED_DEFAULT_PLACE_SLUG ?? LEGACY_DEFAULT_PLACE_SLUG;
+
+/** Displayed only when no canonical locality could be resolved. */
 export const PLACE_FALLBACK = {
-  name: "The United Kingdom & Ireland",
+  name: "Choose a supported place",
   region: "",
-  blurb: "Choose somewhere and see what is actually there.",
+  blurb:
+    "The starting place isn't available yet. Choose a supported place to see what's recorded there.",
 };
 
 const KINDS: PlaceKind[] = [
@@ -200,6 +220,20 @@ export function buildPlaceIndex(places: Place[]): PlaceIndex {
 
 export function placeBySlug(index: PlaceIndex, slug: string): Place | null {
   return index.bySlug.get(slug) ?? null;
+}
+
+/**
+ * Prefer the person's saved locality, then the configured canonical default.
+ * Unsupported configured defaults deliberately resolve to null instead of
+ * silently switching the user to a different region.
+ */
+export function resolvePlaceFromIndex(
+  index: PlaceIndex | null,
+  selectedSlug: string,
+  defaultSlug = DEFAULT_PLACE_SLUG,
+): Place | null {
+  if (!index) return null;
+  return index.bySlug.get(selectedSlug) ?? index.bySlug.get(defaultSlug) ?? null;
 }
 
 /** Everywhere directly inside a place. */
