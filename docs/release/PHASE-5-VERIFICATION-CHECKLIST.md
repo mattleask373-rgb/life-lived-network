@@ -1,4 +1,6 @@
 # Phase 5 Verification Checklist
+**Last verified:** 2026-10-19 09:34 Europe/London (GitHub repository, PR and ruleset metadata rechecked; no live runtime or production test).  
+**Verified main HEAD:** `5f06fc336a748cf37c6a06ac272bee4a387bd745`  
 **Use before any go/no-go decision**
 
 ## Pre-merge (per PR)
