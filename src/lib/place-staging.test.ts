@@ -64,7 +64,8 @@ describe("place staging normalizer", () => {
     expect(report.eligibleForDisposablePreview).toBe(false);
     expect(report.rows[0]?.reasons).toContain("missing_coordinates");
     expect(report.rows[1]?.reasons).toContain("source_not_current");
-    expect(report.rows.some((row) => row.sourceKey === "c" && row.status === "blocked")).toBe(true);
+    expect(report.issues.some((issue) => issue.rowIndex === 2 && issue.code === "invalid_row")).toBe(true);
+    expect(report.summary.blocked).toBe(3);
   });
 
   it("rejects duplicate source keys and globally colliding slugs", () => {
