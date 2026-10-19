@@ -26,6 +26,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RoadTripRouteImport } from './routes/road-trip'
 import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as CountryPlaceRouteImport } from './routes/$country.$place'
+import { Route as CountryPlaceServiceRouteImport } from './routes/$country.$place.$service'
 import { Route as NeedIndexRouteImport } from './routes/need.index'
 import { Route as NeedIdRouteImport } from './routes/need.$id'
 import { Route as ApiPublicSitemapPagesDotxmlRouteImport } from './routes/api/public/sitemap-pages[.]xml'
@@ -116,6 +117,11 @@ const CountryPlaceRoute = CountryPlaceRouteImport.update({
   path: '/$country/$place',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CountryPlaceServiceRoute = CountryPlaceServiceRouteImport.update({
+  id: '/$country/$place/$service',
+  path: '/$country/$place/$service',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NeedIndexRoute = NeedIndexRouteImport.update({
   id: '/need/',
   path: '/need/',
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/road-trip': typeof RoadTripRoute
   '/sources': typeof SourcesRoute
   '/$country/$place': typeof CountryPlaceRoute
+  '/$country/$place/$service': typeof CountryPlaceServiceRoute
   '/need/$id': typeof NeedIdRoute
   '/need/': typeof NeedIndexRoute
   '/api/public/sitemap-pages.xml': typeof ApiPublicSitemapPagesDotxmlRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/road-trip': typeof RoadTripRoute
   '/sources': typeof SourcesRoute
   '/$country/$place': typeof CountryPlaceRoute
+  '/$country/$place/$service': typeof CountryPlaceServiceRoute
   '/need/$id': typeof NeedIdRoute
   '/need': typeof NeedIndexRoute
   '/api/public/sitemap-pages.xml': typeof ApiPublicSitemapPagesDotxmlRoute
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/road-trip': typeof RoadTripRoute
   '/sources': typeof SourcesRoute
   '/$country/$place': typeof CountryPlaceRoute
+  '/$country/$place/$service': typeof CountryPlaceServiceRoute
   '/need/$id': typeof NeedIdRoute
   '/need/': typeof NeedIndexRoute
   '/api/public/sitemap-pages.xml': typeof ApiPublicSitemapPagesDotxmlRoute
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/road-trip'
     | '/sources'
     | '/$country/$place'
+    | '/$country/$place/$service'
     | '/need/$id'
     | '/need/'
     | '/api/public/sitemap-pages.xml'
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/road-trip'
     | '/sources'
     | '/$country/$place'
+    | '/$country/$place/$service'
     | '/need/$id'
     | '/need'
     | '/api/public/sitemap-pages.xml'
@@ -274,6 +285,7 @@ export interface FileRouteTypes {
     | '/road-trip'
     | '/sources'
     | '/$country/$place'
+    | '/$country/$place/$service'
     | '/need/$id'
     | '/need/'
     | '/api/public/sitemap-pages.xml'
@@ -298,6 +310,7 @@ export interface RootRouteChildren {
   RoadTripRoute: typeof RoadTripRoute
   SourcesRoute: typeof SourcesRoute
   CountryPlaceRoute: typeof CountryPlaceRoute
+  CountryPlaceServiceRoute: typeof CountryPlaceServiceRoute
   NeedIdRoute: typeof NeedIdRoute
   NeedIndexRoute: typeof NeedIndexRoute
   ApiPublicSitemapPagesDotxmlRoute: typeof ApiPublicSitemapPagesDotxmlRoute
@@ -425,6 +438,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CountryPlaceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$country/$place/$service': {
+      id: '/$country/$place/$service'
+      path: '/$country/$place/$service'
+      fullPath: '/$country/$place/$service'
+      preLoaderRoute: typeof CountryPlaceServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/need/': {
       id: '/need/'
       path: '/need'
@@ -474,6 +494,7 @@ const rootRouteChildren: RootRouteChildren = {
   RoadTripRoute: RoadTripRoute,
   SourcesRoute: SourcesRoute,
   CountryPlaceRoute: CountryPlaceRoute,
+  CountryPlaceServiceRoute: CountryPlaceServiceRoute,
   NeedIdRoute: NeedIdRoute,
   NeedIndexRoute: NeedIndexRoute,
   ApiPublicSitemapPagesDotxmlRoute: ApiPublicSitemapPagesDotxmlRoute,
