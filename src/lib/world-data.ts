@@ -10,6 +10,8 @@
  * their real source and credit; otherwise the UI keeps a neutral placeholder.
  */
 
+import type { WorkOpportunity } from "./work-opportunities";
+
 export type LayerId =
   "work" | "experience" | "music" | "art" | "community" | "people" | "nature" | "food";
 
@@ -62,6 +64,12 @@ export interface WorldEntry {
   outdoors: boolean;
   /** True when a real person on the platform posted this, not demo content. */
   community?: boolean;
+  /**
+   * Optional explicit work/volunteer terms. Missing or invalid terms never
+   * imply pay, volunteering, dates, accommodation or availability.
+   */
+  workOpportunity?: WorkOpportunity;
+
   /** How trustworthy the information is right now. */
   quality?: DataQuality;
   /** What kind of thing this is, for community-posted entries. */
