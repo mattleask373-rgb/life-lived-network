@@ -247,3 +247,6 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 
 
 - Latest code-bearing head `9b1b628436cb616026b9a8bb6a74ad5a88976714` passed both push Verify [39335326404](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335326404) and PR Verify [39335332611](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335332611). Status/roadmap now record that evidence; the documentation-only follow-up needs a fresh check.
+
+
+- Latest hosted Verify evidence before this status refresh: PR head `29b582952c52cb8768318fccba09488051b9c4d4` passed PR Verify [39335447101](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335447101) and push Verify [39335444665](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335444665); frozen-lockfile install, lint, tests and build all passed. This entry is documentation-only; verify the resulting docs head.
