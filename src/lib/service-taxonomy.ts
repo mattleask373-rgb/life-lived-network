@@ -18,10 +18,11 @@
  */
 
 import { isService } from "./services";
+import { isPublishableWorkOpportunity } from "./work-opportunities";
 import type { WorldEntry } from "./world-data";
 
 export type ServiceGroupId =
-  "health" | "home" | "creative" | "learning" | "professional" | "community" | "events";
+  "health" | "home" | "creative" | "learning" | "professional" | "community" | "events" | "work";
 
 export interface ServiceGroup {
   id: ServiceGroupId;
@@ -36,6 +37,7 @@ export const SERVICE_GROUPS: ServiceGroup[] = [
   { id: "professional", label: "Professional" },
   { id: "community", label: "Community" },
   { id: "events", label: "Events" },
+  { id: "work", label: "Work & opportunities" },
 ];
 
 export interface ServiceCategory {
@@ -276,6 +278,89 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
 
   // Community
   {
+    slug: "hospitality-shifts",
+    label: "Hospitality shifts",
+    plural: "Hospitality roles and shifts",
+    group: "work",
+    words: [
+      "hospitality shift",
+      "hospitality shifts",
+      "barista shift",
+      "waitstaff",
+      "front of house",
+      "kitchen hand",
+      "food runner",
+      "cafe shift",
+      "hotel shift",
+      "restaurant staff",
+    ],
+  },
+  {
+    slug: "event-work",
+    label: "Event work",
+    plural: "Event crew and staff",
+    group: "work",
+    words: [
+      "event work",
+      "event staff",
+      "event crew",
+      "event setup",
+      "event set-up",
+      "event teardown",
+      "festival crew",
+      "festival staff",
+      "event steward",
+      "event usher",
+    ],
+  },
+  {
+    slug: "seasonal-work",
+    label: "Seasonal work",
+    plural: "Seasonal roles",
+    group: "work",
+    words: [
+      "seasonal work",
+      "seasonal job",
+      "seasonal position",
+      "harvest work",
+      "fruit picking",
+      "seasonal hospitality",
+    ],
+  },
+  {
+    slug: "short-term-work",
+    label: "Short-term work",
+    plural: "Short-term and casual opportunities",
+    group: "work",
+    words: [
+      "short-term job",
+      "short term job",
+      "temporary work",
+      "casual shift",
+      "casual work",
+      "one-off job",
+      "short-term gig",
+      "short term gig",
+    ],
+  },
+  {
+    slug: "longer-term-roles",
+    label: "Longer-term and professional roles",
+    plural: "Longer-term and professional roles",
+    group: "work",
+    words: [
+      "long-term job",
+      "long term job",
+      "permanent position",
+      "full-time role",
+      "part-time role",
+      "fixed-term role",
+      "contract position",
+      "professional vacancy",
+    ],
+  },
+
+  {
     slug: "volunteering",
     label: "Volunteering",
     plural: "Ways to volunteer",
@@ -359,12 +444,20 @@ function haystack(entry: WorldEntry): string {
  * decided are kept so a page can say why.
  */
 export function categoriesOf(entry: WorldEntry): CategoryMatch[] {
+  const publicWork =
+    entry.layer === "work" &&
+    entry.demonstration !== true &&
+    isPublishableWorkOpportunity(entry.workOpportunity);
   const declared = entry.serviceCategory ? categoryBySlug(entry.serviceCategory) : null;
-  if (declared) return [{ category: declared, basis: "declared", evidence: [] }];
+  if (declared) {
+    if (declared.group === "work" && !publicWork) return [];
+    return [{ category: declared, basis: "declared", evidence: [] }];
+  }
 
   const text = haystack(entry);
   const matches: CategoryMatch[] = [];
   for (const category of SERVICE_CATEGORIES) {
+    if (category.group === "work" && !publicWork) continue;
     const evidence = category.words.filter((word) => text.includes(word));
     if (evidence.length) matches.push({ category, basis: "matched", evidence });
   }
@@ -405,9 +498,15 @@ export interface CategoryPresence {
  * grid of empty promises.
  */
 export function categoriesPresent(entries: WorldEntry[]): CategoryPresence[] {
-  const current = entries.filter(
-    (entry) => entry.quality !== "expired" && !entry.cancellation && isService(entry),
-  );
+  const current = entries.filter((entry) => {
+    if (entry.quality === "expired" || entry.cancellation) return false;
+    if (isService(entry)) return true;
+    return (
+      entry.layer === "work" &&
+      entry.demonstration !== true &&
+      isPublishableWorkOpportunity(entry.workOpportunity)
+    );
+  });
   const buckets = new Map<string, WorldEntry[]>();
   for (const entry of current) {
     for (const match of categoriesOf(entry)) {
