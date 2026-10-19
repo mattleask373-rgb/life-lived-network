@@ -317,6 +317,6 @@ export function normalizeStagedPlaceBatch(
     rows,
     issues,
     eligibleForDisposablePreview: rows.length > 0 && issues.length === 0 && eligible === rows.length,
-    summary: { total: input.length, eligible, blocked },
+    summary: { total: input.length, eligible, blocked: input.length - eligible },
   };
 }
