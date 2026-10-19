@@ -26,6 +26,7 @@ import { EmptyPlace } from "@/components/data-state";
 import { LocalityQuestions } from "@/components/locality-questions";
 import { WhatsHappening } from "@/components/whats-happening";
 import { WhatsHere } from "@/components/whats-here";
+import { WorkOpportunityFacts } from "@/components/work-opportunity-facts";
 import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
@@ -33,6 +34,7 @@ import { contributions, localityQuestions, providerGroups, upcomingEvents } from
 import { KIND_LABEL } from "@/lib/places";
 import { privatePage, publicPage } from "@/lib/seo";
 import { categoriesPresent } from "@/lib/service-taxonomy";
+import { publicWorkOpportunityEntries } from "@/lib/work-opportunity-presentation";
 import { filterEntriesByText, parseQuerySearch } from "@/lib/search-context";
 import {
   applyTravellerFilters,
@@ -197,6 +199,7 @@ function LocalityPage() {
   const groups = useMemo(() => providerGroups(filtered), [filtered]);
   const offers = useMemo(() => contributions(filtered), [filtered]);
   const categories = useMemo(() => categoriesPresent(entries), [entries]);
+  const publishedWork = useMemo(() => publicWorkOpportunityEntries(entries), [entries]);
   const questions = useMemo(() => localityQuestions(entries, 0), [entries]);
   const demonstrations = entries.filter((entry) => entry.demonstration).length;
 
@@ -350,6 +353,42 @@ function LocalityPage() {
                   {list.length}
                   {demonstrationOnly ? " (trial data)" : ""}
                 </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {publishedWork.length ? (
+        <section className="mt-10" aria-labelledby="published-work-opportunities">
+          <h2 id="published-work-opportunities" className="text-2xl">
+            Published work opportunities
+          </h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            Only explicitly published opportunities with human-approved policy review and cleared
+            source rights appear here. Pay, dates, duration, accommodation and conditions are shown
+            as recorded. Confirm the terms with the named source.
+          </p>
+          <ul className="mt-3 space-y-3">
+            {publishedWork.map((entry) => (
+              <li className="card-paper p-4" key={entry.id}>
+                <button
+                  className="focus-ink min-h-11 w-full text-left"
+                  onClick={() => setOpen(entry)}
+                  type="button"
+                >
+                  <span className="text-base font-medium">{entry.title}</span>
+                  <span className="mt-1 block text-sm text-muted-foreground">
+                    {entry.place}
+                    {entry.neighbourhood && entry.neighbourhood !== entry.place
+                      ? ` · ${entry.neighbourhood}`
+                      : ""}
+                  </span>
+                  {entry.summary ? (
+                    <span className="mt-2 block text-sm">{entry.summary}</span>
+                  ) : null}
+                </button>
+                <WorkOpportunityFacts entry={entry} />
               </li>
             ))}
           </ul>
