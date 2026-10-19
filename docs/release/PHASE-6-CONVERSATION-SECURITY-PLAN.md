@@ -1,4 +1,6 @@
 # Phase 6 — Conversation Security Remediation Plan
+**Last verified:** 2026-10-19 09:34 Europe/London (GitHub repository, PR and ruleset metadata rechecked; no live runtime or production test).  
+**Verified main HEAD:** `5f06fc336a748cf37c6a06ac272bee4a387bd745`  
 **Date:** 2026-10-19  
 **Related PR:** #162 (currently draft)  
 **Status:** Design + contract only. No migration applied. No disposable-DB run performed.
@@ -62,3 +64,47 @@ Until steps 1–4 are complete:
 - Claiming the security property is verified
 
 **Owner of final apply decision:** Founder only.
+
+
+## 7. Implementation-ready safe test rewrite (plan only; not implemented here)
+
+### 7.1 Gate before any database connection
+The test file must evaluate the safety gate before importing or constructing the database client.
+
+- Without RUN_CONVERSATION_DB_TESTS=1, emit an unmistakable "SKIP: conversation DB integration tests not opted in" result and make **zero database connections**.
+- If the opt-in is 1 but any required target setting is absent or invalid, fail closed with a non-zero exit. Do not silently skip a misconfigured, explicitly requested run.
+- Require DISPOSABLE_DATABASE_URL and CONFIRM_CONVERSATION_TEST_DATABASE=life-lived-conversation-test-only.
+- For the first implementation, accept **loopback hosts only** (localhost, 127.0.0.1, or ::1) and require the database name life_lived_conversation_test. Reject all other database names and hosts before connecting; explicitly reject Supabase-hosted domains and any production/shared endpoint. Remote ephemeral databases are out of scope for this initial harness.
+- Once connected, query current_database() and confirm the exact expected database name before writing anything. Do not use a default URL, a fallback to postgres, or values loaded implicitly from the application's normal environment.
+
+### 7.2 Fixture ownership and cleanup
+1. Generate a unique test-run identifier and unique fixture identifiers at the start of each run.
+2. Create only the users and rows required by this run, using the project's real constraints and supported auth setup.
+3. Track every inserted primary key and test-created auth user explicitly in the fixture owner.
+4. In finally, delete only those fixture-owned rows and users in dependency order, by their recorded IDs. Use a transaction where compatible; where auth setup crosses a transaction boundary, retain an explicit cleanup ledger and report cleanup failure as a test failure.
+5. Never run TRUNCATE, TRUNCATE ... CASCADE, whole-table deletes, schema resets, or global cleanup against application tables. Never attempt automatic cleanup of data not created by this run.
+
+### 7.3 Minimum two-/three-account matrix
+- Account A can access only the conversation and messages it is authorised to access.
+- Account B can access its own authorised conversation but cannot read or mutate A's private data unless an explicit participant rule permits it.
+- Account C, an unrelated authenticated account, cannot read, send, alter status, block, or report through IDs belonging to A/B unless that operation is intentionally allowed by policy.
+- An unauthenticated caller cannot read or mutate private conversation data.
+- A non-participant cannot send messages; participants cannot write after the conversation is closed/settled.
+- Recipient accept/decline, sender withdrawal, context immutability, and no-reopen rules are asserted at the database boundary where the schema implements them.
+
+For every forbidden action, assert both the result and that no unintended row changed. Avoid tests that pass just because the client UI hides an action.
+
+### 7.4 Honest result semantics and command
+- Missing opt-in = **SKIP**, with zero database connections.
+- Opt-in enabled but unsafe/missing target configuration = **FAIL**, before any connection.
+- Valid disposable target and all assertions pass = **PASS**.
+- Assertion or fixture-cleanup failure = **FAIL**.
+
+With the local disposable database already created, configured and verified, the run command is:
+
+    RUN_CONVERSATION_DB_TESTS=1 bun run test src/lib/connection-policy-db.integration.test.ts
+
+Set DISPOSABLE_DATABASE_URL and CONFIRM_CONVERSATION_TEST_DATABASE in the local shell without putting their values in source control. Never print a connection string, credentials, message bodies, or private fixture contents. The current harness has **not** been run or rewritten by this documentation change.
+
+### 7.5 Acceptance evidence before any security claim
+Attach the exact commit SHA, command, exit code, test-run summary (including an explicit PASS rather than SKIP), the confirmed disposable database type, and the A/B/C results. Independently review the migration's grants, trigger functions, RLS interaction, and cleanup behavior. Only the founder may decide whether or when a migration is applied to a hosted environment.
