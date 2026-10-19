@@ -74,3 +74,14 @@ No autonomous production merge/deploy is active.
 
 
 - Latest hosted Verify evidence before this status refresh: PR head `29b582952c52cb8768318fccba09488051b9c4d4` passed PR Verify [39335447101](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335447101) and push Verify [39335444665](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335444665); install, lint, tests and build all passed. This entry updates status only; the resulting documentation head must also be checked.
+
+## Australia pilot staging skeleton — 2026-10-19 (unpublished, not preview-eligible)
+
+- Added `src/lib/staging/australia-skeleton.ts` and tests alongside the green staging validator. It contains six proposed hierarchy rows: Australia, New South Wales, Queensland, Byron Bay, Agnes Water and Port Douglas.
+- Every candidate is explicitly `not_published`; coordinates are `null`; source retrieval/version, licence, attribution and redistribution review are blank; all source review statuses are pending and rights are unreviewed.
+- Uses `AU` / `AUD`. Local timezone strings are candidates only (`Australia/Sydney` for Byron Bay/NSW and `Australia/Brisbane` for Agnes Water/Port Douglas/Queensland). Australia country-level timezone is deliberately unresolved/null rather than asserting one zone for a multi-zone country.
+- The state-to-locality hierarchy is coarse and proposed, not approved; replace with the source-verified administrative-parent crosswalk after review.
+- A regression test runs the skeleton through `normalizeStagedPlaceBatch()` using blank provenance/retrieval placeholders and proves that it is rejected. It is not an import-ready batch and cannot qualify for even a disposable preview.
+- No coordinates, place rows, live listings, production writes, schema/RLS/grant changes, merge or deployment.
+- Human decisions: approve locality inclusion and exact hierarchy; retrieve the official NSW/Queensland source rows and versions; review licence/attribution/redistribution rights; resolve country-level timezone semantics; validate timezone candidates; review CRS/datum before coordinates enter any later batch.
+

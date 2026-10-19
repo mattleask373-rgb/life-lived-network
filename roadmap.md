@@ -250,3 +250,12 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 
 
 - Latest hosted Verify evidence before this status refresh: PR head `29b582952c52cb8768318fccba09488051b9c4d4` passed PR Verify [39335447101](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335447101) and push Verify [39335444665](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335444665); frozen-lockfile install, lint, tests and build all passed. This entry is documentation-only; verify the resulting docs head.
+
+## Australia pilot hierarchy scaffold (2026-10-19; deliberately blocked)
+
+- [x] Added a six-node proposed scaffold (Australia, NSW, Queensland, Byron Bay, Agnes Water, Port Douglas) in `src/lib/staging/australia-skeleton.ts`, using `AU` / `AUD`, proposed parent keys, local timezone candidates, and explicit `publicationStatus: "not_published"`.
+- [x] No coordinates or retrieval/license facts are fabricated: coordinates are null, provenance/license/version/retrievedAt placeholders remain null, source rights are unreviewed, and every hierarchy decision is unapproved.
+- [x] Test proves the candidate rows do **not** pass `normalizeStagedPlaceBatch()` until actual provenance/retrieval/licensing fields exist.
+- [ ] Still required: source-verified administrative parent crosswalk, human-approved hierarchy, actual source-file retrieval/version/checksum and licence review, timezone candidate validation and country-level timezone semantics, then coordinate/reference-system verification. Australia remains NOT LIVE.
+- Branch is PR #175's existing feature branch; hosted Verify must pass on the final scaffold SHA before claiming this slice green.
+
