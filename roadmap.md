@@ -248,6 +248,7 @@ Open decisions: trusted authority for policy/rights approval fields and opportun
 
 ## Enquiry foundation — PR #176 (2026-10-19)
 
+- [ ] Integrate the detailed opportunity-facts panel into the generated service-locality route on PR #173 after the two branch scopes are jointly reviewed. Current PR #176 covers locality cards and service cards/details, not the dedicated `/<country>/<place>/<service>` route.
 - [x] Added a “Request a match” CTA on approved opportunity details and a prefilled request CTA on service detail sheets; it routes into the existing need → `findSupply()` flow and explicitly states it does not directly message the source.
 - [x] Reused the existing authenticated `createNeed` call and added visible loading/error/success states including a link to the saved need's matching results. No new table/schema or connection recipient inference.
 - [x] Added bounded category/title query parsing and tests so the CTA prefill is editable text only, never claims about supply or an employer.
