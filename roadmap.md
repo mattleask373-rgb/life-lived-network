@@ -92,11 +92,11 @@ Blockers unchanged: Ticketmaster key absent; genuine Guildhall details not suppl
 - Site address comes from `VITE_SITE_ORIGIN` when set, otherwise the published
   Lovable address — set it when a custom domain is connected.
 
-### Next SEO slices (not started)
+### Next SEO slices (status reconciled 2026-10-19)
 
-2 service taxonomy + locality landing pages · 3 service + locality pages with the
-indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
-6 enquiry pathway · 7 cross-navigation, analytics, commercial foundation.
+- Slice 3 indexability foundation: in review on `feat/seo-indexability-gate` (not merged). A pure four-state gate now governs metadata on the existing server-rendered locality route. It excludes thin, demonstration-only, stale/cancelled, provenance-free, or policy-blocked pages; only `INDEXABLE` is sitemap-eligible.
+- Still open: the generic service+locality route; actual locality/service sitemap builders wired to the gate; provider/event sitemaps; structured data (slice 5); enquiry/lead pathway (slice 6); cross-navigation and privacy-safe measurement (slice 7).
+- No new locality/service URLs are currently advertised to crawlers, and no production pilot inventory is claimed by this gate-only work.
 
 ## SEO slice 2 — service kinds + locality pages (done)
 
