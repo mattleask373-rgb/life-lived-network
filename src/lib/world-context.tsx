@@ -79,7 +79,12 @@ export function WorldProvider({ children }: { children: ReactNode }) {
     if (saved !== DEFAULT_PLACE_SLUG) setSlug(saved);
   }, []);
 
-  const { data: places, isLoading, isError, refetch } = useQuery({
+  const {
+    data: places,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["places", "index"],
     queryFn: fetchPlaceIndex,
     staleTime: 1000 * 60 * 60,
