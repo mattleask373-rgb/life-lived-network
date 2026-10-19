@@ -44,9 +44,7 @@ describe("how far a need reaches", () => {
 
   it("keeps separate places separate, however big they are", () => {
     const geo = needGeography(INDEX, "birmingham");
-    expect(
-      geographicReach({ serviceAreaPlaceIds: ["herefordshire"] }, geo),
-    ).toBeNull();
+    expect(geographicReach({ serviceAreaPlaceIds: ["herefordshire"] }, geo)).toBeNull();
   });
 
   it("falls back to exactly one place when there is no hierarchy to hand", () => {
