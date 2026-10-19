@@ -1,22 +1,10 @@
 /**
  * Where a need can honestly reach.
  *
- * The world has a hierarchy — country, region, county, city, town, village,
- * neighbourhood — and a need sits at one point in it. This module turns that
- * one point into the two sets the matching rules are allowed to use, and
- * nothing more:
- *
- *   localPlaceIds   the need's place and everywhere inside it. Living here is
- *                   genuinely being here.
- *   serviceScopeIds the need's place, everywhere inside it, and the places it
- *                   sits inside. Someone may state that they cover a whole
- *                   county; that legitimately reaches a town in it.
- *
- * The distinction matters: living in a county is not the same as working in
- * one of its villages, so a person whose only link is a parent place needs a
- * stated service area before they appear.
- *
- * Pure, so the same rules run in tests, on the server and with fixtures.
+ * A person's residence is not service coverage. The engine only treats a
+ * person as geographically relevant to a need when they have explicitly
+ * stated a service area that reaches it. Passing through somewhere is a
+ * separate journey signal and is never treated as working there.
  */
 
 import { ancestorsOf, descendantIdsOf, type PlaceIndex } from "./places";
@@ -43,22 +31,20 @@ export function exactGeography(placeId: string | null): NeedGeography {
 export interface GeographicReach {
   /** How they reach it, in plain words, for the evidence list. */
   reason: string;
-  kind: "lives_here" | "stated_service_area";
+  kind: "stated_service_area";
 }
 
 /**
- * Does this person reach the need's place at all? Passing through somewhere is
- * deliberately excluded — that is a journey, handled separately, and it is
- * never treated as working there.
+ * Does this person reach the need's place at all?
+ *
+ * Residence is deliberately not enough. A person must explicitly state a
+ * service area. Passing through somewhere is a journey, handled separately.
  */
 export function geographicReach(
   person: { placeId: string | null; serviceAreaPlaceIds: string[] },
   geo: NeedGeography,
 ): GeographicReach | null {
   if (!geo.placeId) return null;
-  if (person.placeId && geo.localPlaceIds.includes(person.placeId)) {
-    return { kind: "lives_here", reason: "Lives in this area" };
-  }
   if (person.serviceAreaPlaceIds.some((id) => geo.serviceScopeIds.includes(id))) {
     return {
       kind: "stated_service_area",
