@@ -80,10 +80,11 @@ describe("gated place sitemap candidate builder", () => {
 
   it("excludes invalid canonical place segments", () => {
     const invalidPlace = { ...place, country_code: "AUS" };
-    const paths = buildGatedPlaceSitemapPaths(
-      buildPlaceIndex([invalidPlace]),
-      [service("one"), service("two"), service("three")],
-    );
+    const paths = buildGatedPlaceSitemapPaths(buildPlaceIndex([invalidPlace]), [
+      service("one"),
+      service("two"),
+      service("three"),
+    ]);
     expect(paths).toEqual([]);
   });
 });
