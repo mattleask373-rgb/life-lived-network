@@ -30,6 +30,7 @@ import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as CountryPlaceRouteImport } from './routes/$country.$place'
 import { Route as NeedIndexRouteImport } from './routes/need.index'
 import { Route as NeedIdRouteImport } from './routes/need.$id'
+import { Route as CountryPlaceIndexRouteImport } from './routes/$country.$place.index'
 import { Route as CountryPlaceServiceRouteImport } from './routes/$country.$place.$service'
 import { Route as ApiPublicSitemapPagesDotxmlRouteImport } from './routes/api/public/sitemap-pages[.]xml'
 import { Route as ApiPublicSitemapDotxmlRouteImport } from './routes/api/public/sitemap[.]xml'
@@ -139,6 +140,11 @@ const NeedIdRoute = NeedIdRouteImport.update({
   path: '/need/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CountryPlaceIndexRoute = CountryPlaceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CountryPlaceRoute,
+} as any)
 const CountryPlaceServiceRoute = CountryPlaceServiceRouteImport.update({
   id: '/$service',
   path: '/$service',
@@ -181,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/$country/$place/$service': typeof CountryPlaceServiceRoute
   '/api/public/sitemap-pages.xml': typeof ApiPublicSitemapPagesDotxmlRoute
   '/api/public/sitemap.xml': typeof ApiPublicSitemapDotxmlRoute
+  '/$country/$place/': typeof CountryPlaceIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -201,12 +208,12 @@ export interface FileRoutesByTo {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sources': typeof SourcesRoute
-  '/$country/$place': typeof CountryPlaceRouteWithChildren
   '/need/$id': typeof NeedIdRoute
   '/need': typeof NeedIndexRoute
   '/$country/$place/$service': typeof CountryPlaceServiceRoute
   '/api/public/sitemap-pages.xml': typeof ApiPublicSitemapPagesDotxmlRoute
   '/api/public/sitemap.xml': typeof ApiPublicSitemapDotxmlRoute
+  '/$country/$place': typeof CountryPlaceIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -234,6 +241,7 @@ export interface FileRoutesById {
   '/$country/$place/$service': typeof CountryPlaceServiceRoute
   '/api/public/sitemap-pages.xml': typeof ApiPublicSitemapPagesDotxmlRoute
   '/api/public/sitemap.xml': typeof ApiPublicSitemapDotxmlRoute
+  '/$country/$place/': typeof CountryPlaceIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -262,6 +270,7 @@ export interface FileRouteTypes {
     | '/$country/$place/$service'
     | '/api/public/sitemap-pages.xml'
     | '/api/public/sitemap.xml'
+    | '/$country/$place/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -282,12 +291,12 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sitemap.xml'
     | '/sources'
-    | '/$country/$place'
     | '/need/$id'
     | '/need'
     | '/$country/$place/$service'
     | '/api/public/sitemap-pages.xml'
     | '/api/public/sitemap.xml'
+    | '/$country/$place'
   id:
     | '__root__'
     | '/'
@@ -314,6 +323,7 @@ export interface FileRouteTypes {
     | '/$country/$place/$service'
     | '/api/public/sitemap-pages.xml'
     | '/api/public/sitemap.xml'
+    | '/$country/$place/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -491,6 +501,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NeedIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$country/$place/': {
+      id: '/$country/$place/'
+      path: '/'
+      fullPath: '/$country/$place/'
+      preLoaderRoute: typeof CountryPlaceIndexRouteImport
+      parentRoute: typeof CountryPlaceRoute
+    }
     '/$country/$place/$service': {
       id: '/$country/$place/$service'
       path: '/$service'
@@ -517,10 +534,12 @@ declare module '@tanstack/react-router' {
 
 interface CountryPlaceRouteChildren {
   CountryPlaceServiceRoute: typeof CountryPlaceServiceRoute
+  CountryPlaceIndexRoute: typeof CountryPlaceIndexRoute
 }
 
 const CountryPlaceRouteChildren: CountryPlaceRouteChildren = {
   CountryPlaceServiceRoute: CountryPlaceServiceRoute,
+  CountryPlaceIndexRoute: CountryPlaceIndexRoute,
 }
 
 const CountryPlaceRouteWithChildren = CountryPlaceRoute._addFileChildren(
