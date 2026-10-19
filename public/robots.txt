@@ -16,6 +16,7 @@ Disallow: /partners
 Disallow: /partner-tracker
 Disallow: /earn
 
-# Static fallback and server sitemap index for gated dynamic locality/service URLs.
+# Static /sitemap.xml is a fallback; server sitemaps add gate-approved place URLs.
+# The API index also advertises dynamic locality and service URLs.
 Sitemap: https://life-lived-network.lovable.app/sitemap.xml
 Sitemap: https://life-lived-network.lovable.app/api/public/sitemap.xml
