@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  evaluateIndexability,
-  type IndexabilityInput,
-} from "./seo-indexability";
+import { evaluateIndexability, type IndexabilityInput } from "./seo-indexability";
 
 function eligible(overrides: Partial<IndexabilityInput> = {}): IndexabilityInput {
   return {
@@ -43,9 +40,7 @@ describe("public SEO indexability gate", () => {
   });
 
   it("requires a valid category for service pages", () => {
-    const result = evaluateIndexability(
-      eligible({ pageKind: "service", categoryValid: false }),
-    );
+    const result = evaluateIndexability(eligible({ pageKind: "service", categoryValid: false }));
     expect(result.status).toBe("NOINDEX");
     expect(result.reasons).toContain("invalid_category");
     expect(result.sitemapEligible).toBe(false);
@@ -75,9 +70,7 @@ describe("public SEO indexability gate", () => {
   });
 
   it("labels incomplete pages but still excludes them from sitemaps", () => {
-    expect(
-      evaluateIndexability(eligible({ informationComplete: false })),
-    ).toEqual({
+    expect(evaluateIndexability(eligible({ informationComplete: false }))).toEqual({
       status: "INDEXABLE_WITH_LIMITATIONS",
       reasons: ["incomplete_information"],
       sitemapEligible: false,
