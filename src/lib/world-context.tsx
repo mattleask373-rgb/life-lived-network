@@ -28,6 +28,7 @@ import {
   descendantSlugsOf,
   fetchPlaceIndex,
   placePath,
+  resolvePlaceFromIndex,
   type Place,
   type PlaceIndex,
 } from "./places";
@@ -38,6 +39,12 @@ export interface WorldContextValue {
   /** The geography index, once it has loaded. */
   index: PlaceIndex | null;
   loading: boolean;
+  /** True when the public geography index failed to load. */
+  loadError: boolean;
+  /** True when the index loaded but the selected/configured slug is not present. */
+  defaultUnavailable: boolean;
+  /** Retry the public geography read after a network or server failure. */
+  retryPlaceIndex: () => void;
   /** Where we are looking. Null only while geography is still loading. */
   place: Place | null;
   /** Nearest parent first. */
@@ -72,11 +79,15 @@ export function WorldProvider({ children }: { children: ReactNode }) {
     if (saved !== DEFAULT_PLACE_SLUG) setSlug(saved);
   }, []);
 
-  const { data: places, isLoading } = useQuery({
+  const { data: places, isLoading, isError, refetch } = useQuery({
     queryKey: ["places", "index"],
     queryFn: fetchPlaceIndex,
     staleTime: 1000 * 60 * 60,
   });
+
+  const retryPlaceIndex = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const index = useMemo(() => (places ? buildPlaceIndex(places) : null), [places]);
 
@@ -90,12 +101,15 @@ export function WorldProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<WorldContextValue>(() => {
-    const place =
-      (index && (index.bySlug.get(slug) ?? index.bySlug.get(DEFAULT_PLACE_SLUG))) || null;
+    const place = resolvePlaceFromIndex(index, slug);
+    const defaultUnavailable = Boolean(index && !place);
     if (!index || !place) {
       return {
         index,
         loading: isLoading,
+        loadError: isError,
+        defaultUnavailable,
+        retryPlaceIndex,
         place,
         ancestors: [],
         children: [],
@@ -108,6 +122,9 @@ export function WorldProvider({ children }: { children: ReactNode }) {
     return {
       index,
       loading: isLoading,
+      loadError: isError,
+      defaultUnavailable,
+      retryPlaceIndex,
       place,
       ancestors: ancestorsOf(index, place.id),
       children: childrenOf(index, place.id),
@@ -116,7 +133,7 @@ export function WorldProvider({ children }: { children: ReactNode }) {
       path: placePath(index, place.id),
       setPlaceSlug,
     };
-  }, [index, isLoading, slug, setPlaceSlug]);
+  }, [index, isLoading, isError, slug, setPlaceSlug, retryPlaceIndex]);
 
   return <WorldContext.Provider value={value}>{children}</WorldContext.Provider>;
 }
