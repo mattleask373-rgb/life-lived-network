@@ -231,3 +231,11 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - Both noindex and in PRIVATE_PATHS. No payments, backend, schema or auth changes.
 - [ ] Blocked on approval: storing interest submissions in the database (needs a new table) and a follow-up contact route.
 - [ ] My Places full slice: plan awaiting approval (schema addition, location precision).
+
+
+## Australia pilot place-data pipeline — foundation (2026-10-19)
+
+- A pure staging validator is under review on `feat/place-staging-validation`; it reports hierarchy/data/provenance/rights errors without generating IDs, writing rows or publishing URLs.
+- Official source candidates and outstanding country/parent/timezone decisions are recorded in `docs/launch/AUSTRALIA-STAGING-VALIDATION.md`.
+- Pilot geography is not seeded yet: no source-row coordinate crosswalk or founder-approved hierarchy has been imported. The source review and a disposable-DB diff/rollback proof remain required before any actual staging import.
+- Australia remains **NOT LIVE**; no current jobs, people, events, venues or services are claimed.
