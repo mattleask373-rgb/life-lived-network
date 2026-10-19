@@ -3,6 +3,7 @@ import { asBookingState, BOOKING_LABEL, isService, providerLine } from "@/lib/se
 import { duration, eventDate, layerText, money } from "./layer-colour";
 import { LayerIcon } from "./layer-icon";
 import { TrustChip } from "./trust-chip";
+import { RequestMatchLink } from "./request-match-link";
 
 export function EntryCard({
   entry,
@@ -56,15 +57,32 @@ export function EntryCard({
     </>
   );
 
-  if (!onOpen) return <div className="card-paper p-4 text-left">{body}</div>;
+  const requestMatch = service ? (
+    <RequestMatchLink
+      title={`Help needed: ${entry.title}`}
+      category={entry.serviceCategory || "service"}
+    />
+  ) : null;
+
+  if (!onOpen) {
+    return (
+      <div className="card-paper p-4 text-left">
+        {body}
+        {requestMatch}
+      </div>
+    );
+  }
 
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(entry)}
-      className="card-paper focus-ink w-full p-4 text-left transition-shadow hover:shadow-lift"
-    >
-      {body}
-    </button>
+    <div className="card-paper overflow-hidden">
+      <button
+        type="button"
+        onClick={() => onOpen(entry)}
+        className="focus-ink w-full p-4 text-left transition-shadow hover:shadow-lift"
+      >
+        {body}
+      </button>
+      {requestMatch ? <div className="px-4 pb-4">{requestMatch}</div> : null}
+    </div>
   );
 }
