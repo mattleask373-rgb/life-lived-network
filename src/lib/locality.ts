@@ -66,22 +66,57 @@ export function contributions(entries: WorldEntry[]): WorldEntry[] {
 export interface LocalityQuestion {
   id: "happening" | "here" | "who" | "needed" | "possible";
   question: string;
-  /** How many real answers exist. 0 is a valid, honest answer. */
-  count: number;
+  /**
+   * How many real answers exist. 0 is a valid, honest answer.
+   * null means the count was not checked — never display it as zero.
+   */
+  count: number | null;
   /** What the count is counting, in plain words. */
   unit: string;
   /** Where the answer lives: a section on this page, or another screen. */
   href: string;
 }
 
+/** A needs read. A number is a known count. Anything else is not a zero. */
+export type OpenNeedsAnswer =
+  number | { state: "known"; count: number } | { state: "checking" } | { state: "unavailable" };
+
+function neededQuestion(openNeeds: OpenNeedsAnswer): LocalityQuestion {
+  if (typeof openNeeds === "number") {
+    return {
+      id: "needed",
+      question: "What's needed?",
+      count: openNeeds,
+      unit: "things people have asked for",
+      href: "/need",
+    };
+  }
+  if (openNeeds.state === "known") {
+    return {
+      id: "needed",
+      question: "What's needed?",
+      count: openNeeds.count,
+      unit: "things people have asked for",
+      href: "/need",
+    };
+  }
+  return {
+    id: "needed",
+    question: "What's needed?",
+    count: null,
+    unit: openNeeds.state === "checking" ? "still checking" : "couldn't be checked",
+    href: "/need",
+  };
+}
+
 /**
  * The questions a locality answers, with true counts. A question is never
  * hidden because the answer is zero — a quiet locality is a fact worth saying,
- * and an invitation.
+ * and an invitation. An unchecked needs read stays unknown.
  */
 export function localityQuestions(
   entries: WorldEntry[],
-  openNeeds: number,
+  openNeeds: OpenNeedsAnswer,
   now = Date.now(),
 ): LocalityQuestion[] {
   const services = providerGroups(entries);
@@ -107,13 +142,7 @@ export function localityQuestions(
       unit: "offers of time or skill",
       href: "#who",
     },
-    {
-      id: "needed",
-      question: "What's needed?",
-      count: openNeeds,
-      unit: "things people have asked for",
-      href: "/need",
-    },
+    neededQuestion(openNeeds),
     {
       id: "possible",
       question: "What could happen?",

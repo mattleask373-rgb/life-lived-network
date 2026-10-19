@@ -7,7 +7,7 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
-import { needIdInput } from "./server-inputs";
+import { canonicalizeNeedPlace, createNeedInput, needIdInput } from "./server-inputs";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 import {
@@ -26,6 +26,7 @@ import { rowToEntry, type ListingRow } from "./listings";
 import { findSupply, type PersonCandidate, type SupplyAnswer } from "./supply-engine";
 import { freshness } from "./capability-freshness";
 import { needGeography } from "./geo-scope";
+import { boundedOpenNeedsPlaceScope, exactOpenNeedsCount } from "./open-needs-query";
 import type { JourneyContext, JourneyVisibility, JourneyStatus } from "./journey-context";
 
 export interface NeedDraft {
@@ -54,11 +55,30 @@ export interface NeedDraft {
 
 export const createNeed = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: NeedDraft) => input)
+  .inputValidator((input: NeedDraft) => createNeedInput.parse(input))
   .handler(async ({ data, context }) => {
+    let canonicalPlace = null;
+    if (data.place_id !== null) {
+      const { data: placeRow, error: placeError } = await context.supabase
+        .from("places")
+        .select("id, name, lat, lng, timezone, currency")
+        .eq("id", data.place_id)
+        .maybeSingle();
+      if (placeError) throw placeError;
+      if (!placeRow) throw new Error("Choose a valid locality before posting a need.");
+      canonicalPlace = {
+        id: placeRow.id,
+        name: placeRow.name,
+        lat: placeRow.lat === null ? null : Number(placeRow.lat),
+        lng: placeRow.lng === null ? null : Number(placeRow.lng),
+        timezone: placeRow.timezone,
+        currency: placeRow.currency,
+      };
+    }
+    const safeData = canonicalizeNeedPlace(data, canonicalPlace);
     const { data: row, error } = await context.supabase
       .from("needs")
-      .insert({ ...data, creator_id: context.userId })
+      .insert({ ...safeData, creator_id: context.userId })
       .select("id")
       .single();
     if (error) throw error;
@@ -90,19 +110,41 @@ export const getOpenNeeds = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(50);
     if (data.placeId) {
-      // Asking about a city means asking about everywhere inside it. The
-      // hierarchy is expanded here, behind the boundary, so the browser only
-      // ever says where it is.
+      // Never let an unresolved or oversized locality silently become a global query.
       const { loadPlaceIndex } = await import("./place-index.server");
       const { descendantIdsOf } = await import("./places");
       const index = await loadPlaceIndex(supabase);
-      const inside = descendantIdsOf(index, data.placeId);
-      if (inside.length > 1 && inside.length <= 400) query = query.in("place_id", inside);
-      else if (inside.length <= 1) query = query.eq("place_id", data.placeId);
+      query = query.in(
+        "place_id",
+        boundedOpenNeedsPlaceScope(descendantIdsOf(index, data.placeId)),
+      );
     }
     const { data: rows, error } = await query;
     if (error) throw error;
     return ((rows ?? []) as unknown as NeedRow[]).map(rowToNeed);
+  });
+
+/**
+ * A place-page count must be an exact database count, not the length of the
+ * 50-row list returned by getOpenNeeds. Query metadata avoids loading need
+ * content into the page and distinguishes a true zero from an unavailable read.
+ */
+export const getOpenNeedsCount = createServerFn({ method: "GET" })
+  .inputValidator((input: { placeId: string }) => input)
+  .handler(async ({ data }): Promise<number> => {
+    const { publicServerClient } = await import("./supabase-public.server");
+    const supabase = publicServerClient();
+    const { loadPlaceIndex } = await import("./place-index.server");
+    const { descendantIdsOf } = await import("./places");
+    const index = await loadPlaceIndex(supabase);
+    const placeIds = boundedOpenNeedsPlaceScope(descendantIdsOf(index, data.placeId));
+    const { count, error } = await supabase
+      .from("needs")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "open")
+      .in("place_id", placeIds);
+    if (error) throw error;
+    return exactOpenNeedsCount(count);
   });
 
 /**
