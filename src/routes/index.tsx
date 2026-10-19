@@ -34,7 +34,7 @@ import {
 
 const title = "Real World Atlas — what's actually happening near you";
 const description =
-  "A living map of real work, music, food, nature, community projects and people open to meeting, across the UK and Ireland. Find something, then go and live it.";
+  "A living map of real work, music, food, nature, community projects and local opportunities. Find something, then go and live it.";
 
 export const Route = createFileRoute("/")({
   head: () => publicPage({ path: "/", title, description }),
@@ -85,7 +85,7 @@ function Home() {
   const given = useMemo(() => contributions(all), [all]);
   const needCount = openNeeds?.length ?? 0;
   const questions = useMemo(() => localityQuestions(all, needCount), [all, needCount]);
-  const quiet = !worldLoading && !loading && !worldError && all.length === 0;
+  const quiet = Boolean(place) && !worldLoading && !loading && !worldError && all.length === 0;
 
   return (
     <main className="paper-grain min-h-screen">
@@ -99,9 +99,11 @@ function Home() {
           <p role="status" className="mt-2 text-sm text-muted-foreground">
             {worldLoading || loading
               ? "Checking what's recorded here…"
-              : worldError
-                ? "We couldn't check what's recorded here."
-                : `${all.length === 1 ? "1 thing" : `${all.length} things`} recorded here · ${needCount === 1 ? "1 open need" : `${needCount} open needs`}`}
+              : !place
+                ? "Choose a supported place to see what's recorded here."
+                : worldError
+                  ? "We couldn't check what's recorded here."
+                  : `${all.length} ${all.length === 1 ? "thing" : "things"} recorded here · ${needCount} ${needCount === 1 ? "open need" : "open needs"}`}
           </p>
           <p className="mt-4 max-w-2xl text-base">
             Find real things to do, people who can help, and worthwhile stops along your way — then
@@ -148,7 +150,7 @@ function Home() {
           </Link>
         ) : null}
 
-        <LocalityQuestions questions={questions} placeName={placeName} />
+        {place ? <LocalityQuestions questions={questions} placeName={placeName} /> : null}
 
         {snapshot.length ? (
           <section aria-labelledby="happening-heading" className="card-paper mt-6 p-5">
@@ -187,7 +189,13 @@ function Home() {
               What's around you
             </h2>
             <p role="status" aria-live="polite" className="shrink-0 text-sm text-muted-foreground">
-              {worldLoading ? "Looking…" : `${entries.length} things`}
+              {worldLoading
+                ? "Looking…"
+                : !place
+                  ? "Choose a place"
+                  : worldError
+                    ? "Unavailable"
+                    : `${entries.length} things`}
             </p>
           </div>
           <div className="mt-3">
