@@ -15,6 +15,7 @@ import { createFileRoute, Link, notFound, redirect, useRouter } from "@tanstack/
 import { useMemo, useState } from "react";
 
 import { EntrySheet } from "@/components/entry-sheet";
+import { EmptyPlace } from "@/components/data-state";
 import { LocalityQuestions } from "@/components/locality-questions";
 import { WhatsHappening } from "@/components/whats-happening";
 import { WhatsHere } from "@/components/whats-here";
@@ -26,6 +27,11 @@ import { KIND_LABEL } from "@/lib/places";
 import { privatePage, publicPage } from "@/lib/seo";
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import { filterEntriesByText, parseQuerySearch } from "@/lib/search-context";
+import {
+  applyTravellerFilters,
+  TRAVELLER_FILTERS,
+  type TravellerFilterId,
+} from "@/lib/traveller-filters";
 import type { WorldEntry } from "@/lib/world-data";
 
 export function localityPath(place: Pick<PlaceBrief, "slug" | "countrySegment">): string {
@@ -173,10 +179,15 @@ function LocalityPage() {
   const { has, toggle } = useLifeList();
   const { q } = Route.useSearch();
   const textMatches = useMemo(() => filterEntriesByText(entries, q), [entries, q]);
+  const [quickFilters, setQuickFilters] = useState<TravellerFilterId[]>([]);
 
-  const events = useMemo(() => upcomingEvents(entries), [entries]);
-  const groups = useMemo(() => providerGroups(entries), [entries]);
-  const offers = useMemo(() => contributions(entries), [entries]);
+  const filtered = useMemo(
+    () => applyTravellerFilters(entries, quickFilters),
+    [entries, quickFilters],
+  );
+  const events = useMemo(() => upcomingEvents(filtered), [filtered]);
+  const groups = useMemo(() => providerGroups(filtered), [filtered]);
+  const offers = useMemo(() => contributions(filtered), [filtered]);
   const categories = useMemo(() => categoriesPresent(entries), [entries]);
   const questions = useMemo(() => localityQuestions(entries, 0), [entries]);
   const demonstrations = entries.filter((entry) => entry.demonstration).length;
