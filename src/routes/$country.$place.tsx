@@ -11,7 +11,14 @@
  * locality with nothing in it is not offered to search engines.
  */
 
-import { createFileRoute, Link, notFound, redirect, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  notFound,
+  redirect,
+  useNavigate,
+  useRouter,
+} from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import { EntrySheet } from "@/components/entry-sheet";
@@ -173,6 +180,7 @@ function PlaceLinks({ title, places }: { title: string; places: PlaceBrief[] }) 
 }
 
 function LocalityPage() {
+  const navigate = useNavigate();
   const { geography, entries } = Route.useLoaderData();
   const { place, ancestors, children, siblings } = geography;
   const [open, setOpen] = useState<WorldEntry | null>(null);
