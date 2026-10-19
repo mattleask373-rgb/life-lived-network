@@ -1,13 +1,14 @@
-import { hasPublicWorkOpportunity, workOpportunityFacts } from "@/lib/work-opportunity-presentation";
+import {
+  hasPublicWorkOpportunity,
+  workOpportunityFacts,
+} from "@/lib/work-opportunity-presentation";
 import type { WorldEntry } from "@/lib/world-data";
 
 function safeHttpUrl(value: string | undefined): string | null {
   if (!value) return null;
   try {
     const parsed = new URL(value);
-    return parsed.protocol === "http:" || parsed.protocol === "https:"
-      ? parsed.toString()
-      : null;
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.toString() : null;
   } catch {
     return null;
   }
