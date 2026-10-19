@@ -47,9 +47,7 @@ export function normaliseConfiguredPlaceSlug(value: unknown): string | null {
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? slug : null;
 }
 
-export const CONFIGURED_DEFAULT_PLACE_SLUG = normaliseConfiguredPlaceSlug(
-  import.meta.env.VITE_DEFAULT_PLACE_SLUG,
-);
+export const CONFIGURED_DEFAULT_PLACE_SLUG = normaliseConfiguredPlaceSlug(import.meta.env.VITE_DEFAULT_PLACE_SLUG);
 
 /** Configurable per deployment; UK/Ireland remains the backwards-compatible default. */
 export const DEFAULT_PLACE_SLUG =
