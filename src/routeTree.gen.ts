@@ -24,6 +24,8 @@ import { Route as PartnerTrackerRouteImport } from './routes/partner-tracker'
 import { Route as PartnersRouteImport } from './routes/partners'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RoadTripRouteImport } from './routes/road-trip'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as CountryPlaceRouteImport } from './routes/$country.$place'
 import { Route as CountryPlaceServiceRouteImport } from './routes/$country.$place.$service'
@@ -107,6 +109,16 @@ const RoadTripRoute = RoadTripRouteImport.update({
   path: '/road-trip',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SourcesRoute = SourcesRouteImport.update({
   id: '/sources',
   path: '/sources',
@@ -160,6 +172,8 @@ export interface FileRoutesByFullPath {
   '/partners': typeof PartnersRoute
   '/profile': typeof ProfileRoute
   '/road-trip': typeof RoadTripRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sources': typeof SourcesRoute
   '/$country/$place': typeof CountryPlaceRoute
   '/$country/$place/$service': typeof CountryPlaceServiceRoute
@@ -184,6 +198,8 @@ export interface FileRoutesByTo {
   '/partners': typeof PartnersRoute
   '/profile': typeof ProfileRoute
   '/road-trip': typeof RoadTripRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sources': typeof SourcesRoute
   '/$country/$place': typeof CountryPlaceRoute
   '/$country/$place/$service': typeof CountryPlaceServiceRoute
@@ -209,6 +225,8 @@ export interface FileRoutesById {
   '/partners': typeof PartnersRoute
   '/profile': typeof ProfileRoute
   '/road-trip': typeof RoadTripRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sources': typeof SourcesRoute
   '/$country/$place': typeof CountryPlaceRoute
   '/$country/$place/$service': typeof CountryPlaceServiceRoute
@@ -235,6 +253,8 @@ export interface FileRouteTypes {
     | '/partners'
     | '/profile'
     | '/road-trip'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/sources'
     | '/$country/$place'
     | '/$country/$place/$service'
@@ -259,6 +279,8 @@ export interface FileRouteTypes {
     | '/partners'
     | '/profile'
     | '/road-trip'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/sources'
     | '/$country/$place'
     | '/$country/$place/$service'
@@ -283,6 +305,8 @@ export interface FileRouteTypes {
     | '/partners'
     | '/profile'
     | '/road-trip'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/sources'
     | '/$country/$place'
     | '/$country/$place/$service'
@@ -308,6 +332,8 @@ export interface RootRouteChildren {
   PartnersRoute: typeof PartnersRoute
   ProfileRoute: typeof ProfileRoute
   RoadTripRoute: typeof RoadTripRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SourcesRoute: typeof SourcesRoute
   CountryPlaceRoute: typeof CountryPlaceRoute
   CountryPlaceServiceRoute: typeof CountryPlaceServiceRoute
@@ -424,6 +450,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoadTripRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sources': {
       id: '/sources'
       path: '/sources'
@@ -492,6 +532,8 @@ const rootRouteChildren: RootRouteChildren = {
   PartnersRoute: PartnersRoute,
   ProfileRoute: ProfileRoute,
   RoadTripRoute: RoadTripRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SourcesRoute: SourcesRoute,
   CountryPlaceRoute: CountryPlaceRoute,
   CountryPlaceServiceRoute: CountryPlaceServiceRoute,
