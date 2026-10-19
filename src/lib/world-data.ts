@@ -1,5 +1,3 @@
-import type { WorkOpportunity } from "./work-opportunities";
-
 /**
  * The domain vocabulary of Real World Atlas.
  *
@@ -11,6 +9,8 @@ import type { WorkOpportunity } from "./work-opportunities";
  * No AI-generated imagery is used. Photographs are optional and must preserve
  * their real source and credit; otherwise the UI keeps a neutral placeholder.
  */
+
+import type { WorkOpportunity } from "./work-opportunities";
 
 export type LayerId =
   "work" | "experience" | "music" | "art" | "community" | "people" | "nature" | "food";
