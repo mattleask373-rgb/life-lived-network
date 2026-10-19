@@ -14,6 +14,7 @@ import {
 import { duration, eventDate, layerText, money } from "./layer-colour";
 import { LayerIcon } from "./layer-icon";
 import { WorkOpportunityFacts } from "./work-opportunity-facts";
+import { RequestMatchLink } from "./request-match-link";
 
 export function EntrySheet({
   entry,
@@ -181,12 +182,11 @@ export function EntrySheet({
                     {step.label}
                   </a>
                 ) : step.kind === "enquire" ? (
-                  <Link
-                    to="/need"
-                    className="focus-ink inline-flex rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground"
-                  >
-                    {step.label}
-                  </Link>
+                  <RequestMatchLink
+                    title={entry.title}
+                    category={entry.serviceCategory || "service"}
+                    label={step.label}
+                  />
                 ) : (
                   <span className="inline-flex rounded-full border border-border px-4 py-2 text-sm text-muted-foreground">
                     {step.label}

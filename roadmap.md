@@ -245,3 +245,11 @@ Canonical base for this slice: `f2de6d8d76bdabbd98639f4bf4837573c96587cc`. Chang
 - [ ] Stage Byron Bay, Agnes Water, and Port Douglas plus required parents as `not_published` only after hierarchy/timezone/currency/provenance fields are defined by a reviewed staging contract. No real listing/coordinates are inferred.
 
 Open decisions: trusted authority for policy/rights approval fields and opportunity persistence; market-specific compensation/legal review; locality hierarchy and timezone interpretation; source licensing. Live sitemap responses, browser/mobile behavior, deployed SEO, database authority, and production write paths have not been verified in this session.
+
+## Enquiry foundation — PR #176 (2026-10-19)
+
+- [x] Added a “Request a match” CTA on approved opportunity details and a prefilled request CTA on service detail sheets; it routes into the existing need → `findSupply()` flow and explicitly states it does not directly message the source.
+- [x] Reused the existing authenticated `createNeed` call and added visible loading/error/success states including a link to the saved need's matching results. No new table/schema or connection recipient inference.
+- [x] Added bounded category/title query parsing and tests so the CTA prefill is editable text only, never claims about supply or an employer.
+- [ ] Verify the final PR #176 head in hosted CI, then review conversion wording and accessibility before merge. User-authored needs and `findSupply()` remain the sole matching path.
+

@@ -65,3 +65,11 @@ Canonical repository: `mattleask373-rgb/life-lived-network`. Current `main` base
 - **Not established:** local shell/browser verification, live sitemap HTTP behavior, live inventory suitability, disposable database proof, legal review, or deployed production behavior. Supabase Preview is skipped when a PR has no associated Supabase branch.
 
 Human decisions remain required for review/merge/deployment, real source-rights and jurisdiction approval, trusted authorship/storage of opportunity review facts, and Australia hierarchy/timezone/provenance semantics.
+
+## 2026-10-19 — enquiry foundation on PR #176 (no direct source contact)
+
+- Added a minimal `RequestMatchLink` on the reviewed work-opportunity surface and service detail sheet. It pre-fills the existing `/need` form with bounded title/category text and makes clear that this creates a user-authored need for the canonical local matching flow; it does not message or identify the listed host.
+- Extended the need route's search parser for safe bounded category prefill and added helper tests.
+- Added visible save/error/loading states to the existing need form: pending button, `role=alert` failure, saved `role=status` with a link to the newly-created need/matching page. The existing authenticated `createNeed` persistence path is reused; no new schema/API was added.
+- Must verify the new head in hosted CI before claiming this slice green. Existing `findSupplyForNeed` remains responsible for discovery; no direct lookup or recipient inference is performed.
+

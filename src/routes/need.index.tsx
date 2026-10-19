@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { parseQuerySearch } from "@/lib/search-context";
+import { parseNeedSearch } from "@/lib/need-prefill";
 
 import { useSession } from "@/hooks/use-session";
 import { createNeed, getMyNeeds, getOpenNeeds } from "@/lib/needs.functions";
@@ -18,13 +18,13 @@ const description =
 
 export const Route = createFileRoute("/need/")({
   head: () => privatePage({ path: "", title, description }),
-  validateSearch: parseQuerySearch,
+  validateSearch: parseNeedSearch,
   component: NeedPage,
 });
 
 function NeedPage() {
   const { user, ready } = useSession();
-  const { from } = Route.useSearch();
+  const { from, category } = Route.useSearch();
   const typed = from ?? "";
   const qc = useQueryClient();
   const openNeeds = useServerFn(getOpenNeeds);
@@ -58,6 +58,7 @@ function NeedPage() {
 
         {ready && user ? (
           <NeedForm
+            categorySeed={category ?? ""}
             placeId={place?.place.id ?? null}
             placeName={place?.place.name ?? ""}
             timezone={place?.place.timezone ?? "UTC"}
@@ -135,6 +136,7 @@ function NeedList({ heading, needs, empty }: { heading: string; needs: Need[]; e
 }
 
 function NeedForm({
+  categorySeed,
   placeId,
   placeName,
   timezone,
@@ -144,6 +146,7 @@ function NeedForm({
   typed,
   onDone,
 }: {
+  categorySeed: string;
   placeId: string | null;
   placeName: string;
   timezone: string;
@@ -154,7 +157,7 @@ function NeedForm({
   onDone: () => void;
 }) {
   const submit = useServerFn(createNeed);
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(categorySeed);
   const [needTitle, setNeedTitle] = useState(typed);
   const [description, setDescription] = useState("");
   const [intent, setIntent] = useState("paid_work");
@@ -165,6 +168,7 @@ function NeedForm({
   const [urgency, setUrgency] = useState("soon");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [savedNeedId, setSavedNeedId] = useState<string | null>(null);
 
   const paymentType =
     intent === "skills_exchange"
@@ -175,6 +179,7 @@ function NeedForm({
 
   async function save() {
     setError(null);
+    setSavedNeedId(null);
     if (!category.trim() || !needTitle.trim()) {
       setError("A word for what it is, and a line about what you need.");
       return;
@@ -182,7 +187,7 @@ function NeedForm({
     setBusy(true);
     try {
       const startsAt = when ? new Date(when).toISOString() : null;
-      await submit({
+      const saved = await submit({
         data: {
           category: category.trim().toLowerCase(),
           title: needTitle.trim(),
@@ -210,6 +215,7 @@ function NeedForm({
           visibility: "local_discovery",
         },
       });
+      setSavedNeedId(saved.id);
       setCategory("");
       setNeedTitle("");
       setDescription("");
@@ -242,7 +248,10 @@ function NeedForm({
           What kind of thing is it?
           <input
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              setSavedNeedId(null);
+            }}
             placeholder="gardening, cleaning, translation, carrying things"
             className="focus-ink rounded-md border border-border bg-background px-3 py-2"
           />
@@ -258,7 +267,10 @@ function NeedForm({
           ) : null}
           <input
             value={needTitle}
-            onChange={(e) => setNeedTitle(e.target.value)}
+            onChange={(e) => {
+              setNeedTitle(e.target.value);
+              setSavedNeedId(null);
+            }}
             placeholder="Gardener for an overgrown back garden"
             className="focus-ink rounded-md border border-border bg-background px-3 py-2"
           />
@@ -369,7 +381,26 @@ function NeedForm({
           </label>
         </div>
 
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        {error ? (
+          <p className="text-sm text-destructive" role="alert">
+            {error}
+          </p>
+        ) : null}
+        {savedNeedId ? (
+          <div className="rounded-lg border border-border bg-background p-3 text-sm" role="status">
+            <p className="font-medium">Your request has been saved.</p>
+            <p className="mt-1 text-muted-foreground">
+              It will use the existing local matching flow; it has not messaged a listed source directly.
+            </p>
+            <Link
+              to="/need/$id"
+              params={{ id: savedNeedId }}
+              className="focus-ink mt-2 inline-flex min-h-11 items-center underline underline-offset-4"
+            >
+              See who could help
+            </Link>
+          </div>
+        ) : null}
 
         <div>
           <button
