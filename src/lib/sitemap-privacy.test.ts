@@ -66,7 +66,9 @@ describe("public sitemap privacy", () => {
 
   it("static public/sitemap.xml lists exactly the fixed public screens", () => {
     const sitemap = readFileSync(new URL("../../public/sitemap.xml", import.meta.url), "utf8");
-    expect(locs(sitemap).sort()).toEqual(PUBLIC_PATHS.map((path) => `${SITE_ORIGIN}${path}`).sort());
+    expect(locs(sitemap).sort()).toEqual(
+      PUBLIC_PATHS.map((path) => `${SITE_ORIGIN}${path}`).sort(),
+    );
     for (const path of PRIVATE_PATHS) expect(locs(sitemap)).not.toContain(`${SITE_ORIGIN}${path}`);
   });
 
