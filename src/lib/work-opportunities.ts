@@ -27,7 +27,7 @@ const compensationSchema = z.discriminatedUnion("status", [
   z.object({
     status: z.literal("stated_paid"),
     /** Integer minor units; no floating-point monetary values. */
-    amountCents: z.number().int().positive().safe(),
+    amountCents: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
     /** ISO 4217-style code; market-specific allow-list validation stays upstream. */
     currency: z.string().regex(/^[A-Z]{3}$/),
     basis: z.enum(["hour", "shift", "day", "week", "project"]),
