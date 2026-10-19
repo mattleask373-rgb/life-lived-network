@@ -103,8 +103,8 @@ function ServiceNotFound() {
       <div className="mx-auto max-w-md px-4 pt-16 pb-20 text-center sm:px-6">
         <h1 className="text-2xl">We don't have this page on record</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          The address may be mistyped, or the place or service hasn't been added to Real World
-          Atlas yet.
+          The address may be mistyped, or the place or service hasn't been added to Real World Atlas
+          yet.
         </p>
         <Link
           to="/"
@@ -221,7 +221,9 @@ function ServicePage() {
                   to="/$country/$place/$service"
                   className="focus-ink flex min-h-11 flex-col rounded-lg border border-border bg-background px-4 py-3 text-sm hover:bg-card"
                 >
-                  <span className="font-medium">{category.label} in {ancestors[0].name}</span>
+                  <span className="font-medium">
+                    {category.label} in {ancestors[0].name}
+                  </span>
                   <span className="text-muted-foreground">Look one step wider</span>
                 </Link>
               </li>

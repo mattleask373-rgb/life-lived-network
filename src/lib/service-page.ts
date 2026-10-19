@@ -86,10 +86,7 @@ export interface ServicePageCopy {
  * the category, and how many genuine records exist. A quiet page describes
  * itself as quiet rather than implying supply.
  */
-export function servicePageCopy(
-  placeName: string,
-  listings: ServicePageListings,
-): ServicePageCopy {
+export function servicePageCopy(placeName: string, listings: ServicePageListings): ServicePageCopy {
   const { category, real } = listings;
   const title = `${category.label} in ${placeName} | Real World Atlas`;
   const description = real.length
