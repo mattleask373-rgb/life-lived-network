@@ -43,9 +43,7 @@ function statedPay(compensation: WorkOpportunity["compensation"]): string {
 }
 
 /** Formatted facts only; absent or uncertain fields are never inferred. */
-export function workOpportunityFacts(
-  opportunity: WorkOpportunity,
-): WorkOpportunityFact[] {
+export function workOpportunityFacts(opportunity: WorkOpportunity): WorkOpportunityFact[] {
   return [
     { label: "Arrangement", value: ARRANGEMENT_LABEL[opportunity.arrangement] },
     { label: "Engagement", value: ENGAGEMENT_LABEL[opportunity.engagementKind] },
@@ -114,15 +112,12 @@ export function publicWorkOpportunityEntries(entries: WorldEntry[]): WorldEntry[
  * "Today" is a date-coverage check, not an availability inference. Records without
  * both endpoints stay out because an unknown start/end cannot establish the span.
  */
-export function workOpportunityCoversDate(
-  opportunity: WorkOpportunity,
-  date: string,
-): boolean {
+export function workOpportunityCoversDate(opportunity: WorkOpportunity, date: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
   return Boolean(
     opportunity.startDate &&
-      opportunity.endDate &&
-      opportunity.startDate <= date &&
-      opportunity.endDate >= date,
+    opportunity.endDate &&
+    opportunity.startDate <= date &&
+    opportunity.endDate >= date,
   );
 }
