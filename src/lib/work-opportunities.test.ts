@@ -95,16 +95,8 @@ describe("work opportunity contract", () => {
   });
 
   it("requires human market-policy review and rights clearance before publication", () => {
-    expect(() =>
-      parseWorkOpportunity(
-        opportunity({ policyReviewStatus: "review_required" }),
-      ),
-    ).toThrow();
-    expect(() =>
-      parseWorkOpportunity(
-        opportunity({ rightsStatus: "unreviewed" }),
-      ),
-    ).toThrow();
+    expect(() => parseWorkOpportunity(opportunity({ policyReviewStatus: "review_required" }))).toThrow();
+    expect(() => parseWorkOpportunity(opportunity({ rightsStatus: "unreviewed" }))).toThrow();
     expect(
       isPublishableWorkOpportunity(
         opportunity({
@@ -125,19 +117,11 @@ describe("work opportunity contract", () => {
         }),
       ),
     ).toThrow();
-    expect(() =>
-      parseWorkOpportunity(
-        opportunity({ startDate: "2026-02-30" }),
-      ),
-    ).toThrow();
+    expect(() => parseWorkOpportunity(opportunity({ startDate: "2026-02-30" }))).toThrow();
   });
 
   it("requires a jurisdiction code and a currency-code shape", () => {
-    expect(() =>
-      parseWorkOpportunity(
-        opportunity({ jurisdictionCountryCode: "AUS" }),
-      ),
-    ).toThrow();
+    expect(() => parseWorkOpportunity(opportunity({ jurisdictionCountryCode: "AUS" }))).toThrow();
     expect(() =>
       parseWorkOpportunity(
         opportunity({
@@ -153,11 +137,7 @@ describe("work opportunity contract", () => {
   });
 
   it("rejects unknown fields instead of silently accepting schema drift", () => {
-    expect(() =>
-      parseWorkOpportunity(
-        opportunity({ assumedAvailability: true }),
-      ),
-    ).toThrow();
+    expect(() => parseWorkOpportunity(opportunity({ assumedAvailability: true }))).toThrow();
   });
 
   it("only surfaces reviewed and rights-cleared published records", () => {
