@@ -32,7 +32,7 @@ import {
 } from "@/lib/service-page";
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import type { WorldEntry } from "@/lib/world-data";
-import { localityPath } from "./$country.$place";
+import { localityPath } from "@/lib/locality-path";
 
 export const Route = createFileRoute("/$country/$place/$service")({
   loader: async ({ params }) => {
