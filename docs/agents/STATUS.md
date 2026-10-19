@@ -52,3 +52,14 @@ No autonomous production merge/deploy is active.
 2. Reconcile #62's lifecycle model with the durable SQL status contract and authenticated fencing boundaries before any integration.
 3. Reconcile #43 into #49's canonical ingest boundary; preserve useful fixture/normalization/freshness/provenance evidence while retiring the parallel architecture.
 4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
+
+
+## SEO slice 3 foundation — 2026-10-19
+
+- Canonical repository: `mattleask373-rgb/life-lived-network`. Verified `main` baseline at `0c56cc299825dea5996323506e7a1cc9266975c8`; work is isolated on `feat/seo-indexability-gate`.
+- Added a pure indexability decision contract with `INDEXABLE`, `INDEXABLE_WITH_LIMITATIONS`, `NOINDEX`, and `NOT_PUBLISHED`, stable reason codes, and an explicit rule that only `INDEXABLE` pages are sitemap-eligible.
+- Wired the existing server-rendered locality route metadata through the gate. The gate fails closed for invalid place data, thin or absent real records, demonstration-only content, known stale/cancelled records, missing provenance, missing links, or blocked policy. Locality pages remain `noindex` unless all required evidence passes.
+- Added unit coverage for each status, hard blockers, service-category requirements, the three-record default threshold, and the sitemap eligibility boundary.
+- **Scope limit:** this is the gate foundation, not all of SEO slice 3. The generic service+locality route, gate-backed locality/service sitemaps, provider/event sitemaps, structured data, enquiry pathway, and live SEO verification remain open. No locality/service URLs were added to sitemaps.
+- **Verification honesty:** this connector session has no local checkout/shell, so local `tsgo`, lint, Vitest, and build commands were not run here. Hosted Verify must pass on the final PR head; no result is claimed before GitHub reports it.
+- **Human gates:** review the exact PR head; confirm any eventual pilot page has current rights-cleared real inventory and sufficient locality facts before allowing indexing. No production writes, grants, schema changes, merges, or deployments were made.
