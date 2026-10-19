@@ -1,4 +1,6 @@
 # Phase 5 Engineering Plan
+**Last verified:** 2026-10-19 09:34 Europe/London (GitHub repository, PR and ruleset metadata rechecked; no live runtime or production test).  
+**Verified main HEAD:** `5f06fc336a748cf37c6a06ac272bee4a387bd745`  
 **Living World / Real World Atlas**  
 **Date:** 2026-10-19  
 **Base:** `main` @ `5f06fc336a748cf37c6a06ac272bee4a387bd745`  
@@ -50,12 +52,27 @@ Reach a defensible, security-tested **limited beta** for already-supported local
 
 ### E. Anti-spam / Abuse Protection (P2)
 **Owner:** TBD  
-**Status:** Audit + proposal  
-**Acceptance criteria:**
-- Enforceable limits on messages, requests, reports
-- Identity-aware controls where appropriate
-- Sensitive data kept out of logs
+**Status:** Proposal only; no rate limiter deployed or verified  
+**Goal:** Reduce scripted spam during a limited beta without blocking legitimate help-seeking or exposing private information.
 
+**Practical MVP design**
+- Enforce limits server-side at the TanStack server-function boundary; never trust disabled buttons, client counters, or client-supplied identity as enforcement.
+- Use an atomic Postgres-backed per-action / time-bucket counter (or an existing approved edge rate limiter if already configured). Any new counter table must deny direct client access through RLS and expose only the minimal server-side operation needed to increment/check a bucket.
+- Proposed starting thresholds for pilot tuning (not current behavior): need creation 3/hour and 10/day per account; new connection requests 5/hour and 15/day per account, with duplicate-request protection per recipient; messages 10/minute and 60/hour per account, plus a per-conversation burst guard; reports 10/hour per account with idempotency for repeated reports against the same target. Keep safety reporting available and review any throttling that could suppress urgent legitimate reports.
+- Return HTTP 429 with a useful retry message and a bounded Retry-After value. Apply progressive cooldowns to repeated abuse; do not automatically impose permanent account bans based only on a counter.
+- For signed-out endpoints, use hosting/WAF controls if available plus a privacy-conscious pseudonymous network key. Do not persist raw IP addresses indefinitely; verify current platform capabilities before relying on edge protection.
+- Cap payload sizes, validate schemas, reject duplicate submissions idempotently, and rate-limit before expensive database or external-provider work.
+- Observe counts, rejections and latency without logging message bodies, secrets, access tokens, or raw private content. Define a short retention window and access controls for operational counters.
+
+**Implementation sequence**
+1. Inventory each public/server mutation path (create need, request connection, send message, report, login-related endpoints) and its auth requirements.
+2. Confirm existing hosting/WAF protections from configuration rather than assumption.
+3. Select the enforcement store and implement one atomic server-side helper with action-specific policy configuration.
+4. Add tests for unauthenticated bursts, per-user buckets, duplicate calls, concurrent requests, 429/retry behavior, and legitimate users crossing locality or conversation boundaries.
+5. Add minimal metrics and a documented operator response to bursts.
+6. Review privacy, table grants/RLS, migration rollback and abuse-report escape hatches before any deployment.
+
+**Acceptance criteria:** limits are enforced server-side under concurrency, signed-in identity is derived from the authenticated session, counters are inaccessible to ordinary clients, tests prove rejection and cooldown behavior, logs avoid private payloads, and the deployed provider configuration is verified separately. No code, schema, WAF or production changes are made by this proposal.
 ### F. Authentication & Private Routes (P1)
 **Owner:** TBD  
 **Status:** Source-level tests exist (#156); full two-account matrix still open (#132)  
