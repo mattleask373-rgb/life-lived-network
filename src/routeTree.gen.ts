@@ -30,6 +30,7 @@ import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as CountryPlaceRouteImport } from './routes/$country.$place'
 import { Route as NeedIndexRouteImport } from './routes/need.index'
 import { Route as NeedIdRouteImport } from './routes/need.$id'
+import { Route as CountryPlaceServiceRouteImport } from './routes/$country.$place.$service'
 import { Route as ApiPublicSitemapPagesDotxmlRouteImport } from './routes/api/public/sitemap-pages[.]xml'
 import { Route as ApiPublicSitemapDotxmlRouteImport } from './routes/api/public/sitemap[.]xml'
 
@@ -138,6 +139,11 @@ const NeedIdRoute = NeedIdRouteImport.update({
   path: '/need/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CountryPlaceServiceRoute = CountryPlaceServiceRouteImport.update({
+  id: '/$service',
+  path: '/$service',
+  getParentRoute: () => CountryPlaceRoute,
+} as any)
 const ApiPublicSitemapPagesDotxmlRoute =
   ApiPublicSitemapPagesDotxmlRouteImport.update({
     id: '/api/public/sitemap-pages.xml',
@@ -169,9 +175,10 @@ export interface FileRoutesByFullPath {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sources': typeof SourcesRoute
-  '/$country/$place': typeof CountryPlaceRoute
+  '/$country/$place': typeof CountryPlaceRouteWithChildren
   '/need/$id': typeof NeedIdRoute
   '/need/': typeof NeedIndexRoute
+  '/$country/$place/$service': typeof CountryPlaceServiceRoute
   '/api/public/sitemap-pages.xml': typeof ApiPublicSitemapPagesDotxmlRoute
   '/api/public/sitemap.xml': typeof ApiPublicSitemapDotxmlRoute
 }
@@ -194,9 +201,10 @@ export interface FileRoutesByTo {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sources': typeof SourcesRoute
-  '/$country/$place': typeof CountryPlaceRoute
+  '/$country/$place': typeof CountryPlaceRouteWithChildren
   '/need/$id': typeof NeedIdRoute
   '/need': typeof NeedIndexRoute
+  '/$country/$place/$service': typeof CountryPlaceServiceRoute
   '/api/public/sitemap-pages.xml': typeof ApiPublicSitemapPagesDotxmlRoute
   '/api/public/sitemap.xml': typeof ApiPublicSitemapDotxmlRoute
 }
@@ -220,9 +228,10 @@ export interface FileRoutesById {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sources': typeof SourcesRoute
-  '/$country/$place': typeof CountryPlaceRoute
+  '/$country/$place': typeof CountryPlaceRouteWithChildren
   '/need/$id': typeof NeedIdRoute
   '/need/': typeof NeedIndexRoute
+  '/$country/$place/$service': typeof CountryPlaceServiceRoute
   '/api/public/sitemap-pages.xml': typeof ApiPublicSitemapPagesDotxmlRoute
   '/api/public/sitemap.xml': typeof ApiPublicSitemapDotxmlRoute
 }
@@ -250,6 +259,7 @@ export interface FileRouteTypes {
     | '/$country/$place'
     | '/need/$id'
     | '/need/'
+    | '/$country/$place/$service'
     | '/api/public/sitemap-pages.xml'
     | '/api/public/sitemap.xml'
   fileRoutesByTo: FileRoutesByTo
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/$country/$place'
     | '/need/$id'
     | '/need'
+    | '/$country/$place/$service'
     | '/api/public/sitemap-pages.xml'
     | '/api/public/sitemap.xml'
   id:
@@ -300,6 +311,7 @@ export interface FileRouteTypes {
     | '/$country/$place'
     | '/need/$id'
     | '/need/'
+    | '/$country/$place/$service'
     | '/api/public/sitemap-pages.xml'
     | '/api/public/sitemap.xml'
   fileRoutesById: FileRoutesById
@@ -323,7 +335,7 @@ export interface RootRouteChildren {
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SourcesRoute: typeof SourcesRoute
-  CountryPlaceRoute: typeof CountryPlaceRoute
+  CountryPlaceRoute: typeof CountryPlaceRouteWithChildren
   NeedIdRoute: typeof NeedIdRoute
   NeedIndexRoute: typeof NeedIndexRoute
   ApiPublicSitemapPagesDotxmlRoute: typeof ApiPublicSitemapPagesDotxmlRoute
@@ -479,6 +491,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NeedIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$country/$place/$service': {
+      id: '/$country/$place/$service'
+      path: '/$service'
+      fullPath: '/$country/$place/$service'
+      preLoaderRoute: typeof CountryPlaceServiceRouteImport
+      parentRoute: typeof CountryPlaceRoute
+    }
     '/api/public/sitemap-pages.xml': {
       id: '/api/public/sitemap-pages.xml'
       path: '/api/public/sitemap-pages.xml'
@@ -495,6 +514,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface CountryPlaceRouteChildren {
+  CountryPlaceServiceRoute: typeof CountryPlaceServiceRoute
+}
+
+const CountryPlaceRouteChildren: CountryPlaceRouteChildren = {
+  CountryPlaceServiceRoute: CountryPlaceServiceRoute,
+}
+
+const CountryPlaceRouteWithChildren = CountryPlaceRoute._addFileChildren(
+  CountryPlaceRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -515,7 +546,7 @@ const rootRouteChildren: RootRouteChildren = {
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SourcesRoute: SourcesRoute,
-  CountryPlaceRoute: CountryPlaceRoute,
+  CountryPlaceRoute: CountryPlaceRouteWithChildren,
   NeedIdRoute: NeedIdRoute,
   NeedIndexRoute: NeedIndexRoute,
   ApiPublicSitemapPagesDotxmlRoute: ApiPublicSitemapPagesDotxmlRoute,

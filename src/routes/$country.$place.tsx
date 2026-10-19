@@ -343,13 +343,23 @@ function LocalityPage() {
           </p>
           <ul className="mt-3 flex flex-wrap gap-2">
             {categories.map(({ category, entries: list, demonstrationOnly }) => (
-              <li className="card-paper px-3 py-2 text-sm" key={category.slug}>
-                <span>{category.label}</span>
-                <span className="text-muted-foreground">
-                  {" · "}
-                  {list.length}
-                  {demonstrationOnly ? " (trial data)" : ""}
-                </span>
+              <li key={category.slug}>
+                <Link
+                  params={{
+                    country: place.countrySegment || "gb",
+                    place: place.slug,
+                    service: category.slug,
+                  }}
+                  to="/$country/$place/$service"
+                  className="card-paper focus-ink block px-3 py-2 text-sm transition-shadow hover:shadow-lift"
+                >
+                  <span>{category.label}</span>
+                  <span className="text-muted-foreground">
+                    {" · "}
+                    {list.length}
+                    {demonstrationOnly ? " (trial data)" : ""}
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>
