@@ -91,11 +91,7 @@ describe("service + locality route evidence", () => {
   });
 
   it("allows only sufficiently evidenced, current service records to pass", () => {
-    const entries = [
-      service({ id: "one" }),
-      service({ id: "two" }),
-      service({ id: "three" }),
-    ];
+    const entries = [service({ id: "one" }), service({ id: "two" }), service({ id: "three" })];
     const result = evaluateServiceLocalityPage({
       place,
       serviceSlug: "cleaning",
@@ -106,7 +102,11 @@ describe("service + locality route evidence", () => {
   });
 
   it("fails closed when provenance or freshness is not established", () => {
-    const missingSource = service({ origin: "source", sourceName: undefined, sourceUrl: undefined });
+    const missingSource = service({
+      origin: "source",
+      sourceName: undefined,
+      sourceUrl: undefined,
+    });
     const stale = service({ id: "stale", quality: "may have changed" });
     const result = evaluateServiceLocalityPage({
       place,
