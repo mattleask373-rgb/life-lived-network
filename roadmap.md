@@ -245,3 +245,6 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 
 - The exact pre-fix head `c0e1938b8e3d64d2a52c86252993eb0222ee1522` installed dependencies with `bun install --frozen-lockfile` successfully; both hosted Verify runs failed only at `bun run lint` on two Prettier-only lines in `src/lib/place-staging.ts`.
 - Formatting-only repair commit: `660fcd1b2a3423d84ea27307daf01032e56b3f10`. No package manifest or lockfile was touched. Await fresh exact-head hosted Verify before marking the gate green.
+
+
+- Verification update: push Verify on `8c1461d08b50f3721cc1d4788eb36d667daa74f4` passed ([run 39334870150](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39334870150)). The paired PR-context run failed only on formatting in `src/lib/geo-scope.test.ts` as seen against the older merge base `0c56cc299825dea5996323506e7a1cc9266975c8`; current `main` is `f2de6d8d76bdabbd98639f4bf4837573c96587cc` and has the formatted test. Fresh PR-context Verify is required before this gate is green.
