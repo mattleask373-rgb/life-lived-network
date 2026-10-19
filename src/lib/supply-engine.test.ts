@@ -248,6 +248,21 @@ describe("real geography, not exact place ids", () => {
     expect(answer.results).toEqual([]);
   });
 
+  it("does not mistake living in the requested locality for serving it", () => {
+    const residentOnly = {
+      ...latentGardener,
+      placeId: gardenerNeed.placeId,
+      serviceAreaPlaceIds: [],
+    };
+    const answer = findSupply({
+      need: gardenerNeed,
+      people: [residentOnly],
+      entries: [],
+      now: "2026-09-19T10:00:00.000Z",
+    });
+    expect(answer.results).toEqual([]);
+  });
+
   it("never treats ticking a place as passing through as a journey", () => {
     const answer = findSupply({
       need: gardenerNeed,

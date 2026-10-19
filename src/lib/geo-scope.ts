@@ -6,15 +6,14 @@
  * one point into the two sets the matching rules are allowed to use, and
  * nothing more:
  *
- *   localPlaceIds   the need's place and everywhere inside it. Living here is
- *                   genuinely being here.
+ *   localPlaceIds   the need's place and everywhere inside it, for listing
+ *                   scope. It is not evidence that a person serves that place.
  *   serviceScopeIds the need's place, everywhere inside it, and the places it
- *                   sits inside. Someone may state that they cover a whole
- *                   county; that legitimately reaches a town in it.
+ *                   sits inside. A person must explicitly declare a service
+ *                   area in this scope before they can match.
  *
- * The distinction matters: living in a county is not the same as working in
- * one of its villages, so a person whose only link is a parent place needs a
- * stated service area before they appear.
+ * Residence and passing through are never service-area evidence. Journeys are
+ * handled separately by the canonical supply engine.
  *
  * Pure, so the same rules run in tests, on the server and with fixtures.
  */
@@ -43,7 +42,7 @@ export function exactGeography(placeId: string | null): NeedGeography {
 export interface GeographicReach {
   /** How they reach it, in plain words, for the evidence list. */
   reason: string;
-  kind: "lives_here" | "stated_service_area";
+  kind: "stated_service_area";
 }
 
 /**
@@ -52,13 +51,10 @@ export interface GeographicReach {
  * never treated as working there.
  */
 export function geographicReach(
-  person: { placeId: string | null; serviceAreaPlaceIds: string[] },
+  person: { serviceAreaPlaceIds: string[] },
   geo: NeedGeography,
 ): GeographicReach | null {
   if (!geo.placeId) return null;
-  if (person.placeId && geo.localPlaceIds.includes(person.placeId)) {
-    return { kind: "lives_here", reason: "Lives in this area" };
-  }
   if (person.serviceAreaPlaceIds.some((id) => geo.serviceScopeIds.includes(id))) {
     return {
       kind: "stated_service_area",

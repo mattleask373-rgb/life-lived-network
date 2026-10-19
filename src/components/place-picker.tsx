@@ -13,7 +13,17 @@ import { KIND_LABEL, placePath, searchPlaces, type Place } from "@/lib/places";
 import { useWorldContext } from "@/lib/world-context";
 
 export function PlacePicker() {
-  const { index, place, ancestors, children, setPlaceSlug, loading } = useWorldContext();
+  const {
+    index,
+    place,
+    ancestors,
+    children,
+    setPlaceSlug,
+    loading,
+    loadError,
+    defaultUnavailable,
+    retryPlaceIndex,
+  } = useWorldContext();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
 
@@ -32,25 +42,55 @@ export function PlacePicker() {
     return <p className="text-sm text-muted-foreground">Finding your way around…</p>;
   }
 
+  if (loadError && !index) {
+    return (
+      <div className="card-paper p-4">
+        <p role="alert" className="text-sm">
+          We couldn't load the supported places just now.
+        </p>
+        <button
+          type="button"
+          onClick={retryPlaceIndex}
+          className="focus-ink mt-3 min-h-11 rounded-full border border-border bg-background px-4 py-2 text-sm"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  const pickerOpen = open || defaultUnavailable;
+
   return (
     <div className="card-paper p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Where are you?</p>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          className="focus-ink text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-        >
-          {open ? "Done" : "Somewhere else"}
-        </button>
+        {!defaultUnavailable ? (
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={pickerOpen}
+            className="focus-ink min-h-11 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+          >
+            {open ? "Done" : "Somewhere else"}
+          </button>
+        ) : (
+          <span className="text-sm text-muted-foreground">Choose a supported place</span>
+        )}
       </div>
 
       <p className="mt-1 text-lg">
-        {place ? placePath(index!, place.id, 3) : "The United Kingdom & Ireland"}
+        {place && index ? placePath(index, place.id, 3) : "Choose a supported place"}
       </p>
 
-      {open ? (
+      {defaultUnavailable ? (
+        <p role="status" className="mt-2 text-sm text-muted-foreground">
+          The configured starting place isn't present in the available canonical place records.
+          Choose another supported place below. No listings are invented for unsupported places.
+        </p>
+      ) : null}
+
+      {pickerOpen ? (
         <div className="mt-4 space-y-4">
           <label className="block text-sm">
             <span className="text-muted-foreground">Search for a place</span>
@@ -82,7 +122,8 @@ export function PlacePicker() {
               </ul>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Nowhere by that name yet. The world is filled in as it is needed.
+                We couldn't find that name in the current place records. Try a nearby town, region
+                or country.
               </p>
             )
           ) : null}

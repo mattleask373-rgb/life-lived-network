@@ -10,8 +10,10 @@ import {
   countryOf,
   descendantSlugsOf,
   isWithin,
+  normaliseConfiguredPlaceSlug,
   placeBySlug,
   placePath,
+  resolvePlaceFromIndex,
   searchPlaces,
   splitPlaceFromQuery,
   type Place,
@@ -87,6 +89,32 @@ const places: Place[] = [
 ];
 
 const index = buildPlaceIndex(places);
+
+describe("configurable default locality", () => {
+  it("normalises a valid deployment locality slug", () => {
+    expect(normaliseConfiguredPlaceSlug("  SYDNEY ")).toBe("sydney");
+    expect(normaliseConfiguredPlaceSlug("australia-new-south-wales")).toBe(
+      "australia-new-south-wales",
+    );
+  });
+
+  it("ignores empty or malformed configuration instead of guessing a place", () => {
+    expect(normaliseConfiguredPlaceSlug(undefined)).toBeNull();
+    expect(normaliseConfiguredPlaceSlug("   ")).toBeNull();
+    expect(normaliseConfiguredPlaceSlug("../sydney")).toBeNull();
+  });
+
+  it("prefers a supported saved selection over the configured default", () => {
+    expect(resolvePlaceFromIndex(index, "lisbon", "uk-and-ireland")?.slug).toBe("lisbon");
+  });
+
+  it("uses the configured default only when its canonical record exists", () => {
+    expect(resolvePlaceFromIndex(index, "unsupported-saved-slug", "portugal")?.slug).toBe(
+      "portugal",
+    );
+    expect(resolvePlaceFromIndex(index, "unsupported-saved-slug", "sydney")).toBeNull();
+  });
+});
 
 describe("place hierarchy", () => {
   it("resolves a place by slug at any depth", () => {
