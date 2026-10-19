@@ -8,10 +8,7 @@
 export type PublicPageKind = "locality" | "service" | "provider" | "event";
 
 export type IndexabilityStatus =
-  | "INDEXABLE"
-  | "INDEXABLE_WITH_LIMITATIONS"
-  | "NOINDEX"
-  | "NOT_PUBLISHED";
+  "INDEXABLE" | "INDEXABLE_WITH_LIMITATIONS" | "NOINDEX" | "NOT_PUBLISHED";
 
 export type IndexabilityReason =
   | "not_published"
