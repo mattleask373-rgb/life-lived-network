@@ -102,9 +102,9 @@ describe("work opportunity presentation", () => {
   it("does not infer an active today span from missing date endpoints", () => {
     expect(workOpportunityCoversDate(opportunity, "2026-10-20")).toBe(true);
     expect(workOpportunityCoversDate(opportunity, "2026-10-19")).toBe(false);
-    expect(
-      workOpportunityCoversDate({ ...opportunity, endDate: undefined }, "2026-10-20"),
-    ).toBe(false);
+    expect(workOpportunityCoversDate({ ...opportunity, endDate: undefined }, "2026-10-20")).toBe(
+      false,
+    );
     expect(workOpportunityCoversDate(opportunity, "not-a-date")).toBe(false);
   });
 });
