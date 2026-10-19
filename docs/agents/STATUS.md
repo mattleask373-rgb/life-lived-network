@@ -52,3 +52,12 @@ No autonomous production merge/deploy is active.
 2. Reconcile #62's lifecycle model with the durable SQL status contract and authenticated fencing boundaries before any integration.
 3. Reconcile #43 into #49's canonical ingest boundary; preserve useful fixture/normalization/freshness/provenance evidence while retiring the parallel architecture.
 4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
+
+
+## Australia place staging foundation — 2026-10-19 (source review pending)
+
+- Added a pure, bounded `normalizeStagedPlaceBatch()` pipeline and tests for stable source-key identity, unique slugs, complete parent references, acyclic hierarchy, IANA timezone syntax, coordinate bounds, country/currency codes, source provenance, freshness, rights clearance, and deterministic output.
+- The report never creates canonical database IDs or writes data; every row remains `not_published`. Even an eligible report is only eligible for a separately approved disposable-database preview.
+- Added `docs/launch/AUSTRALIA-STAGING-VALIDATION.md` with official source candidates and the outstanding crosswalk/approval steps. No Australia records or coordinates are seeded. Byron Bay requires NSW source review; Agnes Water and Port Douglas require source-row confirmation from Queensland's gazetteer.
+- **Launch blocker:** the existing `Place` type requires one timezone per row, which needs a clear country-level semantic before an Australia country row is created. Do not assign one zone to all Australia or guess a coordinate/datum.
+- No production import, write, schema/RLS/grant change, deployment, or live-market claim.
