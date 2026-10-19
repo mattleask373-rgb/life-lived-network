@@ -66,3 +66,6 @@ No autonomous production merge/deploy is active.
 - PR #174 supplies only a reviewed work-opportunity contract/taxonomy; no real feeds or records exist. PR #175 supplies only a non-writing staging validator; Australia remains NOT LIVE and its historical Verify failed on an earlier head.
 - No provider profiles, structured data, analytics, persisted enquiry, matcher changes, schema/RLS/grant changes, production writes, partner feeds, merge or deployment. `findSupply()` remains the sole discovery authority.
 - Human gates: verify current PR heads and hosted checks; review the exact route diff; confirm pilot locality hierarchy, provenance/source rights and timezone policy before any public indexing/import.
+
+
+- Exact-head verification note (2026-10-19): service + locality route/test code passed hosted Verify at `54b68377c56f61f4c9880de1ff68545f30055c92` (PR run [39335030731](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335030731); push run [39335025060](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335025060)). A documentation-only update is being applied now; its new head needs its own Verify result. Local commands remain unclaimed.
