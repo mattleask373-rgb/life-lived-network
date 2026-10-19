@@ -251,5 +251,5 @@ Open decisions: trusted authority for policy/rights approval fields and opportun
 - [x] Added a “Request a match” CTA on approved opportunity details and a prefilled request CTA on service detail sheets; it routes into the existing need → `findSupply()` flow and explicitly states it does not directly message the source.
 - [x] Reused the existing authenticated `createNeed` call and added visible loading/error/success states including a link to the saved need's matching results. No new table/schema or connection recipient inference.
 - [x] Added bounded category/title query parsing and tests so the CTA prefill is editable text only, never claims about supply or an employer.
-- [ ] Verify the final PR #176 head in hosted CI, then review conversion wording and accessibility before merge. User-authored needs and `findSupply()` remain the sole matching path.
+- [x] Code-bearing head `f22cc7b8ed19d34597e8bc3ea8a7f4a9b220299f` passed [PR Verify 39339094190](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39339094190) and [push Verify 39339088114](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39339088114), including frozen install, lint, tests and production build. The documentation follow-up requires its own fresh run. User-authored needs and `findSupply()` remain the sole matching path.
 
