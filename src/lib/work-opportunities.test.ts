@@ -95,7 +95,9 @@ describe("work opportunity contract", () => {
   });
 
   it("requires human market-policy review and rights clearance before publication", () => {
-    expect(() => parseWorkOpportunity(opportunity({ policyReviewStatus: "review_required" }))).toThrow();
+    expect(() =>
+      parseWorkOpportunity(opportunity({ policyReviewStatus: "review_required" })),
+    ).toThrow();
     expect(() => parseWorkOpportunity(opportunity({ rightsStatus: "unreviewed" }))).toThrow();
     expect(
       isPublishableWorkOpportunity(
