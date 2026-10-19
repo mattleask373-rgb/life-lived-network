@@ -11,7 +11,7 @@ export function parseNeedSearch(raw: Record<string, unknown>): NeedSearch {
   const parsed = parseQuerySearch(raw);
   const category =
     typeof raw.category === "string"
-      ? raw.category.trim().replace(/\\s+/g, " ").slice(0, MAX_CATEGORY)
+      ? raw.category.trim().replace(/\s+/g, " ").slice(0, MAX_CATEGORY)
       : "";
   return { ...parsed, ...(category ? { category } : {}) };
 }
