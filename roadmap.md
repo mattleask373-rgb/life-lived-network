@@ -249,3 +249,15 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 
 
 - Exact-head verification: route/test code passed at `54b68377c56f61f4c9880de1ff68545f30055c92` (PR run [39335030731](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335030731); push run [39335025060](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335025060)). Status/roadmap documentation head `6ca3b3e0ba1ea9288ede3b8dd8050d8df762fc6d` also passed hosted Verify (PR run [39335240835](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335240835); push run [39335236361](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335236361)). A new status-only commit follows; verify that head before review.
+
+## 2026-10-19 — BreadcrumbList + gated locality/service sitemap (PR #173; code green)
+
+- [x] Rendered `BreadcrumbList` JSON-LD on locality and service-locality pages from the same visible breadcrumb facts; script-closing text is escaped. No speculative `Event`/`LocalBusiness` schema is emitted.
+- [x] Added a shared pure locality indexability helper and a gated sitemap candidate builder. Only `INDEXABLE` decisions (`sitemapEligible === true`) are included. Thin, demonstration-only, stale, invalid-place and unproven-source candidates are excluded by tests.
+- [x] Root and API pages sitemap endpoints add gate-approved locality/service URLs using the canonical public world read and existing service taxonomy. Failed/incomplete scan returns no dynamic place URLs; wide scopes above the locality read cap are conservatively omitted.
+- [x] Static `public/sitemap.xml` remains the six fixed public screens for static deployments. `robots.txt` advertises both static/root sitemap and API sitemap index.
+- Exact code-bearing head: `2b6c72e8b86de50eec8b8293e8e0f5c563503da6`; canonical base `f2de6d8d76bdabbd98639f4bf4837573c96587cc`.
+- Hosted Verify: [PR run 39338043061](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39338043061) and [push run 39338040184](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39338040184) both passed install, lint, tests and build.
+- This remains an open feature branch, not launched. Live sitemap behavior, deployed robots output, real crawler rendering, and live database completeness have not been verified.
+- Human review before merge: approve the bounded candidate-scan cap/cache strategy and verify production origin/server route behavior. No production writes, schema/RLS/grant changes, secrets, merges or deployments.
+

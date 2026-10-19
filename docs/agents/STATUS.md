@@ -69,3 +69,17 @@ No autonomous production merge/deploy is active.
 
 
 - Exact-head verification: route/test code passed at `54b68377c56f61f4c9880de1ff68545f30055c92` (PR run [39335030731](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335030731); push run [39335025060](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335025060)). Status/roadmap documentation head `6ca3b3e0ba1ea9288ede3b8dd8050d8df762fc6d` also passed hosted Verify (PR run [39335240835](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335240835); push run [39335236361](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335236361)). A new status-only commit follows; verify that head before review. Local commands remain unclaimed.
+
+## 2026-10-19 — verified SEO continuation on PR #173
+
+- PR #173 is open and unmerged. Feature branch: `feat/seo-indexability-gate`; canonical base: `f2de6d8d76bdabbd98639f4bf4837573c96587cc`.
+- Exact code-bearing head: `2b6c72e8b86de50eec8b8293e8e0f5c563503da6`.
+- Fresh PR Verify passed frozen install, lint, tests and production build: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39338043061
+- Fresh push Verify passed on the same SHA: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39338040184
+- Added visible-fact `BreadcrumbList` JSON-LD to locality and service-locality server-rendered routes, with canonical paths and script-safe escaping. No `Event` or `LocalBusiness` JSON-LD was added because complete real published non-demonstration facts have not been established.
+- Extracted `evaluateLocalityPage()` so locality route metadata and locality sitemap candidates use the same pure gate. Service candidates use the existing `evaluateServiceLocalityPage()`. Only `sitemapEligible === true` candidates are emitted.
+- Dynamic root and API pages sitemap routes now combine fixed public pages with gate-approved locality/service paths. Candidates use the canonical public world read and existing taxonomy. Incomplete/failed 20,000-row bounded scan returns no dynamic paths; locality scopes over the existing 400-descendant filter cap are omitted.
+- `robots.txt` advertises the root sitemap and API sitemap index; the static `public/sitemap.xml` remains the six fixed public screens as a conservative static-deploy fallback. Sitemap route tests mock the adapter and don't contact live data.
+- Not verified: a live sitemap HTTP response, crawler rendering in deployed environment, live DB completeness, or mobile/browser layout. No merge or deployment occurred.
+- Remaining human decisions: review the 20,000-record scan cap and 400-descendant exclusion, confirm production cache/route behavior and custom site origin. No Australian places, listing inventory, schema/RLS/grant changes or production writes were added.
+
