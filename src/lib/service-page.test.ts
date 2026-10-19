@@ -27,7 +27,7 @@ function entry(overrides: Partial<WorldEntry>): WorldEntry {
     verified: false,
     social: "friendly",
     outdoors: true,
-    kind: "skill",
+    kind: "service",
     ...overrides,
   };
 }
