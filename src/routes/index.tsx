@@ -103,7 +103,7 @@ function Home() {
                 ? "Choose a supported place to see what's recorded here."
                 : worldError
                   ? "We couldn't check what's recorded here."
-                  : `${all.length === 1 ? "1 thing" : `${all.length} things`} recorded here · ${needCount === 1 ? "1 open need" : `${needCount} open needs` `}
+                  : `${all.length === 1 ? "1 thing" : `${all.length} things`} recorded here · ${needCount === 1 ? "1 open need" : `${needCount} open needs`} `
           </p>
           <p className="mt-4 max-w-2xl text-base">
             Find real things to do, people who can help, and worthwhile stops along your way — then
