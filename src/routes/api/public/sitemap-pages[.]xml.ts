@@ -1,19 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { getGatedPlaceSitemapPaths } from "@/lib/gated-place-sitemap.server";
 import { PUBLIC_PATHS, sitemapXml, XML_HEADERS } from "@/lib/seo";
 
 /**
- * The public app screens that exist today. Private and internal screens are
- * never listed, and no page appears here that a person would find empty.
+ * Existing public screens plus locality/service URLs returned by the shared
+ * indexability gates. If dynamic data cannot be verified, no place URLs are added.
  */
 export const Route = createFileRoute("/api/public/sitemap-pages.xml")({
   server: {
     handlers: {
-      GET: () =>
-        new Response(
-          sitemapXml(PUBLIC_PATHS.map((path) => ({ path, changeFrequency: "weekly" as const }))),
-          { headers: XML_HEADERS },
-        ),
+      GET: async () => {
+        const dynamicPaths = await getGatedPlaceSitemapPaths();
+        const urls = [
+          ...PUBLIC_PATHS.map((path) => ({ path, changeFrequency: "weekly" as const })),
+          ...dynamicPaths.map((path) => ({ path, changeFrequency: "weekly" as const })),
+        ];
+        return new Response(sitemapXml(urls), { headers: XML_HEADERS });
+      },
     },
   },
 });
