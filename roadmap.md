@@ -95,7 +95,7 @@ Blockers unchanged: Ticketmaster key absent; genuine Guildhall details not suppl
 ### Next SEO slices (status reconciled 2026-10-19)
 
 - Slice 3 indexability foundation: in review on `feat/seo-indexability-gate` (not merged). A pure four-state gate now governs metadata on the existing server-rendered locality route. It excludes thin, demonstration-only, stale/cancelled, provenance-free, or policy-blocked pages; only `INDEXABLE` is sitemap-eligible.
-- Still open: the generic service+locality route; actual locality/service sitemap builders wired to the gate; provider/event sitemaps; structured data (slice 5); enquiry/lead pathway (slice 6); cross-navigation and privacy-safe measurement (slice 7).
+- Service+locality route: implemented on `feat/seo-indexability-gate`; exact-head hosted Verify and human review pending. Still open: dynamic locality/service sitemaps wired to the gate; provider/event sitemaps; structured data (slice 5); enquiry/lead pathway (slice 6); cross-navigation and privacy-safe measurement (slice 7).
 - No new locality/service URLs are currently advertised to crawlers, and no production pilot inventory is claimed by this gate-only work.
 
 ## SEO slice 2 — service kinds + locality pages (done)
@@ -231,3 +231,14 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - Both noindex and in PRIVATE_PATHS. No payments, backend, schema or auth changes.
 - [ ] Blocked on approval: storing interest submissions in the database (needs a new table) and a follow-up contact route.
 - [ ] My Places full slice: plan awaiting approval (schema addition, location precision).
+
+
+## SEO slice 3 — generic service + locality route — 2026-10-19
+
+- Implemented `src/routes/$country.$place.$service.tsx` on `feat/seo-indexability-gate`. It is a server-rendered route at `/<country>/<place>/<service>`, resolves the place through the existing canonical place loader, redirects to the one country/place URL, validates service slugs against the shared `SERVICE_CATEGORIES`, and reads through `fetchWorldEntries()`.
+- Added pure `src/lib/service-locality.ts` evidence helpers. Metadata uses the shared `evaluateIndexability()` gate: three genuine non-demonstration records are required by default, plus valid place/category, complete locality/category facts, freshness, provenance and internal-link evidence. Only status `INDEXABLE` gets indexable metadata; every other outcome is noindex and not sitemap-eligible.
+- Service cards use only explicit stored fields and the existing `nextStepFor()` booking contract; external links are limited to http(s). No enquiry is created, no availability is implied, and demonstration records are omitted from service cards and genuine counts. Empty states clarify that an empty record does not prove absence in the real world.
+- Added breadcrumbs, canonical locality navigation, links to real sibling service categories, map, journey, road-trip and existing need/make paths. Registered the route in the generated route tree and added tests for route registration, category matching, demo exclusion, threshold, freshness, provenance and sitemap eligibility.
+- Sitemap status: service URLs are deliberately not emitted yet. A dynamic locality/service sitemap must enumerate canonical places and apply the same gate per candidate; emitting no new service URLs until that work is implemented is intentional. Existing static sitemap entries are unchanged.
+- Verification: **hosted Verify pending on final head**; local typecheck/lint/Vitest/build were not run from this GitHub-only session. Do not treat prior green Verify on the gate-only SHA as proof for this route.
+- Scope/human gates: no provider pages, structured data, analytics, enquiry storage, schema/RLS/grants, production writes, feeds, merge, or deployment. Human review and fresh exact-head Verify required before merge or any live indexing claim.
