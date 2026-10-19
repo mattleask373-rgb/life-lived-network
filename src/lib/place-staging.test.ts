@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import { normalizeStagedPlaceBatch } from "./place-staging";
 
 function stageRow(overrides: Record<string, unknown> = {}) {
-  const sourceKey = typeof overrides.sourceKey === "string" ? overrides.sourceKey : "example:country:au";
+  const sourceKey =
+    typeof overrides.sourceKey === "string" ? overrides.sourceKey : "example:country:au";
   return {
     sourceKey,
     name: "Synthetic Test Place",
@@ -42,30 +43,40 @@ describe("place staging normalizer", () => {
     expect(first.rows[0]?.publicationStatus).toBe("not_published");
   });
 
-  it("requires an explicit reviewed source and cleared rights before staging preview", () => {
-    const report = normalizeStagedPlaceBatch([stageRow({
-      source: {
-        ...stageRow().source,
-        reviewStatus: "pending",
-        rightsStatus: "unreviewed",
-      },
-    })]);
+  it("requires reviewed source use and cleared rights before preview", () => {
+    const report = normalizeStagedPlaceBatch([
+      stageRow({
+        source: {
+          ...stageRow().source,
+          reviewStatus: "pending",
+          rightsStatus: "unreviewed",
+        },
+      }),
+    ]);
     expect(report.eligibleForDisposablePreview).toBe(false);
     expect(report.rows[0]?.reasons).toContain("source_review_pending");
     expect(report.rows[0]?.reasons).toContain("rights_not_cleared");
   });
 
-  it("blocks missing coordinates, old source status and invalid timezone", () => {
+  it("blocks missing coordinates and historic source records", () => {
     const report = normalizeStagedPlaceBatch([
       stageRow({ sourceKey: "a", slug: "a", latitude: null, longitude: null }),
       stageRow({ sourceKey: "b", slug: "b", sourceDataStatus: "historical" }),
-      stageRow({ sourceKey: "c", slug: "c", timezone: "Mars/Olympus" }),
     ]);
     expect(report.eligibleForDisposablePreview).toBe(false);
     expect(report.rows[0]?.reasons).toContain("missing_coordinates");
     expect(report.rows[1]?.reasons).toContain("source_not_current");
-    expect(report.issues.some((issue) => issue.rowIndex === 2 && issue.code === "invalid_row")).toBe(true);
-    expect(report.summary.blocked).toBe(3);
+  });
+
+  it("rejects invalid timezone rows and counts them as blocked", () => {
+    const report = normalizeStagedPlaceBatch([
+      stageRow({ sourceKey: "c", slug: "c", timezone: "Mars/Olympus" }),
+    ]);
+    expect(report.issues).toContainEqual(
+      expect.objectContaining({ rowIndex: 0, code: "invalid_row" }),
+    );
+    expect(report.summary.blocked).toBe(1);
+    expect(report.eligibleForDisposablePreview).toBe(false);
   });
 
   it("rejects duplicate source keys and globally colliding slugs", () => {
@@ -78,18 +89,33 @@ describe("place staging normalizer", () => {
     expect(report.issues.map((issue) => issue.code)).toContain("duplicate_slug");
   });
 
-  it("requires the parent hierarchy or an explicit crosswalk", () => {
-    const row = stageRow({ sourceKey: "child", slug: "child", kind: "town", parentSourceKey: "parent" });
-    expect(normalizeStagedPlaceBatch([row]).issues.map((issue) => issue.code)).toContain("missing_parent");
-    expect(normalizeStagedPlaceBatch([row], { knownParentSourceKeys: ["parent"] }).eligibleForDisposablePreview).toBe(true);
+  it("requires the parent hierarchy or an explicit reviewed crosswalk", () => {
+    const row = stageRow({
+      sourceKey: "child",
+      slug: "child",
+      kind: "town",
+      parentSourceKey: "parent",
+    });
+    expect(normalizeStagedPlaceBatch([row]).issues.map((issue) => issue.code)).toContain(
+      "missing_parent",
+    );
+    expect(
+      normalizeStagedPlaceBatch([row], { knownParentSourceKeys: ["parent"] })
+        .eligibleForDisposablePreview,
+    ).toBe(true);
   });
 
   it("rejects self-parenting and parent cycles", () => {
-    const self = stageRow({ sourceKey: "self", slug: "self", parentSourceKey: "self" });
+    const self = stageRow({
+      sourceKey: "self",
+      slug: "self",
+      parentSourceKey: "self",
+    });
     const a = stageRow({ sourceKey: "a", slug: "a", parentSourceKey: "b" });
     const b = stageRow({ sourceKey: "b", slug: "b", parentSourceKey: "a" });
-    const selfReport = normalizeStagedPlaceBatch([self]);
-    expect(selfReport.issues.map((issue) => issue.code)).toContain("invalid_row");
+    expect(normalizeStagedPlaceBatch([self]).issues.map((issue) => issue.code)).toContain(
+      "invalid_row",
+    );
     const cycleReport = normalizeStagedPlaceBatch([a, b]);
     expect(cycleReport.issues.map((issue) => issue.code)).toContain("parent_cycle");
     expect(cycleReport.eligibleForDisposablePreview).toBe(false);
@@ -104,9 +130,12 @@ describe("place staging normalizer", () => {
     expect(report.eligibleForDisposablePreview).toBe(false);
   });
 
-  it("rejects non-array, empty and oversized batches", () => {
+  it("rejects non-array, empty, and oversized batches", () => {
     expect(normalizeStagedPlaceBatch(null).eligibleForDisposablePreview).toBe(false);
     expect(normalizeStagedPlaceBatch([]).eligibleForDisposablePreview).toBe(false);
-    expect(normalizeStagedPlaceBatch(Array.from({ length: 5001 }, () => stageRow())).eligibleForDisposablePreview).toBe(false);
+    expect(
+      normalizeStagedPlaceBatch(Array.from({ length: 5001 }, () => stageRow()))
+        .eligibleForDisposablePreview,
+    ).toBe(false);
   });
 });
