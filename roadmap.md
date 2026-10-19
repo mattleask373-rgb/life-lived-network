@@ -11,6 +11,8 @@
 - Files: `src/lib/service-page.ts` (+test, 11 tests), `src/lib/locality-path.ts`, `src/routes/$country.$place.tsx`, `src/routes/$country.$place.index.tsx`, `src/routes/$country.$place.$service.tsx`.
 - Checks: tsgo clean; lint 0 errors / 7 warnings (existing); vitest 41 files / 320 passed; build OK. Playwright 375px: service page (quiet + trial-data disclosure), locality page, unknown-service 404, wrong-country redirect all verified; no console/page errors.
 - Still ahead (backend/Codex dependencies): canonical indexability gate, service/locality sitemaps, structured data, enquiry endpoint, Australian place records (none exist — do not seed).
+- Enquiry pathway (Workstream E, frontend half): fixed a truthfulness bug — the "Ask about this" step claimed "your message goes to the provider", but no provider-messaging pathway exists. The note now says so plainly and offers the real step (post a need, visible to people in the place). The step now carries the service's title into `/need` as an editable pre-fill (validated `q`/`from` params), so the visitor lands with context instead of an empty form. Live click-through is untestable with trial data by design — demonstration records never show an enquiry step; covered by unit tests instead. Files: `src/lib/services.ts`, `src/components/entry-sheet.tsx`.
+- QA: service page verified at 1280px and 375px; quiet-state CTAs measure 66px tall; no console/page errors.
 
 ## Final product hardening (done)
 
