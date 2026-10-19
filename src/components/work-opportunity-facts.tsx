@@ -21,8 +21,7 @@ export function WorkOpportunityFacts({ entry }: { entry: WorldEntry }) {
   const opportunity = entry.workOpportunity;
   const facts = workOpportunityFacts(opportunity);
   const provenance = opportunity.provenance;
-  const sourceUrl =
-    provenance.kind === "owner_declared" ? null : safeHttpUrl(provenance.sourceUrl);
+  const sourceUrl = provenance.kind === "owner_declared" ? null : safeHttpUrl(provenance.sourceUrl);
 
   return (
     <section
