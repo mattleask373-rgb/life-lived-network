@@ -54,23 +54,15 @@ No autonomous production merge/deploy is active.
 4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
 
 
-## SEO slice 3 foundation — 2026-10-19
+## SEO slice 3 — fail-closed service + locality route — 2026-10-19
 
-- Canonical repository: `mattleask373-rgb/life-lived-network`. Verified `main` baseline at `0c56cc299825dea5996323506e7a1cc9266975c8`; work is isolated on `feat/seo-indexability-gate`.
-- Added a pure indexability decision contract with `INDEXABLE`, `INDEXABLE_WITH_LIMITATIONS`, `NOINDEX`, and `NOT_PUBLISHED`, stable reason codes, and an explicit rule that only `INDEXABLE` pages are sitemap-eligible.
-- Wired the existing server-rendered locality route metadata through the gate. The gate fails closed for invalid place data, thin or absent real records, demonstration-only content, known stale/cancelled records, missing provenance, missing links, or blocked policy. Locality pages remain `noindex` unless all required evidence passes.
-- Added unit coverage for each status, hard blockers, service-category requirements, the three-record default threshold, and the sitemap eligibility boundary.
-- **Scope limit:** this is the gate foundation, not all of SEO slice 3. The generic service+locality route, gate-backed locality/service sitemaps, provider/event sitemaps, structured data, enquiry pathway, and live SEO verification remain open. No locality/service URLs were added to sitemaps.
-- **Verification honesty:** this connector session has no local checkout/shell, so local `tsgo`, lint, Vitest, and build commands were not run here. Hosted Verify must pass on the final PR head; no result is claimed before GitHub reports it.
-- **Human gates:** review the exact PR head; confirm any eventual pilot page has current rights-cleared real inventory and sufficient locality facts before allowing indexing. No production writes, grants, schema changes, merges, or deployments were made.
-
-
-## SEO slice 3 — generic service + locality route — 2026-10-19
-
-- Implemented `src/routes/$country.$place.$service.tsx` on `feat/seo-indexability-gate`. It is a server-rendered route at `/<country>/<place>/<service>`, resolves the place through the existing canonical place loader, redirects to the one country/place URL, validates service slugs against the shared `SERVICE_CATEGORIES`, and reads through `fetchWorldEntries()`.
-- Added pure `src/lib/service-locality.ts` evidence helpers. Metadata uses the shared `evaluateIndexability()` gate: three genuine non-demonstration records are required by default, plus valid place/category, complete locality/category facts, freshness, provenance and internal-link evidence. Only status `INDEXABLE` gets indexable metadata; every other outcome is noindex and not sitemap-eligible.
-- Service cards use only explicit stored fields and the existing `nextStepFor()` booking contract; external links are limited to http(s). No enquiry is created, no availability is implied, and demonstration records are omitted from service cards and genuine counts. Empty states clarify that an empty record does not prove absence in the real world.
-- Added breadcrumbs, canonical locality navigation, links to real sibling service categories, map, journey, road-trip and existing need/make paths. Registered the route in the generated route tree and added tests for route registration, category matching, demo exclusion, threshold, freshness, provenance and sitemap eligibility.
-- Sitemap status: service URLs are deliberately not emitted yet. A dynamic locality/service sitemap must enumerate canonical places and apply the same gate per candidate; emitting no new service URLs until that work is implemented is intentional. Existing static sitemap entries are unchanged.
-- Verification: **hosted Verify pending on final head**; local typecheck/lint/Vitest/build were not run from this GitHub-only session. Do not treat prior green Verify on the gate-only SHA as proof for this route.
-- Scope/human gates: no provider pages, structured data, analytics, enquiry storage, schema/RLS/grants, production writes, feeds, merge, or deployment. Human review and fresh exact-head Verify required before merge or any live indexing claim.
+- PR #173 remains open and unmerged. Its shared pure `evaluateIndexability()` gate has four outcomes; only `INDEXABLE` has `sitemapEligible: true`. Existing locality metadata remains governed by the same gate.
+- Added a server-rendered `/<country>/<place>/<service>` route using the canonical place loader, `fetchWorldEntries()`, and `SERVICE_CATEGORIES`. Service slugs outside the shared taxonomy return not-found. The route redirects noncanonical country/place segments back to the one canonical locality URL.
+- Added pure service/locality evidence helpers and tests covering canonical paths, taxonomy matching, demo exclusion, thin pages, freshness, provenance, and the default three-real-record gate. Existing booking semantics are reused; no fake enquiry or availability is emitted.
+- The route contains breadcrumbs, a parent locality link when present, links to real sibling service categories, map/journey/road-trip surfaces, and honest empty states. Provider, qualification, time, quality, booking and source facts are presented only when stored.
+- **Sitemap is still deliberately unchanged:** dynamic locality/service sitemap candidates must be enumerated and run through the exact same gate before being emitted. Until that implementation is verified, no service URL is added to a public sitemap.
+- Hosted Verify: run `39334168805` failed at lint before tests/build due formatting in the new route/tests and one existing formatting issue in `src/lib/geo-scope.test.ts`. The reported new-route/test formatting has been corrected; the geo test was updated to current-main content with its Prettier-only correction. A fresh exact-head run is still required after reconciling current main.
+- **Not verified locally:** this connected GitHub session has no local checkout/shell, so local typecheck, lint, tests and build are not claimed.
+- PR #174 supplies only a reviewed work-opportunity contract/taxonomy; no real feeds or records exist. PR #175 supplies only a non-writing staging validator; Australia remains NOT LIVE and its historical Verify failed on an earlier head.
+- No provider profiles, structured data, analytics, persisted enquiry, matcher changes, schema/RLS/grant changes, production writes, partner feeds, merge or deployment. `findSupply()` remains the sole discovery authority.
+- Human gates: verify current PR heads and hosted checks; review the exact route diff; confirm pilot locality hierarchy, provenance/source rights and timezone policy before any public indexing/import.
