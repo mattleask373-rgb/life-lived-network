@@ -52,3 +52,13 @@ No autonomous production merge/deploy is active.
 2. Reconcile #62's lifecycle model with the durable SQL status contract and authenticated fencing boundaries before any integration.
 3. Reconcile #43 into #49's canonical ingest boundary; preserve useful fixture/normalization/freshness/provenance evidence while retiring the parallel architecture.
 4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
+
+
+## 2026-10-20 — Phase 2 global traveller + local network plan
+
+- Added `docs/launch/PHASE-2-GLOBAL-EXPERIENCE-24H-PLAN.md` on a focused documentation branch based on canonical main `9269dff0fb66911733ea309fd7342d86bb60c112`.
+- Plan coordinates the current open SEO/work/Australia/design PRs, proposes parallel non-overlapping lanes for SEO integration, place staging, opportunity taxonomy, events/guides/language learning, trust/enquiry and design-system review.
+- Current PRs are still open and unmerged; no code/data/live changes are made by this plan. #177's manual mobile/keyboard/screen-reader review remains a human gate. Australia remains **NOT LIVE**; #175 is proposed, non-publishing staging only.
+- Verification: documentation-only change; hosted Verify is pending on the resulting PR head. No local tests, browser QA, production crawl or backend proof claimed.
+- Human decisions needed: pilot locality; real inventory/source and moderation owner; jurisdictional work/volunteer policy; consent/enquiry direction; partner/event feed authorisation.
+- Next sequence: re-check exact PR heads and Verify; complete #177 manual pass; review #174 → #176 → #173 in dependency order; keep #175 isolated; build the redesigned experience as incremental, evidence-backed PRs.
