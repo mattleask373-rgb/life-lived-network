@@ -69,33 +69,37 @@
 }
 
 :root {
-  --radius: 0.9rem;
+  /* Grok-inspired palette: warm paper canvas, cream surfaces, deep pine. */
+  --radius: 1.1rem;
 
-  --paper: oklch(0.966 0.014 88);
-  --paper-deep: oklch(0.928 0.022 84);
-  --ink: oklch(0.276 0.031 52);
-  --ink-soft: oklch(0.482 0.026 60);
+  --paper: oklch(0.954 0.011 85);
+  --paper-deep: oklch(0.927 0.022 80);
+  --ink: oklch(0.215 0.005 70);
+  --ink-soft: oklch(0.52 0.015 70);
+
+  --sage: oklch(0.948 0.02 160);
+  --sand: oklch(0.927 0.022 80);
 
   --background: var(--paper);
   --foreground: var(--ink);
-  --card: oklch(0.985 0.01 90);
+  --card: oklch(0.991 0.006 80);
   --card-foreground: var(--ink);
-  --popover: oklch(0.985 0.01 90);
+  --popover: oklch(0.991 0.006 80);
   --popover-foreground: var(--ink);
 
-  --primary: oklch(0.452 0.083 145);
-  --primary-foreground: oklch(0.975 0.014 92);
-  --secondary: oklch(0.912 0.026 82);
+  --primary: oklch(0.46 0.085 170);
+  --primary-foreground: oklch(0.98 0.01 170);
+  --secondary: var(--sand);
   --secondary-foreground: var(--ink);
-  --muted: oklch(0.932 0.019 86);
+  --muted: oklch(0.932 0.012 82);
   --muted-foreground: var(--ink-soft);
   --accent: oklch(0.652 0.132 46);
   --accent-foreground: oklch(0.985 0.012 92);
   --destructive: oklch(0.512 0.152 28);
   --destructive-foreground: oklch(0.98 0.01 90);
-  --border: oklch(0.862 0.026 80);
-  --input: oklch(0.878 0.024 82);
-  --ring: oklch(0.562 0.086 142);
+  --border: oklch(0.902 0.014 80);
+  --input: oklch(0.89 0.014 80);
+  --ring: oklch(0.46 0.085 170);
 
   --land: oklch(0.938 0.028 92);
   --land-high: oklch(0.902 0.038 96);
