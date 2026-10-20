@@ -52,3 +52,10 @@ No autonomous production merge/deploy is active.
 - Before any source activation, a human must verify Adzuna terms, attribution, retention/removal requirements, locality resolution, jurisdiction-specific work/volunteer/pay policy, and publication eligibility.
 - Follow-up UI/SEO surfaces must be reconciled in dependency order against the current route tree; do not merge stale stacked PRs #173/#176 without conflict and exact-head verification.
 
+## 2026-10-20 — Current-main WorkOpportunity surfaces (rebased)
+
+- **PR #203** is the current-main locality/service and Need-prefill surface candidate, stacked on the latest #197 contract baseline.
+- Work-opportunity facts preserve source, compensation, engagement, rights, policy review and publication state; no missing values are inferred.
+- Need-prefill resolves canonical place context and does not post or contact anyone. The separate quiet-service CTA/fail-closed improvement is planned as a subsequent slice.
+- No schema/RLS/grant changes, production writes, source activation, or deployment. Manual mobile route and Need-flow QA remains open.
+
