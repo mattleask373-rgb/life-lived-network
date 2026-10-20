@@ -186,12 +186,10 @@ function LocalityPage() {
   const { place, ancestors, children, siblings } = geography;
   const breadcrumbItems = [
     { name: "Real World Atlas", path: "/" },
-    ...[...ancestors]
-      .reverse()
-      .map((ancestor) => ({
-        name: ancestor.name,
-        path: localityPath(ancestor),
-      })),
+    ...[...ancestors].reverse().map((ancestor) => ({
+      name: ancestor.name,
+      path: localityPath(ancestor),
+    })),
     { name: place.name, path: localityPath(place) },
   ];
   const [open, setOpen] = useState<WorldEntry | null>(null);
