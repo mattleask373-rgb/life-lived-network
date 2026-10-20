@@ -1,5 +1,12 @@
 # Roadmap
 
+## 2026-10-20 — market onboarding (documentation slice)
+
+- New reusable checklist proposed in `docs/launch/MARKET-ONBOARDING-CHECKLIST.md` via branch `codex/market-onboarding-checklist-2026-10-20` (based on main SHA `9269dff0fb66911733ea309fd7342d86bb60c112`).
+- Scope is country-agnostic onboarding: hierarchy/URL contract, ISO country and currency metadata, integer minor units, timezone/locale, market-specific work/policy review, source rights/attribution, moderation/privacy, shared discovery/SEO gates, import dry-run/idempotency/rollback and human launch sign-off.
+- PR #179 is open. Documentation only; no inventory, live data, production writes, schema/security changes, credentials, feeds, merge or deployment. Hosted Verify [#39420348546](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39420348546) passed on exact head `aea2555291799403b4ea68f6b6c4be2afc62948e` (41 test files / 320 tests, build succeeded, lint 0 errors / 7 existing warnings). This is point-in-time evidence; every subsequent commit needs Verify on its own head before merge. No local commands were run.
+- Australia and any other new market remain NOT LIVE until real eligible records and human-approved market/source gates exist.
+
 ## 2026-10-19/20 — Overwrite reconciliation + service pages (SEO slice 3, frontend half)
 
 - Repository overwrite incident (19 Oct, 21:37) reconciled read-only: current main is a superset of the backup branch `lovable-backup-main-1792442270`. The backup's only unique content is two historical plan docs and the tracked `.env` that PR #157 deliberately removed — no implementation work is stranded. Backup left untouched; do not restore `.env` from it.
@@ -245,3 +252,17 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - Both noindex and in PRIVATE_PATHS. No payments, backend, schema or auth changes.
 - [ ] Blocked on approval: storing interest submissions in the database (needs a new table) and a follow-up contact route.
 - [ ] My Places full slice: plan awaiting approval (schema addition, location precision).
+
+
+## 2026-10-20 — 31 October critical-path status refresh
+
+Canonical repository: `mattleask373-rgb/life-lived-network`; observed main baseline `9269dff0fb66911733ea309fd7342d86bb60c112`. No merge/deploy performed.
+
+- #173 SEO gate + gated locality/service sitemap paths: exact head `94870d5b087f1939dbc4372588ee0be7f7f2e25f`; Verify passed https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39427722990. Still requires human review of fail-closed behaviour and gate/metadata/sitemap symmetry. Event and LocalBusiness structured data, complete public supply sitemaps, live crawl/Search Console and enquiry conversion remain open.
+- #174 explicit work-opportunity contract/taxonomy: exact head `cd8f9442429568e669424f649af40348c7efc74c`; Verify passed https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39424411630. Market-specific employment, compensation and volunteer policy remains human-gated.
+- #176 work opportunity surfaces: exact head `5944f38a54b36f808de823bc293f383f086e64a4`; Verify passed https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39425558654. No real opportunity inventory, partner feed or outbound contact is claimed.
+- #175 AU staging hierarchy/validator: exact head `bc4119e2aaaf323f1545e42052f5efad7bb7151f`; Verify passed https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39427760586. Six proposed hierarchy nodes remain unpublished and unapproved; sourced point candidates do not replace boundary, provenance, rights and human review. Australia remains NOT LIVE.
+- #177 visual card/place-picker work: exact head `9e513856f4e8f67ac205ecaabfdea82b164087b2`; Verify passed https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39416122486. Manual mobile/keyboard/screen-reader QA is still outstanding.
+- #179 reusable onboarding checklist: prior head `92af351d9345bc59caf434cf7f4a34317f55cb28` passed Verify https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39420467819. This docs refresh requires a new exact-head Verify.
+
+Recommended sequence: human QA #177; review #174 then #176; review #173 after its contract/surface dependencies; keep #175 strictly staging-only. All PRs remain human-reviewed/unmerged. Hosted Verify is not local/browser, deployed SEO, RLS, or live-data evidence.
