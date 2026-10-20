@@ -48,12 +48,7 @@ const SOURCE_CANDIDATES = {
 function draft(
   row: Omit<
     AustraliaStagingDraft,
-    | "countryCode"
-    | "currency"
-    | "blurb"
-    | "publicationStatus"
-    | "hierarchyDecision"
-    | "source"
+    "countryCode" | "currency" | "blurb" | "publicationStatus" | "hierarchyDecision" | "source"
   > & {
     sourceUrlCandidate: string;
     sourceName?: string;
@@ -168,7 +163,8 @@ export const AUSTRALIA_STAGING_SKELETON: readonly AustraliaStagingDraft[] = [
     sourceName: "Queensland Government Department of Resources",
     licenseName: "Creative Commons Attribution 4.0 International",
     licenseUrlCandidate: "https://creativecommons.org/licenses/by/4.0/",
-    attribution: "© State of Queensland (Department of Resources) 2024",
+    attribution:
+      "© State of Queensland (Department of Resources) 2024",
   }),
   draft({
     sourceKey: "au:locality:port-douglas",
@@ -185,6 +181,7 @@ export const AUSTRALIA_STAGING_SKELETON: readonly AustraliaStagingDraft[] = [
     sourceName: "Queensland Government Department of Resources",
     licenseName: "Creative Commons Attribution 4.0 International",
     licenseUrlCandidate: "https://creativecommons.org/licenses/by/4.0/",
-    attribution: "© State of Queensland (Department of Resources) 2024",
+    attribution:
+      "© State of Queensland (Department of Resources) 2024",
   }),
 ];
