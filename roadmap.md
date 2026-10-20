@@ -245,3 +245,12 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - Both noindex and in PRIVATE_PATHS. No payments, backend, schema or auth changes.
 - [ ] Blocked on approval: storing interest submissions in the database (needs a new table) and a follow-up contact route.
 - [ ] My Places full slice: plan awaiting approval (schema addition, location precision).
+
+
+## 2026-10-20 — Work-opportunity contract reconciliation
+
+- Fresh contract port from PR #174 onto canonical `main` at `14e409e90a027305902f381de3d0a9fbd912dc71`; the original feature branch remains unchanged for review.
+- Scope: strict opportunity contract/parser and taxonomy safeguards only. It does not seed records, activate partner sources, change schema/RLS/grants, or contact anyone.
+- The traveller-facing locality/request surfaces remain a separate integration dependency in #176; do not duplicate matching logic or change `findSupply()`.
+- Previous head `a0316819ab164d367a8e40502e4336cc5d55405b` passed hosted Verify (run #1108); require fresh Verify on the reconciled head before review/merge.
+- Human go/no-go still required for market-specific legal/policy review, source rights and actual supply approval. Australia remains NOT LIVE.
