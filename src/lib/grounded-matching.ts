@@ -59,10 +59,7 @@ export type MatchOutcome =
  * Rank real entries against a query. Returns only genuine matches or an
  * honest quiet outcome. Never fabricates.
  */
-export function groundedMatch(
-  entries: WorldEntry[],
-  query: MatchQuery = {}
-): MatchOutcome {
+export function groundedMatch(entries: WorldEntry[], query: MatchQuery = {}): MatchOutcome {
   const limit = Math.max(1, Math.min(query.limit ?? 6, 12));
   const pool = entries.filter((e) => e.quality !== "expired" && !e.demonstration);
 
@@ -70,7 +67,8 @@ export function groundedMatch(
     return {
       kind: "quiet",
       message: "Nothing current is recorded here yet.",
-      suggestion: "Want to help make something happen? Offer a skill, post a need, or put a real event on the map.",
+      suggestion:
+        "Want to help make something happen? Offer a skill, post a need, or put a real event on the map.",
     };
   }
 
@@ -168,7 +166,8 @@ export function groundedMatch(
     return {
       kind: "quiet",
       message: "Nothing current matches what you asked for here.",
-      suggestion: "Try a wider area, a different layer, or help make something happen by posting a need or offering a skill.",
+      suggestion:
+        "Try a wider area, a different layer, or help make something happen by posting a need or offering a skill.",
     };
   }
 
@@ -192,7 +191,7 @@ export function queryFromIntent(intent: Intent, extra: Partial<MatchQuery> = {})
  */
 export function threeHours(
   entries: WorldEntry[],
-  options: { free?: boolean; outdoors?: boolean; layers?: LayerId[] } = {}
+  options: { free?: boolean; outdoors?: boolean; layers?: LayerId[] } = {},
 ): MatchOutcome {
   const q: MatchQuery = { limit: 4 };
   if (options.free !== undefined) q.free = options.free;
