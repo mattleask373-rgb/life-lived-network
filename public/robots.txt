@@ -4,6 +4,7 @@ Allow: /
 # Personal, private and internal screens. Nothing useful for a search engine,
 # and nothing anyone else should be shown. These must stay in sync with
 # PRIVATE_PATHS in src/lib/seo.ts. robots.txt is crawler policy, not access control.
+# Repo aligned via #129; live origin may still show platform defaults until republish.
 Disallow: /auth
 Disallow: /profile
 Disallow: /conversations
