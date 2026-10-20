@@ -88,13 +88,20 @@ function Home() {
   const quiet = Boolean(place) && !worldLoading && !loading && !worldError && all.length === 0;
 
   return (
-    <main className="paper-grain min-h-screen">
+    <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-5xl px-4 pt-8 pb-20 sm:px-6">
         <header>
-          <h1 className="text-4xl leading-none sm:text-5xl">
-            {placeName}
-            {regionName ? <span className="text-muted-foreground">, {regionName}</span> : null}
+          {regionName ? (
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+              {regionName}
+            </p>
+          ) : null}
+          <h1 className="mt-2 max-w-3xl text-4xl leading-tight md:text-6xl">
+            What's actually happening in <span className="italic text-primary">{placeName}</span>
           </h1>
+          <p className="mt-3 max-w-xl text-lg text-muted-foreground">
+            Real work, tables, music, and hours. Then put the phone away.
+          </p>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">{placeBlurb}</p>
           <p role="status" className="mt-2 text-sm text-muted-foreground">
             {worldLoading || loading
@@ -104,10 +111,6 @@ function Home() {
                 : worldError
                   ? "We couldn't check what's recorded here."
                   : `${all.length} ${all.length === 1 ? "thing" : "things"} recorded here · ${needCount} ${needCount === 1 ? "open need" : "open needs"}`}
-          </p>
-          <p className="mt-4 max-w-2xl text-base">
-            Find real things to do, people who can help, and worthwhile stops along your way — then
-            close the app and go live them.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             {quiet ? (
