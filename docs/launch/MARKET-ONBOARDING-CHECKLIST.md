@@ -100,8 +100,8 @@ Before the first record is made public:
 
 ## 8. Public pages, structured data and sitemaps
 
-- Use one canonical indexability contract for page metadata **and** sitemap candidate enumeration. Do not duplicate or weaken the rule per route, country or sitemap.
-- A place row or known category is not enough to index a landing page. Require real, published, non-demonstration records plus the required locality completeness, currentness, provenance, rights, policy and internal-link evidence defined by the current shared gate.
+- Use one canonical indexability contract for page metadata **and** sitemap candidate enumeration. Verify the implementation actually calls the same decision in both paths; a policy written in documentation alone is not sufficient. Do not duplicate or weaken the rule per route, country or sitemap.
+- A place row or known category is not enough to index a landing page. Require real, published, non-demonstration records plus locality completeness, currentness, provenance, rights, policy and internal-link evidence required by the release's approved shared gate.
 - Quiet/empty, thin, demo-only, unpublished, private, blocked, reported, stale, rights-restricted or policy-pending pages remain noindex and are omitted from sitemaps. Unknown places and service slugs return the defined not-found behavior.
 - Canonical URLs must not multiply through tracking parameters, query filters, case variants or duplicate slugs. Test wrong-country redirects and query/fragment stripping.
 - Emit BreadcrumbList, Event or LocalBusiness structured data only when the underlying real data is eligible, attributable, rights-cleared and visibly present on the page. Never emit schema for fictional/test records or imply a listing exists just because a category page exists.
