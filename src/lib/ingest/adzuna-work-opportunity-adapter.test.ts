@@ -53,9 +53,7 @@ describe("Adzuna parser → WorkOpportunity staging composition", () => {
       status: "not_stated",
     });
     expect(result.candidates[0]?.publication.canPublish).toBe(false);
-    expect(result.candidates[0]?.publication.blockers).toContain(
-      "source_rights_not_approved",
-    );
+    expect(result.candidates[0]?.publication.blockers).toContain("source_rights_not_approved");
   });
 
   it("uses only supplied canonical place resolutions and still does not open publication gates", () => {
@@ -76,9 +74,7 @@ describe("Adzuna parser → WorkOpportunity staging composition", () => {
     expect(result.candidates[0]?.publication.blockers).not.toContain(
       "canonical_place_not_resolved",
     );
-    expect(result.candidates[0]?.publication.blockers).toContain(
-      "source_rights_not_approved",
-    );
+    expect(result.candidates[0]?.publication.blockers).toContain("source_rights_not_approved");
   });
 
   it("reports unknown arrangement semantics as a rejected record, not a guessed mapping", () => {
