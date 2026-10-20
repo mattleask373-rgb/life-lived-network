@@ -42,3 +42,11 @@ No autonomous production merge/deploy is active.
 2. Optionally surface MatchEvidence in UI after #177 is reviewed.
 3. Once WorkOpportunity lands on main, extend matcher input non-destructively.
 4. Wire locality / service surfaces to the same MatchOutcome when design is ready.
+
+## 2026-10-20 — WorkOpportunity contract and Adzuna staging reconciliation
+
+- A current-main integration branch is carrying the reviewed `WorkOpportunity` contract/taxonomy, fixture-first Adzuna parser, and parser-to-staging bridge onto the latest visual baseline. This remains pending exact-head CI and human review.
+- All parsed/staged records remain review-required and unpublishable; no live network calls, credentials, source activation, persistence writes, public inventory, or schema/RLS/grant changes are introduced.
+- Before any source activation, a human must verify Adzuna terms, attribution, retention/removal requirements, locality resolution, jurisdiction-specific work/volunteer/pay policy, and publication eligibility.
+- Follow-up UI/SEO surfaces must be reconciled in dependency order against the current route tree; do not merge stale stacked PRs #173/#176 without conflict and exact-head verification.
+
