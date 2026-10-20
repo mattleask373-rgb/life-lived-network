@@ -253,3 +253,24 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - Strict `work_opportunity` payloads flow only through the existing listing normaliser, are excluded when unpublished/unreviewed/rights-restricted, and reuse the shared service taxonomy. Locality and service pages present explicitly recorded pay, engagement kind, duration, dates, accommodation, conditions, skills, host expectations and source provenance without inferring missing facts.
 - "Request a match" prefills the existing need form; it does not send a message. Signed-out visitors still need an account to post a need, so the full low-friction enquiry conversion remains an open launch gate.
 - This PR does not add schema/RLS/grants, database records, or a partner import. Australia and pilot inventory remain NOT LIVE. Exact-head hosted Verify is required before human review.
+
+
+## 2026-10-20 — SEO slice 3 + reviewed work surface integration (PR #173)
+
+- Final SEO follow-up integrates with the reconciled #174 contract and #176 locality/service work-opportunity surfaces before this branch is eligible for merge.
+- Shared gate states/reasons govern both page metadata and dynamic sitemap inclusion; only `INDEXABLE` candidates are listed. The work-opportunity service category gate accepts only the strict publishable helper's records, with a regression test for published, reviewed, rights-cleared opportunities.
+- BreadcrumbList is generated from the visible locality/service hierarchy. A new test ensures child records do not make an empty parent locality enter the sitemap.
+- Exact-head Verify on this combined commit is required. Event/LocalBusiness schema, frictionless signed-out enquiry/contact, approved real pilot inventory, mobile accessibility and launch operations remain incomplete.
+
+
+## 2026-10-20 — Structured data safety slice (PR #173)
+
+- Added conservative `Event` schema only for verified, non-demo, non-cancelled records with a valid explicit start instant, timezone and recorded place label.
+- Added `LocalBusiness` schema only for a verified current provider group with an explicit organisation name and public URL. No business address or exact coordinates are invented; the model currently supports locality `areaServed`, not Google-address-complete rich results.
+- Tests enforce fail-closed behavior for incomplete/invalid facts and ensure no price, organizer, address, geo or availability claims are inferred. Dedicated event/provider routes/sitemaps and source-compliant real records remain open.
+
+
+## Verify evidence — 2026-10-20 (SEO/schema checkpoint)
+
+- Hosted Verify passed on code head `571f49e069299cdff42c939990ff701d36a20844` in [run #1339](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39427456329): frozen install, lint, Vitest and production build.
+- The pure four-state indexability gate, gated sitemap candidates, work-opportunity gate, BreadcrumbList, conservative Event schema, and conservative LocalBusiness schema were included in that checkpoint. This subsequent docs-only evidence commit still requires fresh Verify before review/merge.
