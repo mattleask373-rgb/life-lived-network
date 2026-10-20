@@ -245,3 +245,33 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - Both noindex and in PRIVATE_PATHS. No payments, backend, schema or auth changes.
 - [ ] Blocked on approval: storing interest submissions in the database (needs a new table) and a follow-up contact route.
 - [ ] My Places full slice: plan awaiting approval (schema addition, location precision).
+
+
+## 2026-10-20 — Global integration and grounded AI rollout
+
+Baseline reviewed: main at `14e409e90a027305902f381de3d0a9fbd912dc71`. See [Grounded AI and Global Platform Integration](docs/ai/GROUNDED-ASSISTANT-AND-GLOBAL-INTEGRATION.md) and the current [agent status](docs/agents/STATUS.md).
+
+### Delivery order
+
+1. **Stabilise the current Grok-inspired UI in the canonical app.** Reconcile the accessibility and detail/map branches against current main. Exact-head Verify and manual contrast, keyboard, screen-reader and responsive checks are required.
+2. **Choose one WorkOpportunity chain.** #203 is the current-main contract candidate; #204 is stacked staging work and #206 is a competing surface path. Reconcile duplicate/older branches before integrating. Staging does not activate live feeds.
+3. **Finish the shared SEO policy.** Locality and service page metadata plus sitemap enumeration must use the same fail-closed indexability decision. Quiet/demo-only pages must remain noindex and absent from sitemaps.
+4. **Prove the core product journey.** Trace a real published record from permitted retrieval through the interface, detail view and honest empty/error states. Do not use demo data as proof of real supply.
+5. **Build AI on the existing data boundary.** Keep the current signed-in draft helper user-reviewed. Design the first new assistant as read-only, place-scoped, citation-backed and freshness-aware; use existing retrieval and matching seams, not a second discovery engine.
+6. **Gate AI operations before public exposure.** Require bounded request/context/output, prompt-injection tests, rate/cost controls, provider/retention documentation, evaluation cases and a feature flag. No writes, autonomous publication or external actions.
+7. **Make global market onboarding repeatable.** Validate hierarchy, ISO country, currency, timezone/locale, source rights, moderation, import idempotency, rollback and stewardship for every market. Australia remains not live until its exact hierarchy and real rights-cleared records are approved.
+
+### Current release/process risks
+
+- GitHub currently reports main as unprotected and required status checks disabled. Recommend human approval of branch protection and required CI before pilot release; no settings were changed.
+- Open PRs are partly stacked and partly competing. Never merge an older branch because its individual Verify once passed; verify the exact candidate head and compare it with current main.
+- No public “Ask this place” assistant, global live data coverage, or production access-control proof is claimed by this roadmap entry.
+
+### Phase exit criteria
+
+- One reviewed UI implementation in the canonical application.
+- Exact integration commit has clean required CI and manual accessibility evidence.
+- Locality/service metadata and sitemaps share a tested gate.
+- WorkOpportunity records cannot surface without the full review/rights/publication contract.
+- The assistant answers only from eligible retrieved records, cites its evidence, states uncertainty and has no write tools.
+- Every new market has an approved readiness record; no staged market is described as live.
