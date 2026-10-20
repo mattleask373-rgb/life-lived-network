@@ -65,7 +65,10 @@ export function PlacePicker() {
   return (
     <div className="card-paper p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"><MapPin className="h-4 w-4 text-primary" aria-hidden="true" />Where are you?</p>
+        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+          <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
+          Where are you?
+        </p>
         {!defaultUnavailable ? (
           <button
             type="button"
@@ -122,7 +125,10 @@ export function PlacePicker() {
                 ))}
               </ul>
             ) : (
-              <p role="status" className="rounded-2xl bg-secondary/60 p-4 text-sm text-muted-foreground">
+              <p
+                role="status"
+                className="rounded-2xl bg-secondary/60 p-4 text-sm text-muted-foreground"
+              >
                 We couldn't find that name in the current place records. Try a nearby town, region
                 or country.
               </p>
