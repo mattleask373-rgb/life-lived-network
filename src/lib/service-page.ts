@@ -22,6 +22,7 @@
  */
 
 import { categoryBySlug, inCategory, type ServiceCategory } from "./service-taxonomy";
+import { hasPublicWorkOpportunity } from "./work-opportunity-presentation";
 import { isService } from "./services";
 import type { WorldEntry } from "./world-data";
 
@@ -49,7 +50,7 @@ export function servicePageListings(
     (entry) =>
       entry.quality !== "expired" &&
       !entry.cancellation &&
-      isService(entry) &&
+      (isService(entry) || hasPublicWorkOpportunity(entry)) &&
       inCategory(entry, category.slug),
   );
   return {

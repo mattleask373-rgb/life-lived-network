@@ -267,3 +267,11 @@ Current source of truth is main `14e409e90a027305902f381de3d0a9fbd912dc71`. Olde
 - Remaining launch gates: current-head verification after each reconciliation; hands-on 375px/1280px, keyboard and screen-reader QA; confirmed source rights and market policy; live sitemap/metadata check; enquiry-path truthfulness and signed-out behavior; security/RLS proof for any future data-path change; explicit pilot locality/hierarchy/timezone approval.
 
 No merge, deployment, production write, schema/RLS/grant change, credential activation, or live-feed activation is authorized by this roadmap update.
+
+## 2026-10-20 afternoon — Current-main WorkOpportunity surfaces (rebased)
+
+- PR #203 connects the reviewed WorkOpportunity contract to existing locality/service pages and the editable Need-prefill path. Review it after PR #197.
+- External candidates remain unpublished until source rights, provenance, freshness, compensation, engagement and policy gates are satisfied. No parallel discovery matcher is introduced.
+- SEO indexability and sitemap eligibility must follow the merged route tree, and quiet-locality request handoff must fail closed for unresolved canonical place slugs.
+- Verify must pass on the final stack after each prerequisite merge; manual 375px/1280px, keyboard/screen-reader and route/sitemap preview checks remain required.
+
