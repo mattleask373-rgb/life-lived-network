@@ -98,9 +98,7 @@ export function EntryCard({
   const shell = "card-paper relative block w-full overflow-hidden rounded-2xl text-left";
 
   return (
-    <article
-      className={interactive ? `${shell} transition-shadow hover:shadow-lift` : shell}
-    >
+    <article className={interactive ? `${shell} transition-shadow hover:shadow-lift` : shell}>
       {interactive ? (
         <button
           type="button"
