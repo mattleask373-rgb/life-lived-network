@@ -71,3 +71,11 @@ No autonomous production merge/deploy is active.
 - BreadcrumbList schema matches visible breadcrumb facts; dynamic place URL candidates use the same exact-place scope as the rendered locality route. Failed or incomplete scans fail closed. `findSupply()` remains the sole discovery authority.
 - Verify succeeded on the pre-integration SEO head `79fc4559dd48ffa452b76073bae9b2735bc29343` (run #1318), but a fresh run is required for this combined head. No local tests, live crawl, Search Console or deployed sitemap checks are claimed.
 - Event/LocalBusiness/provider schema, real inventory, rights-cleared source supply at pilot scale, accountless enquiry/contact, and mobile/accessibility checks remain outstanding human/ops gates. Australia remains **NOT LIVE**.
+
+
+## 2026-10-20 — Conservative Event and LocalBusiness structured data (PR #173)
+
+- Locality pages now add `Event` JSON-LD only for non-demo, currently verified event records with an explicit offset-aware start instant, valid IANA timezone, a non-generic recorded place label, and no cancellation. Invalid or incomplete event facts produce no schema; ticket price/availability/organiser type is never inferred.
+- Locality pages add `LocalBusiness` only for an explicitly named provider with a verified current service record and a public booking/source URL. The schema uses the locality as `areaServed`; the model has no verified business street address, so address/geo fields are deliberately omitted rather than invented.
+- Regression tests cover malformed dates/timezones, demo/cancelled/unverified events, generic place labels, missing business identity/URL, and absence of fabricated address/geo/offer properties.
+- These schemas are attached to the locality page UI, not separate event routes. Dedicated event/provider sitemaps and address-grade business data remain separate gates. Fresh hosted Verify is required for the next SEO branch head; no local test run was performed.

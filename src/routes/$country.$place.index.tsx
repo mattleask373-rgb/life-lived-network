@@ -35,7 +35,12 @@ import { contributions, localityQuestions, providerGroups, upcomingEvents } from
 import { KIND_LABEL } from "@/lib/places";
 import { privatePage, publicPage } from "@/lib/seo";
 import { evaluateLocalityPage } from "@/lib/locality-indexability";
-import { breadcrumbListSchema, safeJsonLd } from "@/lib/structured-data";
+import {
+  breadcrumbListSchema,
+  eventSchema,
+  localBusinessSchema,
+  safeJsonLd,
+} from "@/lib/structured-data";
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import { publicWorkOpportunityEntries } from "@/lib/work-opportunity-presentation";
 import { filterEntriesByText, parseQuerySearch } from "@/lib/search-context";
@@ -216,6 +221,26 @@ function LocalityPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbListSchema(breadcrumbItems)) }}
       />
+      {events.map((entry) => {
+        const schema = eventSchema(entry);
+        return schema ? (
+          <script
+            key={`event-schema-${entry.id}`}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }}
+          />
+        ) : null;
+      })}
+      {groups.map((group) => {
+        const schema = localBusinessSchema(group, place.name);
+        return schema ? (
+          <script
+            key={`business-schema-${group.organisation}`}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }}
+          />
+        ) : null;
+      })}
       <Crumbs ancestors={ancestors} place={place} />
 
       <h1 className="mt-3 text-4xl leading-tight">{place.name}</h1>

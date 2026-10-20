@@ -261,3 +261,10 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - Shared gate states/reasons govern both page metadata and dynamic sitemap inclusion; only `INDEXABLE` candidates are listed. The work-opportunity service category gate accepts only the strict publishable helper's records, with a regression test for published, reviewed, rights-cleared opportunities.
 - BreadcrumbList is generated from the visible locality/service hierarchy. A new test ensures child records do not make an empty parent locality enter the sitemap.
 - Exact-head Verify on this combined commit is required. Event/LocalBusiness schema, frictionless signed-out enquiry/contact, approved real pilot inventory, mobile accessibility and launch operations remain incomplete.
+
+
+## 2026-10-20 — Structured data safety slice (PR #173)
+
+- Added conservative `Event` schema only for verified, non-demo, non-cancelled records with a valid explicit start instant, timezone and recorded place label.
+- Added `LocalBusiness` schema only for a verified current provider group with an explicit organisation name and public URL. No business address or exact coordinates are invented; the model currently supports locality `areaServed`, not Google-address-complete rich results.
+- Tests enforce fail-closed behavior for incomplete/invalid facts and ensure no price, organizer, address, geo or availability claims are inferred. Dedicated event/provider routes/sitemaps and source-compliant real records remain open.
