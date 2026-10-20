@@ -52,3 +52,13 @@ No autonomous production merge/deploy is active.
 2. Reconcile #62's lifecycle model with the durable SQL status contract and authenticated fencing boundaries before any integration.
 3. Reconcile #43 into #49's canonical ingest boundary; preserve useful fixture/normalization/freshness/provenance evidence while retiring the parallel architecture.
 4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
+
+
+## 2026-10-20 — reusable market onboarding checklist (documentation PR)
+
+- Added `docs/launch/MARKET-ONBOARDING-CHECKLIST.md` on branch `codex/market-onboarding-checklist-2026-10-20`, branched from canonical `main` at `9269dff0fb66911733ea309fd7342d86bb60c112`.
+- The checklist defines market gates for geography and canonical URLs; ISO country/currency, integer minor units, locale and IANA timezone; taxonomy and local work-law distinctions; source terms, attribution and media rights; moderation/privacy; current supply-engine integration; shared page/sitemap indexability; non-writing import validation, idempotency and rollback; minimum regression coverage; and named human go/no-go ownership.
+- This is process documentation only. No application code, place rows, listings, events, job opportunities, credentials, partner feeds, schema, RLS/grants, production writes, merge or deployment changed.
+- Australia remains NOT LIVE. The checklist explicitly states that successful staging/schema validation is not proof of inventory and does not authorize publication.
+- Verification: hosted Verify must be checked on the final PR head. No local shell/test run is claimed in this GitHub-only session.
+- Human decisions remain required for pilot locality hierarchy, source-rights decisions, local employment/policy review, minimum verified-record threshold, currency/timezone choices, owner assignments and final release approval.
