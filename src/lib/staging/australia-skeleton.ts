@@ -159,12 +159,12 @@ export const AUSTRALIA_STAGING_SKELETON: readonly AustraliaStagingDraft[] = [
     sourceDataStatus: "unconfirmed",
     latitude: -24.2125857,
     longitude: 151.90327882,
-    sourceUrlCandidate: "https://spatial-gis.information.qld.gov.au/arcgis/rest/services/Location/QldPlaceNames/MapServer/0/query?where=REF_NO%3D39140&outFields=REF_NO%2CPLACE_NAME%2CDESCRIPTION%2CSTATUS%2CCURRENCY%2CMODIFIED_DATE%2CLGA_NAME%2CLONGITUDE_DD%2CLATITUDE_DD&returnGeometry=false&f=pjson",
+    sourceUrlCandidate:
+      "https://spatial-gis.information.qld.gov.au/arcgis/rest/services/Location/QldPlaceNames/MapServer/0/query?where=REF_NO%3D39140&outFields=REF_NO%2CPLACE_NAME%2CDESCRIPTION%2CSTATUS%2CCURRENCY%2CMODIFIED_DATE%2CLGA_NAME%2CLONGITUDE_DD%2CLATITUDE_DD&returnGeometry=false&f=pjson",
     sourceName: "Queensland Government Department of Resources",
     licenseName: "Creative Commons Attribution 4.0 International",
     licenseUrlCandidate: "https://creativecommons.org/licenses/by/4.0/",
-    attribution:
-      "© State of Queensland (Department of Resources) 2024",
+    attribution: "© State of Queensland (Department of Resources) 2024",
   }),
   draft({
     sourceKey: "au:locality:port-douglas",
@@ -177,11 +177,11 @@ export const AUSTRALIA_STAGING_SKELETON: readonly AustraliaStagingDraft[] = [
     sourceDataStatus: "unconfirmed",
     latitude: -16.49944,
     longitude: 145.46083,
-    sourceUrlCandidate: "https://spatial-gis.information.qld.gov.au/arcgis/rest/services/Location/QldPlaceNames/MapServer/0/query?where=REF_NO%3D48847&outFields=REF_NO%2CPLACE_NAME%2CDESCRIPTION%2CSTATUS%2CCURRENCY%2CMODIFIED_DATE%2CLGA_NAME%2CLONGITUDE_DD%2CLATITUDE_DD&returnGeometry=false&f=pjson",
+    sourceUrlCandidate:
+      "https://spatial-gis.information.qld.gov.au/arcgis/rest/services/Location/QldPlaceNames/MapServer/0/query?where=REF_NO%3D48847&outFields=REF_NO%2CPLACE_NAME%2CDESCRIPTION%2CSTATUS%2CCURRENCY%2CMODIFIED_DATE%2CLGA_NAME%2CLONGITUDE_DD%2CLATITUDE_DD&returnGeometry=false&f=pjson",
     sourceName: "Queensland Government Department of Resources",
     licenseName: "Creative Commons Attribution 4.0 International",
     licenseUrlCandidate: "https://creativecommons.org/licenses/by/4.0/",
-    attribution:
-      "© State of Queensland (Department of Resources) 2024",
+    attribution: "© State of Queensland (Department of Resources) 2024",
   }),
 ];
