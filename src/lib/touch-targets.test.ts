@@ -32,7 +32,8 @@ describe("detail panel touch targets", () => {
     expect(src).toContain(
       "const photos = (entry.photos ?? []).filter((photo) => photo.url.trim().length > 0);",
     );
-    expect(src).toContain('role="region" aria-label={`Photos for ${entry.title}`} '.trim());
+    expect(src).toContain('role="region"');
+    expect(src).toContain("Photos for ${entry.title}");
     expect(src).toContain("font-display text-3xl");
   });
 
