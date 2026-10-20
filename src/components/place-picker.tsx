@@ -39,7 +39,11 @@ export function PlacePicker() {
   };
 
   if (loading && !place) {
-    return <p role="status" className="card-paper p-4 text-sm text-muted-foreground">Finding your way around…</p>;
+    return (
+      <p role="status" className="card-paper p-4 text-sm text-muted-foreground">
+        Finding your way around…
+      </p>
+    );
   }
 
   if (loadError && !index) {
@@ -132,7 +136,9 @@ export function PlacePicker() {
 
           {ancestors.length ? (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step out to</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                Step out to
+              </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {ancestors.map((a) => (
                   <Chip key={a.id} onClick={() => choose(a)} label={a.name} />
@@ -143,7 +149,9 @@ export function PlacePicker() {
 
           {children.length ? (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Look closer at</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                Look closer at
+              </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {children.slice(0, 40).map((c) => (
                   <Chip key={c.id} onClick={() => choose(c)} label={c.name} />

@@ -55,7 +55,9 @@ export function EntryCard({
       <div className="p-4">
         <div className="flex items-center gap-2">
           {layer ? <LayerIcon icon={layer.icon} size={15} strokeWidth={1.7} /> : null}
-          <span className={`text-xs font-semibold uppercase tracking-widest ${layerText[entry.layer]}`}>
+          <span
+            className={`text-xs font-semibold uppercase tracking-widest ${layerText[entry.layer]}`}
+          >
             {layer?.label}
           </span>
         </div>
@@ -76,7 +78,9 @@ export function EntryCard({
           {duration(entry.minutes)} · {money(entry.cost, entry.currency)}
         </p>
         <div className="mt-3 flex flex-wrap gap-1.5">
-          {service ? <span className={CHIP}>{BOOKING_LABEL[asBookingState(entry.bookingState)]}</span> : null}
+          {service ? (
+            <span className={CHIP}>{BOOKING_LABEL[asBookingState(entry.bookingState)]}</span>
+          ) : null}
           <TrustChip entry={entry} />
           {entry.origin === "source" && entry.sourceName ? (
             <span className={CHIP}>Listed by {entry.sourceName}</span>
