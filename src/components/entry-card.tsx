@@ -52,7 +52,9 @@ export function EntryCard({
 
       <div className="flex flex-1 flex-col p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className={`inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest ${layerText[entry.layer]}`}>
+          <span
+            className={`inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest ${layerText[entry.layer]}`}
+          >
             {layer ? <LayerIcon icon={layer.icon} size={15} strokeWidth={1.7} /> : null}
             {layer?.label}
           </span>
@@ -71,13 +73,13 @@ export function EntryCard({
 
         <h3 className="mt-2 font-display text-xl leading-snug text-foreground">{entry.title}</h3>
 
-        {service ? (
-          <p className="mt-1 text-sm text-foreground/85">{providerLine(entry)}</p>
-        ) : null}
+        {service ? <p className="mt-1 text-sm text-foreground/85">{providerLine(entry)}</p> : null}
 
         <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
           <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>{entry.place} · {entry.neighbourhood}</span>
+          <span>
+            {entry.place} · {entry.neighbourhood}
+          </span>
         </p>
 
         <p className="mt-2 text-sm text-muted-foreground">
@@ -105,7 +107,11 @@ export function EntryCard({
   );
 
   if (!onOpen) {
-    return <article className="card-paper group flex h-full flex-col overflow-hidden text-left">{body}</article>;
+    return (
+      <article className="card-paper group flex h-full flex-col overflow-hidden text-left">
+        {body}
+      </article>
+    );
   }
 
   return (
