@@ -1,5 +1,4 @@
 import { ImageOff } from "lucide-react";
-
 import { LAYERS, type WorldEntry } from "@/lib/world-data";
 import { asBookingState, BOOKING_LABEL, isService, providerLine } from "@/lib/services";
 import { cardPhoto, NO_PHOTO_LABEL } from "@/lib/entry-card-view";
@@ -27,6 +26,11 @@ export function EntryCard({
   const layer = LAYERS.find((l) => l.id === entry.layer);
   const service = isService(entry);
   const photo = cardPhoto(entry);
+  const interactive = Boolean(onOpen);
+
+  const handleActivate = () => {
+    onOpen?.(entry);
+  };
 
   const body = (
     <>
@@ -91,17 +95,19 @@ export function EntryCard({
     </>
   );
 
-  const shell = "card-paper block w-full overflow-hidden rounded-2xl text-left";
-
-  if (!onOpen) return <article className={shell}>{body}</article>;
+  const shell = "card-paper relative block w-full overflow-hidden rounded-2xl text-left";
 
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(entry)}
-      className={`${shell} focus-ink transition-shadow hover:shadow-lift`}
-    >
+    <article className={interactive ? `${shell} transition-shadow hover:shadow-lift` : shell}>
+      {interactive ? (
+        <button
+          type="button"
+          aria-label={`Open listing: ${entry.title}`}
+          onClick={handleActivate}
+          className="focus-ink absolute inset-0 z-10 appearance-none rounded-2xl border-0 bg-transparent p-0"
+        />
+      ) : null}
       {body}
-    </button>
+    </article>
   );
 }
