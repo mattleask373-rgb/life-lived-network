@@ -168,7 +168,6 @@ function NeedForm({
   const [urgency, setUrgency] = useState("soon");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [savedNeedId, setSavedNeedId] = useState<string | null>(null);
 
   const paymentType =
     intent === "skills_exchange"
@@ -179,7 +178,6 @@ function NeedForm({
 
   async function save() {
     setError(null);
-    setSavedNeedId(null);
     if (!category.trim() || !needTitle.trim()) {
       setError("A word for what it is, and a line about what you need.");
       return;
@@ -187,7 +185,7 @@ function NeedForm({
     setBusy(true);
     try {
       const startsAt = when ? new Date(when).toISOString() : null;
-      const saved = await submit({
+      await submit({
         data: {
           category: category.trim().toLowerCase(),
           title: needTitle.trim(),
@@ -215,7 +213,6 @@ function NeedForm({
           visibility: "local_discovery",
         },
       });
-      setSavedNeedId(saved.id);
       setCategory("");
       setNeedTitle("");
       setDescription("");
@@ -248,10 +245,7 @@ function NeedForm({
           What kind of thing is it?
           <input
             value={category}
-            onChange={(e) => {
-              setCategory(e.target.value);
-              setSavedNeedId(null);
-            }}
+            onChange={(e) => setCategory(e.target.value)}
             placeholder="gardening, cleaning, translation, carrying things"
             className="focus-ink rounded-md border border-border bg-background px-3 py-2"
           />
@@ -267,10 +261,7 @@ function NeedForm({
           ) : null}
           <input
             value={needTitle}
-            onChange={(e) => {
-              setNeedTitle(e.target.value);
-              setSavedNeedId(null);
-            }}
+            onChange={(e) => setNeedTitle(e.target.value)}
             placeholder="Gardener for an overgrown back garden"
             className="focus-ink rounded-md border border-border bg-background px-3 py-2"
           />
@@ -381,26 +372,7 @@ function NeedForm({
           </label>
         </div>
 
-        {error ? (
-          <p className="text-sm text-destructive" role="alert">
-            {error}
-          </p>
-        ) : null}
-        {savedNeedId ? (
-          <div className="rounded-lg border border-border bg-background p-3 text-sm" role="status">
-            <p className="font-medium">Your request has been saved.</p>
-            <p className="mt-1 text-muted-foreground">
-              It uses the existing local matching flow. It has not messaged the listed source.
-            </p>
-            <Link
-              to="/need/$id"
-              params={{ id: savedNeedId }}
-              className="focus-ink mt-2 inline-flex min-h-11 items-center underline underline-offset-4"
-            >
-              See who could help
-            </Link>
-          </div>
-        ) : null}
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
         <div>
           <button

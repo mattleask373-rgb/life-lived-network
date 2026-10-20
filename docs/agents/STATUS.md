@@ -53,24 +53,11 @@ No autonomous production merge/deploy is active.
 3. Reconcile #43 into #49's canonical ingest boundary; preserve useful fixture/normalization/freshness/provenance evidence while retiring the parallel architecture.
 4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
 
-## 2026-10-19 — current verified execution snapshot
 
-Canonical repository: `mattleask373-rgb/life-lived-network`. Current `main` baseline: `f2de6d8d76bdabbd98639f4bf4837573c96587cc`. No PR has been merged or deployed in this execution slice.
+## 2026-10-20 — Reviewed work-opportunity surfaces (PR #176 reconciliation)
 
-- **PR #175 — place staging validator:** open, not merged. Exact head `2d53309078fe9813efcd5a31ed341c5ae8e45876`. PR Verify passed: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335580094 . Push Verify passed: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335578622 . No Australian place inventory has been seeded.
-- **PR #173 — gated locality/service-locality:** open, not merged. Exact head `534274a556b67d1d4455cd2c2a7111a19119c1c8`. PR Verify passed: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335386006 . Push Verify passed: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335376736 . Dynamic locality/service sitemap candidates are still outstanding; the current sitemap lists static public screens only.
-- **PR #176 — reviewed opportunity surfaces:** open, not merged. Code-bearing head `5814e64049779cc1c37ea501ac0a9152437006a0` passed exact-head PR Verify (install, lint, tests and build): https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39337115684 . Exact-head push Verify passed: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39337107458 . The subsequent docs-only commit will need its own fresh exact-head Verify; PR body is the authority for the final head/run links.
-- **PR #174 — work opportunity contract:** remains open/unmerged and is based on an older lineage. #176 is the clean current-main opportunity-surface continuation; human review should resolve duplicate scope before merging either.
-- **Opportunity publication boundary:** `work_opportunity` remains optional and is parsed at the existing listing normalisation seam. Missing/invalid/unreviewed rights or jurisdiction-policy approval means no public opportunity card. No editor, migration, feed activation, real opportunities or second matcher has been introduced. `findSupply()` remains the discovery authority.
-- **Not established:** local shell/browser verification, live sitemap HTTP behavior, live inventory suitability, disposable database proof, legal review, or deployed production behavior. Supabase Preview is skipped when a PR has no associated Supabase branch.
-
-Human decisions remain required for review/merge/deployment, real source-rights and jurisdiction approval, trusted authorship/storage of opportunity review facts, and Australia hierarchy/timezone/provenance semantics.
-
-## 2026-10-19 — enquiry foundation on PR #176 (no direct source contact)
-
-- **Cross-PR gap:** the generated `/<country>/<place>/<service>` route on PR #173 does not yet render the detailed `WorkOpportunityFacts` panel. Opportunity facts are on locality cards and service cards/details in #176; service-locality opportunity rendering remains a follow-up integration and is not claimed complete here.
-- Added a minimal `RequestMatchLink` on the reviewed work-opportunity surface and service detail sheet. It pre-fills the existing `/need` form with bounded title/category text and makes clear that this creates a user-authored need for the canonical local matching flow; it does not message or identify the listed host.
-- Extended the need route's search parser for safe bounded category prefill and added helper tests.
-- Added visible save/error/loading states to the existing need form: pending button, `role=alert` failure, saved `role=status` with a link to the newly-created need/matching page. The existing authenticated `createNeed` persistence path is reused; no new schema/API was added.
-- Code-bearing head `f22cc7b8ed19d34597e8bc3ea8a7f4a9b220299f` passed exact-head PR Verify [39339094190](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39339094190) and push Verify [39339088114](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39339088114): frozen install, lint, tests and build all passed. Documentation head `ec2efbcf31edceda7bfcd946d4fdc8fec491dd72` also passed exact-head PR Verify [39339213229](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39339213229) and push Verify [39339207437](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39339207437), both with install, lint, tests and build green. Existing `findSupplyForNeed` remains responsible for discovery; no direct lookup or recipient inference is performed.
-
+- Reconciled the work presentation/read path with current main plus the contract and taxonomy from #174, without rewriting the original #176 branch history.
+- The existing listing normalization seam accepts an optional `work_opportunity` payload and fails closed unless the strict contract says its publication, market-policy and rights gates are satisfied. Missing payloads remain missing; this does not create database columns or records.
+- Locality and service-locality UI can show recorded terms through the same helper, and the "Request a match" link only prefills the existing need flow. It does not message a source; posting a need still requires an account in the current UI.
+- `findSupply()` remains the single discovery authority. No entry-card/entry-sheet edits are carried here, to keep Grok's #177 accessibility pass separate.
+- No real work rows or partner feeds are activated. Fresh hosted Verify on the reconciled head is required; no local test run or manual mobile/accessibility check is claimed.

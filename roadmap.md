@@ -1,5 +1,19 @@
 # Roadmap
 
+## 2026-10-19/20 — Overwrite reconciliation + service pages (SEO slice 3, frontend half)
+
+- Repository overwrite incident (19 Oct, 21:37) reconciled read-only: current main is a superset of the backup branch `lovable-backup-main-1792442270`. The backup's only unique content is two historical plan docs and the tracked `.env` that PR #157 deliberately removed — no implementation work is stranded. Backup left untouched; do not restore `.env` from it.
+- PRs #157 (.env hygiene), #163 (service-area-only matching), #170 (configurable default locality), #129 (private routes out of crawler paths) are now merged on main.
+- New public route `/<country>/<place>/<service>` (e.g. `/gb/kings-heath/gardening`): canonical country-segment redirect, 404 for unknown place or service slug, breadcrumbs, genuine listings via the shared service taxonomy (record's own evidence only), honest quiet state with offer/browse-wider steps, related services, child-place links. Demonstration records are disclosed, never counted as supply.
+- Indexability: a service page is offered to search engines only with ≥1 genuine current listing (`servicePageIndexable`); quiet pages emit `noindex, nofollow` (verified in served HTML). This reuses the publicPage/privatePage convention — the full explainable INDEXABLE/NOINDEX gate remains a backend dependency; `src/lib/service-page.ts` is the single seam to re-point.
+- Route structure fix: `$country.$place.tsx` is now a bare `<Outlet />` layout; the locality page moved to `$country.$place.index.tsx`; `localityPath` moved to `src/lib/locality-path.ts` (route files exporting helpers break fast refresh).
+- Locality page "kinds of service" chips now link to the new service pages.
+- Files: `src/lib/service-page.ts` (+test, 11 tests), `src/lib/locality-path.ts`, `src/routes/$country.$place.tsx`, `src/routes/$country.$place.index.tsx`, `src/routes/$country.$place.$service.tsx`.
+- Checks: tsgo clean; lint 0 errors / 7 warnings (existing); vitest 41 files / 320 passed; build OK. Playwright 375px: service page (quiet + trial-data disclosure), locality page, unknown-service 404, wrong-country redirect all verified; no console/page errors.
+- Still ahead (backend/Codex dependencies): canonical indexability gate, service/locality sitemaps, structured data, enquiry endpoint, Australian place records (none exist — do not seed).
+- Enquiry pathway (Workstream E, frontend half): fixed a truthfulness bug — the "Ask about this" step claimed "your message goes to the provider", but no provider-messaging pathway exists. The note now says so plainly and offers the real step (post a need, visible to people in the place). The step now carries the service's title into `/need` as an editable pre-fill (validated `q`/`from` params), so the visitor lands with context instead of an empty form. Live click-through is untestable with trial data by design — demonstration records never show an enquiry step; covered by unit tests instead. Files: `src/lib/services.ts`, `src/components/entry-sheet.tsx`.
+- QA: service page verified at 1280px and 375px; quiet-state CTAs measure 66px tall; no console/page errors.
+
 ## Final product hardening (done)
 
 - [x] Restore separate map exploration and explicit area adoption.
@@ -232,25 +246,10 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - [ ] Blocked on approval: storing interest submissions in the database (needs a new table) and a follow-up contact route.
 - [ ] My Places full slice: plan awaiting approval (schema addition, location precision).
 
-## 2026-10-19 — limited-pilot gating: verified progress, remaining work
 
-Canonical base for this slice: `f2de6d8d76bdabbd98639f4bf4837573c96587cc`. Changes remain on focused feature branches; nothing is merged or deployed.
+## 2026-10-20 — Traveller opportunity surface integration (PR #176)
 
-- [x] PR #175 place-staging validator is open and exact-head Verify-green at `2d53309078fe9813efcd5a31ed341c5ae8e45876` (install/lint/tests/build): [PR Verify](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335580094), [push Verify](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335578622). No AU place data was seeded.
-- [x] PR #173 adds server-rendered locality and service-locality routes using the shared indexability gate. Exact head `534274a556b67d1d4455cd2c2a7111a19119c1c8` is Verify-green: [PR Verify](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335386006), [push Verify](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335376736).
-- [x] PR #176 adds an optional strict work-opportunity contract, safe facts presentation, listing-boundary rejection of invalid/unapproved payloads, and locality cards. Code-bearing head `5814e64049779cc1c37ea501ac0a9152437006a0` passed frozen install, lint, tests and build: [PR Verify](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39337115684), [push Verify](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39337107458). Final documentation head requires a fresh run.
-- [ ] Add truthful `BreadcrumbList` JSON-LD to locality and service-locality pages; do not add `Event` or `LocalBusiness` JSON-LD without complete real, published, non-demonstration records.
-- [ ] Add dynamic locality/service sitemap candidate enumeration with `evaluateIndexability().sitemapEligible` as the only inclusion gate and endpoint boundary tests for thin, demo, private, unpublished and invalid paths.
-- [ ] Add minimal enquiry/lead actions with explicit pending/success/error outcomes only after connecting them to the existing safe need/connection flow; no new persistent schema has been approved.
-- [ ] Stage Byron Bay, Agnes Water, and Port Douglas plus required parents as `not_published` only after hierarchy/timezone/currency/provenance fields are defined by a reviewed staging contract. No real listing/coordinates are inferred.
-
-Open decisions: trusted authority for policy/rights approval fields and opportunity persistence; market-specific compensation/legal review; locality hierarchy and timezone interpretation; source licensing. Live sitemap responses, browser/mobile behavior, deployed SEO, database authority, and production write paths have not been verified in this session.
-
-## Enquiry foundation — PR #176 (2026-10-19)
-
-- [ ] Integrate the detailed opportunity-facts panel into the generated service-locality route on PR #173 after the two branch scopes are jointly reviewed. Current PR #176 covers locality cards and service cards/details, not the dedicated `/<country>/<place>/<service>` route.
-- [x] Added a “Request a match” CTA on approved opportunity details and a prefilled request CTA on service detail sheets; it routes into the existing need → `findSupply()` flow and explicitly states it does not directly message the source.
-- [x] Reused the existing authenticated `createNeed` call and added visible loading/error/success states including a link to the saved need's matching results. No new table/schema or connection recipient inference.
-- [x] Added bounded category/title query parsing and tests so the CTA prefill is editable text only, never claims about supply or an employer.
-- [x] Code-bearing head `f22cc7b8ed19d34597e8bc3ea8a7f4a9b220299f` passed [PR Verify 39339094190](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39339094190) and [push Verify 39339088114](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39339088114), including frozen install, lint, tests and production build. Documentation head `ec2efbcf31edceda7bfcd946d4fdc8fec491dd72` also passed [PR Verify 39339213229](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39339213229) and [push Verify 39339207437](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39339207437), with install/lint/tests/build all green. User-authored needs and `findSupply()` remain the sole matching path.
-
+- Reconciled the opportunity contract from #174 onto current main and adapted #176 for the current locality index route, leaving shared EntryCard/EntrySheet accessibility work separate in #177.
+- Strict `work_opportunity` payloads flow only through the existing listing normaliser, are excluded when unpublished/unreviewed/rights-restricted, and reuse the shared service taxonomy. Locality and service pages present explicitly recorded pay, engagement kind, duration, dates, accommodation, conditions, skills, host expectations and source provenance without inferring missing facts.
+- "Request a match" prefills the existing need form; it does not send a message. Signed-out visitors still need an account to post a need, so the full low-friction enquiry conversion remains an open launch gate.
+- This PR does not add schema/RLS/grants, database records, or a partner import. Australia and pilot inventory remain NOT LIVE. Exact-head hosted Verify is required before human review.

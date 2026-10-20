@@ -13,8 +13,6 @@ import {
 } from "@/lib/services";
 import { duration, eventDate, layerText, money } from "./layer-colour";
 import { LayerIcon } from "./layer-icon";
-import { WorkOpportunityFacts } from "./work-opportunity-facts";
-import { RequestMatchLink } from "./request-match-link";
 
 export function EntrySheet({
   entry,
@@ -149,7 +147,6 @@ export function EntrySheet({
           </dl>
 
           <p className="mt-4 leading-relaxed">{entry.summary}</p>
-          <WorkOpportunityFacts entry={entry} />
 
           {/* A service: what it is, who provides it, where, when, what it costs,
               and the one next step that is actually true. */}
@@ -182,11 +179,13 @@ export function EntrySheet({
                     {step.label}
                   </a>
                 ) : step.kind === "enquire" ? (
-                  <RequestMatchLink
-                    title={entry.title}
-                    category={entry.serviceCategory || "service"}
-                    label={step.label}
-                  />
+                  <Link
+                    to="/need"
+                    search={{ q: entry.title, from: entry.title }}
+                    className="focus-ink inline-flex min-h-11 items-center rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground"
+                  >
+                    {step.label}
+                  </Link>
                 ) : (
                   <span className="inline-flex rounded-full border border-border px-4 py-2 text-sm text-muted-foreground">
                     {step.label}

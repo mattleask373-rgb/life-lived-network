@@ -65,8 +65,8 @@ export interface WorldEntry {
   /** True when a real person on the platform posted this, not demo content. */
   community?: boolean;
   /**
-   * Optional explicit work/volunteer terms. Missing or invalid terms never
-   * imply pay, volunteering, dates, accommodation or availability.
+   * Explicit work/volunteer details when available. Optional metadata does not
+   * imply persistence; ingestion must validate it before public use.
    */
   workOpportunity?: WorkOpportunity;
 
