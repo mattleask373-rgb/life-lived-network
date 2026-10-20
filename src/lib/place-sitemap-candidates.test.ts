@@ -89,10 +89,11 @@ describe("gated place sitemap candidate builder", () => {
       parent_id: null,
     };
     const child = { ...place, parent_id: parent.id };
-    const paths = buildGatedPlaceSitemapPaths(
-      buildPlaceIndex([parent, child]),
-      [service("one"), service("two"), service("three")],
-    );
+    const paths = buildGatedPlaceSitemapPaths(buildPlaceIndex([parent, child]), [
+      service("one"),
+      service("two"),
+      service("three"),
+    ]);
     expect(paths).toEqual(["/gb/example-place", "/gb/example-place/cleaning"]);
   });
 

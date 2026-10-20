@@ -26,11 +26,7 @@ import { KIND_LABEL } from "@/lib/places";
 import { evaluateServiceLocalityPage } from "@/lib/service-locality";
 import { privatePage, publicPage } from "@/lib/seo";
 import { breadcrumbListSchema, safeJsonLd } from "@/lib/structured-data";
-import {
-  servicePageCopy,
-  servicePageListings,
-  servicePagePath,
-} from "@/lib/service-page";
+import { servicePageCopy, servicePageListings, servicePagePath } from "@/lib/service-page";
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import type { WorldEntry } from "@/lib/world-data";
 import { localityPath } from "@/lib/locality-path";
