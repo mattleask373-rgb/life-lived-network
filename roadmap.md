@@ -261,3 +261,9 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - Added Queensland Place Names Gazetteer point candidates to the non-writing fixture: Agnes Water REF_NO 39140 (-24.2125857, 151.90327882) and Port Douglas REF_NO 48847 (-16.49944, 145.46083). The official service's licence metadata says CC BY 4.0 and requests attribution to © State of Queensland (Department of Resources) 2024.
 - The fixture records licence/attribution candidates while preserving pending human source review and `rightsStatus=unreviewed`. No fresh bulk source extract/version or retrieved-at timestamp is asserted.
 - Byron Bay and parent nodes remain coordinate-null until an exact authoritative record is sourced; no coordinates are guessed. Points are not navigation/address-grade. Nothing is imported/published; Australia remains NOT LIVE.
+
+
+## Verify evidence — 2026-10-20 (Australia staging checkpoint)
+
+- Hosted Verify passed on code head `0e7dadbb6c4ac3948d2b71ff04014d93b1ce9194` in [run #1336](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39426960966): frozen install, lint, Vitest and production build.
+- The checkpoint contains non-writing place validation plus official Queensland gazetteer point candidates for Agnes Water and Port Douglas with licence/attribution recorded as pending human approval. This subsequent docs-only evidence commit still requires fresh Verify before review/merge.

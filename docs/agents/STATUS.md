@@ -69,3 +69,9 @@ No autonomous production merge/deploy is active.
 - Queensland service metadata states CC BY 4.0 and requests attribution `© State of Queensland (Department of Resources) 2024`; the candidate rows record that licence/attribution but deliberately retain `reviewStatus=pending` and `rightsStatus=unreviewed`.
 - Byron Bay and country/state parent rows still have null coordinates because this pass did not establish an exact official place-point record for them. No guessed points were substituted.
 - Candidate coordinates are named-place points, not street addresses or navigation-grade positions. All six proposed rows remain `not_published` and hierarchy `proposed_not_approved`; source version/retrieval evidence and human review are still required. Australia remains **NOT LIVE**.
+
+
+## Verification checkpoint — 2026-10-20 (Australia staging code head)
+
+- Hosted Verify **passed** on Australia staging implementation head `0e7dadbb6c4ac3948d2b71ff04014d93b1ce9194`: [run #1336](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39426960966). Frozen install, lint, Vitest and production build passed.
+- This run covers the non-writing staging fixture and two Queensland coordinate/licence candidates. The status/roadmap-only commit recording it needs fresh exact-head Verify. Byron Bay/parent coordinates, source version/retrieval evidence, hierarchy/timezone approval and rights approval remain open. Australia remains **NOT LIVE**.
