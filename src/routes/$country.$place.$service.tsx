@@ -34,6 +34,7 @@ import {
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import type { WorldEntry } from "@/lib/world-data";
 import { localityPath } from "@/lib/locality-path";
+import { needPrefillForService } from "@/lib/need-prefill";
 
 export const Route = createFileRoute("/$country/$place/$service")({
   loader: async ({ params }) => {
@@ -193,14 +194,31 @@ function ServicePage() {
             We'd rather say that than invent someone. If you genuinely offer this in {place.name},
             you can be the first — or look wider while the place is still quiet.
           </p>
-          <ul className="mt-5 grid gap-2 sm:grid-cols-3">
+          <ul className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <li>
+              <Link
+                to="/need"
+                search={
+                  needPrefillForService({
+                    categorySlug: category.slug,
+                    categoryLabel: category.label,
+                    placeSlug: place.slug,
+                    placeName: place.name,
+                  })
+                }
+                className="focus-ink flex min-h-11 flex-col rounded-lg border border-primary bg-primary px-4 py-3 text-sm text-primary-foreground"
+              >
+                <span className="font-medium">Looking for help?</span>
+                <span className="opacity-90">Ask for {category.label.toLowerCase()} in {place.name}</span>
+              </Link>
+            </li>
             <li>
               <Link
                 to="/make"
-                className="focus-ink flex min-h-11 flex-col rounded-lg border border-primary bg-primary px-4 py-3 text-sm text-primary-foreground"
+                className="focus-ink flex min-h-11 flex-col rounded-lg border border-border bg-background px-4 py-3 text-sm hover:bg-card"
               >
                 <span className="font-medium">Offer this here</span>
-                <span className="opacity-90">Add a real listing in {place.name}</span>
+                <span className="text-muted-foreground">Add a real listing in {place.name}</span>
               </Link>
             </li>
             <li>
