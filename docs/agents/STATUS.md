@@ -21,7 +21,7 @@ No autonomous production merge/deploy is active.
 
 ### Design / accessibility
 - Current main contains the newer Grok/Lovable front door. PRs #177, #191 and #192 are closed, unmerged, and superseded; do not revive those branches.
-- **PR #193** is the focused current-main EntryCard accessibility fix. Latest native-overlay revision `75e998206a7c0535244f40a9ac7caae46f4fe8dc` is awaiting fresh Verify. Manual 375px/1280px, keyboard and screen-reader checks remain required.
+- **PR #193** is the focused current-main EntryCard accessibility fix. Native-overlay revision `5ac6d3d65cf318cdefc076a1240587fad044acdf` passed hosted Verify #39440279868 (lint, tests and build). Manual 375px/1280px, keyboard and screen-reader checks remain required.
 - **PR #195** carries detail-sheet/map-control polish. Hosted Verify #39439225424 passed on recorded head `6624f7894c6ffd212683300f878c13bc46314312`; visual/keyboard/screen-reader QA remains open.
 
 ### Work contract / opportunity staging
@@ -47,7 +47,7 @@ No autonomous production merge/deploy is active.
 - No contact claim unless the real contact path has actually completed.
 ## 2026-10-20 — WorkOpportunity contract and Adzuna staging reconciliation
 
-- A current-main integration branch is carrying the reviewed `WorkOpportunity` contract/taxonomy, fixture-first Adzuna parser, and parser-to-staging bridge onto the latest visual baseline. This remains pending exact-head CI and human review.
+- The current-main integration branch carries the reviewed `WorkOpportunity` contract/taxonomy, fixture-first Adzuna parser, and parser-to-staging bridge onto the latest visual baseline. Code-bearing head `1abc21d370fb93482760c60c57231c967e3e3d9a` passed hosted Verify #39439428714; status/roadmap documentation refresh head `2bc7286b5c0713a206def501bb4bd11463c8341d` passed hosted Verify #39440209019 and #39440216040. Human review remains open.
 - All parsed/staged records remain review-required and unpublishable; no live network calls, credentials, source activation, persistence writes, public inventory, or schema/RLS/grant changes are introduced.
 - Before any source activation, a human must verify Adzuna terms, attribution, retention/removal requirements, locality resolution, jurisdiction-specific work/volunteer/pay policy, and publication eligibility.
 - Follow-up UI/SEO surfaces must be reconciled in dependency order against the current route tree; do not merge stale stacked PRs #173/#176 without conflict and exact-head verification.
