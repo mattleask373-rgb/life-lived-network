@@ -1,151 +1,146 @@
 /**
- * Server-rendered service + locality landing page.
+ * A service in a place, as a public page.
  *
- * `/<country>/<place>/<service>` uses the canonical place hierarchy, service
- * taxonomy, public record boundary, and the shared fail-closed SEO gate.
- * Empty pages remain useful to visitors but are not offered to search engines.
+ * `/gb/kings-heath/gardening` — one generic route for every known service
+ * category in every place record. The category must exist in the shared
+ * service taxonomy and the place must exist in the canonical geography;
+ * anything else is an honest 404, never a thin page kept alive for search
+ * engines.
+ *
+ * Every listing shown comes through the same canonical entries the map and
+ * the locality page use, filtered by the record's own evidence (see
+ * `service-page.ts`). A service nobody has genuinely offered here says so,
+ * stays out of the index, and offers real next steps instead of invented
+ * supply.
  */
-import { createFileRoute, Link, notFound, redirect } from "@tanstack/react-router";
 
+import { createFileRoute, Link, notFound, redirect, useRouter } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+
+import { EntryCard } from "@/components/entry-card";
+import { EntrySheet } from "@/components/entry-sheet";
+import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
-import { categoryBySlug, categoriesPresent } from "@/lib/service-taxonomy";
-import {
-  evaluateServiceLocalityPage,
-  publicServiceEntries,
-  serviceLocalityPath,
-} from "@/lib/service-locality";
+import { KIND_LABEL } from "@/lib/places";
+import { evaluateServiceLocalityPage } from "@/lib/service-locality";
 import { privatePage, publicPage } from "@/lib/seo";
 import { breadcrumbListSchema, safeJsonLd } from "@/lib/structured-data";
-import { BOOKING_LABEL, nextStepFor, providerLine, qualificationLine } from "@/lib/services";
-import { QUALITY_LABEL, type WorldEntry } from "@/lib/world-data";
+import {
+  servicePageCopy,
+  servicePageListings,
+  servicePagePath,
+} from "@/lib/service-page";
+import { categoriesPresent } from "@/lib/service-taxonomy";
+import type { WorldEntry } from "@/lib/world-data";
+import { localityPath } from "@/lib/locality-path";
 
 export const Route = createFileRoute("/$country/$place/$service")({
   loader: async ({ params }) => {
     const geography = await getLocality({ data: { slug: params.place } });
     if (!geography) throw notFound();
-
-    const canonicalLocality = `/${geography.place.countrySegment || "gb"}/${geography.place.slug}`;
-    if (canonicalLocality !== `/${params.country}/${params.place}`) {
-      throw redirect({ to: canonicalLocality });
-    }
-
-    const category = categoryBySlug(params.service);
-    if (!category) throw notFound();
+    // One canonical address per page. A wrong country segment redirects rather
+    // than becoming a second version of the same page.
+    const canonical = `/${geography.place.countrySegment || "gb"}/${geography.place.slug}/${params.service}`;
+    if (canonical !== `/${params.country}/${params.place}/${params.service}`)
+      throw redirect({ to: canonical });
 
     const entries = await fetchWorldEntries({ placeId: geography.place.id, limit: 60 });
-    return { geography, category, entries };
+    const listings = servicePageListings(entries, params.service);
+    if (!listings) throw notFound();
+    return { geography, entries, listings };
   },
   head: ({ loaderData }) => {
-    if (!loaderData) return privatePage({ path: "", title: "Service in a place", description: "" });
-
-    const { geography, category, entries } = loaderData;
+    if (!loaderData) return privatePage({ path: "", title: "A service", description: "" });
+    const { geography, entries, listings } = loaderData;
     const { place } = geography;
-    const path = serviceLocalityPath(place, category.slug);
-    const gate = evaluateServiceLocalityPage({ place, serviceSlug: category.slug, entries });
-    const title = `${category.label} in ${place.name} | Real World Atlas`;
-    const description =
-      gate.status === "INDEXABLE"
-        ? `Current, attributable ${category.label.toLowerCase()} records in ${place.name}, using details the provider or source has supplied.`
-        : `What we can currently verify about ${category.label.toLowerCase()} in ${place.name}. This page is kept out of search until its public records meet the shared quality gate.`;
-
+    const path = servicePagePath(place, listings.category);
+    const gate = evaluateServiceLocalityPage({
+      place,
+      serviceSlug: listings.category.slug,
+      entries,
+    });
+    const copy = servicePageCopy(place.name, listings);
     return gate.status === "INDEXABLE"
-      ? publicPage({ path, title, description })
-      : privatePage({ path, title, description });
+      ? publicPage({ path, ...copy })
+      : privatePage({ path, ...copy });
   },
-  component: ServiceLocalityPage,
+  component: ServicePage,
+  errorComponent: ServiceError,
+  notFoundComponent: ServiceNotFound,
 });
 
-function localityPath(place: PlaceBrief): string {
-  return `/${place.countrySegment || "gb"}/${place.slug}`;
-}
-
-function SafeExternalLink({ href, children }: { href: string; children: string }) {
-  try {
-    const url = new URL(href);
-    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
-    return (
-      <a
-        href={url.toString()}
-        target="_blank"
-        rel="noreferrer noopener"
-        className="underline underline-offset-4"
-      >
-        {children}
-      </a>
-    );
-  } catch {
-    return null;
-  }
-}
-
-function ServiceRecord({ entry }: { entry: WorldEntry }) {
-  const step = nextStepFor(entry);
+function ServiceError({ reset }: { reset: () => void }) {
+  const router = useRouter();
   return (
-    <article className="card-paper p-5" key={entry.id}>
-      <h2 className="text-xl">{entry.title}</h2>
-      {entry.summary.trim() ? <p className="mt-2 text-sm">{entry.summary}</p> : null}
-      <p className="mt-2 text-sm text-muted-foreground">
-        {entry.place}
-        {entry.neighbourhood && entry.neighbourhood !== entry.place
-          ? ` · ${entry.neighbourhood}`
-          : ""}
-      </p>
-      {entry.organisation || entry.providerNote ? (
-        <p className="mt-2 text-sm">{providerLine(entry)}</p>
-      ) : (
-        <p className="mt-2 text-sm text-muted-foreground">Provider not yet named</p>
-      )}
-      <p className="mt-2 text-sm">{qualificationLine(entry)}</p>
-      <p className="mt-2 text-sm">
-        {entry.quality ? QUALITY_LABEL[entry.quality] : "Current quality has not been recorded"}
-      </p>
-      {entry.when.trim() ? <p className="mt-2 text-sm">Times as stated: {entry.when}</p> : null}
-      {entry.origin === "source" || entry.origin === "confirmed" ? (
-        <p className="mt-2 text-sm">
-          Source: {entry.sourceName?.trim() || "Source name not recorded"}
-          {entry.sourceUrl ? (
-            <>
-              {" · "}
-              <SafeExternalLink href={entry.sourceUrl}>Read source</SafeExternalLink>
-            </>
-          ) : null}
+    <main className="paper-grain min-h-screen">
+      <div role="alert" className="mx-auto max-w-md px-4 pt-16 pb-20 text-center sm:px-6">
+        <h1 className="text-2xl">We couldn't load this page just now</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          This is a connection problem on our side, not a sign the service is unavailable.
         </p>
-      ) : null}
-      <div className="mt-3 text-sm">
-        <p>
-          {entry.bookingState ? BOOKING_LABEL[entry.bookingState] : "Booking status not recorded"}
-        </p>
-        {step.href ? (
-          <p className="mt-1">
-            <SafeExternalLink href={step.href}>{step.label}</SafeExternalLink>
-            <span className="block text-muted-foreground">{step.note}</span>
-          </p>
-        ) : (
-          <p className="mt-1 text-muted-foreground">
-            {entry.bookingState === "enquire"
-              ? "An enquiry form is not connected to this page yet."
-              : step.note}
-          </p>
-        )}
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              void router.invalidate();
+              reset();
+            }}
+            className="focus-ink min-h-11 rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
+          >
+            Try again
+          </button>
+          <Link
+            to="/"
+            className="focus-ink min-h-11 rounded-full border border-border px-5 py-2.5 text-sm"
+          >
+            Back to the map
+          </Link>
+        </div>
       </div>
-    </article>
+    </main>
   );
 }
 
-function ServiceLocalityPage() {
-  const { geography, category, entries } = Route.useLoaderData();
-  const { place, ancestors } = geography;
-  const services = publicServiceEntries(entries, category.slug);
-  const allReal = entries.filter((entry) => !entry.demonstration);
-  const siblingCategories = categoriesPresent(allReal).filter(
-    ({ category: sibling }) => sibling.slug !== category.slug,
+function ServiceNotFound() {
+  return (
+    <main className="paper-grain min-h-screen">
+      <div className="mx-auto max-w-md px-4 pt-16 pb-20 text-center sm:px-6">
+        <h1 className="text-2xl">We don't have this page on record</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          The address may be mistyped, or the place or service hasn't been added to Real World Atlas
+          yet.
+        </p>
+        <Link
+          to="/"
+          className="focus-ink mt-6 inline-block min-h-11 rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
+        >
+          Back to the map
+        </Link>
+      </div>
+    </main>
   );
-  const gate = evaluateServiceLocalityPage({ place, serviceSlug: category.slug, entries });
+}
+
+function ServicePage() {
+  const { geography, entries, listings } = Route.useLoaderData();
+  const { place, ancestors, children } = geography;
+  const { category, real, demonstration } = listings;
+  const [open, setOpen] = useState<WorldEntry | null>(null);
+  const { has, toggle } = useLifeList();
+
+  // Other kinds of service genuinely recorded here, for sideways navigation.
+  const related = useMemo(
+    () => categoriesPresent(entries).filter((row) => row.category.slug !== category.slug),
+    [entries, category.slug],
+  );
+  const chain = [...ancestors].reverse();
+  const placePath = localityPath(place);
   const breadcrumbItems = [
     { name: "Real World Atlas", path: "/" },
-    { name: place.name, path: localityPath(place) },
-    { name: category.label, path: serviceLocalityPath(place, category.slug) },
+    ...chain.map((step) => ({ name: step.name, path: localityPath(step) })),
+    { name: place.name, path: placePath },
+    { name: category.label, path: servicePagePath(place, category) },
   ];
 
   return (
@@ -154,89 +149,138 @@ function ServiceLocalityPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbListSchema(breadcrumbItems)) }}
       />
-      <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
+      <nav aria-label="Where this is" className="text-sm text-muted-foreground">
         <Link className="underline-offset-4 hover:underline" to="/">
           Real World Atlas
         </Link>
+        {chain.map((step) => (
+          <span key={step.id}>
+            <span aria-hidden="true"> › </span>
+            <Link
+              className="underline-offset-4 hover:underline"
+              params={{ country: step.countrySegment || "gb", place: step.slug }}
+              to="/$country/$place"
+            >
+              {step.name}
+            </Link>
+          </span>
+        ))}
         <span aria-hidden="true"> › </span>
-        <Link
-          className="underline-offset-4 hover:underline"
-          params={{ country: place.countrySegment || "gb", place: place.slug }}
-          to="/$country/$place"
-        >
+        <Link className="underline-offset-4 hover:underline" to={placePath}>
           {place.name}
         </Link>
         <span aria-hidden="true"> › </span>
         <span className="text-foreground">{category.label}</span>
       </nav>
 
-      <h1 className="mt-4 text-4xl leading-tight">
+      <h1 className="mt-3 text-4xl leading-tight">
         {category.label} in {place.name}
       </h1>
-      <p className="mt-3 max-w-2xl text-base">
-        This page shows service records connected to {place.name}. Details, provider names,
-        qualifications, times and booking pathways are shown only when they have been recorded. A
-        listing is not a guarantee of availability or qualification.
+      <p className="mt-1 text-sm text-muted-foreground">
+        {KIND_LABEL[place.kind]}
+        {ancestors[0] ? ` in ${ancestors[0].name}` : ""}
       </p>
 
-      {services.length ? (
-        <>
-          <p className="mt-4 text-sm text-muted-foreground">
-            {services.length === 1
-              ? "One current service record is"
-              : `${services.length} current service records are`}{" "}
-            {gate.status !== "INDEXABLE"
-              ? "This page is not yet eligible for search indexing."
-              : ""}
+      {real.length ? (
+        <section className="mt-8" aria-label={`${category.label} recorded in ${place.name}`}>
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            {real.length === 1
+              ? "One genuine listing, grouped here because of what it actually says about itself."
+              : `${real.length} genuine listings, grouped here because of what each one actually says about itself.`}{" "}
+            Nothing is inferred about qualifications or availability.
           </p>
-          <section
-            aria-label={`${category.label} records`}
-            className="mt-4 grid gap-4 md:grid-cols-2"
-          >
-            {services.map((entry) => (
-              <ServiceRecord key={entry.id} entry={entry} />
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {real.map((entry) => (
+              <li key={entry.id}>
+                <EntryCard entry={entry} onOpen={setOpen} />
+              </li>
             ))}
-          </section>
-        </>
+          </ul>
+        </section>
       ) : (
-        <section className="card-paper mt-6 max-w-3xl p-5">
-          <h2 className="text-xl">No current service records on file</h2>
-          <p className="mt-2 text-sm">
-            We have no published, non-demonstration {category.label.toLowerCase()} records to show
-            for {place.name} right now. That describes this site's records, not everything that may
-            exist locally.
+        <section aria-labelledby="quiet-service-heading" className="card-paper mt-8 p-5 sm:p-6">
+          <h2 id="quiet-service-heading" className="text-2xl">
+            Nobody has offered {category.label.toLowerCase()} here yet
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            We'd rather say that than invent someone. If you genuinely offer this in {place.name},
+            you can be the first — or look wider while the place is still quiet.
           </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            We will keep this page out of search until its records and locality information pass the
-            shared quality gate. No listing, price, time or availability has been inferred.
+          <ul className="mt-5 grid gap-2 sm:grid-cols-3">
+            <li>
+              <Link
+                to="/make"
+                className="focus-ink flex min-h-11 flex-col rounded-lg border border-primary bg-primary px-4 py-3 text-sm text-primary-foreground"
+              >
+                <span className="font-medium">Offer this here</span>
+                <span className="opacity-90">Add a real listing in {place.name}</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                to={placePath}
+                className="focus-ink flex min-h-11 flex-col rounded-lg border border-border bg-background px-4 py-3 text-sm hover:bg-card"
+              >
+                <span className="font-medium">Everything in {place.name}</span>
+                <span className="text-muted-foreground">What has been recorded here</span>
+              </Link>
+            </li>
+            {ancestors[0] ? (
+              <li>
+                <Link
+                  params={{
+                    country: ancestors[0].countrySegment || "gb",
+                    place: ancestors[0].slug,
+                    service: category.slug,
+                  }}
+                  to="/$country/$place/$service"
+                  className="focus-ink flex min-h-11 flex-col rounded-lg border border-border bg-background px-4 py-3 text-sm hover:bg-card"
+                >
+                  <span className="font-medium">
+                    {category.label} in {ancestors[0].name}
+                  </span>
+                  <span className="text-muted-foreground">Look one step wider</span>
+                </Link>
+              </li>
+            ) : null}
+          </ul>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Nothing is published until you choose to post it.
           </p>
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-            <Link className="underline underline-offset-4" to="/need">
-              Describe what you need
-            </Link>
-            <Link className="underline underline-offset-4" to="/make">
-              Add something you know about
-            </Link>
-          </div>
         </section>
       )}
 
-      {siblingCategories.length ? (
+      {demonstration.length ? (
+        <p className="mt-4 text-xs text-muted-foreground">
+          {demonstration.length === 1
+            ? "One record here is"
+            : `${demonstration.length} records here are`}{" "}
+          clearly-labelled trial data. Nothing is booked and no enquiry reaches anybody through
+          them.
+        </p>
+      ) : null}
+
+      {related.length ? (
         <section className="mt-10">
-          <h2 className="text-xl">Other services recorded in {place.name}</h2>
-          <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-            {siblingCategories.map(({ category: sibling }) => (
-              <li key={sibling.slug}>
+          <h2 className="text-2xl">Other kinds of service in {place.name}</h2>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {related.map(({ category: other, entries: list, demonstrationOnly }) => (
+              <li key={other.slug}>
                 <Link
-                  className="underline underline-offset-4"
                   params={{
                     country: place.countrySegment || "gb",
                     place: place.slug,
-                    service: sibling.slug,
+                    service: other.slug,
                   }}
                   to="/$country/$place/$service"
+                  className="card-paper focus-ink block px-3 py-2 text-sm transition-shadow hover:shadow-lift"
                 >
-                  {sibling.label}
+                  <span>{other.label}</span>
+                  <span className="text-muted-foreground">
+                    {" · "}
+                    {list.length}
+                    {demonstrationOnly ? " (trial data)" : ""}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -244,48 +288,41 @@ function ServiceLocalityPage() {
         </section>
       ) : null}
 
-      {ancestors[0] ? (
+      {children.length ? (
         <section className="mt-10">
-          <h2 className="text-xl">Explore the wider area</h2>
-          <p className="mt-2 text-sm">
-            This is the nearest parent locality currently recorded for {place.name}:{" "}
-            {ancestors[0].name}.
-          </p>
-          <Link
-            className="mt-2 inline-block underline underline-offset-4"
-            params={{ country: ancestors[0].countrySegment || "gb", place: ancestors[0].slug }}
-            to="/$country/$place"
-          >
-            Browse {ancestors[0].name}
-          </Link>
+          <h2 className="text-sm uppercase tracking-widest text-muted-foreground">
+            {category.label} inside {place.name}
+          </h2>
+          <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            {children.map((child: PlaceBrief) => (
+              <li key={child.id}>
+                <Link
+                  className="underline-offset-4 hover:underline"
+                  params={{
+                    country: child.countrySegment || "gb",
+                    place: child.slug,
+                    service: category.slug,
+                  }}
+                  to="/$country/$place/$service"
+                >
+                  {child.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 
-      <section className="mt-10 card-paper p-5">
-        <h2 className="text-xl">Plan what to do next</h2>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          The map, journey planner and road-trip view use the existing discovery surfaces. They do
-          not imply that a service or opportunity is available here.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-          <Link className="underline underline-offset-4" to="/">
-            Open the living map
-          </Link>
-          <Link className="underline underline-offset-4" to="/journey">
-            Explore a few hours
-          </Link>
-          <Link className="underline underline-offset-4" to="/road-trip">
-            Explore a road trip
-          </Link>
-          <Link
-            className="underline underline-offset-4"
-            params={{ country: place.countrySegment || "gb", place: place.slug }}
-            to="/$country/$place"
-          >
-            All records in {place.name}
-          </Link>
-        </div>
-      </section>
+      {open ? (
+        <EntrySheet
+          entry={open}
+          onClose={() => setOpen(null)}
+          onOpenEntry={setOpen}
+          onSave={toggle}
+          saved={has(open.id)}
+          world={entries}
+        />
+      ) : null}
     </main>
   );
 }

@@ -1,5 +1,19 @@
 # Roadmap
 
+## 2026-10-19/20 — Overwrite reconciliation + service pages (SEO slice 3, frontend half)
+
+- Repository overwrite incident (19 Oct, 21:37) reconciled read-only: current main is a superset of the backup branch `lovable-backup-main-1792442270`. The backup's only unique content is two historical plan docs and the tracked `.env` that PR #157 deliberately removed — no implementation work is stranded. Backup left untouched; do not restore `.env` from it.
+- PRs #157 (.env hygiene), #163 (service-area-only matching), #170 (configurable default locality), #129 (private routes out of crawler paths) are now merged on main.
+- New public route `/<country>/<place>/<service>` (e.g. `/gb/kings-heath/gardening`): canonical country-segment redirect, 404 for unknown place or service slug, breadcrumbs, genuine listings via the shared service taxonomy (record's own evidence only), honest quiet state with offer/browse-wider steps, related services, child-place links. Demonstration records are disclosed, never counted as supply.
+- Indexability: a service page is offered to search engines only with ≥1 genuine current listing (`servicePageIndexable`); quiet pages emit `noindex, nofollow` (verified in served HTML). This reuses the publicPage/privatePage convention — the full explainable INDEXABLE/NOINDEX gate remains a backend dependency; `src/lib/service-page.ts` is the single seam to re-point.
+- Route structure fix: `$country.$place.tsx` is now a bare `<Outlet />` layout; the locality page moved to `$country.$place.index.tsx`; `localityPath` moved to `src/lib/locality-path.ts` (route files exporting helpers break fast refresh).
+- Locality page "kinds of service" chips now link to the new service pages.
+- Files: `src/lib/service-page.ts` (+test, 11 tests), `src/lib/locality-path.ts`, `src/routes/$country.$place.tsx`, `src/routes/$country.$place.index.tsx`, `src/routes/$country.$place.$service.tsx`.
+- Checks: tsgo clean; lint 0 errors / 7 warnings (existing); vitest 41 files / 320 passed; build OK. Playwright 375px: service page (quiet + trial-data disclosure), locality page, unknown-service 404, wrong-country redirect all verified; no console/page errors.
+- Still ahead (backend/Codex dependencies): canonical indexability gate, service/locality sitemaps, structured data, enquiry endpoint, Australian place records (none exist — do not seed).
+- Enquiry pathway (Workstream E, frontend half): fixed a truthfulness bug — the "Ask about this" step claimed "your message goes to the provider", but no provider-messaging pathway exists. The note now says so plainly and offers the real step (post a need, visible to people in the place). The step now carries the service's title into `/need` as an editable pre-fill (validated `q`/`from` params), so the visitor lands with context instead of an empty form. Live click-through is untestable with trial data by design — demonstration records never show an enquiry step; covered by unit tests instead. Files: `src/lib/services.ts`, `src/components/entry-sheet.tsx`.
+- QA: service page verified at 1280px and 375px; quiet-state CTAs measure 66px tall; no console/page errors.
+
 ## Final product hardening (done)
 
 - [x] Restore separate map exploration and explicit area adoption.
@@ -92,7 +106,7 @@ Blockers unchanged: Ticketmaster key absent; genuine Guildhall details not suppl
 - Site address comes from `VITE_SITE_ORIGIN` when set, otherwise the published
   Lovable address — set it when a custom domain is connected.
 
-### Next SEO slices (status reconciled 2026-10-19)
+### Next SEO slices (not started)
 
 2 service taxonomy + locality landing pages · 3 service + locality pages with the
 indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
@@ -114,16 +128,15 @@ indexability gate · 4 provider profiles · 5 structured data + full sitemaps ·
 - Each page is server-rendered so it can actually be read by a crawler: what's
   happening, what's here by provider, kinds of service recorded, hours people
   offered, places inside and nearby, breadcrumbs, and a way into the map.
-- The shared slice 3 indexability gate is implemented in open PR #173 and now
-  governs locality metadata. Service + locality metadata uses the same gate on
-  the PR branch. The route is server-rendered and retains honest empty/thin states;
-  neither URL family is advertised to crawlers until the gate-backed sitemap is
-  implemented and exact-head hosted verification passes.
+- Honest interim indexability rule: a locality page is only offered to search
+  engines once it holds at least three real (non-trial) records. Otherwise it is
+  noindex but still works for anyone who arrives. Slice 3 replaces this with the
+  full explainable gate.
 
 ### Still ahead
 
-Dynamic locality/service sitemaps using the shared gate · 4 provider profiles ·
-5 structured data + provider/event sitemaps · 6 enquiry pathway ·
+3 service + locality pages and the indexability gate · 4 provider profiles ·
+5 structured data + locality/service sitemaps · 6 enquiry pathway ·
 7 cross-navigation, analytics, commercial foundation.
 
 ## Pre-meeting hardening (done)
@@ -234,30 +247,9 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - [ ] My Places full slice: plan awaiting approval (schema addition, location precision).
 
 
-## SEO slice 3 — fail-closed service + locality route — 2026-10-19
+## 2026-10-20 — SEO slice 3 reconciliation (PR #173)
 
-- PR #173 remains open and unmerged. Its shared pure `evaluateIndexability()` gate has four outcomes; only `INDEXABLE` has `sitemapEligible: true`. Existing locality metadata remains governed by the same gate.
-- Added a server-rendered `/<country>/<place>/<service>` route using the canonical place loader, `fetchWorldEntries()`, and `SERVICE_CATEGORIES`. Service slugs outside the shared taxonomy return not-found. The route redirects noncanonical country/place segments back to the one canonical locality URL.
-- Added pure service/locality evidence helpers and tests covering canonical paths, taxonomy matching, demo exclusion, thin pages, freshness, provenance, and the default three-real-record gate. Existing booking semantics are reused; no fake enquiry or availability is emitted.
-- The route contains breadcrumbs, a parent locality link when present, links to real sibling service categories, map/journey/road-trip surfaces, and honest empty states. Provider, qualification, time, quality, booking and source facts are presented only when stored.
-- **Sitemap is still deliberately unchanged:** dynamic locality/service sitemap candidates must be enumerated and run through the exact same gate before being emitted. Until that implementation is verified, no service URL is added to a public sitemap.
-- Hosted Verify: [Verify #39334890154](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39334890154) passed on exact code-bearing head `6db257186865d799ac87d5ed3a779a5b3c438172`: frozen install, lint, all 43 Vitest files, and production build passed. The only changes after that green code-bearing head are this evidence/status refresh; local commands were not separately run in this connected GitHub session.
-- **Not verified locally:** this connected GitHub session has no local checkout/shell, so local typecheck, lint, tests and build are not claimed.
-- PR #174 supplies only a reviewed work-opportunity contract/taxonomy; no real feeds or records exist. PR #175 supplies only a non-writing staging validator; Australia remains NOT LIVE and its historical Verify failed on an earlier head.
-- No provider profiles, structured data, analytics, persisted enquiry, matcher changes, schema/RLS/grant changes, production writes, partner feeds, merge or deployment. `findSupply()` remains the sole discovery authority.
-- Human gates: verify current PR heads and hosted checks; review the exact route diff; confirm pilot locality hierarchy, provenance/source rights and timezone policy before any public indexing/import.
-
-
-- Exact-head verification: route/test code passed at `54b68377c56f61f4c9880de1ff68545f30055c92` (PR run [39335030731](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335030731); push run [39335025060](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335025060)). Status/roadmap documentation head `6ca3b3e0ba1ea9288ede3b8dd8050d8df762fc6d` also passed hosted Verify (PR run [39335240835](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335240835); push run [39335236361](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335236361)). A new status-only commit follows; verify that head before review.
-
-## 2026-10-19 — BreadcrumbList + gated locality/service sitemap (PR #173; code green)
-
-- [x] Rendered `BreadcrumbList` JSON-LD on locality and service-locality pages from the same visible breadcrumb facts; script-closing text is escaped. No speculative `Event`/`LocalBusiness` schema is emitted.
-- [x] Added a shared pure locality indexability helper and a gated sitemap candidate builder. Only `INDEXABLE` decisions (`sitemapEligible === true`) are included. Thin, demonstration-only, stale, invalid-place and unproven-source candidates are excluded by tests.
-- [x] Root and API pages sitemap endpoints add gate-approved locality/service URLs using the canonical public world read and existing service taxonomy. Failed/incomplete scan returns no dynamic place URLs; wide scopes above the locality read cap are conservatively omitted.
-- [x] Static `public/sitemap.xml` remains the six fixed public screens for static deployments. `robots.txt` advertises both static/root sitemap and API sitemap index.
-- Exact code-bearing head: `2b6c72e8b86de50eec8b8293e8e0f5c563503da6`; canonical base `f2de6d8d76bdabbd98639f4bf4837573c96587cc`.
-- Hosted Verify: [PR run 39338043061](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39338043061) and [push run 39338040184](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39338040184) both passed install, lint, tests and build.
-- This remains an open feature branch, not launched. Live sitemap behavior, deployed robots output, real crawler rendering, and live database completeness have not been verified.
-- Human review before merge: approve the bounded candidate-scan cap/cache strategy and verify production origin/server route behavior. No production writes, schema/RLS/grant changes, secrets, merges or deployments.
-
+- Reconciled locality/service indexability and gated sitemap work with canonical main `9269dff0fb66911733ea309fd7342d86bb60c112`.
+- The same pure explainable gate drives route metadata and dynamic locality/service sitemap candidate inclusion; only `INDEXABLE` candidates enter the dynamic URL sets. Dynamic reads fail closed to no place URLs.
+- BreadcrumbList JSON-LD is derived from the same visible locality/service hierarchy. Sitemap candidates match the exact-place bounded records used by the rendered locality route; child supply cannot make a quiet parent appear eligible.
+- Previous head `3b835f41e70a88eadca323f3f385a12e5b8a94ce` passed hosted Verify (run #1217); fresh Verify is required on the reconciliation head. Event/LocalBusiness/provider schemas, enquiry conversion and real pilot supply remain separate launch gates.

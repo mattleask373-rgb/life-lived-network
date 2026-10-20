@@ -2,7 +2,7 @@
  * Pure candidate enumeration for dynamic locality/service sitemaps.
  * Only the shared indexability gate can authorize a path.
  */
-import { descendantIdsOf, type PlaceIndex } from "./places";
+import type { PlaceIndex } from "./places";
 import { evaluateLocalityPage } from "./locality-indexability";
 import {
   categoryServiceEntries,
@@ -12,13 +12,12 @@ import {
 import { categoriesPresent } from "./service-taxonomy";
 import type { WorldEntry } from "./world-data";
 
-const MAX_ROUTE_LOCALITY_SCOPE = 400;
 const ROUTE_ENTRY_LIMIT = 60;
 
 /**
- * Entries are ordered by the canonical world read. A candidate uses the same
- * bounded record view as the locality route. Very wide scopes are excluded
- * because the read layer deliberately drops place filters above 400 descendants.
+ * Entries come from the canonical public world read. Match the same exact-place
+ * scope and bound as the rendered locality route; child records belong to their
+ * own URL and must not accidentally make an empty parent indexable.
  */
 export function buildGatedPlaceSitemapPaths(
   index: PlaceIndex,
@@ -28,9 +27,6 @@ export function buildGatedPlaceSitemapPaths(
   const paths = new Set<string>();
 
   for (const place of index.places) {
-    const placeIds = descendantIdsOf(index, place.id);
-    if (placeIds.length > MAX_ROUTE_LOCALITY_SCOPE) continue;
-
     const countrySegment = (place.country_code || "").toLowerCase();
     const brief = {
       id: place.id,
@@ -39,9 +35,8 @@ export function buildGatedPlaceSitemapPaths(
       countrySegment,
       blurb: place.blurb ?? "",
     };
-    const ids = new Set(placeIds);
     const localEntries = entries
-      .filter((entry) => Boolean(entry.placeId && ids.has(entry.placeId)))
+      .filter((entry) => entry.placeId === place.id)
       .slice(0, ROUTE_ENTRY_LIMIT);
 
     if (evaluateLocalityPage({ place: brief, entries: localEntries, now }).sitemapEligible) {

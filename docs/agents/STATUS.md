@@ -54,32 +54,11 @@ No autonomous production merge/deploy is active.
 4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
 
 
-## SEO slice 3 — fail-closed service + locality route — 2026-10-19
+## 2026-10-20 — Locality/service SEO gate reconciliation (PR #173)
 
-- PR #173 remains open and unmerged. Its shared pure `evaluateIndexability()` gate has four outcomes; only `INDEXABLE` has `sitemapEligible: true`. Existing locality metadata remains governed by the same gate.
-- Added a server-rendered `/<country>/<place>/<service>` route using the canonical place loader, `fetchWorldEntries()`, and `SERVICE_CATEGORIES`. Service slugs outside the shared taxonomy return not-found. The route redirects noncanonical country/place segments back to the one canonical locality URL.
-- Added pure service/locality evidence helpers and tests covering canonical paths, taxonomy matching, demo exclusion, thin pages, freshness, provenance, and the default three-real-record gate. Existing booking semantics are reused; no fake enquiry or availability is emitted.
-- The route contains breadcrumbs, a parent locality link when present, links to real sibling service categories, map/journey/road-trip surfaces, and honest empty states. Provider, qualification, time, quality, booking and source facts are presented only when stored.
-- **Sitemap is still deliberately unchanged:** dynamic locality/service sitemap candidates must be enumerated and run through the exact same gate before being emitted. Until that implementation is verified, no service URL is added to a public sitemap.
-- Hosted Verify: [Verify #39334890154](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39334890154) passed on exact code-bearing head `6db257186865d799ac87d5ed3a779a5b3c438172`: frozen install, lint, all 43 Vitest files, and production build passed. The only changes after that green code-bearing head are this evidence/status refresh; local commands were not separately run in this connected GitHub session.
-- **Not verified locally:** this connected GitHub session has no local checkout/shell, so local typecheck, lint, tests and build are not claimed.
-- PR #174 supplies only a reviewed work-opportunity contract/taxonomy; no real feeds or records exist. PR #175 supplies only a non-writing staging validator; Australia remains NOT LIVE and its historical Verify failed on an earlier head.
-- No provider profiles, structured data, analytics, persisted enquiry, matcher changes, schema/RLS/grant changes, production writes, partner feeds, merge or deployment. `findSupply()` remains the sole discovery authority.
-- Human gates: verify current PR heads and hosted checks; review the exact route diff; confirm pilot locality hierarchy, provenance/source rights and timezone policy before any public indexing/import.
-
-
-- Exact-head verification: route/test code passed at `54b68377c56f61f4c9880de1ff68545f30055c92` (PR run [39335030731](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335030731); push run [39335025060](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335025060)). Status/roadmap documentation head `6ca3b3e0ba1ea9288ede3b8dd8050d8df762fc6d` also passed hosted Verify (PR run [39335240835](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335240835); push run [39335236361](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335236361)). A new status-only commit follows; verify that head before review. Local commands remain unclaimed.
-
-## 2026-10-19 — verified SEO continuation on PR #173
-
-- PR #173 is open and unmerged. Feature branch: `feat/seo-indexability-gate`; canonical base: `f2de6d8d76bdabbd98639f4bf4837573c96587cc`.
-- Exact code-bearing head: `2b6c72e8b86de50eec8b8293e8e0f5c563503da6`.
-- Fresh PR Verify passed frozen install, lint, tests and production build: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39338043061
-- Fresh push Verify passed on the same SHA: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39338040184
-- Added visible-fact `BreadcrumbList` JSON-LD to locality and service-locality server-rendered routes, with canonical paths and script-safe escaping. No `Event` or `LocalBusiness` JSON-LD was added because complete real published non-demonstration facts have not been established.
-- Extracted `evaluateLocalityPage()` so locality route metadata and locality sitemap candidates use the same pure gate. Service candidates use the existing `evaluateServiceLocalityPage()`. Only `sitemapEligible === true` candidates are emitted.
-- Dynamic root and API pages sitemap routes now combine fixed public pages with gate-approved locality/service paths. Candidates use the canonical public world read and existing taxonomy. Incomplete/failed 20,000-row bounded scan returns no dynamic paths; locality scopes over the existing 400-descendant filter cap are omitted.
-- `robots.txt` advertises the root sitemap and API sitemap index; the static `public/sitemap.xml` remains the six fixed public screens as a conservative static-deploy fallback. Sitemap route tests mock the adapter and don't contact live data.
-- Not verified: a live sitemap HTTP response, crawler rendering in deployed environment, live DB completeness, or mobile/browser layout. No merge or deployment occurred.
-- Remaining human decisions: review the 20,000-record scan cap and 400-descendant exclusion, confirm production cache/route behavior and custom site origin. No Australian places, listing inventory, schema/RLS/grant changes or production writes were added.
-
+- Reconciled `feat/seo-indexability-gate` against canonical `main` at `9269dff0fb66911733ea309fd7342d86bb60c112` without rewriting branch history.
+- Adds a pure four-state gate (`INDEXABLE`, `INDEXABLE_WITH_LIMITATIONS`, `NOINDEX`, `NOT_PUBLISHED`) with explicit reasons. Locality/service metadata and dynamic sitemap candidates use shared decision helpers.
+- Locality and service routes keep their current interactive UI while using the fail-closed gate for metadata. Visible breadcrumbs receive escaped `BreadcrumbList` JSON-LD; generated sitemap URLs are limited to fully `INDEXABLE` candidates.
+- Sitemap candidate scans use the canonical public world read and the same exact-place bounded records as the rendered locality route; failed or incomplete scans add no dynamic place URLs. `findSupply()` remains the sole discovery authority.
+- The prior feature head `3b835f41e70a88eadca323f3f385a12e5b8a94ce` had hosted Verify success (run #1217); the reconciled head needs fresh Verify. No local test suite, live crawl, Search Console inspection or deployed sitemap check is claimed.
+- Event/LocalBusiness structured data, a new enquiry backend, partner feeds, and live market supply are not included. Empty/thin/demo/unprovenanced pages remain out of search. Human review required before merge.

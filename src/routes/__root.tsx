@@ -14,6 +14,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { WorldProvider } from "../lib/world-context";
 import { useSession } from "../hooks/use-session";
+import { CompassMark } from "../components/compass-mark";
+import { Compass, Search, Route as RouteIcon, User } from "lucide-react";
 
 const BOUNDARY_BUTTON =
   "focus-ink inline-flex min-h-11 items-center justify-center rounded-full px-5 py-2.5 text-sm";
@@ -100,7 +102,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Karla:wght@400;500;600&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
@@ -174,8 +176,14 @@ function SiteHeader() {
     <header className="border-b border-border bg-card/80 backdrop-blur-sm">
       <nav aria-label="Main" className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6">
         <div className="flex items-baseline justify-between gap-4">
-          <Link to="/" className="min-w-0 truncate font-semibold tracking-tight">
-            Real World Atlas
+          <Link to="/" className="focus-ink flex min-w-0 items-center gap-2 rounded-md">
+            <CompassMark className="h-8 w-8 shrink-0" />
+            <span className="min-w-0 leading-none">
+              <span className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                Real World
+              </span>
+              <span className="block truncate font-display text-lg italic">Atlas</span>
+            </span>
           </Link>
           <Link
             to={user ? "/profile" : "/auth"}
@@ -185,7 +193,7 @@ function SiteHeader() {
             {!ready ? "Account" : user ? "Your account" : "Sign in"}
           </Link>
         </div>
-        <div className="flex items-stretch gap-2 overflow-x-auto pb-1">
+        <div className="hidden items-stretch gap-2 overflow-x-auto pb-1 md:flex">
           {DOORS.map((door) => (
             <Link
               key={door.to}
@@ -215,6 +223,39 @@ function SiteHeader() {
   );
 }
 
+/** Thumb-reach tabs on small screens; the same doors as the desktop header. */
+function MobileTabs() {
+  const { user } = useSession();
+  const tabs = [
+    { to: "/", label: "Explore", icon: Compass, exact: true },
+    { to: "/need", label: "Find", icon: Search, exact: false },
+    { to: "/road-trip", label: "Journey", icon: RouteIcon, exact: false },
+    { to: user ? "/profile" : "/auth", label: "You", icon: User, exact: false },
+  ];
+  return (
+    <nav
+      aria-label="Main tabs"
+      className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur-sm md:hidden"
+    >
+      <ul className="mx-auto flex max-w-md justify-around px-2 pt-1">
+        {tabs.map(({ to, label, icon: Icon, exact }) => (
+          <li key={label} className="flex-1">
+            <Link
+              to={to}
+              activeOptions={{ exact }}
+              activeProps={{ className: "text-primary", "aria-current": "page" }}
+              className="focus-ink flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-xs font-medium text-muted-foreground"
+            >
+              <Icon className="h-5 w-5" aria-hidden="true" />
+              {label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -222,8 +263,11 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <WorldProvider>
         <SiteHeader />
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
+        <div className="pb-20 md:pb-0">
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </div>
+        <MobileTabs />
       </WorldProvider>
     </QueryClientProvider>
   );

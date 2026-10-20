@@ -78,6 +78,24 @@ describe("gated place sitemap candidate builder", () => {
     ).toEqual([]);
   });
 
+  it("does not let child records make a quiet parent locality indexable", () => {
+    const parent: Place = {
+      ...place,
+      id: "parent-1",
+      kind: "region",
+      name: "Example Region",
+      slug: "example-region",
+      blurb: "A factual region description.",
+      parent_id: null,
+    };
+    const child = { ...place, parent_id: parent.id };
+    const paths = buildGatedPlaceSitemapPaths(
+      buildPlaceIndex([parent, child]),
+      [service("one"), service("two"), service("three")],
+    );
+    expect(paths).toEqual(["/gb/example-place", "/gb/example-place/cleaning"]);
+  });
+
   it("excludes invalid canonical place segments", () => {
     const invalidPlace = { ...place, country_code: "AUS" };
     const paths = buildGatedPlaceSitemapPaths(buildPlaceIndex([invalidPlace]), [
