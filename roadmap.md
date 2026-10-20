@@ -247,9 +247,17 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - [ ] My Places full slice: plan awaiting approval (schema addition, location precision).
 
 
-## 2026-10-20 — SEO slice 3 reconciliation (PR #173)
+## 2026-10-20 — Traveller opportunity surface integration (PR #176)
 
-- Reconciled locality/service indexability and gated sitemap work with canonical main `9269dff0fb66911733ea309fd7342d86bb60c112`.
-- The same pure explainable gate drives route metadata and dynamic locality/service sitemap candidate inclusion; only `INDEXABLE` candidates enter the dynamic URL sets. Dynamic reads fail closed to no place URLs.
-- BreadcrumbList JSON-LD is derived from the same visible locality/service hierarchy. Sitemap candidates match the exact-place bounded records used by the rendered locality route; child supply cannot make a quiet parent appear eligible.
-- Previous head `3b835f41e70a88eadca323f3f385a12e5b8a94ce` passed hosted Verify (run #1217); fresh Verify is required on the reconciliation head. Event/LocalBusiness/provider schemas, enquiry conversion and real pilot supply remain separate launch gates.
+- Reconciled the opportunity contract from #174 onto current main and adapted #176 for the current locality index route, leaving shared EntryCard/EntrySheet accessibility work separate in #177.
+- Strict `work_opportunity` payloads flow only through the existing listing normaliser, are excluded when unpublished/unreviewed/rights-restricted, and reuse the shared service taxonomy. Locality and service pages present explicitly recorded pay, engagement kind, duration, dates, accommodation, conditions, skills, host expectations and source provenance without inferring missing facts.
+- "Request a match" prefills the existing need form; it does not send a message. Signed-out visitors still need an account to post a need, so the full low-friction enquiry conversion remains an open launch gate.
+- This PR does not add schema/RLS/grants, database records, or a partner import. Australia and pilot inventory remain NOT LIVE. Exact-head hosted Verify is required before human review.
+
+
+## 2026-10-20 — SEO slice 3 + reviewed work surface integration (PR #173)
+
+- Final SEO follow-up integrates with the reconciled #174 contract and #176 locality/service work-opportunity surfaces before this branch is eligible for merge.
+- Shared gate states/reasons govern both page metadata and dynamic sitemap inclusion; only `INDEXABLE` candidates are listed. The work-opportunity service category gate accepts only the strict publishable helper's records, with a regression test for published, reviewed, rights-cleared opportunities.
+- BreadcrumbList is generated from the visible locality/service hierarchy. A new test ensures child records do not make an empty parent locality enter the sitemap.
+- Exact-head Verify on this combined commit is required. Event/LocalBusiness schema, frictionless signed-out enquiry/contact, approved real pilot inventory, mobile accessibility and launch operations remain incomplete.

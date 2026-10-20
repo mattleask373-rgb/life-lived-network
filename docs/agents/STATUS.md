@@ -54,11 +54,20 @@ No autonomous production merge/deploy is active.
 4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
 
 
-## 2026-10-20 — Locality/service SEO gate reconciliation (PR #173)
+## 2026-10-20 — Reviewed work-opportunity surfaces (PR #176 reconciliation)
 
-- Reconciled `feat/seo-indexability-gate` against canonical `main` at `9269dff0fb66911733ea309fd7342d86bb60c112` without rewriting branch history.
-- Adds a pure four-state gate (`INDEXABLE`, `INDEXABLE_WITH_LIMITATIONS`, `NOINDEX`, `NOT_PUBLISHED`) with explicit reasons. Locality/service metadata and dynamic sitemap candidates use shared decision helpers.
-- Locality and service routes keep their current interactive UI while using the fail-closed gate for metadata. Visible breadcrumbs receive escaped `BreadcrumbList` JSON-LD; generated sitemap URLs are limited to fully `INDEXABLE` candidates.
-- Sitemap candidate scans use the canonical public world read and the same exact-place bounded records as the rendered locality route; failed or incomplete scans add no dynamic place URLs. `findSupply()` remains the sole discovery authority.
-- The prior feature head `3b835f41e70a88eadca323f3f385a12e5b8a94ce` had hosted Verify success (run #1217); the reconciled head needs fresh Verify. No local test suite, live crawl, Search Console inspection or deployed sitemap check is claimed.
-- Event/LocalBusiness structured data, a new enquiry backend, partner feeds, and live market supply are not included. Empty/thin/demo/unprovenanced pages remain out of search. Human review required before merge.
+- Reconciled the work presentation/read path with current main plus the contract and taxonomy from #174, without rewriting the original #176 branch history.
+- The existing listing normalization seam accepts an optional `work_opportunity` payload and fails closed unless the strict contract says its publication, market-policy and rights gates are satisfied. Missing payloads remain missing; this does not create database columns or records.
+- Locality and service-locality UI can show recorded terms through the same helper, and the "Request a match" link only prefills the existing need flow. It does not message a source; posting a need still requires an account in the current UI.
+- `findSupply()` remains the single discovery authority. No entry-card/entry-sheet edits are carried here, to keep Grok's #177 accessibility pass separate.
+- No real work rows or partner feeds are activated. Fresh hosted Verify on the reconciled head is required; no local test run or manual mobile/accessibility check is claimed.
+
+
+## 2026-10-20 — SEO gate integration over the opportunity surfaces (PR #173)
+
+- Reconciled the SEO gate/sitemap slice on top of the current-main work-opportunity surface branch (`5944f38a54b36f808de823bc293f383f086e64a4`), preserving the prior SEO branch history and using the opportunity branch as the second merge parent.
+- Current locality and service-locality routes retain the existing interaction design and work-opportunity details. Shared four-state indexability decisions now drive route metadata and dynamic sitemap eligibility.
+- Work-opportunity entries enter category pages and the service-locality SEO/sitemap gate only when `hasPublicWorkOpportunity()` confirms a published, human-policy-approved, rights-cleared contract payload. The existing listing normalizer rejects invalid payloads.
+- BreadcrumbList schema matches visible breadcrumb facts; dynamic place URL candidates use the same exact-place scope as the rendered locality route. Failed or incomplete scans fail closed. `findSupply()` remains the sole discovery authority.
+- Verify succeeded on the pre-integration SEO head `79fc4559dd48ffa452b76073bae9b2735bc29343` (run #1318), but a fresh run is required for this combined head. No local tests, live crawl, Search Console or deployed sitemap checks are claimed.
+- Event/LocalBusiness/provider schema, real inventory, rights-cleared source supply at pilot scale, accountless enquiry/contact, and mobile/accessibility checks remain outstanding human/ops gates. Australia remains **NOT LIVE**.

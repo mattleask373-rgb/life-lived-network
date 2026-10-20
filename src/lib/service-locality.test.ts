@@ -7,6 +7,7 @@ import {
   serviceLocalityPath,
 } from "./service-locality";
 import type { WorldEntry } from "./world-data";
+import { parseWorkOpportunity } from "./work-opportunities";
 
 const place = {
   id: "place-example",
@@ -118,6 +119,49 @@ describe("service + locality route evidence", () => {
     expect(result.reasons).toContain("missing_provenance");
     expect(result.reasons).toContain("stale_or_expired");
     expect(result.sitemapEligible).toBe(false);
+  });
+
+  it("includes only published, rights-cleared work opportunities via the shared taxonomy gate", () => {
+    const reviewedWork = (id: string) =>
+      service({
+        id,
+        kind: "work",
+        serviceCategory: "cleaning",
+        workOpportunity: parseWorkOpportunity({
+          arrangement: "short_term",
+          engagementKind: "paid_work",
+          compensation: {
+            status: "stated_paid",
+            amountCents: 3200,
+            currency: "AUD",
+            basis: "hour",
+          },
+          accommodation: "not_stated",
+          skillRequirements: ["Cleaning experience"],
+          hostExpectations: ["Confirm the shift"],
+          conditions: [],
+          jurisdictionCountryCode: "AU",
+          policyReviewStatus: "approved_by_human",
+          publicationStatus: "published",
+          provenance: { kind: "owner_declared", sourceName: "Opportunity owner" },
+          rightsStatus: "cleared",
+        }),
+      });
+    const entries = [reviewedWork("work-1"), reviewedWork("work-2"), reviewedWork("work-3")];
+    expect(categoryServiceEntries(entries, "cleaning").map((row) => row.id)).toEqual([
+      "work-1",
+      "work-2",
+      "work-3",
+    ]);
+    expect(publicServiceEntries(entries, "cleaning")).toHaveLength(3);
+    expect(
+      evaluateServiceLocalityPage({
+        place,
+        serviceSlug: "cleaning",
+        entries,
+        now: Date.parse("2026-10-19T12:00:00Z"),
+      }).status,
+    ).toBe("INDEXABLE");
   });
 
   it("does not use an invalid category as an indexable landing page", () => {

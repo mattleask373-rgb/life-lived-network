@@ -19,6 +19,7 @@ import { useMemo, useState } from "react";
 
 import { EntryCard } from "@/components/entry-card";
 import { EntrySheet } from "@/components/entry-sheet";
+import { WorkOpportunityFacts } from "@/components/work-opportunity-facts";
 import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
@@ -189,6 +190,7 @@ function ServicePage() {
             {real.map((entry) => (
               <li key={entry.id}>
                 <EntryCard entry={entry} onOpen={setOpen} />
+                <WorkOpportunityFacts entry={entry} />
               </li>
             ))}
           </ul>

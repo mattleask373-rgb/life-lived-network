@@ -4,6 +4,7 @@
  */
 import { categoryBySlug, inCategory } from "./service-taxonomy";
 import { evaluateIndexability, type IndexabilityDecision } from "./seo-indexability";
+import { hasPublicWorkOpportunity } from "./work-opportunity-presentation";
 import { isService } from "./services";
 import type { PlaceBrief } from "./locality.functions";
 import type { WorldEntry } from "./world-data";
@@ -26,7 +27,7 @@ export function categoryServiceEntries(entries: WorldEntry[], serviceSlug: strin
   return entries
     .filter(
       (entry) =>
-        isService(entry) &&
+        (isService(entry) || hasPublicWorkOpportunity(entry)) &&
         inCategory(entry, serviceSlug) &&
         entry.quality !== "expired" &&
         !entry.cancellation,
