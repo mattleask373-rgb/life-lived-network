@@ -4,7 +4,7 @@
 
 - New reusable checklist proposed in `docs/launch/MARKET-ONBOARDING-CHECKLIST.md` via branch `codex/market-onboarding-checklist-2026-10-20` (based on main SHA `9269dff0fb66911733ea309fd7342d86bb60c112`).
 - Scope is country-agnostic onboarding: hierarchy/URL contract, ISO country and currency metadata, integer minor units, timezone/locale, market-specific work/policy review, source rights/attribution, moderation/privacy, shared discovery/SEO gates, import dry-run/idempotency/rollback and human launch sign-off.
-- PR #179 is open. Documentation only; no inventory, live data, production writes, schema/security changes, credentials, feeds, merge or deployment. Verify #39420190084 passed the content-bearing head; the final head after this status/roadmap correction needs a fresh hosted run. No local commands were run.
+- PR #179 is open. Documentation only; no inventory, live data, production writes, schema/security changes, credentials, feeds, merge or deployment. Hosted Verify [#39420348546](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39420348546) passed on exact head `aea2555291799403b4ea68f6b6c4be2afc62948e` (41 test files / 320 tests, build succeeded, lint 0 errors / 7 existing warnings). This is point-in-time evidence; every subsequent commit needs Verify on its own head before merge. No local commands were run.
 - Australia and any other new market remain NOT LIVE until real eligible records and human-approved market/source gates exist.
 
 ## 2026-10-19/20 — Overwrite reconciliation + service pages (SEO slice 3, frontend half)
