@@ -50,3 +50,11 @@ No autonomous production merge/deploy is active.
 - Before any source activation, a human must verify Adzuna terms, attribution, retention/removal requirements, locality resolution, jurisdiction-specific work/volunteer/pay policy, and publication eligibility.
 - Follow-up UI/SEO surfaces must be reconciled in dependency order against the current route tree; do not merge stale stacked PRs #173/#176 without conflict and exact-head verification.
 
+## 2026-10-20 — WorkOpportunity surfaces current-main integration
+
+- Stacked follow-up branch carries locality/service and Need-prefill surfaces onto the current-main WorkOpportunity contract branch. This is a review candidate only; it is not merged.
+- Reuses the existing service taxonomy, locality pages and Need model. Place context is resolved against canonical place records; unresolved places fail closed rather than silently selecting another locality.
+- Opportunity cards preserve explicit engagement, compensation, source, rights, policy-review and publication-state semantics. Candidate records remain unpublishable until approved.
+- No schema/RLS/grant changes, production writes, source activation, outbound contact, or deployment.
+- Dependency order: merge/review the contract PR first, then review this stacked surface PR; reconcile the separate SEO/indexability work in #173 against the exact merged route tree.
+
