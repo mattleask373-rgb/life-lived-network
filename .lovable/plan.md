@@ -1,67 +1,53 @@
-# My Places: first complete version
+# Grok design integration — read-only audit and phased plan
 
-## Audit: what already exists (checked this session)
-- **Framework and sign-in:** the app's existing setup and sign-in. Every action on private places requires sign-in, and the four server actions (list, save, delete, export) each require it.
-- **Private places page:** `/memories` ("Places I've known"), in the main menu and kept out of the sitemap. It has a list, add and edit, delete with a basic browser pop-up, and a JSON download.
-- **Database table** `place_memories`:
-  - It is linked to a known locality, not raw coordinates, with optional full dates and a note of up to 2,000 characters.
-  - Visibility is locked to private.
-  - The database rules let each owner read, add, edit and delete only their own places; signed-out visitors have no access.
-  - An earlier two-account check passed.
-- **Map:** the app's own hand-drawn map, with no paid map provider. Places come from the app's list of localities, each with a centre point.
-- **Discovery:** the place page uses the single discovery engine, `findSupply()`, and shows trust labels.
-- **Tests:** 35 files and 254 tests, all passing. The type check is clean.
+No files, settings, data or permissions changed. Labels: VERIFIED (seen this turn), INFERRED, UNKNOWN.
 
-## Gaps against the brief
-- No memory type (lived, visited, worked, meaningful), no tags, and no approximate period such as a year or month.
-- No map view of my places, and no search or filters.
-- No detail page for a single memory with a separate discovery section.
-- No Data and Privacy page, no documented export format, and no note on how to delete an account.
-- Duplicate saves are not prevented, and the private-by-default notice before the first save could be clearer.
+## 1. Source this project uses
+- VERIFIED: working branch `edit/edt-c4e94701-...`, clean, head `2bb7d4d` (grounded-matching docs). Recent history includes `9269dff` "Redesigned home page in Grok style" (the earlier Lovable slice: tokens, fonts, CompassMark, mobile tabs, home hero).
+- VERIFIED: only Lovable-internal git remotes; no GitHub remote, no `gh`, no GitHub connector.
+- UNKNOWN: whether this project syncs to `mattleask373-rgb/life-lived-network`, which branch it syncs, and whether `2bb7d4d` equals GitHub main.
+- UNKNOWN: PR #191 (`grok/a11y-entry-card-2026-10-20`, `d388b69`) is not present locally; its diff, mergeability and CI cannot be checked from here.
+- INFERRED mismatch: PR #191 restyles EntryCard/PlacePicker/palette, while this project already changed palette and fonts in `src/styles.css` and `__root.tsx`. Both edit the same files, which likely explains mergeable=false.
 
-## Proposed slice (the smallest complete version)
-1. **Database addition** (adds fields only; nothing removed or renamed):
-   - `memory_type`: one of the four types, default "meaningful".
-   - `tags`: up to 10 short tags, default empty.
-   - `date_precision`: day, month or year, default day.
-   - `place_label`: an optional name in the person's own words, default empty.
-   - Owner-only access and private-only visibility stay as they are.
-2. **My Places (`/memories`):**
-   - Map and List switch. The map plots the centre of each place's locality.
-   - Search by place or note, plus a filter by type.
-   - Cards show place, period and type.
-   - A friendly first-use screen.
-   - An "Add a place" button.
-3. **Add and edit form:**
-   - Fields: locality picker (required), type, start and end dates with day/month/year choice, tags and note.
-   - Shown before the first save: "Private by default."
-   - The Save button locks while saving, so a double tap can't create two entries.
-   - Clear saving, success and error messages.
-4. **Place detail (`/memories/$id`):**
-   - The private memory, with edit, delete (an in-app confirmation) and privacy status ("Only you").
-   - A separately boxed section, "What's on in [place] now". It uses the existing discovery engine and shows only real records, their source and freshness, or an honest empty state with a link to the place page.
-5. **Data and Privacy (`/privacy-data`):**
-   - Download my data.
-   - A plain field-by-field list of what is exported.
-   - The documented JSON format, version 2.
-   - Delete all my places, with confirmation.
-   - Explains that full account deletion is not yet supported in-app and how to request it.
-   - The download is created on request and is never stored at a public address.
-6. **Tests:**
-   - Input checks for type, tags, precision and date order.
-   - Export covers only the owner's records, is complete for memories and matches the documented format.
-   - Edit and delete only work on the owner's own records.
-   - A source check that every new server action requires sign-in.
-   - A live two-account database check, rolled back afterwards: signed-out visitors and other accounts can't read, edit or delete someone's places.
-   - A phone-width (375px) browser check of the screens a signed-out visitor sees.
+## 2. UI surfaces and data paths (VERIFIED by file presence)
+- Shell: `src/routes/__root.tsx` (header doors, MobileTabs, WorldProvider).
+- Home: `src/routes/index.tsx`, `possibility-front-door.tsx`, `whats-happening.tsx`, `whats-here.tsx`, `three-hours.tsx`, `do-something-today.tsx`.
+- Cards: `entry-card.tsx`, `entry-sheet.tsx`, `trust-chip.tsx`, `layer-icon.tsx`, `layer-colour.ts`.
+- Place picker: `place-picker.tsx`, `place-search.tsx`, `src/lib/places.ts`, `world-context.tsx`.
+- Map: `living-map.tsx`, `src/lib/map-view.ts`.
+- Locality/service: `$country.$place.tsx` (layout), `$country.$place.index.tsx`, `$country.$place.$service.tsx`, `lib/locality*.ts`, `service-page.ts`, `services.ts`.
+- Work/needs: `need.index.tsx`, `need.$id.tsx`, `earn.tsx`, `give.tsx`, `help.tsx`, `lib/needs.ts`, `earning.ts`, `hours.ts`.
+- Discovery: `src/lib/supply-engine.ts` (`findSupply()`); server reads in `world.functions.ts`, `locality.functions.ts`; ingestion `src/lib/ingest/*`.
+- VERIFIED: no symbol named `WorkOpportunity` exists in `src/`. The brief's contract name has no match here; the nearest are needs and earning helpers. Must be reconciled, not invented.
 
-## Kept out on purpose
-- Free-typed coordinates or exact addresses. The approved MVP stores locality-level location only, for privacy. The "optional address" in the brief becomes the person's own `place_label`, which is never matched to a map location.
-- Imports, sharing, photos and live GPS.
+## 3. Backend (high level, from provided schema metadata; no queries run)
+- Relevant tables: `places` (public read, writes denied), `listings` + `listing_photos`, `needs`, `hour_offers`, `person_capabilities`, `service_areas`, `availability_windows`, `journeys`/`journey_places`, `sources`/`source_records`, `profiles`, `saved_items`, `connection_requests`/`connection_messages`, `content_reports`, `user_blocks`, `user_roles`.
+- All tables show RLS policies; role checks via `has_role` / `is_safety_reviewer`.
+- Storage: private `profile-photos` bucket; one open security finding on photo visibility (owner decision pending).
+- UNKNOWN: whether Lovable Cloud is the same backend the GitHub repo or other agents target. Earlier audit flagged a possible `connection_requests` update-policy weakness (unproven).
+- None of the design phases below need backend changes.
 
-## Checks after building
-`bunx tsgo --noEmit`, `bun run lint`, `bunx vitest run` and `bun run build`, plus a Playwright check at 375px and 1280px. The signed-in flows will be checked with a test sign-in if one is available; otherwise they will be reported as not checked. Nothing is published.
+## 4. Phased plan (frontend only, each a small reviewable PR)
+```text
+Phase 0  Reconcile        -> no code
+Phase 1  Tokens/type      -> styles.css, __root.tsx
+Phase 2  EntryCard        -> entry-card, trust-chip, layer-colour
+Phase 3  PlacePicker      -> place-picker, place-search
+Phase 4  Locality/service -> $country.$place.index, $service
+Phase 5  Map + sheet      -> living-map, entry-sheet
+Phase 6  Needs/work       -> need.*, earn, give, help
+```
+- Phase 0: diff PR #191 against this project's head; choose one owner for each shared file (keep this project's tokens, take #191's card/picker accessibility changes); record decision.
+- Each phase: keep props, data sources and `findSupply()` calls unchanged; visual and accessibility changes only; preserve demo labels, provenance, trust chips and honest empty states; never port prototype data (Lisbon/Kyoto/Oaxaca, mock activity, Zustand store).
+- Tests per phase: existing suite plus `touch-targets.test.ts`; add small tests only where a rule changes (e.g. demo label still shown). Run typecheck, lint, tests, build.
+- Manual QA per phase: 375px and 1280px screenshots, keyboard-only pass, visible focus, 44px targets, contrast AA on new tokens, screen-reader labels on cards/picker, quiet locality (Herefordshire) and busy locality (Kings Heath).
+- Human gates: approve Phase 0 decision; approve each PR after `verify` passes; any backend, schema, RLS, auth or new contract needs separate approval.
 
-## Decisions
-- Is the database addition above approved?
-- Should location stay at locality level only, as the plan recommends, instead of the exact coordinates the brief mentions?
+## 5. Blockers and evidence needed before implementation
+1. Lovable Project Settings -> GitHub: screenshot showing linked repo name and synced branch (must not be `main`).
+2. GitHub ruleset for `main`: PR required, `verify` required, no bypass for Lovable/bot accounts.
+3. PR #191: current diff, conflict list, a `verify` run on its exact head, and owner decision to merge, rebase or treat as reference.
+4. Confirmation that GitHub main matches `2bb7d4d` (or list of differing commits).
+5. Confirmation which backend the GitHub repo/other agents use, matching this Lovable Cloud project.
+6. Decision on the `WorkOpportunity` name: map to existing needs/earning, or a separately approved contract.
+7. Open profile-photo visibility finding: owner choice (not a design blocker).
