@@ -7,10 +7,9 @@
  * Adzuna records stay staging-only until independent locality resolution,
  * source-rights approval, jurisdiction review and explicit engagement review.
  *
- * The input interface mirrors the output shape of ingest/adzuna.ts but does not
- * import that module yet: that parser remains in draft PR #186, while this
- * focused bridge is stacked on the contract PR (#174). Type compatibility is
- * checked when the two reviewed slices are integrated.
+ * The companion adzuna-work-opportunity-adapter.ts composes this bridge
+ * with the parser's typed output. This keeps parsing and contract staging
+ * separate while compile-checking their boundary in one integrated slice.
  */
 
 import { safeUrl } from "./normalise";
