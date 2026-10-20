@@ -67,3 +67,10 @@ No autonomous production merge/deploy is active.
 - No new inventory, schema/RLS/grant change, source activation, production write or deployment is included.
 - Require tests for page metadata and sitemap inclusion/exclusion to use the same gate; verify served HTML and sitemap on preview before launch.
 
+## 2026-10-20 — Quiet service Need handoff
+
+- Adds a “Looking for help?” action to quiet service pages that carries the canonical service and locality into an editable Need draft.
+- The Need page resolves the requested place slug against the real place source. If it cannot resolve, it explains the failure and does not silently fall back to the user's default locality.
+- Query values are bounded draft prefill only; they are not persisted facts and do not create a Need until the signed-in user explicitly submits.
+- No schema/RLS/grant change, production write, outbound contact, source activation or deployment. Manual end-to-end click-through remains required.
+
