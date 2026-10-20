@@ -3,8 +3,9 @@
 ## Canonical baseline
 
 - Repository: mattleask373-rgb/life-lived-network
-- Current main SHA checked via GitHub: 14e409e90a027305902f381de3d0a9fbd912dc71
-- Latest main commit message: “Applied Grok redesign to home” (Lovable sync commit).
+- Current main SHA checked via GitHub: 006a98c64a52d5bd6028ac5f9457acd31a72746a
+- Latest main commit message: “Update plan” (gpt-engineer-app[bot] Lovable sync).
+- Recent merges on main: #157 (env hygiene), #129 (private-route robots.txt alignment).
 - The repository branch API reports main as unprotected, with required status checks disabled. This is a release-process risk; propose branch protection/required checks for human approval, but do not change settings autonomously.
 - No autonomous merge/deploy is authorised. Production data, schema, RLS/grants, secrets and live source activation remain human-gated.
 
@@ -46,8 +47,12 @@
 - #173/#174/#176 were closed without merge after becoming stale; treat them as historical source material, not current merge candidates.
 - #178 is a draft integration audit. Keep its findings useful, but do not assume its old base represents current main.
 
-### Security
+### Security / hygiene
+- #157 env hygiene merged. #129 private robots merged.
+- #156 auth guard regression tests open, clean, prior Verify green — candidate for human review.
+- #154 discovery open-needs open but dirty (conflicts).
 - #194 is a documentation-only least-privilege ACL proposal. It is not authorisation to change grants or RLS. The target Supabase project identity and effective access still need human verification.
+- #133 Lovable write-to-main incident remains open for human process decision.
 
 ## AI and global-scale direction
 
@@ -65,6 +70,7 @@
 4. Keep source ingestion fixture-first and staged; rights, credentials, country coverage and publication remain human gates.
 5. Define and test the read-only assistant context boundary before implementing its UI or public model endpoint.
 6. Decide branch protection and required CI checks for main; no repository settings change made by this update.
+7. Review/merge #156 auth tests; rebase #154.
 
 ## Canonical invariants
 
