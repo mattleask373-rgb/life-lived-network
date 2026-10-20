@@ -39,7 +39,7 @@ export function PlacePicker() {
   };
 
   if (loading && !place) {
-    return <p className="text-sm text-muted-foreground">Finding your way around…</p>;
+    return <p role="status" className="card-paper p-4 text-sm text-muted-foreground">Finding your way around…</p>;
   }
 
   if (loadError && !index) {
@@ -79,7 +79,7 @@ export function PlacePicker() {
         )}
       </div>
 
-      <p className="mt-1 text-lg">
+      <p className="mt-1 font-display text-xl leading-snug">
         {place && index ? placePath(index, place.id, 3) : "Choose a supported place"}
       </p>
 
@@ -98,22 +98,24 @@ export function PlacePicker() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Kings Heath, Manchester, Herefordshire, Edinburgh, Galway…"
-              className="focus-ink mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              type="search"
+              autoComplete="off"
+              className="focus-ink mt-1 min-h-11 w-full rounded-xl border border-border bg-background px-4 py-2 text-base"
             />
           </label>
 
           {query.trim() ? (
             results.length ? (
-              <ul className="space-y-1">
+              <ul aria-label="Matching places" className="space-y-2">
                 {results.map((r) => (
                   <li key={r.id}>
                     <button
                       type="button"
                       onClick={() => choose(r)}
-                      className="focus-ink w-full rounded-lg border border-border bg-background px-3 py-2 text-left text-sm hover:shadow-paper"
+                      className="focus-ink flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border border-border bg-background px-4 py-2 text-left text-sm hover:border-primary/40 hover:shadow-paper"
                     >
                       {placePath(index!, r.id, 3)}
-                      <span className="ml-2 text-xs text-muted-foreground">
+                      <span className="shrink-0 text-xs uppercase tracking-wider text-muted-foreground">
                         {KIND_LABEL[r.kind]}
                       </span>
                     </button>
@@ -121,7 +123,7 @@ export function PlacePicker() {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p role="status" className="text-sm text-muted-foreground">
                 We couldn't find that name in the current place records. Try a nearby town, region
                 or country.
               </p>
@@ -130,7 +132,7 @@ export function PlacePicker() {
 
           {ancestors.length ? (
             <div>
-              <p className="text-sm text-muted-foreground">Step out to</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Step out to</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {ancestors.map((a) => (
                   <Chip key={a.id} onClick={() => choose(a)} label={a.name} />
@@ -141,7 +143,7 @@ export function PlacePicker() {
 
           {children.length ? (
             <div>
-              <p className="text-sm text-muted-foreground">Look closer at</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Look closer at</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {children.slice(0, 40).map((c) => (
                   <Chip key={c.id} onClick={() => choose(c)} label={c.name} />
@@ -165,7 +167,7 @@ function Chip({ label, onClick }: { label: string; onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="focus-ink rounded-full border border-border bg-background px-3 py-1 text-sm text-muted-foreground hover:text-foreground"
+      className="focus-ink inline-flex min-h-11 items-center rounded-full border border-border bg-background px-4 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground"
     >
       {label}
     </button>
