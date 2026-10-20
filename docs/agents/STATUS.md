@@ -1,3 +1,28 @@
+# Agent System Status — 2026-10-20 (current-main reconciliation)
+
+## Current source of truth and immediate gates
+
+- Canonical repository: mattleask373-rgb/life-lived-network.
+- Current main observed during this audit: 9269dff0fb66911733ea309fd7342d86bb60c112. Older PR descriptions based on 0c56cc2... must not be treated as current-main verification.
+- src/lib/supply-engine.ts and findSupply() remain the only discovery authority. src/lib/ingest/* remains the canonical provider-neutral ingestion boundary.
+- GitHub reports main branch protection is disabled. Repository owner action is required to enforce PR-only changes, founder/owner approval, current Verify, no force-push/deletion, and no bypass. This agent has not changed repository settings.
+- Integration is the near-term risk: PRs #173/#175/#176 contain diverged route changes; #174/#176 overlap the work-opportunity contract/taxonomy and must be reconciled before merge. Verify results only apply to the exact recorded head, and Supabase Preview was skipped on these runs.
+- #177 is a focused design PR based on the observed current main SHA; Verify is green on recorded heads, but manual 375px/1280px and keyboard/screen-reader QA remains unrun.
+- Australia is staging-only: the proposed hierarchy is not approved/import-ready and no Australian inventory is evidenced. Do not publish or claim live Australian coverage.
+- Current evidence and sequencing: docs/launch/GLOBAL-MARKET-READINESS-AUDIT-2026-10-20.md.
+
+## Current launch focus
+
+1. Protect main (human owner action).
+2. Reconcile and re-verify SEO/locality PR #173 with place staging #175.
+3. Reconcile opportunity contract #174 and surface #176 into one coherent implementation and fresh Verify.
+4. Complete #177 manual responsive/accessibility checks before merge.
+5. Prove deployed SEO/sitemap behavior, conversion journey, and operational ownership before any public-pilot go/no-go.
+
+---
+
+## Historical status snapshot (2026-10-07; retained for audit trail, not current queue)
+
 # Agent System Status — 2026-10-07 (control-tower reconciliation)
 
 ## SOURCE OF TRUTH
