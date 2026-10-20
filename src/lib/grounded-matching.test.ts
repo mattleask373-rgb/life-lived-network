@@ -46,7 +46,7 @@ describe("groundedMatch", () => {
     expect(outcome.kind).toBe("matches");
     if (outcome.kind === "matches") {
       expect(outcome.matches).toHaveLength(1);
-      expect(outcome.matches[0].entry.id).toBe("good");
+      expect(outcome.matches[0]!.entry.id).toBe("good");
     }
   });
 
@@ -58,8 +58,8 @@ describe("groundedMatch", () => {
     const outcome = groundedMatch(entries, { serviceCategory: "gardening", layers: ["work"] });
     expect(outcome.kind).toBe("matches");
     if (outcome.kind === "matches") {
-      expect(outcome.matches[0].entry.id).toBe("g1");
-      expect(outcome.matches[0].evidence.reasons.some((r) => r.includes("gardening"))).toBe(true);
+      expect(outcome.matches[0]!.entry.id).toBe("g1");
+      expect(outcome.matches[0]!.evidence.reasons.some((r) => r.includes("gardening"))).toBe(true);
     }
   });
 
@@ -71,7 +71,7 @@ describe("groundedMatch", () => {
     const outcome = groundedMatch(entries, { free: true, outdoors: true });
     expect(outcome.kind).toBe("matches");
     if (outcome.kind === "matches") {
-      expect(outcome.matches[0].entry.id).toBe("free-out");
+      expect(outcome.matches[0]!.entry.id).toBe("free-out");
     }
   });
 });

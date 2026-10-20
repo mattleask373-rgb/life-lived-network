@@ -177,14 +177,13 @@ export function groundedMatch(
 
 /** Convenience: turn an existing Intent into a MatchQuery. */
 export function queryFromIntent(intent: Intent, extra: Partial<MatchQuery> = {}): MatchQuery {
-  return {
-    layers: intent.layers.length ? intent.layers : undefined,
-    free: intent.free,
-    pays: intent.pays,
-    outdoors: intent.outdoors,
-    give: intent.give,
-    ...extra,
-  };
+  const q: MatchQuery = {};
+  if (intent.layers.length) q.layers = intent.layers;
+  if (intent.free !== undefined) q.free = intent.free;
+  if (intent.pays !== undefined) q.pays = intent.pays;
+  if (intent.outdoors !== undefined) q.outdoors = intent.outdoors;
+  if (intent.give !== undefined) q.give = intent.give;
+  return { ...q, ...extra };
 }
 
 /**
@@ -195,10 +194,9 @@ export function threeHours(
   entries: WorldEntry[],
   options: { free?: boolean; outdoors?: boolean; layers?: LayerId[] } = {}
 ): MatchOutcome {
-  return groundedMatch(entries, {
-    free: options.free,
-    outdoors: options.outdoors,
-    layers: options.layers,
-    limit: 4,
-  });
+  const q: MatchQuery = { limit: 4 };
+  if (options.free !== undefined) q.free = options.free;
+  if (options.outdoors !== undefined) q.outdoors = options.outdoors;
+  if (options.layers !== undefined) q.layers = options.layers;
+  return groundedMatch(entries, q);
 }
