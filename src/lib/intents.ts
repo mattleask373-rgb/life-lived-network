@@ -5,11 +5,13 @@
  * invents anything: it only arranges what the world already contains, and says
  * plainly when there's nothing worth suggesting.
  *
- * Same seam as the journey engine: swap the scoring for an AI service later
- * without changing a single component.
+ * Ranking is delegated to grounded-matching so locality, service and time-intent
+ * experiences share one evidence-backed path. The public API stays stable so
+ * existing UI components need no change.
  */
 
 import type { LayerId, WorldEntry } from "./world-data";
+import { groundedMatch, queryFromIntent } from "./grounded-matching";
 
 export interface Intent {
   id: string;
@@ -77,35 +79,34 @@ export function intentById(id: string): Intent | undefined {
 
 const TODAY_BANDS = new Set(["now", "today", "tonight"]);
 
-/** A few real possibilities for today. Never a wall of results. */
+/**
+ * A few real possibilities for today. Never a wall of results.
+ *
+ * Public contract unchanged: returns WorldEntry[] (empty when nothing eligible).
+ * Ranking and eligibility are handled by groundedMatch so the same rules apply
+ * across locality, service and intent surfaces.
+ */
 export function doSomethingToday(all: WorldEntry[], intent: Intent): WorldEntry[] {
-  const pool = all.filter((e) => e.quality !== "expired");
-  const today = pool.filter((e) => TODAY_BANDS.has(e.band));
-  const base = today.length >= 3 ? today : pool;
+  // Prefer items that are actually "today" when enough exist; otherwise use the full pool.
+  // groundedMatch already drops demonstration + expired.
+  const today = all.filter((e) => TODAY_BANDS.has(e.band));
+  const pool = today.length >= 3 ? today : all;
 
-  const scored = base
-    .map((e) => {
-      let score = 0;
-      if (intent.layers.length && !intent.layers.includes(e.layer)) score += 12;
-      if (intent.give && !e.give) score += 6;
-      if (intent.free && e.cost > 0) score += 8;
-      if (intent.pays && e.cost >= 0) score += 10;
-      if (intent.outdoors && !e.outdoors) score += 8;
-      if (!TODAY_BANDS.has(e.band)) score += 3;
-      if (e.quality === "may have changed") score += 2;
-      if (!e.verified) score += 1;
-      return { e, score };
-    })
-    .filter((r) => r.score < 12)
-    .sort((a, b) => a.score - b.score);
+  const outcome = groundedMatch(pool, {
+    ...queryFromIntent(intent),
+    limit: 12, // enough headroom before variety filter
+  });
 
-  // One per layer, so three possibilities feel genuinely different.
+  if (outcome.kind === "quiet") return [];
+
+  // Preserve the established "one per layer, at most three" presentation so the
+  // existing DoSomethingToday UI still feels varied rather than repetitive.
   const seen = new Set<LayerId>();
   const out: WorldEntry[] = [];
-  for (const { e } of scored) {
-    if (seen.has(e.layer) && out.length < 3) continue;
-    seen.add(e.layer);
-    out.push(e);
+  for (const { entry } of outcome.matches) {
+    if (seen.has(entry.layer) && out.length < 3) continue;
+    seen.add(entry.layer);
+    out.push(entry);
     if (out.length === 3) break;
   }
   return out;
@@ -118,7 +119,7 @@ export function doSomethingToday(all: WorldEntry[], intent: Intent): WorldEntry[
 export function whyNot(all: WorldEntry[], savedIds: string[], nudge = 0): WorldEntry | undefined {
   const savedLayers = new Set(all.filter((e) => savedIds.includes(e.id)).map((e) => e.layer));
   const candidates = all
-    .filter((e) => e.quality !== "expired" && !savedIds.includes(e.id))
+    .filter((e) => e.quality !== "expired" && !e.demonstration && !savedIds.includes(e.id))
     .filter((e) => e.cost <= 20)
     .sort((a, b) => {
       const aNew = savedLayers.has(a.layer) ? 1 : 0;
