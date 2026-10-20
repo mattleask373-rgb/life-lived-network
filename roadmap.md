@@ -254,3 +254,11 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - The traveller-facing locality/request surfaces remain a separate integration dependency in #176; do not duplicate matching logic or change `findSupply()`.
 - Previous head `a0316819ab164d367a8e40502e4336cc5d55405b` passed hosted Verify (run #1108); require fresh Verify on the reconciled head before review/merge.
 - Human go/no-go still required for market-specific legal/policy review, source rights and actual supply approval. Australia remains NOT LIVE.
+
+
+## 2026-10-20 — WorkOpportunity existing-supply surfaces
+
+- A fresh integration branch ports the #176 contract-consuming surface onto the reviewed WorkOpportunity contract baseline. It updates existing listing reads, taxonomy-aware service page presentation and canonical locality/request surfaces.
+- Only a work opportunity that passes `isPublishableWorkOpportunity()` is attached to a public WorldEntry. This PR does not create a separate discovery path, new matcher, new database table, or public inventory.
+- Requests are prefilling from the existing source flow; submission/record creation behaviour is not widened by this visual/surface slice.
+- SEO/indexability reconciliation remains a following dependent slice (#173). No sitemap/indexability policy changes are included here.
