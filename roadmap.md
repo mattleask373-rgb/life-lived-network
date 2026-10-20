@@ -1,5 +1,12 @@
 # Roadmap
 
+## 2026-10-20 — market onboarding (documentation slice)
+
+- New reusable checklist proposed in `docs/launch/MARKET-ONBOARDING-CHECKLIST.md` via branch `codex/market-onboarding-checklist-2026-10-20` (based on main SHA `9269dff0fb66911733ea309fd7342d86bb60c112`).
+- Scope is country-agnostic onboarding: hierarchy/URL contract, ISO country and currency metadata, integer minor units, timezone/locale, market-specific work/policy review, source rights/attribution, moderation/privacy, shared discovery/SEO gates, import dry-run/idempotency/rollback and human launch sign-off.
+- Documentation only; no inventory, live data, production writes, schema/security changes, credentials, feeds, merge or deployment. The PR's hosted Verify remains to be checked.
+- Australia and any other new market remain NOT LIVE until real eligible records and human-approved market/source gates exist.
+
 ## 2026-10-19/20 — Overwrite reconciliation + service pages (SEO slice 3, frontend half)
 
 - Repository overwrite incident (19 Oct, 21:37) reconciled read-only: current main is a superset of the backup branch `lovable-backup-main-1792442270`. The backup's only unique content is two historical plan docs and the tracked `.env` that PR #157 deliberately removed — no implementation work is stranded. Backup left untouched; do not restore `.env` from it.
