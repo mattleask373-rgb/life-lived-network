@@ -130,9 +130,7 @@ function canonicalInstant(value: string): string | null {
   return new Date(timestamp).toISOString();
 }
 
-function validCompensationEvidence(
-  value: AdzunaBridgeInput["compensationEvidence"],
-): boolean {
+function validCompensationEvidence(value: AdzunaBridgeInput["compensationEvidence"]): boolean {
   if (!value || typeof value !== "object") return false;
   const validAmount = (amount: number | null) =>
     amount === null || (Number.isFinite(amount) && amount > 0);
@@ -140,10 +138,7 @@ function validCompensationEvidence(
   if (value.minimum !== null && value.maximum !== null && value.minimum > value.maximum) {
     return false;
   }
-  if (
-    value.salaryIsPredicted !== null &&
-    typeof value.salaryIsPredicted !== "boolean"
-  ) {
+  if (value.salaryIsPredicted !== null && typeof value.salaryIsPredicted !== "boolean") {
     return false;
   }
   // This staging contract currently has no verified salary currency or basis.
@@ -189,9 +184,7 @@ export function stageAdzunaWorkOpportunity(
     return { status: "rejected", reason: "invalid_compensation_evidence" };
   }
 
-  const sourceCreatedAt = input.sourceCreatedAt
-    ? canonicalInstant(input.sourceCreatedAt)
-    : null;
+  const sourceCreatedAt = input.sourceCreatedAt ? canonicalInstant(input.sourceCreatedAt) : null;
 
   // Adzuna's salary range does not provide verified currency + pay basis in
   // this parser contract, so it is preserved as source evidence only. The
