@@ -422,26 +422,38 @@ function RoadTripCard({
           <p className="mt-3 line-clamp-2 text-sm text-foreground/80">{entry.summary}</p>
         ) : null}
         <div className="mt-4 space-y-2 text-xs text-muted-foreground">
-        {discovery.matchedInterests.length ? (
-          <p>
-            <span className="text-foreground">Matches:</span>{" "}
-            {discovery.matchedInterests.join(" · ")}
-          </p>
-        ) : null}
-        {routeReason ? <p>{routeReason}</p> : null}
-        {timing ? <p className="font-medium text-foreground">{timing}</p> : null}
-        {discovery.freshnessLabel ? <p>{discovery.freshnessLabel}</p> : null}
-        {discovery.evidenceLabel ? <p>{discovery.evidenceLabel}</p> : null}
-      </div>
-      <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
-        <Button type="button" size="sm" onClick={onAdd} disabled={added} className="min-h-11 rounded-full">
-          {added ? <Check aria-hidden="true" /> : <Plus aria-hidden="true" />}
-          {added ? "Added to journey" : "Add to journey"}
-        </Button>
-        <Button type="button" size="sm" variant="ghost" onClick={onOpen} className="min-h-11 rounded-full">
-          View details
-        </Button>
-      </div>
+          {discovery.matchedInterests.length ? (
+            <p>
+              <span className="text-foreground">Matches:</span>{" "}
+              {discovery.matchedInterests.join(" · ")}
+            </p>
+          ) : null}
+          {routeReason ? <p>{routeReason}</p> : null}
+          {timing ? <p className="font-medium text-foreground">{timing}</p> : null}
+          {discovery.freshnessLabel ? <p>{discovery.freshnessLabel}</p> : null}
+          {discovery.evidenceLabel ? <p>{discovery.evidenceLabel}</p> : null}
+        </div>
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
+          <Button
+            type="button"
+            size="sm"
+            onClick={onAdd}
+            disabled={added}
+            className="min-h-11 rounded-full"
+          >
+            {added ? <Check aria-hidden="true" /> : <Plus aria-hidden="true" />}
+            {added ? "Added to journey" : "Add to journey"}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={onOpen}
+            className="min-h-11 rounded-full"
+          >
+            View details
+          </Button>
+        </div>
       </div>
     </article>
   );
