@@ -47,7 +47,6 @@
   /* Semantic aliases matching the prototype vocabulary for incremental UI ports. */
   --color-canvas: var(--paper);
   --color-surface: var(--card);
-  --color-muted: var(--ink-soft);
   --color-line: var(--border);
   --color-primary-fg: var(--primary-foreground);
   --color-sage: var(--sage);
