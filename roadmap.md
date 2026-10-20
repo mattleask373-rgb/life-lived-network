@@ -254,3 +254,16 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - The traveller-facing locality/request surfaces remain a separate integration dependency in #176; do not duplicate matching logic or change `findSupply()`.
 - Previous head `a0316819ab164d367a8e40502e4336cc5d55405b` passed hosted Verify (run #1108); require fresh Verify on the reconciled head before review/merge.
 - Human go/no-go still required for market-specific legal/policy review, source rights and actual supply approval. Australia remains NOT LIVE.
+
+## 2026-10-20 afternoon — current-main readiness reconciliation
+
+Current source of truth is main `14e409e90a027305902f381de3d0a9fbd912dc71`. Older roadmap entries below are historical snapshots; use this section and `docs/agents/STATUS.md` for present integration state.
+
+- #197 is the current-main WorkOpportunity contract/taxonomy + fixture-first Adzuna staging slice. Verify #39439428714 passed on exact head `1abc21d370fb93482760c60c57231c967e3e3d9a`; no feed, credentials, persistence, publication or live inventory.
+- #193 is the current EntryCard accessibility follow-up; latest native-button-overlay revision requires fresh exact-head Verify plus manual responsive, keyboard and screen-reader QA. #195 detail/map polish has hosted Verify #39439225424 on its recorded head but still requires manual QA.
+- #177/#191/#192 are closed, unmerged visual branches superseded by current main. Do not merge or revive them.
+- #173 remains an older, non-mergeable integrated SEO branch that includes work-opportunity files. It passed Verify #39427722990 on its recorded head only. Reconcile its SEO route/gate/sitemap changes last against the post-contract/surface code; verify route/sitemap data-scope parity and current route-tree generation.
+- #174/#176/#175/#186/#188 remain old-base dependencies or references. #175 is staging-only and Australia is NOT LIVE. #178 audit has been refreshed against the current main; #196 is the current-main integration playbook.
+- Remaining launch gates: current-head verification after each reconciliation; hands-on 375px/1280px, keyboard and screen-reader QA; confirmed source rights and market policy; live sitemap/metadata check; enquiry-path truthfulness and signed-out behavior; security/RLS proof for any future data-path change; explicit pilot locality/hierarchy/timezone approval.
+
+No merge, deployment, production write, schema/RLS/grant change, credential activation, or live-feed activation is authorized by this roadmap update.
