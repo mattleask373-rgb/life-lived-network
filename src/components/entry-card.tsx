@@ -1,4 +1,5 @@
 import { ImageOff } from "lucide-react";
+import type { KeyboardEvent } from "react";
 
 import { LAYERS, type WorldEntry } from "@/lib/world-data";
 import { asBookingState, BOOKING_LABEL, isService, providerLine } from "@/lib/services";
@@ -27,6 +28,17 @@ export function EntryCard({
   const layer = LAYERS.find((l) => l.id === entry.layer);
   const service = isService(entry);
   const photo = cardPhoto(entry);
+  const interactive = Boolean(onOpen);
+
+  const handleActivate = () => {
+    onOpen?.(entry);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (!interactive || (event.key !== "Enter" && event.key !== " ")) return;
+    event.preventDefault();
+    handleActivate();
+  };
 
   const body = (
     <>
@@ -93,15 +105,20 @@ export function EntryCard({
 
   const shell = "card-paper block w-full overflow-hidden rounded-2xl text-left";
 
-  if (!onOpen) return <article className={shell}>{body}</article>;
-
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(entry)}
-      className={`${shell} focus-ink transition-shadow hover:shadow-lift`}
+    <article
+      className={
+        interactive
+          ? `${shell} focus-ink cursor-pointer transition-shadow hover:shadow-lift`
+          : shell
+      }
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-label={interactive ? `Open listing: ${entry.title}` : undefined}
+      onClick={interactive ? handleActivate : undefined}
+      onKeyDown={interactive ? handleKeyDown : undefined}
     >
       {body}
-    </button>
+    </article>
   );
 }
