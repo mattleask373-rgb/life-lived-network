@@ -44,7 +44,9 @@ function JourneyPage() {
   return (
     <main className="paper-grain min-h-screen">
       <div className="mx-auto max-w-3xl px-4 pt-8 pb-20 sm:px-6">
-        <h1 className="font-display text-4xl leading-tight tracking-tight sm:text-5xl">What could your journey become?</h1>
+        <h1 className="font-display text-4xl leading-tight tracking-tight sm:text-5xl">
+          What could your journey become?
+        </h1>
         <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
           Nothing here is invented. Every step below is something someone has actually offered where
           you are, anything unchecked is marked as such, and demonstration records say so.
@@ -131,7 +133,10 @@ function JourneyPage() {
 
                 <ol className="mt-4 space-y-3">
                   {j.steps.map((s) => (
-                    <li key={s.entry.id} className="rounded-r-2xl border-l-2 border-primary bg-background/70 py-3 pl-4 pr-3">
+                    <li
+                      key={s.entry.id}
+                      className="rounded-r-2xl border-l-2 border-primary bg-background/70 py-3 pl-4 pr-3"
+                    >
                       <p className="text-xs uppercase tracking-widest text-muted-foreground">
                         {s.bandLabel}
                       </p>
@@ -189,7 +194,9 @@ function JourneyPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mt-4 first:mt-0">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        {label}
+      </p>
       <div className="mt-2 flex flex-wrap gap-2">{children}</div>
     </div>
   );
