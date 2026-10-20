@@ -8,7 +8,7 @@ import { parseNeedSearch } from "@/lib/need-prefill";
 import { useSession } from "@/hooks/use-session";
 import { createNeed, getMyNeeds, getOpenNeeds } from "@/lib/needs.functions";
 import { FLEXIBILITIES, NEED_INTENTS, URGENCIES, type Need } from "@/lib/needs";
-import { fetchDefaultPlace } from "@/lib/places";
+import { fetchDefaultPlace, fetchPlaceBySlug } from "@/lib/places";
 import { money } from "@/components/layer-colour";
 import { DraftHelper } from "@/components/draft-helper";
 
@@ -24,13 +24,28 @@ export const Route = createFileRoute("/need/")({
 
 function NeedPage() {
   const { user, ready } = useSession();
-  const { from, category } = Route.useSearch();
+  const { from, category, place: placeSlug } = Route.useSearch();
   const typed = from ?? "";
   const qc = useQueryClient();
   const openNeeds = useServerFn(getOpenNeeds);
   const myNeeds = useServerFn(getMyNeeds);
 
-  const { data: place } = useQuery({ queryKey: ["place", "default"], queryFn: fetchDefaultPlace });
+  const { data: defaultPlace } = useQuery({
+    queryKey: ["place", "default"],
+    queryFn: fetchDefaultPlace,
+    enabled: !placeSlug,
+  });
+  const {
+    data: requestedPlace,
+    isPending: requestedPlacePending,
+  } = useQuery({
+    queryKey: ["place", "need-prefill", placeSlug],
+    queryFn: () => fetchPlaceBySlug(placeSlug ?? ""),
+    enabled: Boolean(placeSlug),
+  });
+  // A service-page handoff must keep its requested locality. If it cannot be
+  // resolved, never silently post the need against the person's default place.
+  const place = placeSlug ? requestedPlace : defaultPlace;
   const { data: needs } = useQuery({
     queryKey: ["needs", "open"],
     queryFn: () => openNeeds({ data: {} }),
@@ -57,17 +72,36 @@ function NeedPage() {
         </header>
 
         {ready && user ? (
-          <NeedForm
-            categorySeed={category ?? ""}
-            placeId={place?.place.id ?? null}
-            placeName={place?.place.name ?? ""}
-            timezone={place?.place.timezone ?? "UTC"}
-            currency={place?.place.currency ?? "EUR"}
-            lat={place?.place.lat ?? null}
-            lng={place?.place.lng ?? null}
-            typed={typed}
-            onDone={() => qc.invalidateQueries({ queryKey: ["needs"] })}
-          />
+          placeSlug && requestedPlacePending ? (
+            <p role="status" className="card-paper mt-6 p-5 text-sm text-muted-foreground">
+              Finding {placeSlug.replaceAll("-", " ")} on the map…
+            </p>
+          ) : placeSlug && !requestedPlace ? (
+            <section role="alert" className="card-paper mt-6 p-5">
+              <h2 className="text-xl">We couldn't find that place on our map</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Your request hasn't been moved to another place. Choose an existing place and try again.
+              </p>
+              <Link
+                to="/"
+                className="focus-ink mt-4 inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
+              >
+                Back to the map
+              </Link>
+            </section>
+          ) : (
+            <NeedForm
+              categorySeed={category ?? ""}
+              placeId={place?.place.id ?? null}
+              placeName={place?.place.name ?? ""}
+              timezone={place?.place.timezone ?? "UTC"}
+              currency={place?.place.currency ?? "EUR"}
+              lat={place?.place.lat ?? null}
+              lng={place?.place.lng ?? null}
+              typed={typed}
+              onDone={() => qc.invalidateQueries({ queryKey: ["needs"] })}
+            />
+          )
         ) : (
           <section className="card-paper mt-6 p-5">
             <h2 className="text-xl">Posting a need takes an account</h2>
@@ -76,7 +110,7 @@ function NeedPage() {
             </p>
             <Link
               to="/auth"
-              className="focus-ink mt-4 inline-flex rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
+              className="focus-ink mt-4 inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
             >
               Sign in or join
             </Link>
@@ -247,7 +281,7 @@ function NeedForm({
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             placeholder="gardening, cleaning, translation, carrying things"
-            className="focus-ink rounded-md border border-border bg-background px-3 py-2"
+            className="focus-ink min-h-11 rounded-md border border-border bg-background px-3 py-2"
           />
         </label>
 
@@ -285,7 +319,7 @@ function NeedForm({
                 key={option.id}
                 type="button"
                 onClick={() => setIntent(option.id)}
-                className={`focus-ink rounded-full border px-3 py-1.5 text-xs ${
+                className={`focus-ink min-h-11 rounded-full border px-3 py-1.5 text-xs ${
                   intent === option.id
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border"
@@ -379,7 +413,7 @@ function NeedForm({
             type="button"
             onClick={save}
             disabled={busy}
-            className="focus-ink rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground disabled:opacity-60"
+            className="focus-ink min-h-11 rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground disabled:opacity-60"
           >
             {busy ? "Saving…" : "Post it"}
           </button>
