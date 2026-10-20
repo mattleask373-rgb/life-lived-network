@@ -1,19 +1,21 @@
-# Agent System Status — 2026-10-20 (Phase 2 integration spine)
+# Agent System Status — 2026-10-20 (Phase 2 first consumer)
 
 ## SOURCE OF TRUTH
 
 Repository evidence on `main`, GitHub Actions, open PRs, and canonical contracts are authoritative.
 No autonomous production merge/deploy is active.
 
-## PHASE 2 — GROUNDED MATCHING FOUNDATION (NEW)
+## PHASE 2 — GROUNDED MATCHING + FIRST CONSUMER
 
-- **Landed on main (2026-10-20):** `src/lib/grounded-matching.ts` + tests + `docs/ai/grounded-matching.md`
-- Pure, deterministic ranking of verified `WorldEntry` records only.
-- Never invents supply. Explicit evidence on every match. Honest quiet-state + contribution invitation when sparse.
-- Compatible with existing `intents.ts`, the redesign visual language (#177), locality pages, and future WorkOpportunity / Needs once #181–#190 bridges land.
+- **Foundation on main:** `src/lib/grounded-matching.ts` + tests + `docs/ai/grounded-matching.md`
+- **First real consumer (2026-10-20):** `doSomethingToday` in `src/lib/intents.ts` now ranks via `groundedMatch` + `queryFromIntent`.
+  - Public API (`WorldEntry[]`) unchanged — existing `DoSomethingToday` UI untouched.
+  - Max three results, layer variety preserved.
+  - Empty → empty array; UI quiet messaging unchanged.
+  - Regression tests in `src/lib/intents.test.ts`.
+- Pure, deterministic, evidence-backed. Never invents supply.
 - **Does not** create a second discovery engine. `findSupply()` remains the sole possibility authority.
-- **Does not** overwrite any visual tokens, cards or map work from the redesign lane.
-- Next: wire into surfaces after #177 review; extend input type when WorkOpportunity contract is merged.
+- **Does not** overwrite redesign visual tokens, cards or map work (#177).
 
 ## CURRENT QUEUE (condensed)
 
@@ -36,7 +38,7 @@ No autonomous production merge/deploy is active.
 
 ## NEXT FOR THIS LANE
 
-1. Keep grounded-matching pure and tested.
-2. Coordinate with #177 so the redesign consumes the same MatchOutcome shape.
-3. Once WorkOpportunity is reviewable on main, extend the matcher input non-destructively.
-4. Support small-place + global hotspot readiness without special-case code.
+1. Hosted Verify / CI on the exact head that contains the intents integration.
+2. Optionally surface MatchEvidence in UI after #177 is reviewed.
+3. Once WorkOpportunity lands on main, extend matcher input non-destructively.
+4. Wire locality / service surfaces to the same MatchOutcome when design is ready.
