@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #f3f0e8;
+  --color-surface: #fffcf7;
+  --color-ink: #1b1916;
+  --color-muted: #6e675e;
+  --color-line: #e4ded3;
+  --color-primary: #0c6b56;
+  --color-primary-fg: #f3fbf8;
+  --color-sage: #e3f2eb;
+  --color-sand: #efe6d6;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", georgia, serif;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-sage);
+    color: var(--color-ink);
+  }
+}
+
+.terrain-lisbon {
+  background:
+    radial-gradient(120% 80% at 0% 100%, var(--color-sand), transparent 55%),
+    radial-gradient(90% 70% at 100% 0%, var(--color-sage), transparent 50%),
+    var(--color-canvas);
+}
+.terrain-kyoto {
+  background:
+    radial-gradient(80% 60% at 70% 80%, var(--color-sage), transparent 60%),
+    radial-gradient(70% 50% at 10% 20%, var(--color-sand), transparent 50%),
+    var(--color-canvas);
+}
+.terrain-oaxaca {
+  background:
+    radial-gradient(90% 70% at 80% 90%, var(--color-sand), transparent 55%),
+    radial-gradient(60% 40% at 20% 10%, var(--color-sage), transparent 50%),
+    var(--color-canvas);
+}
+.terrain-cape {
+  background:
+    radial-gradient(100% 80% at 100% 100%, var(--color-sage), transparent 50%),
+    radial-gradient(80% 50% at 0% 0%, var(--color-sand), transparent 55%),
+    var(--color-canvas);
+}
+.atlas-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--color-ink) 12%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-ink) 12%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+.rail {
+  scrollbar-width: none;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+.safe-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card-media {
+    transition: transform 600ms ease;
+  }
+  .group:hover .card-media {
+    transform: scale(1.04);
+  }
+}
