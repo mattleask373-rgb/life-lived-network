@@ -18,6 +18,7 @@
 - Shared service taxonomy: src/lib/service-taxonomy.ts.
 - Canonical possibility/discovery authority: findSupply() in src/lib/supply-engine.ts.
 - Deterministic evidence-based ranking seam: src/lib/grounded-matching.ts; the doSomethingToday consumer uses it.
+- Important boundary: groundedMatch() is a ranking seam, not a publication/rights gate. In the current implementation it excludes demonstration and expired entries, but it does not independently prove publication status, source licence, moderation approval or rights clearance. Any assistant must receive an already-eligible server-side record set and fail closed when eligibility cannot be established.
 - Public listing retrieval/normalisation: src/lib/world.functions.ts and src/lib/listings.ts.
 - Existing AI-assisted drafting: src/lib/draft-assist.functions.ts + src/lib/draft-assist.server.ts. It is signed-in, schema-bounded and saves nothing automatically.
 - Generic locality and service-locality routes already exist on main; current SEO gate/sitemap integration still needs exact-head reconciliation and verification.
