@@ -120,4 +120,8 @@ This audit does not prove deployed routes, live database/RLS safety, live sitema
 5. Keep #175 staging-only until source rights, hierarchy, coordinates, timezone semantics and pilot scope receive explicit human approval.
 6. Update `docs/agents/STATUS.md` and `roadmap.md` to stop listing closed #177 as active, and record exact current heads and manual blockers.
 
+
+
+6. **Currency amount semantics must be explicit before global work feeds are enabled.** The WorkOpportunity schema currently names the integer field `amountCents` while documenting it as integer currency minor units, and the presentation layer formats using the currency's `Intl.NumberFormat` fraction digits. That can be correct only if every adapter stores the currency's actual minor-unit amount—not always literal cents. Before activating any market/feed, choose and document one canonical contract (`amountMinorUnits` with currency-specific scale, or literal cents with an explicit conversion rule), then test at least AUD/GBP/EUR plus a zero-decimal currency and a three-decimal currency. Adzuna staging correctly does not convert raw salary evidence into public compensation today.
+
 **No merge, deploy, schema/RLS/grant change, credential activation, production write, or live-feed action was performed by this audit.**
