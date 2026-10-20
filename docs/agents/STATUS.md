@@ -51,3 +51,11 @@ No autonomous production merge/deploy is active.
 - The contract preserves explicit engagement kind, pay status with integer minor units plus currency/basis, duration/dates, accommodation/transport/skills/conditions, provenance/source rights, freshness, jurisdiction/policy review and publication state.
 - `findSupply()` remains the sole discovery authority. No DB/schema/RLS/grant changes, production writes, source activation or public opportunity publishing are included.
 - Human review is still required for market-specific law/policy, source rights and any record publication. Australia remains NOT LIVE.
+
+
+## 2026-10-20 — Adzuna staging bridge review
+
+- Added an isolated follow-up branch `integration/adzuna-staging-bridge-2026-10-20` on top of the fresh WorkOpportunity contract port. It reuses the reviewed fixture-first parser/bridge files from #190 and compiles against the contract PR rather than the stale feature branch.
+- This slice is pure parsing/composition and caller-supplied place resolution only: no live requests, credentials, persistence, scheduled refresh, Supabase changes or public inventory.
+- All staged opportunities remain `canPublish: false` with unreviewed source rights, required policy review and unknown freshness; salary does not become public compensation without verified currency and basis.
+- Hosted Verify and human legal/source-rights review are required. The source is NOT ACTIVE.
