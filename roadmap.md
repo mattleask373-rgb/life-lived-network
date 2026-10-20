@@ -4,7 +4,7 @@
 
 - New reusable checklist proposed in `docs/launch/MARKET-ONBOARDING-CHECKLIST.md` via branch `codex/market-onboarding-checklist-2026-10-20` (based on main SHA `9269dff0fb66911733ea309fd7342d86bb60c112`).
 - Scope is country-agnostic onboarding: hierarchy/URL contract, ISO country and currency metadata, integer minor units, timezone/locale, market-specific work/policy review, source rights/attribution, moderation/privacy, shared discovery/SEO gates, import dry-run/idempotency/rollback and human launch sign-off.
-- Documentation only; no inventory, live data, production writes, schema/security changes, credentials, feeds, merge or deployment. The PR's hosted Verify remains to be checked.
+- PR #179 is open. Documentation only; no inventory, live data, production writes, schema/security changes, credentials, feeds, merge or deployment. Verify #39420190084 passed the content-bearing head; the final head after this status/roadmap correction needs a fresh hosted run. No local commands were run.
 - Australia and any other new market remain NOT LIVE until real eligible records and human-approved market/source gates exist.
 
 ## 2026-10-19/20 — Overwrite reconciliation + service pages (SEO slice 3, frontend half)
