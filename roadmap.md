@@ -1,3 +1,14 @@
+## 2026-10-20 — Global-market integration audit
+
+- Canonical main observed at 9269dff0fb66911733ea309fd7342d86bb60c112; the old 0c56cc2... baseline in several PR descriptions is stale.
+- Audit doc: docs/launch/GLOBAL-MARKET-READINESS-AUDIT-2026-10-20.md (integration dependencies, launch gates, exact-head Verify links, no-merge/non-production scope).
+- GitHub currently reports main branch protection disabled. Owner must configure PR-required, founder/owner approval, current Verify, no force-push/deletion and no bypass. No repository settings were changed.
+- Integration gate: #173/#175/#176 are diverged from current main and overlap locality route/route-tree files. #174/#176 overlap the work-opportunity contract, taxonomy, world-data, locality route and programme docs. Do not merge these stale heads directly; reconcile in a reviewed integration branch and re-run Verify on the final head.
+- Existing Verify success is exact-SHA evidence only; Supabase Preview was skipped. It is not live RLS/privacy proof.
+- #177 Verify is green on recorded heads, but manual 375px/1280px keyboard, focus and screen-reader QA remains outstanding.
+- Australia staging skeleton is not an approved locality import and is not live inventory. Keep unpublished until source, hierarchy, coordinates, time zone, rights, provenance and human review are complete.
+- Next sequence: owner protects main → reconcile SEO/place route work → unify opportunity contract/surface → fresh Verify → manual a11y QA → deployed sitemap/canonical/structured-data + conversion journey proof → explicit limited-pilot go/no-go.
+
 # Roadmap
 
 ## 2026-10-19/20 — Overwrite reconciliation + service pages (SEO slice 3, frontend half)
