@@ -1,6 +1,4 @@
 import { ImageOff } from "lucide-react";
-import type { KeyboardEvent } from "react";
-
 import { LAYERS, type WorldEntry } from "@/lib/world-data";
 import { asBookingState, BOOKING_LABEL, isService, providerLine } from "@/lib/services";
 import { cardPhoto, NO_PHOTO_LABEL } from "@/lib/entry-card-view";
@@ -32,12 +30,6 @@ export function EntryCard({
 
   const handleActivate = () => {
     onOpen?.(entry);
-  };
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (!interactive || (event.key !== "Enter" && event.key !== " ")) return;
-    event.preventDefault();
-    handleActivate();
   };
 
   const body = (
@@ -103,21 +95,20 @@ export function EntryCard({
     </>
   );
 
-  const shell = "card-paper block w-full overflow-hidden rounded-2xl text-left";
+  const shell = "card-paper relative block w-full overflow-hidden rounded-2xl text-left";
 
   return (
     <article
-      className={
-        interactive
-          ? `${shell} focus-ink cursor-pointer transition-shadow hover:shadow-lift`
-          : shell
-      }
-      role={interactive ? "button" : undefined}
-      tabIndex={interactive ? 0 : undefined}
-      aria-label={interactive ? `Open listing: ${entry.title}` : undefined}
-      onClick={interactive ? handleActivate : undefined}
-      onKeyDown={interactive ? handleKeyDown : undefined}
+      className={interactive ? `${shell} transition-shadow hover:shadow-lift` : shell}
     >
+      {interactive ? (
+        <button
+          type="button"
+          aria-label={`Open listing: ${entry.title}`}
+          onClick={handleActivate}
+          className="focus-ink absolute inset-0 z-10 appearance-none rounded-2xl border-0 bg-transparent p-0"
+        />
+      ) : null}
       {body}
     </article>
   );
