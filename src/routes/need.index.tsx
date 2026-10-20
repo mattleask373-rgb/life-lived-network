@@ -35,10 +35,7 @@ function NeedPage() {
     queryFn: fetchDefaultPlace,
     enabled: !placeSlug,
   });
-  const {
-    data: requestedPlace,
-    isPending: requestedPlacePending,
-  } = useQuery({
+  const { data: requestedPlace, isPending: requestedPlacePending } = useQuery({
     queryKey: ["place", "need-prefill", placeSlug],
     queryFn: () => fetchPlaceBySlug(placeSlug ?? ""),
     enabled: Boolean(placeSlug),
@@ -80,7 +77,8 @@ function NeedPage() {
             <section role="alert" className="card-paper mt-6 p-5">
               <h2 className="text-xl">We couldn't find that place on our map</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Your request hasn't been moved to another place. Choose an existing place and try again.
+                Your request hasn\'t been moved to another place. Choose an existing place and try
+                again.
               </p>
               <Link
                 to="/"
