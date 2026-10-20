@@ -62,6 +62,7 @@ export type OpportunityBridgeRejectionReason =
   | "unsupported_arrangement"
   | "unsafe_source_url"
   | "place_country_mismatch"
+  | "invalid_place_resolution"
   | "invalid_compensation_evidence";
 
 export interface StagedExternalOpportunity {
@@ -113,9 +114,7 @@ function arrangementFor(value: string | null): WorkOpportunity["arrangement"] | 
   switch (value?.trim().toLowerCase()) {
     case "permanent":
       return "longer_term";
-    case "contract":
     case "temporary":
-    case "fixed_term":
       return "short_term";
     case "seasonal":
       return "seasonal";
@@ -128,6 +127,13 @@ function canonicalInstant(value: string): string | null {
   const timestamp = Date.parse(value);
   if (!Number.isFinite(timestamp)) return null;
   return new Date(timestamp).toISOString();
+}
+
+function canonicalObservedInstant(value: string): string | null {
+  // The observation time must be a timestamp with an explicit timezone, not a
+  // date-only value or a machine-local wall clock.
+  if (!/^\\d{4}-\\d{2}-\\d{2}T.*(?:Z|[+-]\\d{2}:\\d{2})$/i.test(value)) return null;
+  return canonicalInstant(value);
 }
 
 function validCompensationEvidence(value: AdzunaBridgeInput["compensationEvidence"]): boolean {
@@ -167,7 +173,7 @@ export function stageAdzunaWorkOpportunity(
     return { status: "rejected", reason: "invalid_country_code" };
   }
 
-  const seenAt = canonicalInstant(observedAt);
+  const seenAt = canonicalObservedInstant(observedAt);
   if (!seenAt) return { status: "rejected", reason: "invalid_observed_at" };
 
   const arrangement = arrangementFor(input.contractType);
@@ -176,6 +182,9 @@ export function stageAdzunaWorkOpportunity(
   const sourceUrl = safeUrl(input.sourceUrl);
   if (!sourceUrl) return { status: "rejected", reason: "unsafe_source_url" };
 
+  if (place && !place.placeId.trim()) {
+    return { status: "rejected", reason: "invalid_place_resolution" };
+  }
   if (place && place.countryCode.trim().toUpperCase() !== countryCode) {
     return { status: "rejected", reason: "place_country_mismatch" };
   }
