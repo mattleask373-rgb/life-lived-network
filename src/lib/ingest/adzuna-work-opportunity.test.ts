@@ -94,12 +94,15 @@ describe("Adzuna -> WorkOpportunity staging bridge", () => {
   });
 
   it("maps only explicitly understood contract types and rejects unknown duration semantics", () => {
-    expect(stageAdzunaWorkOpportunity({ ...BASE, contractType: "permanent" }, OBSERVED_AT).status)
-      .toBe("staged");
-    expect(stageAdzunaWorkOpportunity({ ...BASE, contractType: "temporary" }, OBSERVED_AT).status)
-      .toBe("staged");
-    expect(stageAdzunaWorkOpportunity({ ...BASE, contractType: "seasonal" }, OBSERVED_AT).status)
-      .toBe("staged");
+    expect(
+      stageAdzunaWorkOpportunity({ ...BASE, contractType: "permanent" }, OBSERVED_AT).status,
+    ).toBe("staged");
+    expect(
+      stageAdzunaWorkOpportunity({ ...BASE, contractType: "temporary" }, OBSERVED_AT).status,
+    ).toBe("staged");
+    expect(
+      stageAdzunaWorkOpportunity({ ...BASE, contractType: "seasonal" }, OBSERVED_AT).status,
+    ).toBe("staged");
     expect(stageAdzunaWorkOpportunity({ ...BASE, contractType: "unknown" }, OBSERVED_AT)).toEqual({
       status: "rejected",
       reason: "unsupported_arrangement",
@@ -160,14 +163,17 @@ describe("Adzuna -> WorkOpportunity staging bridge", () => {
   });
 
   it("rejects impossible source compensation evidence", () => {
-    const result = stageAdzunaWorkOpportunity({
-      ...BASE,
-      compensationEvidence: {
-        ...BASE.compensationEvidence,
-        minimum: 30000,
-        maximum: 20000,
+    const result = stageAdzunaWorkOpportunity(
+      {
+        ...BASE,
+        compensationEvidence: {
+          ...BASE.compensationEvidence,
+          minimum: 30000,
+          maximum: 20000,
+        },
       },
-    }, OBSERVED_AT);
+      OBSERVED_AT,
+    );
     expect(result).toEqual({
       status: "rejected",
       reason: "invalid_compensation_evidence",
