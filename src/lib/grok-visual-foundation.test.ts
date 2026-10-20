@@ -37,4 +37,14 @@ describe("Grok visual foundation integration", () => {
     expect(placePicker).toContain("min-h-11");
     expect(placePicker).not.toContain("@/data/atlas");
   });
+
+  it("uses a valid interactive article instead of a button with block content", () => {
+    // Interactive cards must not put div/h3/p inside a <button> (invalid content model).
+    expect(entryCard).toContain('role={interactive ? "button" : undefined}');
+    expect(entryCard).toContain("tabIndex={interactive ? 0 : undefined}");
+    expect(entryCard).toContain('aria-label={interactive ? `Open listing: ${entry.title}` : undefined}');
+    expect(entryCard).toContain("onKeyDown={interactive ? handleKeyDown : undefined}");
+    // Must not reintroduce a wrapping <button> for the whole card body.
+    expect(entryCard).not.toMatch(/<button[\s\S]*aspect-\[4\/3\]/);
+  });
 });
