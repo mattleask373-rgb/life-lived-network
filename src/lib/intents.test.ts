@@ -26,7 +26,7 @@ const base = (overrides: Partial<WorldEntry> = {}): WorldEntry => ({
 
 describe("doSomethingToday (groundedMatch integration)", () => {
   it("returns empty array when nothing eligible", () => {
-    expect(doSomethingToday([], INTENTS[0])).toEqual([]);
+    expect(doSomethingToday([], INTENTS[0]!)).toEqual([]);
   });
 
   it("excludes demonstration and expired records", () => {
@@ -44,7 +44,7 @@ describe("doSomethingToday (groundedMatch integration)", () => {
     const world = Array.from({ length: 8 }, (_, i) =>
       base({
         id: `e${i}`,
-        layer: (["work", "music", "food", "nature", "art"] as const)[i % 5],
+        layer: (["work", "music", "food", "nature", "art"] as const)[i % 5]!,
         title: `Entry ${i}`,
         band: "today",
       }),
@@ -75,7 +75,7 @@ describe("doSomethingToday (groundedMatch integration)", () => {
     const work = INTENTS.find((i) => i.id === "work")!;
     const results = doSomethingToday(world, work);
     expect(results.length).toBeGreaterThan(0);
-    expect(results[0].id).toBe("paid");
+    expect(results[0]!.id).toBe("paid");
   });
 });
 

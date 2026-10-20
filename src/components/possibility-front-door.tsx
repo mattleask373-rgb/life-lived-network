@@ -50,11 +50,14 @@ export function PossibilityFrontDoor() {
   }
 
   return (
-    <section aria-labelledby="front-door-heading" className="card-paper mt-6 p-5 sm:p-6">
-      <h2 id="front-door-heading" className="text-xl sm:text-2xl">
-        What are you looking for?
+    <section aria-labelledby="front-door-heading" className="card-paper p-5 sm:p-7">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+        Start here
+      </p>
+      <h2 id="front-door-heading" className="mt-1 font-display text-2xl leading-tight sm:text-3xl">
+        What are you <span className="italic text-primary">looking for?</span>
       </h2>
-      <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+      <p className="mt-2 max-w-xl text-sm text-muted-foreground">
         Say it in plain words, or pick a door. We only route you — we don&apos;t invent people,
         places, or qualifications.
       </p>
