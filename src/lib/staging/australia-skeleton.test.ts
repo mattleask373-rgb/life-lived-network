@@ -13,15 +13,41 @@ describe("Australia pilot staging skeleton", () => {
       expect(row.currency).toBe("AUD");
       expect(row.publicationStatus).toBe("not_published");
       expect(row.hierarchyDecision).toBe("proposed_not_approved");
-      expect(row.latitude).toBeNull();
-      expect(row.longitude).toBeNull();
+      if (row.slug === "agnes-water") {
+        expect(row.latitude).toBe(-24.2125857);
+        expect(row.longitude).toBe(151.90327882);
+      } else if (row.slug === "port-douglas") {
+        expect(row.latitude).toBe(-16.49944);
+        expect(row.longitude).toBe(145.46083);
+      } else {
+        expect(row.latitude).toBeNull();
+        expect(row.longitude).toBeNull();
+      }
       expect(row.source.reviewStatus).toBe("pending");
       expect(row.source.rightsStatus).toBe("unreviewed");
-      expect(row.source.licenseName).toBeNull();
-      expect(row.source.licenseUrlCandidate).toBeNull();
+      if (row.slug === "agnes-water" || row.slug === "port-douglas") {
+        expect(row.source.licenseName).toBe("Creative Commons Attribution 4.0 International");
+        expect(row.source.licenseUrlCandidate).toBe("https://creativecommons.org/licenses/by/4.0/");
+        expect(row.source.attribution).toBe("© State of Queensland (Department of Resources) 2024");
+      } else {
+        expect(row.source.licenseName).toBeNull();
+        expect(row.source.licenseUrlCandidate).toBeNull();
+      }
       expect(row.source.version).toBeNull();
       expect(row.source.retrievedAt).toBeNull();
       if (row.parentSourceKey) expect(keys.has(row.parentSourceKey)).toBe(true);
+    }
+  });
+
+  it("uses official Queensland gazetteer points as unapproved candidates only", () => {
+    const agnes = AUSTRALIA_STAGING_SKELETON.find((row) => row.slug === "agnes-water");
+    const portDouglas = AUSTRALIA_STAGING_SKELETON.find((row) => row.slug === "port-douglas");
+    for (const row of [agnes, portDouglas]) {
+      expect(row?.source.sourceName).toBe("Queensland Government Department of Resources");
+      expect(row?.source.reviewStatus).toBe("pending");
+      expect(row?.source.rightsStatus).toBe("unreviewed");
+      expect(row?.source.retrievedAt).toBeNull();
+      expect(row?.publicationStatus).toBe("not_published");
     }
   });
 

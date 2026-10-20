@@ -254,3 +254,10 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - Coordinates, source version/retrieval evidence, licence/attribution/redistribution rights and human hierarchy approvals are not yet complete. Timezone entries are candidates and need authority review.
 - Existing feature head `852a8b8db850b5fc103b1e0f57e61b23b8e0178a` passed hosted Verify (run #1244); fresh Verify is required on the reconciliation head.
 - No production writes, schema/RLS/grants, secret/partner activation, or live inventory. Human approval and disposable-database proof remain explicit gates.
+
+
+## 2026-10-20 — Australia staging source evidence (PR #175)
+
+- Added Queensland Place Names Gazetteer point candidates to the non-writing fixture: Agnes Water REF_NO 39140 (-24.2125857, 151.90327882) and Port Douglas REF_NO 48847 (-16.49944, 145.46083). The official service's licence metadata says CC BY 4.0 and requests attribution to © State of Queensland (Department of Resources) 2024.
+- The fixture records licence/attribution candidates while preserving pending human source review and `rightsStatus=unreviewed`. No fresh bulk source extract/version or retrieved-at timestamp is asserted.
+- Byron Bay and parent nodes remain coordinate-null until an exact authoritative record is sourced; no coordinates are guessed. Points are not navigation/address-grade. Nothing is imported/published; Australia remains NOT LIVE.

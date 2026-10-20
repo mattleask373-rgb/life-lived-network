@@ -1,7 +1,8 @@
 /**
  * Proposed Australia pilot hierarchy only. This is intentionally not an import
- * payload: source records, licensing, coordinates and country-level timezone
- * semantics have not been reviewed. Do not feed this module to a publish path.
+ * payload: two Queensland gazetteer points are filled as source-backed candidates;
+ * NSW coordinates and several provenance fields remain incomplete. Human rights,
+ * hierarchy, CRS and timezone decisions are pending. Never feed to a publish path.
  */
 export interface AustraliaStagingDraft {
   sourceKey: string;
@@ -15,19 +16,20 @@ export interface AustraliaStagingDraft {
   /** Candidate from local geography only; null when country-level meaning is unresolved. */
   timezoneCandidate: string | null;
   timezoneDecisionRequired: "candidate_pending_review" | "country_semantics_unresolved";
-  latitude: null;
-  longitude: null;
+  /** Official gazetteer place-point candidate, not a navigation or address coordinate. */
+  latitude: number | null;
+  longitude: number | null;
   blurb: "";
   sourceDataStatus: "unknown" | "unconfirmed";
   publicationStatus: "not_published";
   hierarchyDecision: "proposed_not_approved";
   source: {
     sourceKey: string;
-    sourceName: "OFFICIAL SOURCE REVIEW PENDING";
+    sourceName: string;
     sourceUrlCandidate: string;
-    licenseName: null;
-    licenseUrlCandidate: null;
-    attribution: null;
+    licenseName: string | null;
+    licenseUrlCandidate: string | null;
+    attribution: string | null;
     version: null;
     retrievedAt: null;
     reviewStatus: "pending";
@@ -48,13 +50,19 @@ function draft(
     AustraliaStagingDraft,
     | "countryCode"
     | "currency"
-    | "latitude"
-    | "longitude"
     | "blurb"
     | "publicationStatus"
     | "hierarchyDecision"
     | "source"
-  > & { sourceUrlCandidate: string },
+  > & {
+    sourceUrlCandidate: string;
+    sourceName?: string;
+    licenseName?: string | null;
+    licenseUrlCandidate?: string | null;
+    attribution?: string | null;
+    version?: string | null;
+    retrievedAt?: string | null;
+  },
 ): AustraliaStagingDraft {
   return {
     sourceKey: row.sourceKey,
@@ -66,21 +74,21 @@ function draft(
     currency: "AUD",
     timezoneCandidate: row.timezoneCandidate,
     timezoneDecisionRequired: row.timezoneDecisionRequired,
-    latitude: null,
-    longitude: null,
+    latitude: row.latitude,
+    longitude: row.longitude,
     blurb: "",
     sourceDataStatus: row.sourceDataStatus,
     publicationStatus: "not_published",
     hierarchyDecision: "proposed_not_approved",
     source: {
       sourceKey: row.sourceKey,
-      sourceName: "OFFICIAL SOURCE REVIEW PENDING",
+      sourceName: row.sourceName ?? "OFFICIAL SOURCE REVIEW PENDING",
       sourceUrlCandidate: row.sourceUrlCandidate,
-      licenseName: null,
-      licenseUrlCandidate: null,
-      attribution: null,
-      version: null,
-      retrievedAt: null,
+      licenseName: row.licenseName ?? null,
+      licenseUrlCandidate: row.licenseUrlCandidate ?? null,
+      attribution: row.attribution ?? null,
+      version: row.version ?? null,
+      retrievedAt: row.retrievedAt ?? null,
       reviewStatus: "pending",
       rightsStatus: "unreviewed",
     },
@@ -102,6 +110,8 @@ export const AUSTRALIA_STAGING_SKELETON: readonly AustraliaStagingDraft[] = [
     timezoneCandidate: null,
     timezoneDecisionRequired: "country_semantics_unresolved",
     sourceDataStatus: "unknown",
+    latitude: null,
+    longitude: null,
     sourceUrlCandidate: SOURCE_CANDIDATES.australia,
   }),
   draft({
@@ -113,6 +123,8 @@ export const AUSTRALIA_STAGING_SKELETON: readonly AustraliaStagingDraft[] = [
     timezoneCandidate: "Australia/Sydney",
     timezoneDecisionRequired: "candidate_pending_review",
     sourceDataStatus: "unconfirmed",
+    latitude: null,
+    longitude: null,
     sourceUrlCandidate: SOURCE_CANDIDATES.nsw,
   }),
   draft({
@@ -124,6 +136,8 @@ export const AUSTRALIA_STAGING_SKELETON: readonly AustraliaStagingDraft[] = [
     timezoneCandidate: "Australia/Brisbane",
     timezoneDecisionRequired: "candidate_pending_review",
     sourceDataStatus: "unconfirmed",
+    latitude: null,
+    longitude: null,
     sourceUrlCandidate: SOURCE_CANDIDATES.queensland,
   }),
   draft({
@@ -135,6 +149,8 @@ export const AUSTRALIA_STAGING_SKELETON: readonly AustraliaStagingDraft[] = [
     timezoneCandidate: "Australia/Sydney",
     timezoneDecisionRequired: "candidate_pending_review",
     sourceDataStatus: "unconfirmed",
+    latitude: null,
+    longitude: null,
     sourceUrlCandidate: SOURCE_CANDIDATES.nsw,
   }),
   draft({
@@ -146,7 +162,13 @@ export const AUSTRALIA_STAGING_SKELETON: readonly AustraliaStagingDraft[] = [
     timezoneCandidate: "Australia/Brisbane",
     timezoneDecisionRequired: "candidate_pending_review",
     sourceDataStatus: "unconfirmed",
-    sourceUrlCandidate: SOURCE_CANDIDATES.queensland,
+    latitude: -24.2125857,
+    longitude: 151.90327882,
+    sourceUrlCandidate: "https://spatial-gis.information.qld.gov.au/arcgis/rest/services/Location/QldPlaceNames/MapServer/0/query?where=REF_NO%3D39140&outFields=REF_NO%2CPLACE_NAME%2CDESCRIPTION%2CSTATUS%2CCURRENCY%2CMODIFIED_DATE%2CLGA_NAME%2CLONGITUDE_DD%2CLATITUDE_DD&returnGeometry=false&f=pjson",
+    sourceName: "Queensland Government Department of Resources",
+    licenseName: "Creative Commons Attribution 4.0 International",
+    licenseUrlCandidate: "https://creativecommons.org/licenses/by/4.0/",
+    attribution: "© State of Queensland (Department of Resources) 2024",
   }),
   draft({
     sourceKey: "au:locality:port-douglas",
@@ -157,6 +179,12 @@ export const AUSTRALIA_STAGING_SKELETON: readonly AustraliaStagingDraft[] = [
     timezoneCandidate: "Australia/Brisbane",
     timezoneDecisionRequired: "candidate_pending_review",
     sourceDataStatus: "unconfirmed",
-    sourceUrlCandidate: SOURCE_CANDIDATES.queensland,
+    latitude: -16.49944,
+    longitude: 145.46083,
+    sourceUrlCandidate: "https://spatial-gis.information.qld.gov.au/arcgis/rest/services/Location/QldPlaceNames/MapServer/0/query?where=REF_NO%3D48847&outFields=REF_NO%2CPLACE_NAME%2CDESCRIPTION%2CSTATUS%2CCURRENCY%2CMODIFIED_DATE%2CLGA_NAME%2CLONGITUDE_DD%2CLATITUDE_DD&returnGeometry=false&f=pjson",
+    sourceName: "Queensland Government Department of Resources",
+    licenseName: "Creative Commons Attribution 4.0 International",
+    licenseUrlCandidate: "https://creativecommons.org/licenses/by/4.0/",
+    attribution: "© State of Queensland (Department of Resources) 2024",
   }),
 ];

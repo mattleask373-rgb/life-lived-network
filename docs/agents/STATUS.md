@@ -61,3 +61,11 @@ No autonomous production merge/deploy is active.
 - The Australia skeleton remains proposed-only: Australia, New South Wales, Queensland, Byron Bay, Agnes Water and Port Douglas. Coordinates and source/licence details remain incomplete; timezone values are candidates, not approved facts. The validator does not turn this into live place data.
 - Prior feature head `852a8b8db850b5fc103b1e0f57e61b23b8e0178a` had hosted Verify success (run #1244); a new hosted Verify is required on this reconciled head. No local shell/test execution was available in this session.
 - No schema/RLS/grant changes, credentials, production writes, import, or publication. Human approval is required for the pilot boundary, authoritative source/provenance/licensing, hierarchy and coordinates. Australia remains **NOT LIVE**.
+
+
+## 2026-10-20 — Official Queensland point candidates added (PR #175)
+
+- The non-writing Australia staging fixture now records official Queensland Place Names gazetteer point candidates for Agnes Water (REF_NO 39140: latitude -24.2125857, longitude 151.90327882) and Port Douglas (REF_NO 48847: latitude -16.49944, longitude 145.46083). Source fields report a population centre for Agnes Water and locality bounded for Port Douglas, both modified on 2026-01-13.
+- Queensland service metadata states CC BY 4.0 and requests attribution `© State of Queensland (Department of Resources) 2024`; the candidate rows record that licence/attribution but deliberately retain `reviewStatus=pending` and `rightsStatus=unreviewed`.
+- Byron Bay and country/state parent rows still have null coordinates because this pass did not establish an exact official place-point record for them. No guessed points were substituted.
+- Candidate coordinates are named-place points, not street addresses or navigation-grade positions. All six proposed rows remain `not_published` and hierarchy `proposed_not_approved`; source version/retrieval evidence and human review are still required. Australia remains **NOT LIVE**.
