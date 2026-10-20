@@ -63,16 +63,19 @@ describe("Adzuna request construction", () => {
       );
     }
 
-    expect(adzunaSearchRequest({ market: "au", what: "builder", where: "Byron Bay" }).params.get("where"))
-      .toBe("Byron Bay");
+    expect(
+      adzunaSearchRequest({ market: "au", what: "builder", where: "Byron Bay" }).params.get(
+        "where",
+      ),
+    ).toBe("Byron Bay");
   });
 
   it("rejects an unconfigured market or unsafe/unbounded query settings", () => {
     expect(() => adzunaSearchRequest({ market: "../", what: "gardener" })).toThrow();
     expect(() => adzunaSearchRequest({ market: "gb", what: "  " })).toThrow();
     expect(() => adzunaSearchRequest({ market: "gb", what: "gardener", page: 0 })).toThrow();
-    expect(
-      () => adzunaSearchRequest({ market: "gb", what: "gardener", resultsPerPage: 500 }),
+    expect(() =>
+      adzunaSearchRequest({ market: "gb", what: "gardener", resultsPerPage: 500 }),
     ).toThrow();
   });
 
