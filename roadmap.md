@@ -245,3 +245,25 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - Both noindex and in PRIVATE_PATHS. No payments, backend, schema or auth changes.
 - [ ] Blocked on approval: storing interest submissions in the database (needs a new table) and a follow-up contact route.
 - [ ] My Places full slice: plan awaiting approval (schema addition, location precision).
+
+
+## 2026-10-20 — Australia staging preparation (PR #175 reconciliation)
+
+- PR #175 now reconciles the non-writing locality staging validator with canonical `main` `9269dff0fb66911733ea309fd7342d86bb60c112`.
+- Six proposed hierarchy nodes only: Australia, NSW, Queensland, Byron Bay, Agnes Water and Port Douglas. This is a validation fixture, not an import payload or live place index.
+- Coordinates, source version/retrieval evidence, licence/attribution/redistribution rights and human hierarchy approvals are not yet complete. Timezone entries are candidates and need authority review.
+- Existing feature head `852a8b8db850b5fc103b1e0f57e61b23b8e0178a` passed hosted Verify (run #1244); fresh Verify is required on the reconciliation head.
+- No production writes, schema/RLS/grants, secret/partner activation, or live inventory. Human approval and disposable-database proof remain explicit gates.
+
+
+## 2026-10-20 — Australia staging source evidence (PR #175)
+
+- Added Queensland Place Names Gazetteer point candidates to the non-writing fixture: Agnes Water REF_NO 39140 (-24.2125857, 151.90327882) and Port Douglas REF_NO 48847 (-16.49944, 145.46083). The official service's licence metadata says CC BY 4.0 and requests attribution to © State of Queensland (Department of Resources) 2024.
+- The fixture records licence/attribution candidates while preserving pending human source review and `rightsStatus=unreviewed`. No fresh bulk source extract/version or retrieved-at timestamp is asserted.
+- Byron Bay and parent nodes remain coordinate-null until an exact authoritative record is sourced; no coordinates are guessed. Points are not navigation/address-grade. Nothing is imported/published; Australia remains NOT LIVE.
+
+
+## Verify evidence — 2026-10-20 (Australia staging checkpoint)
+
+- Hosted Verify passed on code head `0e7dadbb6c4ac3948d2b71ff04014d93b1ce9194` in [run #1336](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39426960966): frozen install, lint, Vitest and production build.
+- The checkpoint contains non-writing place validation plus official Queensland gazetteer point candidates for Agnes Water and Port Douglas with licence/attribution recorded as pending human approval. This subsequent docs-only evidence commit still requires fresh Verify before review/merge.
