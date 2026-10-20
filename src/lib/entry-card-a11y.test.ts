@@ -6,7 +6,7 @@ const entryCard = readFileSync("src/components/entry-card.tsx", "utf8");
 describe("EntryCard accessibility contract", () => {
   it("keeps block content outside the native action button", () => {
     expect(entryCard).toContain("<article");
-    expect(entryCard).not.toMatch(/<button[\s\S]*?aspect-\[4\/3\]/);
+    expect(entryCard).not.toMatch(/<button[\s\S]*?<\/button>/);
   });
 
   it("uses a named native button only when the card is interactive", () => {
