@@ -268,3 +268,9 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - Added conservative `Event` schema only for verified, non-demo, non-cancelled records with a valid explicit start instant, timezone and recorded place label.
 - Added `LocalBusiness` schema only for a verified current provider group with an explicit organisation name and public URL. No business address or exact coordinates are invented; the model currently supports locality `areaServed`, not Google-address-complete rich results.
 - Tests enforce fail-closed behavior for incomplete/invalid facts and ensure no price, organizer, address, geo or availability claims are inferred. Dedicated event/provider routes/sitemaps and source-compliant real records remain open.
+
+
+## Verify evidence — 2026-10-20 (SEO/schema checkpoint)
+
+- Hosted Verify passed on code head `571f49e069299cdff42c939990ff701d36a20844` in [run #1339](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39427456329): frozen install, lint, Vitest and production build.
+- The pure four-state indexability gate, gated sitemap candidates, work-opportunity gate, BreadcrumbList, conservative Event schema, and conservative LocalBusiness schema were included in that checkpoint. This subsequent docs-only evidence commit still requires fresh Verify before review/merge.

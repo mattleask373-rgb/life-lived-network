@@ -79,3 +79,9 @@ No autonomous production merge/deploy is active.
 - Locality pages add `LocalBusiness` only for an explicitly named provider with a verified current service record and a public booking/source URL. The schema uses the locality as `areaServed`; the model has no verified business street address, so address/geo fields are deliberately omitted rather than invented.
 - Regression tests cover malformed dates/timezones, demo/cancelled/unverified events, generic place labels, missing business identity/URL, and absence of fabricated address/geo/offer properties.
 - These schemas are attached to the locality page UI, not separate event routes. Dedicated event/provider sitemaps and address-grade business data remain separate gates. Fresh hosted Verify is required for the next SEO branch head; no local test run was performed.
+
+
+## Verification checkpoint — 2026-10-20 (SEO/schema code head)
+
+- Hosted Verify **passed** on the SEO, work-surface integration, and Event/LocalBusiness schema code head `571f49e069299cdff42c939990ff701d36a20844`: [run #1339](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39427456329). Frozen install, lint, Vitest and production build all passed.
+- This is evidence for the code head above. The status/roadmap-only commit recording it requires its own fresh exact-head Verify before merge. Manual mobile/accessibility QA, live crawl/Search Console, real public inventory and human review remain open.
