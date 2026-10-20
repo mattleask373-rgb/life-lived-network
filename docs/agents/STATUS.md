@@ -51,3 +51,11 @@ No autonomous production merge/deploy is active.
 - The contract preserves explicit engagement kind, pay status with integer minor units plus currency/basis, duration/dates, accommodation/transport/skills/conditions, provenance/source rights, freshness, jurisdiction/policy review and publication state.
 - `findSupply()` remains the sole discovery authority. No DB/schema/RLS/grant changes, production writes, source activation or public opportunity publishing are included.
 - Human review is still required for market-specific law/policy, source rights and any record publication. Australia remains NOT LIVE.
+
+
+## 2026-10-20 — WorkOpportunity surfaces fresh port
+
+- Branch `integration/work-opportunity-surfaces-2026-10-20` ports the existing-supply integration from #176 onto the refreshed #203 contract/taxonomy baseline.
+- Locality and service views consume the existing `WorldEntry` result path; contract-invalid, draft, unreviewed or rights-restricted opportunity payloads are excluded by `isPublishableWorkOpportunity()` before public presentation.
+- Adds shared work-facts and request-prefill/presentation helpers with tests. No schema/RLS/grant changes, source activation, production write or second discovery engine.
+- SEO/indexability gating remains the next dependent review slice. Fresh hosted Verify and human publication-policy review required before merge/release.
