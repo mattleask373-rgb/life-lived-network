@@ -1,4 +1,5 @@
 import { MapPin } from "lucide-react";
+import type { KeyboardEvent } from "react";
 
 import { LAYERS, type WorldEntry } from "@/lib/world-data";
 import { asBookingState, BOOKING_LABEL, isService, providerLine } from "@/lib/services";
@@ -18,9 +19,33 @@ export function EntryCard({
   const layer = LAYERS.find((l) => l.id === entry.layer);
   const photo = entry.photos?.find((item) => Boolean(item.url));
   const service = isService(entry);
+  const interactive = Boolean(onOpen);
 
-  const body = (
-    <>
+  const handleActivate = () => {
+    onOpen?.(entry);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (!interactive) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleActivate();
+    }
+  };
+
+  return (
+    <article
+      className={
+        interactive
+          ? "card-paper focus-ink group flex h-full w-full cursor-pointer flex-col overflow-hidden text-left transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-lift motion-reduce:transform-none"
+          : "card-paper group flex h-full flex-col overflow-hidden text-left"
+      }
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-label={interactive ? `Open listing: ${entry.title}` : undefined}
+      onClick={interactive ? handleActivate : undefined}
+      onKeyDown={interactive ? handleKeyDown : undefined}
+    >
       <div className="relative aspect-[4/3] overflow-hidden bg-paper-deep">
         {photo ? (
           <img
@@ -103,24 +128,6 @@ export function EntryCard({
 
         {note ? <p className="mt-3 text-sm italic text-foreground/80">{note}</p> : null}
       </div>
-    </>
-  );
-
-  if (!onOpen) {
-    return (
-      <article className="card-paper group flex h-full flex-col overflow-hidden text-left">
-        {body}
-      </article>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={() => onOpen(entry)}
-      className="card-paper focus-ink group flex h-full w-full flex-col overflow-hidden text-left transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-lift motion-reduce:transform-none"
-    >
-      {body}
-    </button>
+    </article>
   );
 }
