@@ -199,10 +199,10 @@ function ServicePage() {
               <Link
                 to="/need"
                 search={needPrefillForService({
-                    categorySlug: category.slug,
-                    categoryLabel: category.label,
-                    placeSlug: place.slug,
-                    placeName: place.name,
+                  categorySlug: category.slug,
+                  categoryLabel: category.label,
+                  placeSlug: place.slug,
+                  placeName: place.name,
                 })}
                 className="focus-ink flex min-h-11 flex-col rounded-lg border border-primary bg-primary px-4 py-3 text-sm text-primary-foreground"
               >
