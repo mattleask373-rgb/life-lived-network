@@ -15,4 +15,34 @@ describe("detail panel touch targets", () => {
     expect(src).toMatch(/min-h-11 rounded-full px-4 py-2 text-sm transition-colors/);
     expect(src).toMatch(/min-h-11 rounded-full border border-border bg-card px-4 py-2 text-sm/);
   });
+
+  it("keeps map pins and controls comfortably tappable", () => {
+    const src = read("components/living-map.tsx");
+    expect(src).toContain("h-11 w-11 -translate-x-1/2 -translate-y-full");
+    expect(src).toContain(
+      "grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-lift",
+    );
+    expect(src).toContain(
+      'aria-label={centreName ? `Map around ${centreName}` : "Map of recorded places"}',
+    );
+  });
+
+  it("uses only photos with a usable source URL in the detail gallery", () => {
+    const src = read("components/entry-sheet.tsx");
+    expect(src).toContain(
+      "const photos = (entry.photos ?? []).filter((photo) => photo.url.trim().length > 0);",
+    );
+    expect(src).toContain('role="region"');
+    expect(src).toContain("Photos for ${entry.title}");
+    expect(src).toContain("font-display text-3xl");
+  });
+
+  it("sets the Grok visual type and warm paper/cream/forest palette", () => {
+    const styles = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
+    expect(styles).toContain('--font-sans: "Manrope"');
+    expect(styles).toContain("--paper: #f3f0e8");
+    expect(styles).toContain("--card: #fffcf7");
+    expect(styles).toContain("--primary: #0c6b56");
+    expect(styles).toContain("--sage: #e3f2eb");
+  });
 });

@@ -87,7 +87,7 @@ describe("queryFromIntent + threeHours", () => {
 
   it("threeHours returns at most 4 matches or quiet", () => {
     const many = Array.from({ length: 10 }, (_, i) =>
-      base({ id: `e${i}`, title: `Activity ${i}` })
+      base({ id: `e${i}`, title: `Activity ${i}` }),
     );
     const outcome = threeHours(many, { free: true });
     if (outcome.kind === "matches") {
