@@ -250,7 +250,7 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 ## 2026-10-20 — Grok visual integration, first cards/picker slice
 
 - Preserved design reference source in `reference/grok-design-2026-10-20` (source archive SHA-256 `6eae21ffddcb1cd1b62025c416cd979ae2fa500321fce83b158b870c838c72a6`); prototype routes and mock data stay quarantined.
-- Created `integration/grok-design-2026-10-20` from `main` SHA `0c56cc299825dea5996323506e7a1cc9266975c8`. Implementation scope: align loaded Manrope font token and core paper/cream/forest colours; re-skin listing cards and place picker.
+- Created `integration/grok-design-2026-10-20` from `main` SHA `9269dff0fb66911733ea309fd7342d86bb60c112`. Implementation scope: align loaded Manrope font token and core paper/cream/forest colours; re-skin listing cards and place picker.
 - Listing cards use only canonical `WorldEntry.photos` and source credit, otherwise disclose “No photo supplied”; preserve trust, source and demonstration states plus existing money formatting.
 - Place picker uses larger, more legible search/result/chip controls while retaining the canonical place tree, current locality, explicit unavailable/error messaging and honest zero results.
 - Hosted `verify` and manual 375px/1280px browser/accessibility check will be recorded on the PR after exact-head evidence completes. No data/schema/RLS/grant/auth/route/discovery changes.
