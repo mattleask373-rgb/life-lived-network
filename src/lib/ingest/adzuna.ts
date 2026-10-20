@@ -55,9 +55,7 @@ export function adzunaSearchRequest(input: AdzunaSearchInput): AdzunaSearchReque
     resultsPerPage < 1 ||
     resultsPerPage > MAX_RESULTS_PER_PAGE
   ) {
-    throw new Error(
-      `Adzuna resultsPerPage must be an integer from 1 to ${MAX_RESULTS_PER_PAGE}`,
-    );
+    throw new Error(`Adzuna resultsPerPage must be an integer from 1 to ${MAX_RESULTS_PER_PAGE}`);
   }
 
   const params = new URLSearchParams();
@@ -77,9 +75,7 @@ export function adzunaSearchRequest(input: AdzunaSearchInput): AdzunaSearchReque
 type RecordValue = Record<string, unknown>;
 
 function asRecord(value: unknown): RecordValue {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as RecordValue)
-    : {};
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as RecordValue) : {};
 }
 
 function scalarText(value: unknown, maxLength = 200): string {
@@ -180,10 +176,7 @@ function responseError(payload: RecordValue): string {
 }
 
 /** Parse a search response without treating malformed/error payloads as empty supply. */
-export function parseAdzunaSearchPayload(
-  payload: unknown,
-  countryCode: string,
-): AdzunaParseResult {
+export function parseAdzunaSearchPayload(payload: unknown, countryCode: string): AdzunaParseResult {
   const country = countryCode.trim().toUpperCase();
   if (!/^[A-Z]{2}$/.test(country)) {
     return { jobs: [], skipped: ["Configured countryCode must be a two-letter ISO code"] };
@@ -199,7 +192,9 @@ export function parseAdzunaSearchPayload(
     const error = responseError(response);
     return {
       jobs: [],
-      skipped: [error ? `Provider returned an error: ${error}` : "Provider response had no results array"],
+      skipped: [
+        error ? `Provider returned an error: ${error}` : "Provider response had no results array",
+      ],
     };
   }
 
