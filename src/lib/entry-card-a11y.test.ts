@@ -12,7 +12,9 @@ describe("EntryCard accessibility contract", () => {
   it("exposes a named, focusable button role only when the card is interactive", () => {
     expect(entryCard).toContain('role={interactive ? "button" : undefined}');
     expect(entryCard).toContain("tabIndex={interactive ? 0 : undefined}");
-    expect(entryCard).toContain('aria-label={interactive ? `Open listing: ${entry.title}` : undefined}');
+    expect(entryCard).toContain(
+      'aria-label={interactive ? `Open listing: ${entry.title}` : undefined}',
+    );
   });
 
   it("supports Enter and Space without scrolling the page", () => {
