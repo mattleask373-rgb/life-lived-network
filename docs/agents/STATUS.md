@@ -58,3 +58,12 @@ No autonomous production merge/deploy is active.
 - No schema/RLS/grant changes, production writes, source activation, outbound contact, or deployment.
 - Dependency order: merge/review the contract PR first, then review this stacked surface PR; reconcile the separate SEO/indexability work in #173 against the exact merged route tree.
 
+## 2026-10-20 — SEO indexability and sitemap current-main integration
+
+- Stacked SEO gate work is being reconciled after the WorkOpportunity contract and locality/service surface slices. This branch is review-only until the preceding contract/surface PRs are approved and merged.
+- Locality/service indexability, structured data and sitemap enumeration share a single eligibility policy; empty, demonstration, stale, private, rights-restricted or blocked pages must not become indexable.
+- Sitemap routes enumerate only approved canonical page candidates; unknown place/service slugs must not generate doorway pages.
+- `robots.txt` is crawler guidance, not an access-control boundary. Private-route access remains enforced by auth/RLS/server boundaries.
+- No new inventory, schema/RLS/grant change, source activation, production write or deployment is included.
+- Require tests for page metadata and sitemap inclusion/exclusion to use the same gate; verify served HTML and sitemap on preview before launch.
+
