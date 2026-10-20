@@ -100,6 +100,13 @@ describe("Adzuna -> WorkOpportunity staging bridge", () => {
     expect(
       stageAdzunaWorkOpportunity({ ...BASE, contractType: "temporary" }, OBSERVED_AT).status,
     ).toBe("staged");
+    expect(stageAdzunaWorkOpportunity({ ...BASE, contractType: "contract" }, OBSERVED_AT)).toEqual({
+      status: "rejected",
+      reason: "unsupported_arrangement",
+    });
+    expect(
+      stageAdzunaWorkOpportunity({ ...BASE, contractType: "fixed_term" }, OBSERVED_AT),
+    ).toEqual({ status: "rejected", reason: "unsupported_arrangement" });
     expect(
       stageAdzunaWorkOpportunity({ ...BASE, contractType: "seasonal" }, OBSERVED_AT).status,
     ).toBe("staged");
@@ -136,6 +143,16 @@ describe("Adzuna -> WorkOpportunity staging bridge", () => {
       status: "rejected",
       reason: "invalid_observed_at",
     });
+    expect(stageAdzunaWorkOpportunity(BASE, "2026-10-20")).toEqual({
+      status: "rejected",
+      reason: "invalid_observed_at",
+    });
+  });
+
+  it("rejects an empty canonical place resolution", () => {
+    expect(
+      stageAdzunaWorkOpportunity(BASE, OBSERVED_AT, { placeId: "  ", countryCode: "GB" }),
+    ).toEqual({ status: "rejected", reason: "invalid_place_resolution" });
   });
 
   it("does not attach a canonical place from another country", () => {
