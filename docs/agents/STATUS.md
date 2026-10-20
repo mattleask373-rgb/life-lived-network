@@ -3,10 +3,11 @@
 ## Canonical baseline
 
 - Repository: mattleask373-rgb/life-lived-network
-- Current main SHA checked via GitHub: 14e409e90a027305902f381de3d0a9fbd912dc71
-- Latest main commit message: “Applied Grok redesign to home” (Lovable sync commit).
+- Current main SHA checked via GitHub: 006a98c64a52d5bd6028ac5f9457acd31a72746a
+- Latest main commit message: “Update plan” (Lovable bot) after merges of #208 (prettier) and #207 (docs).
 - The repository branch API reports main as unprotected, with required status checks disabled. This is a release-process risk; propose branch protection/required checks for human approval, but do not change settings autonomously.
 - No autonomous merge/deploy is authorised. Production data, schema, RLS/grants, secrets and live source activation remain human-gated.
+- Env hygiene: tracked .env removed via merged #157; .gitignore correctly ignores real env files.
 
 ## Foundation confirmed on main
 
@@ -46,12 +47,16 @@
 - #173/#174/#176 were closed without merge after becoming stale; treat them as historical source material, not current merge candidates.
 - #178 is a draft integration audit. Keep its findings useful, but do not assume its old base represents current main.
 
+### Discovery honesty
+- #154 open (non-draft) for exact open-need counts + fail-closed place scope; needs rebase against current main (dirty). Prefer reconciling with #172 if overlapping.
+
 ### Security
 - #194 is a documentation-only least-privilege ACL proposal. It is not authorisation to change grants or RLS. The target Supabase project identity and effective access still need human verification.
+- #156 open with green Verify for private route auth guard regression tests.
 
 ## AI and global-scale direction
 
-- First AI feature to design is a read-only, place-scoped “Ask this place” assistant over approved public records.
+- First AI feature to design is a read-only, place-scoped “Ask this place” assistant over approved public records (Issue #209).
 - Use existing server retrieval, canonical place hierarchy, findSupply() and groundedMatch(); do not introduce another discovery/ranking authority.
 - Require server-side eligibility checks, record-backed citations, freshness/uncertainty, prompt-injection handling, bounded inputs/outputs, rate/cost controls, evaluation tests and an explicit feature gate before public activation.
 - Existing AI drafting remains user-reviewed and must not invent facts or publish automatically.
@@ -62,9 +67,10 @@
 1. Reconcile one design/accessibility chain against current main; exact-head CI plus manual visual/keyboard/screen-reader checks.
 2. Choose one WorkOpportunity contract branch (#203 is the current-main candidate), then one downstream staging/surface chain; mark duplicate alternatives superseded.
 3. Reconcile the indexability gate so locality/service metadata and sitemap enumeration use one explainable policy. Verify empty/demo-only pages remain noindex and absent from sitemaps.
-4. Keep source ingestion fixture-first and staged; rights, credentials, country coverage and publication remain human gates.
-5. Define and test the read-only assistant context boundary before implementing its UI or public model endpoint.
-6. Decide branch protection and required CI checks for main; no repository settings change made by this update.
+4. Rebase or supersede #154 discovery honesty PR; review #156 auth tests.
+5. Keep source ingestion fixture-first and staged; rights, credentials, country coverage and publication remain human gates.
+6. Define and test the read-only assistant context boundary before implementing its UI or public model endpoint.
+7. Decide branch protection and required CI checks for main; no repository settings change made by this update.
 
 ## Canonical invariants
 
@@ -73,3 +79,4 @@
 - Quiet/unknown states stay honest.
 - Demonstration/unpublished/unreviewed/rights-uncleared content is excluded from public claims and indexability.
 - No production writes, schema/RLS/grant changes, secrets, live partner feeds, autonomous publishing, merge or deployment without explicit human approval.
+- place_memories are owner-only.
