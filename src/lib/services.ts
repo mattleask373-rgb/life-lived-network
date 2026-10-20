@@ -105,7 +105,9 @@ export function nextStepFor(entry: WorldEntry): NextStep {
     return {
       kind: "enquire",
       label: "Ask about this",
-      note: "There is no automatic booking. Your message goes to the provider.",
+      // There is no provider-messaging pathway yet, so this must not claim
+      // one. Posting a need is the real, existing step — said as what it is.
+      note: "There is no way to message this provider directly yet. You can post what you need — it will be visible to people in this place.",
     };
   }
 

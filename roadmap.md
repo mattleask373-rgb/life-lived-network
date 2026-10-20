@@ -1,5 +1,19 @@
 # Roadmap
 
+## 2026-10-19/20 — Overwrite reconciliation + service pages (SEO slice 3, frontend half)
+
+- Repository overwrite incident (19 Oct, 21:37) reconciled read-only: current main is a superset of the backup branch `lovable-backup-main-1792442270`. The backup's only unique content is two historical plan docs and the tracked `.env` that PR #157 deliberately removed — no implementation work is stranded. Backup left untouched; do not restore `.env` from it.
+- PRs #157 (.env hygiene), #163 (service-area-only matching), #170 (configurable default locality), #129 (private routes out of crawler paths) are now merged on main.
+- New public route `/<country>/<place>/<service>` (e.g. `/gb/kings-heath/gardening`): canonical country-segment redirect, 404 for unknown place or service slug, breadcrumbs, genuine listings via the shared service taxonomy (record's own evidence only), honest quiet state with offer/browse-wider steps, related services, child-place links. Demonstration records are disclosed, never counted as supply.
+- Indexability: a service page is offered to search engines only with ≥1 genuine current listing (`servicePageIndexable`); quiet pages emit `noindex, nofollow` (verified in served HTML). This reuses the publicPage/privatePage convention — the full explainable INDEXABLE/NOINDEX gate remains a backend dependency; `src/lib/service-page.ts` is the single seam to re-point.
+- Route structure fix: `$country.$place.tsx` is now a bare `<Outlet />` layout; the locality page moved to `$country.$place.index.tsx`; `localityPath` moved to `src/lib/locality-path.ts` (route files exporting helpers break fast refresh).
+- Locality page "kinds of service" chips now link to the new service pages.
+- Files: `src/lib/service-page.ts` (+test, 11 tests), `src/lib/locality-path.ts`, `src/routes/$country.$place.tsx`, `src/routes/$country.$place.index.tsx`, `src/routes/$country.$place.$service.tsx`.
+- Checks: tsgo clean; lint 0 errors / 7 warnings (existing); vitest 41 files / 320 passed; build OK. Playwright 375px: service page (quiet + trial-data disclosure), locality page, unknown-service 404, wrong-country redirect all verified; no console/page errors.
+- Still ahead (backend/Codex dependencies): canonical indexability gate, service/locality sitemaps, structured data, enquiry endpoint, Australian place records (none exist — do not seed).
+- Enquiry pathway (Workstream E, frontend half): fixed a truthfulness bug — the "Ask about this" step claimed "your message goes to the provider", but no provider-messaging pathway exists. The note now says so plainly and offers the real step (post a need, visible to people in the place). The step now carries the service's title into `/need` as an editable pre-fill (validated `q`/`from` params), so the visitor lands with context instead of an empty form. Live click-through is untestable with trial data by design — demonstration records never show an enquiry step; covered by unit tests instead. Files: `src/lib/services.ts`, `src/components/entry-sheet.tsx`.
+- QA: service page verified at 1280px and 375px; quiet-state CTAs measure 66px tall; no console/page errors.
+
 ## Final product hardening (done)
 
 - [x] Restore separate map exploration and explicit area adoption.
@@ -233,9 +247,10 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - [ ] My Places full slice: plan awaiting approval (schema addition, location precision).
 
 
-## Traveller and local work opportunity representation — foundation (2026-10-19)
+## 2026-10-20 — Work-opportunity contract reconciliation
 
-- Added a typed optional work-opportunity detail contract and an explicit work/volunteer taxonomy group on `feat/work-opportunity-contract` (review pending; not merged).
-- Short-term categories cover hospitality shifts, event work and seasonal work. Existing gardening, cleaning and odd-job categories remain canonical. Longer-term/professional role labels are included without implying qualification, availability or legal classification.
-- The model records pay in integer cents plus currency/basis; date window/duration; accommodation; transport notes; skill requirements; host expectations; conditions; jurisdiction; provenance/rights; and human policy/publication states.
-- Still open: persistent storage and owner editing; public enquiry/contact flow; road-trip integration; real partner ingestion and rights approvals; UX for pay/conditions and volunteer-versus-work context. No external feed is activated and no live work inventory is claimed.
+- PR #174 (`feat/work-opportunity-contract`) is being reconciled onto current canonical main `9269dff0fb66911733ea309fd7342d86bb60c112` without rewriting the existing feature history.
+- Scope: strict opportunity contract/parser and taxonomy safeguards only. It does not seed records, activate partner sources, change schema/RLS/grants, or contact anyone.
+- The traveller-facing locality/request surfaces remain a separate integration dependency in #176; do not duplicate matching logic or change `findSupply()`.
+- Previous head `a0316819ab164d367a8e40502e4336cc5d55405b` passed hosted Verify (run #1108); require fresh Verify on the reconciled head before review/merge.
+- Human go/no-go still required for market-specific legal/policy review, source rights and actual supply approval. Australia remains NOT LIVE.

@@ -54,11 +54,11 @@ No autonomous production merge/deploy is active.
 4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
 
 
-## Work opportunity contract — 2026-10-19 (review pending)
+## 2026-10-20 — Work-opportunity contract reconciliation
 
-- Added an optional typed `WorldEntry.workOpportunity` contract for short-term, seasonal, longer-term and professional arrangements. It keeps integer minor-unit pay plus currency/basis; separately classifies paid work, volunteering, skills exchange, unpaid training and unstated engagement; and carries duration, dates, accommodation, transport notes, stated skill requirements, host expectations, conditions, jurisdiction, provenance/rights, policy review and publication state.
-- Runtime parsing is pure and IO-free. Public classification requires a published record, explicit engagement type, cleared rights and human-approved jurisdiction-policy review. Missing pay remains `not_stated`, never volunteering; the schema does not decide employment status.
-- Extended the shared taxonomy for hospitality shifts, event work, seasonal work, short-term work and longer-term/professional roles. Existing cleaning, gardening and odd-job categories are reused, not duplicated. Only publishable non-demonstration work records classify under the new work group.
-- **Scope limit:** this is a domain/taxonomy contract, not database persistence, partner activation, or an end-to-end opportunity UI. Existing canonical `findSupply()` remains the only discovery authority. No migrations, production writes or external feeds are enabled.
-- Australian Fair Work review remains a human/legal gate; the Fair Work Ombudsman notes that labelling an arrangement volunteering does not settle whether an employment relationship exists: https://www.fairwork.gov.au/starting-employment/unpaid-work
-- Local and hosted verification must be attached to the final PR head before approval; this connector session has no local shell.
+- Reconciled feature branch `feat/work-opportunity-contract` with canonical `main` at `9269dff0fb66911733ea309fd7342d86bb60c112`; this is still a review-only PR, not a merge to main.
+- Adds an IO-free runtime contract for explicit engagement type, pay state and integer minor units plus currency/basis, dates, duration, accommodation, transport, stated skills, host expectations, conditions, jurisdiction/policy review, source rights/provenance, and publication state.
+- Extends the existing service taxonomy only when the opportunity record passes its explicit publication safeguards. Taxonomy matching does not imply qualification or availability.
+- `src/lib/supply-engine.ts` / `findSupply()` remains the sole discovery authority. No new matcher, database/schema changes, production records, partner feed, or credentials.
+- The prior feature head `a0316819ab164d367a8e40502e4336cc5d55405b` had hosted Verify success (run #1108). The reconciled merge commit requires a fresh hosted Verify; no local shell was available in this session.
+- Human gates remain: jurisdiction-specific work/volunteer and pay-policy review, source rights and provenance approval, confirmation of any publication records, and final release decision. Australia remains NOT LIVE; this PR creates no Australian inventory.
