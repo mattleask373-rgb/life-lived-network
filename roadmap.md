@@ -254,3 +254,11 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - The traveller-facing locality/request surfaces remain a separate integration dependency in #176; do not duplicate matching logic or change `findSupply()`.
 - Previous head `a0316819ab164d367a8e40502e4336cc5d55405b` passed hosted Verify (run #1108); require fresh Verify on the reconciled head before review/merge.
 - Human go/no-go still required for market-specific legal/policy review, source rights and actual supply approval. Australia remains NOT LIVE.
+
+
+## 2026-10-20 — Adzuna parser → WorkOpportunity staging bridge
+
+- Review branch `integration/adzuna-staging-bridge-2026-10-20` composes the fixture-first Adzuna parser with the reviewed `WorkOpportunity` bridge; it is a separate dependent slice after the contract PR.
+- Every record remains non-publishable staging output: source rights are unreviewed, policy review is required, freshness is unknown, and engagement kind is not stated where the source does not establish it.
+- Salary observations remain private parser evidence unless currency and pay basis are verified; public compensation stays not stated in that case.
+- No live HTTP, credentials, database writes, scheduled ingestion, schema/RLS/grant changes, or source activation. Human approval remains required before publication.
