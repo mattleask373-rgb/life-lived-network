@@ -44,13 +44,13 @@ function JourneyPage() {
   return (
     <main className="paper-grain min-h-screen">
       <div className="mx-auto max-w-3xl px-4 pt-8 pb-20 sm:px-6">
-        <h1 className="text-3xl sm:text-4xl">What could your journey become?</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <h1 className="font-display text-4xl leading-tight tracking-tight sm:text-5xl">What could your journey become?</h1>
+        <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
           Nothing here is invented. Every step below is something someone has actually offered where
           you are, anything unchecked is marked as such, and demonstration records say so.
         </p>
 
-        <section className="card-paper mt-6 p-5">
+        <section className="card-paper mt-6 rounded-3xl p-5 shadow-paper sm:p-7">
           <Field label="How long">
             {[1, 3, 7, 10].map((d) => (
               <Chip key={d} on={days === d} onClick={() => setDays(d)}>
@@ -107,7 +107,7 @@ function JourneyPage() {
                 planJourney({ days, budget, interests, wantsPaidWork, social }, world ?? []),
               )
             }
-            className="focus-ink mt-5 rounded-full bg-accent px-6 py-2.5 text-accent-foreground"
+            className="focus-ink mt-5 inline-flex min-h-11 items-center rounded-full bg-primary px-6 py-2.5 text-primary-foreground shadow-paper transition-colors hover:brightness-95"
           >
             Show me
           </button>
@@ -118,8 +118,8 @@ function JourneyPage() {
         {journeys?.length ? (
           <div className="mt-8 space-y-8">
             {journeys.map((j) => (
-              <article key={j.name} className="card-paper p-5">
-                <h2 className="text-2xl">{j.name}</h2>
+              <article key={j.name} className="card-paper rounded-3xl p-5 shadow-paper sm:p-7">
+                <h2 className="font-display text-2xl leading-tight sm:text-3xl">{j.name}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{j.idea}</p>
                 <p className="mt-2 text-sm">
                   You'd spend about {currencySymbol(place?.currency)}
@@ -131,14 +131,14 @@ function JourneyPage() {
 
                 <ol className="mt-4 space-y-3">
                   {j.steps.map((s) => (
-                    <li key={s.entry.id} className="border-l-2 border-border pl-4">
+                    <li key={s.entry.id} className="rounded-r-2xl border-l-2 border-primary bg-background/70 py-3 pl-4 pr-3">
                       <p className="text-xs uppercase tracking-widest text-muted-foreground">
                         {s.bandLabel}
                       </p>
                       <button
                         type="button"
                         onClick={() => setOpen(s.entry)}
-                        className="focus-ink mt-0.5 text-left"
+                        className="focus-ink mt-1 flex min-h-11 flex-col justify-center text-left"
                       >
                         <span className={`${layerText[s.entry.layer]} text-base`}>
                           {s.entry.title}
@@ -154,7 +154,7 @@ function JourneyPage() {
                 </ol>
 
                 {j.uncertain.length ? (
-                  <p className="mt-4 rounded-lg border border-border bg-muted p-3 text-sm text-muted-foreground">
+                  <p className="mt-4 rounded-2xl border border-border bg-muted/70 p-4 text-sm text-muted-foreground">
                     Not yet checked, so treat it as a maybe: {j.uncertain.join("; ")}.
                   </p>
                 ) : null}
@@ -165,7 +165,7 @@ function JourneyPage() {
             </p>
           </div>
         ) : journeys ? (
-          <p className="mt-8 rounded-lg border border-border bg-muted p-4 text-sm">
+          <p className="mt-8 rounded-2xl border border-border bg-muted/70 p-5 text-sm">
             It's quiet for that shape of trip. Rather than invent something, we'd say: widen the
             days, or go and make something happen.
           </p>
@@ -189,7 +189,7 @@ function JourneyPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mt-4 first:mt-0">
-      <p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
       <div className="mt-2 flex flex-wrap gap-2">{children}</div>
     </div>
   );
@@ -209,7 +209,7 @@ function Chip({
       type="button"
       onClick={onClick}
       aria-pressed={on}
-      className={`focus-ink rounded-full border px-3 py-1.5 text-sm transition-colors ${
+      className={`focus-ink inline-flex min-h-11 items-center rounded-full border px-4 py-2 text-sm transition-colors ${
         on
           ? "border-transparent bg-primary text-primary-foreground"
           : "border-border bg-card text-muted-foreground hover:text-foreground"
