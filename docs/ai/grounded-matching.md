@@ -1,6 +1,6 @@
 # Grounded Matching — Phase 2 Integration Spine
 
-**Status:** First pure foundation landed on `main` (2026-10-20)
+**Status:** Foundation + first real consumer on `main` (2026-10-20)
 
 ## Purpose
 
@@ -16,6 +16,15 @@ It ranks **only** verified `WorldEntry` records that are handed to it. It never 
 - Demonstration and expired records are excluded.
 - Compatible with the existing `intents.ts` “Do something today” / “Why not?” layer.
 - Ready to consume future `WorkOpportunity` and Needs once the #181–#190 bridges land.
+
+## First verified consumer
+
+`doSomethingToday(world, intent)` in `src/lib/intents.ts` now delegates ranking to `groundedMatch` + `queryFromIntent`.
+
+- Public signature and return type (`WorldEntry[]`) unchanged — existing `DoSomethingToday` UI needs no change.
+- Still returns at most three results with layer variety.
+- Empty result remains an empty array; the component’s existing quiet messaging is preserved.
+- Intentional ranking difference vs the previous ad-hoc penalty model: scoring is now centralized, evidence-based, and service-category aware.
 
 ## Public API
 
@@ -45,9 +54,10 @@ const shortlist = threeHours(entries, { free: true, outdoors: true });
 ## Next integration steps (do not do in this file)
 
 1. Wire into locality / service pages and the redesign card surfaces **after** #177 visual foundation is reviewed.
-2. Extend the input type once the reviewed `WorkOpportunity` contract is merged so jobs/odd-jobs appear in the same ranking.
-3. Feed Needs (“Looking for a gardener in Newtown”) as a parallel signal when #184 lands.
-4. Keep all ranking pure and fixture-tested; any AI scoring later must still only rearrange verified records.
+2. Optionally surface `MatchEvidence` in the UI once the redesign lane is ready.
+3. Extend the input type once the reviewed `WorkOpportunity` contract is merged so jobs/odd-jobs appear in the same ranking.
+4. Feed Needs (“Looking for a gardener in Newtown”) as a parallel signal when #184 lands.
+5. Keep all ranking pure and fixture-tested; any AI scoring later must still only rearrange verified records.
 
 ## Human gates
 
