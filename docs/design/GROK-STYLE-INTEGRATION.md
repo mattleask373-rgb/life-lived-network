@@ -6,7 +6,7 @@ Port the prototype's warm paper/cream/forest palette, Fraunces/Manrope typograph
 
 Reference-only branch: `reference/grok-design-2026-10-20`.
 Design integration branch: `integration/grok-design-2026-10-20`.
-Canonical base at branch creation: `0c56cc299825dea5996323506e7a1cc9266975c8`.
+Verified canonical base for this integration: `9269dff0fb66911733ea309fd7342d86bb60c112`.
 
 The app already has the compass mark, desktop navigation, mobile tabs, paper tokens and Fraunces/Manrope stylesheet links. This slice fixes the font-token mismatch and updates the listing-card and place-picker visuals. No mock routes/data were copied into production code.
 
