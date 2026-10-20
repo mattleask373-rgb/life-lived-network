@@ -123,10 +123,10 @@ export interface SitemapUrl {
 
 function escapeXml(value: string): string {
   return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/&/g, "&")
+    .replace(/</g, "<")
+    .replace(/>/g, ">")
+    .replace(/"/g, """);
 }
 
 /** A urlset document. Only canonical, indexable paths belong in here. */
@@ -160,6 +160,7 @@ export const XML_HEADERS = {
  * Crawler policy generated from the single PRIVATE_PATHS source of truth.
  * robots.txt is not access control. Static public/robots.txt must match this
  * output so both the static deploy path and the server route stay aligned.
+ * Live published snapshot may still serve platform defaults until a human republish.
  */
 export function robotsTxt(): string {
   const lines = [
@@ -169,6 +170,7 @@ export function robotsTxt(): string {
     "# Personal, private and internal screens. Nothing useful for a search engine,",
     "# and nothing anyone else should be shown. These must stay in sync with",
     "# PRIVATE_PATHS in src/lib/seo.ts. robots.txt is crawler policy, not access control.",
+    "# Repo aligned via #129; live origin may still show platform defaults until republish.",
     ...PRIVATE_PATHS.map((path) => `Disallow: ${path}`),
     "",
     "# Static and dynamic /sitemap.xml for deploy reliability. Dynamic /api/public/sitemap.xml remains",
