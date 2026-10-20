@@ -26,7 +26,6 @@ export function safeJsonLd(value: unknown): string {
   return JSON.stringify(value).replace(/</g, "\\u003c");
 }
 
-
 function publicHttpUrl(value?: string | null): string | undefined {
   if (!value?.trim()) return undefined;
   try {
@@ -46,7 +45,7 @@ function publicHttpUrl(value?: string | null): string | undefined {
 }
 
 function explicitInstant(value?: string | null): number | undefined {
-  if (!value || !/(?:Z|[+-]\\d{2}:\\d{2})$/i.test(value)) return undefined;
+  if (!value || !/(?:Z|[+-]\d{2}:\d{2})$/i.test(value)) return undefined;
   const timestamp = Date.parse(value);
   return Number.isFinite(timestamp) ? timestamp : undefined;
 }
@@ -122,8 +121,7 @@ export function localBusinessSchema(
       (publicHttpUrl(entry.bookingUrl) || publicHttpUrl(entry.sourceUrl)),
   );
   if (!representative) return null;
-  const url =
-    publicHttpUrl(representative.bookingUrl) ?? publicHttpUrl(representative.sourceUrl);
+  const url = publicHttpUrl(representative.bookingUrl) ?? publicHttpUrl(representative.sourceUrl);
   if (!url) return null;
 
   return {

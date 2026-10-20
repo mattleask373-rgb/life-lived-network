@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { breadcrumbListSchema, eventSchema, localBusinessSchema, safeJsonLd } from "./structured-data";
+import {
+  breadcrumbListSchema,
+  eventSchema,
+  localBusinessSchema,
+  safeJsonLd,
+} from "./structured-data";
 import type { WorldEntry } from "./world-data";
 
 describe("BreadcrumbList structured data", () => {
@@ -39,7 +44,6 @@ describe("BreadcrumbList structured data", () => {
     expect(embedded).toContain("\\u003c/script>");
   });
 });
-
 
 function verifiedEntry(overrides: Partial<WorldEntry> = {}): WorldEntry {
   return {
@@ -93,7 +97,12 @@ describe("Event structured data", () => {
     expect(eventSchema(verifiedEntry({ timezone: "Not/A_Real_Zone" }))).toBeNull();
     expect(eventSchema(verifiedEntry({ place: "Shared once you say you're coming" }))).toBeNull();
     expect(
-      eventSchema(verifiedEntry({ startsAt: "2026-11-10T18:00:00+11:00", endsAt: "2026-11-10T17:00:00+11:00" })),
+      eventSchema(
+        verifiedEntry({
+          startsAt: "2026-11-10T18:00:00+11:00",
+          endsAt: "2026-11-10T17:00:00+11:00",
+        }),
+      ),
     ).toBeNull();
   });
 });
@@ -128,12 +137,20 @@ describe("LocalBusiness structured data", () => {
   });
 
   it("omits structured data when identity, verification, or public URL is missing", () => {
-    expect(localBusinessSchema({ organisation: "", entries: [verifiedEntry()] }, "Byron Bay")).toBeNull();
     expect(
-      localBusinessSchema(group(verifiedEntry({ verified: false, sourceUrl: "https://example.org" })), "Byron Bay"),
+      localBusinessSchema({ organisation: "", entries: [verifiedEntry()] }, "Byron Bay"),
     ).toBeNull();
     expect(
-      localBusinessSchema(group(verifiedEntry({ kind: "service", organisation: "Harbour Studio" })), "Byron Bay"),
+      localBusinessSchema(
+        group(verifiedEntry({ verified: false, sourceUrl: "https://example.org" })),
+        "Byron Bay",
+      ),
+    ).toBeNull();
+    expect(
+      localBusinessSchema(
+        group(verifiedEntry({ kind: "service", organisation: "Harbour Studio" })),
+        "Byron Bay",
+      ),
     ).toBeNull();
     expect(
       localBusinessSchema(
