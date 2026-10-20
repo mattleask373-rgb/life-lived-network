@@ -156,7 +156,9 @@ function RoadTrip() {
   return (
     <main className="paper-grain min-h-screen">
       <div className="mx-auto max-w-5xl px-4 pt-8 pb-20 sm:px-6">
-        <h1 className="font-display text-4xl leading-tight tracking-tight sm:text-5xl">Plan a road trip</h1>
+        <h1 className="font-display text-4xl leading-tight tracking-tight sm:text-5xl">
+          Plan a road trip
+        </h1>
         <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
           Say where you are going. We will show what is genuinely along the way — nothing invented,
           nothing ranked in secret, and every card saying where it came from.
@@ -409,17 +411,17 @@ function RoadTripCard({
         ) : null}
       </div>
       <div className="flex flex-1 flex-col p-5 sm:p-6">
-      <p className={`text-xs font-semibold uppercase tracking-widest ${layerText[entry.layer]}`}>
-        {GROUP_LABEL[discovery.group]}
-      </p>
-      <h4 className="mt-1 font-display text-xl leading-snug">{entry.title}</h4>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {entry.place} · {entry.neighbourhood}
-      </p>
-      {entry.summary ? (
-        <p className="mt-3 line-clamp-2 text-sm text-foreground/80">{entry.summary}</p>
-      ) : null}
-      <div className="mt-4 space-y-2 text-xs text-muted-foreground">
+        <p className={`text-xs font-semibold uppercase tracking-widest ${layerText[entry.layer]}`}>
+          {GROUP_LABEL[discovery.group]}
+        </p>
+        <h4 className="mt-1 font-display text-xl leading-snug">{entry.title}</h4>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {entry.place} · {entry.neighbourhood}
+        </p>
+        {entry.summary ? (
+          <p className="mt-3 line-clamp-2 text-sm text-foreground/80">{entry.summary}</p>
+        ) : null}
+        <div className="mt-4 space-y-2 text-xs text-muted-foreground">
         {discovery.matchedInterests.length ? (
           <p>
             <span className="text-foreground">Matches:</span>{" "}
