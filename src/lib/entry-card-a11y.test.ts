@@ -13,7 +13,7 @@ describe("EntryCard accessibility contract", () => {
     expect(entryCard).toContain('role={interactive ? "button" : undefined}');
     expect(entryCard).toContain("tabIndex={interactive ? 0 : undefined}");
     expect(entryCard).toContain(
-      'aria-label={interactive ? `Open listing: ${entry.title}` : undefined}',
+      "aria-label={interactive ? `Open listing: ${entry.title}` : undefined}",
     );
   });
 
