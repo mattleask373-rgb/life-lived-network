@@ -44,7 +44,7 @@ describe("doSomethingToday (groundedMatch integration)", () => {
     const world = Array.from({ length: 8 }, (_, i) =>
       base({
         id: `e${i}`,
-        layer: (["work", "music", "food", "nature", "art"] as const)[i % 5],
+        layer: (["work", "music", "food", "nature", "art"] as const)[i % 5]!,
         title: `Entry ${i}`,
         band: "today",
       }),
