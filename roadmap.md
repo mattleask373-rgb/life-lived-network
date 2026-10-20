@@ -1,5 +1,19 @@
 # Roadmap
 
+## 2026-10-19/20 — Overwrite reconciliation + service pages (SEO slice 3, frontend half)
+
+- Repository overwrite incident (19 Oct, 21:37) reconciled read-only: current main is a superset of the backup branch `lovable-backup-main-1792442270`. The backup's only unique content is two historical plan docs and the tracked `.env` that PR #157 deliberately removed — no implementation work is stranded. Backup left untouched; do not restore `.env` from it.
+- PRs #157 (.env hygiene), #163 (service-area-only matching), #170 (configurable default locality), #129 (private routes out of crawler paths) are now merged on main.
+- New public route `/<country>/<place>/<service>` (e.g. `/gb/kings-heath/gardening`): canonical country-segment redirect, 404 for unknown place or service slug, breadcrumbs, genuine listings via the shared service taxonomy (record's own evidence only), honest quiet state with offer/browse-wider steps, related services, child-place links. Demonstration records are disclosed, never counted as supply.
+- Indexability: a service page is offered to search engines only with ≥1 genuine current listing (`servicePageIndexable`); quiet pages emit `noindex, nofollow` (verified in served HTML). This reuses the publicPage/privatePage convention — the full explainable INDEXABLE/NOINDEX gate remains a backend dependency; `src/lib/service-page.ts` is the single seam to re-point.
+- Route structure fix: `$country.$place.tsx` is now a bare `<Outlet />` layout; the locality page moved to `$country.$place.index.tsx`; `localityPath` moved to `src/lib/locality-path.ts` (route files exporting helpers break fast refresh).
+- Locality page "kinds of service" chips now link to the new service pages.
+- Files: `src/lib/service-page.ts` (+test, 11 tests), `src/lib/locality-path.ts`, `src/routes/$country.$place.tsx`, `src/routes/$country.$place.index.tsx`, `src/routes/$country.$place.$service.tsx`.
+- Checks: tsgo clean; lint 0 errors / 7 warnings (existing); vitest 41 files / 320 passed; build OK. Playwright 375px: service page (quiet + trial-data disclosure), locality page, unknown-service 404, wrong-country redirect all verified; no console/page errors.
+- Still ahead (backend/Codex dependencies): canonical indexability gate, service/locality sitemaps, structured data, enquiry endpoint, Australian place records (none exist — do not seed).
+- Enquiry pathway (Workstream E, frontend half): fixed a truthfulness bug — the "Ask about this" step claimed "your message goes to the provider", but no provider-messaging pathway exists. The note now says so plainly and offers the real step (post a need, visible to people in the place). The step now carries the service's title into `/need` as an editable pre-fill (validated `q`/`from` params), so the visitor lands with context instead of an empty form. Live click-through is untestable with trial data by design — demonstration records never show an enquiry step; covered by unit tests instead. Files: `src/lib/services.ts`, `src/components/entry-sheet.tsx`.
+- QA: service page verified at 1280px and 375px; quiet-state CTAs measure 66px tall; no console/page errors.
+
 ## Final product hardening (done)
 
 - [x] Restore separate map exploration and explicit area adoption.
@@ -233,29 +247,10 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - [ ] My Places full slice: plan awaiting approval (schema addition, location precision).
 
 
-## Australia pilot place-data pipeline — foundation (2026-10-19)
+## 2026-10-20 — Australia staging preparation (PR #175 reconciliation)
 
-- A pure staging validator is under review on `feat/place-staging-validation`; it reports hierarchy/data/provenance/rights errors without generating IDs, writing rows or publishing URLs.
-- Official source candidates and outstanding country/parent/timezone decisions are recorded in `docs/launch/AUSTRALIA-STAGING-VALIDATION.md`.
-- Pilot geography is not seeded: no source-row coordinate crosswalk or founder-approved hierarchy has been imported. Source review and disposable-DB diff/rollback proof remain required before any staging import.
-- Australia remains **NOT LIVE**; no current jobs, people, events, venues or services are claimed.
-
-## PR #175 Verify repair — 2026-10-19
-
-- Pre-fix head `c0e1938b8e3d64d2a52c86252993eb0222ee1522` installed dependencies successfully and failed only two Prettier rules in `src/lib/place-staging.ts`. Formatting-only fix: `660fcd1b2a3423d84ea27307daf01032e56b3f10`.
-- Push Verify passed on `8c1461d08b50f3721cc1d4788eb36d667daa74f4` (run [39334870150](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39334870150)). The PR merge-context run failed at a Prettier-only discrepancy in `src/lib/geo-scope.test.ts` from older base `0c56cc299825dea5996323506e7a1cc9266975c8`. Current main `f2de6d8d76bdabbd98639f4bf4837573c96587cc` is now integrated into the feature branch; fresh PR-context Verify is required before the PR is considered green.
-
-
-- Latest code-bearing head `9b1b628436cb616026b9a8bb6a74ad5a88976714` passed both push Verify [39335326404](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335326404) and PR Verify [39335332611](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335332611). Status/roadmap now record that evidence; the documentation-only follow-up needs a fresh check.
-
-
-- Latest hosted Verify evidence before this status refresh: PR head `29b582952c52cb8768318fccba09488051b9c4d4` passed PR Verify [39335447101](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335447101) and push Verify [39335444665](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335444665); frozen-lockfile install, lint, tests and build all passed. This entry is documentation-only; verify the resulting docs head.
-
-## Australia pilot hierarchy scaffold (2026-10-19; deliberately blocked)
-
-- [x] Added a six-node proposed scaffold (Australia, NSW, Queensland, Byron Bay, Agnes Water, Port Douglas) in `src/lib/staging/australia-skeleton.ts`, using `AU` / `AUD`, proposed parent keys, local timezone candidates, and explicit `publicationStatus: "not_published"`.
-- [x] No coordinates or retrieval/license facts are fabricated: coordinates are null, provenance/license/version/retrievedAt placeholders remain null, source rights are unreviewed, and every hierarchy decision is unapproved.
-- [x] Test proves the candidate rows do **not** pass `normalizeStagedPlaceBatch()` until actual provenance/retrieval/licensing fields exist.
-- [ ] Still required: source-verified administrative parent crosswalk, human-approved hierarchy, actual source-file retrieval/version/checksum and licence review, timezone candidate validation and country-level timezone semantics, then coordinate/reference-system verification. Australia remains NOT LIVE.
-- Code head `c61ae168ca2da5aed307ed2278fdd8e3599e1a8c` passed [PR Verify 39338628239](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39338628239) and [push Verify 39338624483](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39338624483), including install/lint/tests/build. Documentation head `3213ff5def6f7b99aa6cdefa62e67cd9e73990ab` also passed [PR Verify 39338818609](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39338818609) and [push Verify 39338813543](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39338813543), including install, lint, tests and build.
-
+- PR #175 now reconciles the non-writing locality staging validator with canonical `main` `9269dff0fb66911733ea309fd7342d86bb60c112`.
+- Six proposed hierarchy nodes only: Australia, NSW, Queensland, Byron Bay, Agnes Water and Port Douglas. This is a validation fixture, not an import payload or live place index.
+- Coordinates, source version/retrieval evidence, licence/attribution/redistribution rights and human hierarchy approvals are not yet complete. Timezone entries are candidates and need authority review.
+- Existing feature head `852a8b8db850b5fc103b1e0f57e61b23b8e0178a` passed hosted Verify (run #1244); fresh Verify is required on the reconciliation head.
+- No production writes, schema/RLS/grants, secret/partner activation, or live inventory. Human approval and disposable-database proof remain explicit gates.

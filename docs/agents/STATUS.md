@@ -54,34 +54,10 @@ No autonomous production merge/deploy is active.
 4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
 
 
-## Australia place staging foundation — 2026-10-19 (source review pending)
+## 2026-10-20 — Australia staging validator reconciliation (PR #175)
 
-- Added a pure, bounded `normalizeStagedPlaceBatch()` pipeline and tests for stable source-key identity, unique slugs, complete parent references, acyclic hierarchy, IANA timezone syntax, coordinate bounds, country/currency codes, source provenance, freshness, rights clearance, and deterministic output.
-- The report never creates canonical database IDs or writes data; every row remains `not_published`. Even an eligible report is only eligible for a separately approved disposable-database preview.
-- Added `docs/launch/AUSTRALIA-STAGING-VALIDATION.md` with official source candidates and outstanding crosswalk/approval steps. No Australia records or coordinates are seeded. Byron Bay requires NSW source review; Agnes Water and Port Douglas require source-row confirmation from Queensland's gazetteer.
-- **Launch blocker:** the existing `Place` type requires one timezone per row; country-level timezone semantics must be resolved before creating an Australia country row. Do not assign one zone to all Australia or guess a coordinate/datum.
-- No production import, write, schema/RLS/grant change, deployment, or live-market claim.
-
-## PR #175 Verify repair — 2026-10-19
-
-- Canonical base now verified: `main` at `f2de6d8d76bdabbd98639f4bf4837573c96587cc`. The PR head before base integration was `a99acaa7fcd9b8877f4100246137423f85b7c55a`.
-- Exact pre-fix Verify runs `39330526786` and `39330526939` failed at `bun run lint`; frozen-lockfile installation passed (473 packages installed). The only errors on that head were two Prettier rules in `src/lib/place-staging.ts` (lines 183 and 206). No tests/build were reached.
-- Formatting-only repair: `660fcd1b2a3423d84ea27307daf01032e56b3f10`. No feature, dependency, or lockfile changes.
-- Push Verify on `8c1461d08b50f3721cc1d4788eb36d667daa74f4` passed at run `39334870150`. The paired PR merge-context run failed because `src/lib/geo-scope.test.ts` in main still had one Prettier-only formatting error. Current main was merged into this feature branch at `e8d7c94a58b226952531518cb194f4f25550dbef`, and the remaining formatting-only correction was committed as `9b1b628436cb616026b9a8bb6a74ad5a88976714`. Both push Verify [39335326404](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335326404) and PR Verify [39335332611](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335332611) passed on that exact head. No package or lockfile change was required.
-
-
-- Current-main integration + formatting-only cleanup verified: code-bearing head `9b1b628436cb616026b9a8bb6a74ad5a88976714`; push Verify [39335326404](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335326404) and PR Verify [39335332611](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335332611) both green. The last change was only documentation of this evidence; re-check the documentation head before review.
-
-
-- Latest hosted Verify evidence before this status refresh: PR head `29b582952c52cb8768318fccba09488051b9c4d4` passed PR Verify [39335447101](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335447101) and push Verify [39335444665](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39335444665); install, lint, tests and build all passed. This entry updates status only; the resulting documentation head must also be checked.
-
-## Australia pilot staging skeleton — 2026-10-19 (unpublished, not preview-eligible)
-
-- Added `src/lib/staging/australia-skeleton.ts` and tests alongside the green staging validator. It contains six proposed hierarchy rows: Australia, New South Wales, Queensland, Byron Bay, Agnes Water and Port Douglas.
-- Every candidate is explicitly `not_published`; coordinates are `null`; source retrieval/version, licence, attribution and redistribution review are blank; all source review statuses are pending and rights are unreviewed.
-- Uses `AU` / `AUD`. Local timezone strings are candidates only (`Australia/Sydney` for Byron Bay/NSW and `Australia/Brisbane` for Agnes Water/Port Douglas/Queensland). Australia country-level timezone is deliberately unresolved/null rather than asserting one zone for a multi-zone country.
-- The state-to-locality hierarchy is coarse and proposed, not approved; replace with the source-verified administrative-parent crosswalk after review.
-- A regression test runs the skeleton through `normalizeStagedPlaceBatch()` using blank provenance/retrieval placeholders and proves that it is rejected. It is not an import-ready batch and cannot qualify for even a disposable preview.
-- No coordinates, place rows, live listings, production writes, schema/RLS/grant changes, merge or deployment.
-- Human decisions: approve locality inclusion and exact hierarchy; retrieve the official NSW/Queensland source rows and versions; review licence/attribution/redistribution rights; resolve country-level timezone semantics; validate timezone candidates; review CRS/datum before coordinates enter any later batch.
-
+- Reconciled `feat/place-staging-validation` with canonical `main` at `9269dff0fb66911733ea309fd7342d86bb60c112` without rewriting its published history.
+- Adds a bounded, pure validator for staged locality proposals. It checks stable source keys, unique slugs, hierarchy integrity, country/currency codes, IANA timezone, coordinate-pair/range, provenance, source freshness/rights and human-review state. It does not write data or create database IDs.
+- The Australia skeleton remains proposed-only: Australia, New South Wales, Queensland, Byron Bay, Agnes Water and Port Douglas. Coordinates and source/licence details remain incomplete; timezone values are candidates, not approved facts. The validator does not turn this into live place data.
+- Prior feature head `852a8b8db850b5fc103b1e0f57e61b23b8e0178a` had hosted Verify success (run #1244); a new hosted Verify is required on this reconciled head. No local shell/test execution was available in this session.
+- No schema/RLS/grant changes, credentials, production writes, import, or publication. Human approval is required for the pilot boundary, authoritative source/provenance/licensing, hierarchy and coordinates. Australia remains **NOT LIVE**.
