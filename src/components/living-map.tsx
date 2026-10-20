@@ -258,7 +258,11 @@ export function LivingMap({
         >
           <p>We couldn't load this area.</p>
           {onRetry ? (
-            <button type="button" className="focus-ink mt-2 inline-flex min-h-11 items-center underline underline-offset-4" onClick={onRetry}>
+            <button
+              type="button"
+              className="focus-ink mt-2 inline-flex min-h-11 items-center underline underline-offset-4"
+              onClick={onRetry}
+            >
               Try again
             </button>
           ) : null}
