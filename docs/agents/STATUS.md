@@ -56,7 +56,7 @@ No autonomous production merge/deploy is active.
 
 ## 2026-10-20 — Grok visual integration workstream
 
-- Canonical source remains `mattleask373-rgb/life-lived-network`, `main` baseline `0c56cc299825dea5996323506e7a1cc9266975c8`. Reference and integration branches were created from that base; neither was merged into main.
+- Canonical source remains `mattleask373-rgb/life-lived-network`, `main` baseline `9269dff0fb66911733ea309fd7342d86bb60c112`. Reference and integration branches were created from that base; neither was merged into main.
 - Uploaded prototype snapshot SHA-256: `6eae21ffddcb1cd1b62025c416cd979ae2fa500321fce83b158b870c838c72a6`. Design-only reference is preserved in `reference/grok-design-2026-10-20`; the standalone prototype mock data, routes and auth/database wiring are quarantined and not imported.
 - First implementation slice aligns the body font token to the already-loaded Manrope face, aligns the paper/cream/forest anchors, and refreshes `EntryCard` and `PlacePicker` using canonical current data.
 - Cards use `WorldEntry.photos` with source credit, or a neutral “No photo supplied” placeholder. Existing trust/source state, demonstration labelling, service/provider distinction and currency helper remain.
