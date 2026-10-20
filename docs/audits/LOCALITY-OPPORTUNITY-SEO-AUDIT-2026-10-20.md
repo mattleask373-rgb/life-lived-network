@@ -71,3 +71,53 @@ These are observations at the cited snapshot, not a merge recommendation. A gree
 ## Explicit non-claims
 
 This audit does not prove deployed routes, live database/RLS safety, live sitemap responses, production inventory, Australian coverage, or browser/screen-reader conformance. It creates no records and makes no production changes.
+
+
+---
+
+## Afternoon re-audit — current main and active integration branches
+
+**Snapshot checked 2026-10-20 afternoon UTC:** current `main` is `14e409e90a027305902f381de3d0a9fbd912dc71`, not the original `9269dff...` snapshot above. The following section supersedes earlier PR-state descriptions where they differ. GitHub source/metadata/workflow reads only; no local checkout, production database, deployed-page, or browser/screen-reader inspection was available.
+
+### Current-main foundation
+
+- `src/lib/supply-engine.ts` still owns `findSupply()`. `src/lib/grounded-matching.ts` is now on main and `doSomethingToday` in `src/lib/intents.ts` calls `groundedMatch` / `queryFromIntent`. This is an evidence-backed consumer path; do not promote it to a second canonical supply engine.
+- The newer Grok/Lovable home/front-door changes are on main. The previous PR #177 visual branch and follow-up #191/#192 branches were closed without merging because the implementation was superseded; do not re-open or merge those old visual snapshots.
+- Current `src/components/entry-card.tsx` still has a native `<button>` around block-level card content. Current focused fix is #193, based on current main.
+- Current main does **not** yet contain the service-locality SEO gate modules or the generic `/$country/$place/$service` route. These remain in #173's older, integrated branch.
+- Current main's `docs/agents/STATUS.md` still references #177 as the active design PR and lists #186/#187/#190 as current work. That status is stale and should be reconciled after the current contract integration and accessibility decisions.
+
+### Current integration queue and evidence
+
+| PR | Observed status | Readiness interpretation |
+|---|---|---|
+| [#193 — EntryCard accessibility](https://github.com/mattleask373-rgb/life-lived-network/pull/193) | Open draft, current-main base `14e409e...`; latest change is an empty native full-card button over a semantic article. Previous hosted Verify passed before that latest change; a fresh run is required. | Best current focused accessibility fix. Manual 375px/1280px, keyboard and screen-reader checks still block calling it complete. |
+| [#195 — detail sheet and map controls](https://github.com/mattleask373-rgb/life-lived-network/pull/195) | Open draft on current main; hosted Verify #39439225424 passed on recorded head `6624f789...`. | Useful current design work, but manual responsive, keyboard, screen-reader, focus-return and contrast checks remain. Verify does not equal manual QA. |
+| [#196 — Grok integration playbook](https://github.com/mattleask373-rgb/life-lived-network/pull/196) | Open draft, docs-only, current-main base. | Useful release/coordination guide; owner review still needed. |
+| [#197 — work contract + Adzuna staging](https://github.com/mattleask373-rgb/life-lived-network/pull/197) | Open draft, current-main base; mergeable; hosted Verify #39439428714 passed on exact head `1abc21d...`. | Preferred current-main successor to the stale #174 plus #187/#190 work. Contract, taxonomy and fixture-first staging are present, but all Adzuna candidates remain review-required, `canPublish: false`, with no live requests or credentials. Human source/legal/retention/market review still blocks activation. |
+| [#173 — SEO gate, locality/service pages and sitemaps](https://github.com/mattleask373-rgb/life-lived-network/pull/173) | Open, non-mergeable, old-base integrated branch; latest recorded head `94870d5...`; hosted Verify #39427722990 passed on that recorded head. It now includes work-opportunity files from the contract/surface branches as well as SEO files. | Do not treat this as a small isolated SEO PR. Reconcile against current main and the eventual #197/#176 integration, preserve generated route-tree correctness, and run Verify on the final candidate. The sitemap builder is bounded and fails closed on incomplete scans; verify that the data slice used by the sitemap matches the rendered route's exact 60-entry scope and ordering before launch. |
+| [#174 — work contract/taxonomy](https://github.com/mattleask373-rgb/life-lived-network/pull/174) | Open, old-base/non-mergeable. | Superseded as the preferred current-main integration path by #197; do not independently merge the old branch if #197 is selected. |
+| [#176 — opportunity surfaces](https://github.com/mattleask373-rgb/life-lived-network/pull/176) | Open, old-base/non-mergeable; hosted Verify passed on its recorded head. | Reconcile only after #197's contract lands; it changes public locality/service/need surfaces and carries contract copies. Avoid duplicate definitions or branch merges. |
+| [#175 — place staging validator](https://github.com/mattleask373-rgb/life-lived-network/pull/175) | Open, old-base/non-mergeable; hosted Verify #39427760586 passed on recorded head `bc4119e...`. | Staging only. Proposed Australian hierarchy and Queensland gazetteer point candidates remain unapproved, `not_published`, with rights review pending; Byron Bay and parent coordinate questions remain unresolved. |
+| [#186 — Adzuna parser](https://github.com/mattleask373-rgb/life-lived-network/pull/186) | Open draft, old-base; hosted Verify passed on its recorded head. | Parser code is carried forward into #197. Avoid duplicate integration/activation from this branch. |
+| [#188 — need prefill CTA](https://github.com/mattleask373-rgb/life-lived-network/pull/188) | Open draft, based on #176's old branch. | Keep as a reference for bounded prefill behavior; reconcile after contract/surface changes on current main. Prefill is not contact and does not mean a host was messaged. |
+| [#178 — this audit](https://github.com/mattleask373-rgb/life-lived-network/pull/178) | Open draft, docs-only, old-base but currently mergeable. | Keep this updated with the current snapshot; do not use old SHAs above as current truth. |
+
+### New integration risks and release blockers
+
+1. **Branch overlap:** #173 currently contains both SEO work and opportunity files. #197 is the clean current-main contract/staging successor. Integration should be deliberate, not a blanket merge of #173 followed by #174/#176.
+2. **Sitemap/page parity:** both `/sitemap.xml` and `/api/public/sitemap-pages.xml` call the same dynamic candidate adapter in #173, and the candidate helper uses the same indexability decisions. Before launch, verify route-loader and sitemap data-window/order equivalence, that unknown place/service slugs return 404, and that current deployment serves the new route handlers.
+3. **EntryCard semantics:** #193's latest intended pattern is a semantic article plus a separate labelled native action button, not a button wrapping the article content. The new code-bearing head needs fresh Verify and manual QA; a source-regex test alone cannot prove screen-reader behavior or 375px layout.
+4. **No live job supply:** #197's Adzuna parser/staging bridge is fixture-first and intentionally cannot publish. No credentials, feed calls, live records, or Australian inventory are enabled by these PRs.
+5. **No release claim yet:** there is no evidence here of live sitemap fetches, search-console/index coverage, a production two-account RLS proof for this new work path, signed-out enquiry submission, or a completed mobile/keyboard/screen-reader pass.
+
+### Recommended next sequence
+
+1. Complete fresh Verify plus manual QA for #193; keep it draft until manual checks are recorded.
+2. Human-review and decide whether #197's contract/staging scope is acceptable; it is the current-main base for work integration, not permission to activate Adzuna.
+3. Reconcile #176's presentation/request path onto the post-#197 main, with explicit regression tests that the request CTA uses `/need` and the canonical `findSupply()` flow and never claims outbound contact.
+4. Reconcile #173's SEO gate/routes/sitemaps last, minimizing its diff to the SEO dependency once the work contract/surface integration is stable. Run Verify on the exact final head.
+5. Keep #175 staging-only until source rights, hierarchy, coordinates, timezone semantics and pilot scope receive explicit human approval.
+6. Update `docs/agents/STATUS.md` and `roadmap.md` to stop listing closed #177 as active, and record exact current heads and manual blockers.
+
+**No merge, deploy, schema/RLS/grant change, credential activation, production write, or live-feed action was performed by this audit.**
