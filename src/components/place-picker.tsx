@@ -7,6 +7,7 @@
  * uses.
  */
 
+import { MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { KIND_LABEL, placePath, searchPlaces, type Place } from "@/lib/places";
@@ -44,7 +45,7 @@ export function PlacePicker() {
 
   if (loadError && !index) {
     return (
-      <div className="card-paper p-4">
+      <div className="card-paper p-4 sm:p-5">
         <p role="alert" className="text-sm">
           We couldn't load the supported places just now.
         </p>
@@ -64,7 +65,7 @@ export function PlacePicker() {
   return (
     <div className="card-paper p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Where are you?</p>
+        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"><MapPin className="h-4 w-4 text-primary" aria-hidden="true" />Where are you?</p>
         {!defaultUnavailable ? (
           <button
             type="button"
@@ -79,7 +80,7 @@ export function PlacePicker() {
         )}
       </div>
 
-      <p className="mt-1 text-lg">
+      <p className="mt-2 font-display text-xl leading-snug">
         {place && index ? placePath(index, place.id, 3) : "Choose a supported place"}
       </p>
 
@@ -97,23 +98,23 @@ export function PlacePicker() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Kings Heath, Manchester, Herefordshire, Edinburgh, Galway…"
-              className="focus-ink mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              placeholder="Search a town, city or neighbourhood"
+              className="focus-ink mt-2 min-h-11 w-full rounded-2xl border border-border bg-card px-4 py-2.5 text-base placeholder:text-muted-foreground/80"
             />
           </label>
 
           {query.trim() ? (
             results.length ? (
-              <ul className="space-y-1">
+              <ul className="space-y-2" aria-label="Place search results" aria-live="polite">
                 {results.map((r) => (
                   <li key={r.id}>
                     <button
                       type="button"
                       onClick={() => choose(r)}
-                      className="focus-ink w-full rounded-lg border border-border bg-background px-3 py-2 text-left text-sm hover:shadow-paper"
+                      className="focus-ink flex min-h-12 w-full items-center gap-3 rounded-2xl border border-border bg-card px-3 py-2.5 text-left text-sm transition-colors hover:bg-secondary/50"
                     >
-                      {placePath(index!, r.id, 3)}
-                      <span className="ml-2 text-xs text-muted-foreground">
+                      <span className="min-w-0 flex-1">{placePath(index!, r.id, 3)}</span>
+                      <span className="shrink-0 rounded-full bg-secondary px-2 py-1 text-[0.65rem] text-muted-foreground">
                         {KIND_LABEL[r.kind]}
                       </span>
                     </button>
@@ -121,7 +122,7 @@ export function PlacePicker() {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p role="status" className="rounded-2xl bg-secondary/60 p-4 text-sm text-muted-foreground">
                 We couldn't find that name in the current place records. Try a nearby town, region
                 or country.
               </p>
@@ -165,7 +166,7 @@ function Chip({ label, onClick }: { label: string; onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="focus-ink rounded-full border border-border bg-background px-3 py-1 text-sm text-muted-foreground hover:text-foreground"
+      className="focus-ink inline-flex min-h-11 items-center rounded-full border border-border bg-card px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
     >
       {label}
     </button>
