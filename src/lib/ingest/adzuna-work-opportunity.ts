@@ -132,7 +132,7 @@ function canonicalInstant(value: string): string | null {
 function canonicalObservedInstant(value: string): string | null {
   // The observation time must be a timestamp with an explicit timezone, not a
   // date-only value or a machine-local wall clock.
-  if (!/^\\d{4}-\\d{2}-\\d{2}T.*(?:Z|[+-]\\d{2}:\\d{2})$/i.test(value)) return null;
+  if (!/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/i.test(value)) return null;
   return canonicalInstant(value);
 }
 
