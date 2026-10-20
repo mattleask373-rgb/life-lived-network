@@ -42,3 +42,12 @@ No autonomous production merge/deploy is active.
 2. Optionally surface MatchEvidence in UI after #177 is reviewed.
 3. Once WorkOpportunity lands on main, extend matcher input non-destructively.
 4. Wire locality / service surfaces to the same MatchOutcome when design is ready.
+
+
+## 2026-10-20 — WorkOpportunity contract fresh port
+
+- Fresh review branch `integration/work-opportunity-contract-2026-10-20` ports only the strict work-opportunity contract, taxonomy extension and explicit publication safeguards from #174 onto `main` at `14e409e90a027305902f381de3d0a9fbd912dc71`.
+- The Adzuna parser/bridge files are intentionally excluded from this slice and remain a separate dependent staging integration; this branch makes no live source calls and creates no inventory.
+- The contract preserves explicit engagement kind, pay status with integer minor units plus currency/basis, duration/dates, accommodation/transport/skills/conditions, provenance/source rights, freshness, jurisdiction/policy review and publication state.
+- `findSupply()` remains the sole discovery authority. No DB/schema/RLS/grant changes, production writes, source activation or public opportunity publishing are included.
+- Human review is still required for market-specific law/policy, source rights and any record publication. Australia remains NOT LIVE.
