@@ -198,18 +198,18 @@ function ServicePage() {
             <li>
               <Link
                 to="/need"
-                search={
-                  needPrefillForService({
+                search={needPrefillForService({
                     categorySlug: category.slug,
                     categoryLabel: category.label,
                     placeSlug: place.slug,
                     placeName: place.name,
-                  })
-                }
+                })}
                 className="focus-ink flex min-h-11 flex-col rounded-lg border border-primary bg-primary px-4 py-3 text-sm text-primary-foreground"
               >
                 <span className="font-medium">Looking for help?</span>
-                <span className="opacity-90">Ask for {category.label.toLowerCase()} in {place.name}</span>
+                <span className="opacity-90">
+                  Ask for {category.label.toLowerCase()} in {place.name}
+                </span>
               </Link>
             </li>
             <li>
