@@ -19,14 +19,20 @@ describe("detail panel touch targets", () => {
   it("keeps map pins and controls comfortably tappable", () => {
     const src = read("components/living-map.tsx");
     expect(src).toContain("h-11 w-11 -translate-x-1/2 -translate-y-full");
-    expect(src).toContain("grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-lift");
-    expect(src).toContain('aria-label={centreName ? `Map around ${centreName}` : "Map of recorded places"}');
+    expect(src).toContain(
+      "grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-lift",
+    );
+    expect(src).toContain(
+      'aria-label={centreName ? `Map around ${centreName}` : "Map of recorded places"}',
+    );
   });
 
   it("uses only photos with a usable source URL in the detail gallery", () => {
     const src = read("components/entry-sheet.tsx");
-    expect(src).toContain("const photos = (entry.photos ?? []).filter((photo) => photo.url.trim().length > 0);");
-    expect(src).toContain("role=\"region\" aria-label={`Photos for ${entry.title}`}");
+    expect(src).toContain(
+      "const photos = (entry.photos ?? []).filter((photo) => photo.url.trim().length > 0);",
+    );
+    expect(src).toContain('role="region" aria-label={`Photos for ${entry.title}`} '.trim());
     expect(src).toContain("font-display text-3xl");
   });
 
