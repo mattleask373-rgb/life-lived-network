@@ -52,3 +52,13 @@ No autonomous production merge/deploy is active.
 2. Reconcile #62's lifecycle model with the durable SQL status contract and authenticated fencing boundaries before any integration.
 3. Reconcile #43 into #49's canonical ingest boundary; preserve useful fixture/normalization/freshness/provenance evidence while retiring the parallel architecture.
 4. Keep #72, #69, #67, #73 and all control-plane work human-gated; no merge performed by the control tower.
+
+
+## 2026-10-20 — Grok visual integration workstream
+
+- Canonical source remains `mattleask373-rgb/life-lived-network`, `main` baseline `0c56cc299825dea5996323506e7a1cc9266975c8`. Reference and integration branches were created from that base; neither was merged into main.
+- Uploaded prototype snapshot SHA-256: `6eae21ffddcb1cd1b62025c416cd979ae2fa500321fce83b158b870c838c72a6`. Design-only reference is preserved in `reference/grok-design-2026-10-20`; the standalone prototype mock data, routes and auth/database wiring are quarantined and not imported.
+- First implementation slice aligns the body font token to the already-loaded Manrope face, aligns the paper/cream/forest anchors, and refreshes `EntryCard` and `PlacePicker` using canonical current data.
+- Cards use `WorldEntry.photos` with source credit, or a neutral “No photo supplied” placeholder. Existing trust/source state, demonstration labelling, service/provider distinction and currency helper remain.
+- Hosted Verify and manual 375px/1280px browser QA are pending for the implementation PR until exact-head checks and screenshots are attached. Owner action remains required to set branch rules (PR required, `verify`, founder approval, no bypass/force-push).
+- Next design slices: home editorial hierarchy, detail sheet/map pins, locality/service pages, Journey/Road Trip, then account/profile. No visual slice should change `findSupply()`, ingestion, auth/RLS, routes or private-data semantics.
