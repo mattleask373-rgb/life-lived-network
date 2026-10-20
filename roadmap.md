@@ -247,10 +247,9 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - [ ] My Places full slice: plan awaiting approval (schema addition, location precision).
 
 
-## 2026-10-20 — Work-opportunity contract reconciliation
+## 2026-10-20 — Traveller opportunity surface integration (PR #176)
 
-- PR #174 (`feat/work-opportunity-contract`) is being reconciled onto current canonical main `9269dff0fb66911733ea309fd7342d86bb60c112` without rewriting the existing feature history.
-- Scope: strict opportunity contract/parser and taxonomy safeguards only. It does not seed records, activate partner sources, change schema/RLS/grants, or contact anyone.
-- The traveller-facing locality/request surfaces remain a separate integration dependency in #176; do not duplicate matching logic or change `findSupply()`.
-- Previous head `a0316819ab164d367a8e40502e4336cc5d55405b` passed hosted Verify (run #1108); require fresh Verify on the reconciled head before review/merge.
-- Human go/no-go still required for market-specific legal/policy review, source rights and actual supply approval. Australia remains NOT LIVE.
+- Reconciled the opportunity contract from #174 onto current main and adapted #176 for the current locality index route, leaving shared EntryCard/EntrySheet accessibility work separate in #177.
+- Strict `work_opportunity` payloads flow only through the existing listing normaliser, are excluded when unpublished/unreviewed/rights-restricted, and reuse the shared service taxonomy. Locality and service pages present explicitly recorded pay, engagement kind, duration, dates, accommodation, conditions, skills, host expectations and source provenance without inferring missing facts.
+- "Request a match" prefills the existing need form; it does not send a message. Signed-out visitors still need an account to post a need, so the full low-friction enquiry conversion remains an open launch gate.
+- This PR does not add schema/RLS/grants, database records, or a partner import. Australia and pilot inventory remain NOT LIVE. Exact-head hosted Verify is required before human review.
