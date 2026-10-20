@@ -71,7 +71,8 @@ export function EntrySheet({
           {photos.length ? (
             <div
               className="flex snap-x snap-mandatory gap-1 overflow-x-auto"
-              role="region" aria-label={`Photos for ${entry.title}`}
+              role="region"
+              aria-label={`Photos for ${entry.title}`}
             >
               {photos.slice(0, 6).map((photo, index) => (
                 <figure
@@ -112,7 +113,9 @@ export function EntrySheet({
             {layer ? <LayerIcon icon={layer.icon} size={15} strokeWidth={1.7} /> : null}{" "}
             {layer?.label}
           </p>
-          <DialogTitle className="mt-1 font-display text-3xl leading-tight tracking-tight">{entry.title}</DialogTitle>
+          <DialogTitle className="mt-1 font-display text-3xl leading-tight tracking-tight">
+            {entry.title}
+          </DialogTitle>
           {entry.demonstration ? (
             <p className="mt-2 rounded-lg border border-border bg-background p-3 text-xs text-muted-foreground">
               <span className="uppercase tracking-widest">Demonstration record</span> — this is
