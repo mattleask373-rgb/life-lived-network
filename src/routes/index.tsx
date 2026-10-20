@@ -112,36 +112,36 @@ function Home() {
                   ? "We couldn't check what's recorded here."
                   : `${all.length} ${all.length === 1 ? "thing" : "things"} recorded here · ${needCount} ${needCount === 1 ? "open need" : "open needs"}`}
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap gap-2">
             {quiet ? (
               <Link
                 to="/make"
-                className="focus-ink rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
+                className="focus-ink inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
               >
                 Add the first real thing here
               </Link>
             ) : (
               <a
                 href="#map-heading"
-                className="focus-ink rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
+                className="focus-ink inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
               >
                 {densityOf(all.length) === "busy" ? "See what's on" : "Explore the map"}
               </a>
             )}
             <Link
               to="/road-trip"
-              className="focus-ink rounded-full border border-border bg-card px-5 py-2.5 text-sm"
+              className="focus-ink inline-flex min-h-11 items-center rounded-full border border-border bg-card px-5 py-2.5 text-sm"
             >
               Plan a road trip
             </Link>
           </div>
         </header>
 
-        <div className="mt-5">
+        {/* Where you are, then what you want: one grouped front door. */}
+        <div className="mt-6 space-y-4 border-t border-border pt-6">
           <PlacePicker />
+          <PossibilityFrontDoor />
         </div>
-
-        <PossibilityFrontDoor />
 
         {place && place.country_code ? (
           <Link
