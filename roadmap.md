@@ -245,3 +245,13 @@ Observed, not fixed: after Escape, focus lands on the page body rather than the 
 - Both noindex and in PRIVATE_PATHS. No payments, backend, schema or auth changes.
 - [ ] Blocked on approval: storing interest submissions in the database (needs a new table) and a follow-up contact route.
 - [ ] My Places full slice: plan awaiting approval (schema addition, location precision).
+
+
+## 2026-10-20 — Phase 2: global traveller + local life experience (24-hour plan)
+
+- Added `docs/launch/PHASE-2-GLOBAL-EXPERIENCE-24H-PLAN.md` as the cross-agent execution brief.
+- Product direction: one coherent traveller-and-local network; place-first discovery connects real local guides/tours, language teaching/exchange, services, paid/unpaid/unstated work opportunities, events and community contributions without splitting user identity or discovery architecture.
+- Parallel lanes are defined for SEO/indexability/sitemaps, Australia place staging, opportunity taxonomy/surfaces, event/guide/language representation, trust/enquiry and the visual system. Shared files have single-owner expectations.
+- Dependency gates: #177 manual responsive/accessibility pass; #174 work contract/taxonomy; #176 opportunity surfaces; #173 final SEO/indexability/sitemap integration. #175 remains staging only. #178/#179 remain open documentation inputs unless a human merges them.
+- Status: this plan is documentation only. No feature merge/deployment, schema/RLS/grant change, production write, partner credential/feed activation or public pilot launch. Hosted Verify pending on the plan PR; local tests not run.
+- 31 October gaps remain: human-selected pilot locality; real rights-cleared inventory and moderation owner; validated place hierarchy/source/licence/timezone semantics; full event/provider detail+sitemap coverage; approved enquiry persistence/consent path; real end-to-end outcome; manual mobile/accessibility sign-off and launch go/no-go.
