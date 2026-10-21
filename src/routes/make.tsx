@@ -380,7 +380,13 @@ function MakePage() {
                   <span className="text-muted-foreground">Booking / enquiry pathway</span>
                   <select
                     value={form.bookingState}
-                    onChange={(e) => setForm({ ...form, bookingState: e.target.value })}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        bookingState: e.target.value,
+                        bookingUrl: e.target.value === "external" ? form.bookingUrl : "",
+                      })
+                    }
                     className={input}
                   >
                     <option value="not_bookable">No booking pathway yet</option>
