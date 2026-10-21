@@ -30,7 +30,10 @@ import {
   setServiceAreas,
 } from "@/lib/capability.functions";
 import { fetchPlaces } from "@/lib/places";
-import { buildServiceAreaSelections } from "@/lib/service-area-selections";
+import {
+  buildServiceAreaSelections,
+  MAX_SERVICE_AREA_SELECTIONS,
+} from "@/lib/service-area-selections";
 
 export function CapabilityPanel() {
   const qc = useQueryClient();
@@ -88,6 +91,7 @@ export function CapabilityPanel() {
       },
     });
   };
+  const atServiceAreaLimit = chosenAreas.length + chosenTravelThrough.length >= MAX_SERVICE_AREA_SELECTIONS;
   const chosenPrefs = data?.preferences ?? [];
   const chosenGives = data?.contributions.map((c) => c.contribution) ?? [];
   const earning = data?.earningPreference ?? "unstated";
@@ -304,7 +308,8 @@ export function CapabilityPanel() {
         <h2 className="text-xl">Where you work or can serve</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Places, not addresses. These are areas you explicitly say you serve or can work in;
-          they do not imply you're currently available.
+          they do not imply you're currently available. Up to {MAX_SERVICE_AREA_SELECTIONS} places
+          can be selected.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {(places ?? []).map((p) => {
@@ -313,6 +318,7 @@ export function CapabilityPanel() {
               <button
                 key={p.id}
                 type="button"
+                disabled={areas.isPending || (!on && atServiceAreaLimit)}
                 onClick={() =>
                   saveServiceAreas(
                     on ? chosenAreas.filter((id) => id !== p.id) : [...chosenAreas, p.id],
@@ -346,6 +352,7 @@ export function CapabilityPanel() {
               <button
                 key={p.id}
                 type="button"
+                disabled={areas.isPending || (!on && atServiceAreaLimit)}
                 onClick={() =>
                   saveServiceAreas(
                     chosenAreas.filter((id) => id !== p.id),
@@ -369,7 +376,7 @@ export function CapabilityPanel() {
       </section>
       {areas.isError ? (
         <p role="alert" className="text-sm text-destructive">
-          We couldn't update those places. Your previous selections should remain in place; please try again.
+          We couldn't finish updating these places. Review the current selections and try again.
         </p>
       ) : null}
 
