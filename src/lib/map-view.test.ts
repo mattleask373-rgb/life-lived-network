@@ -146,8 +146,10 @@ describe("map viewport", () => {
     const west = { ...east, id: "west", name: "West", slug: "west", lng: -175 };
     const outside = { ...east, id: "outside", name: "Outside", slug: "outside", lng: 0 };
     const index = buildPlaceIndex([east, west, outside]);
-    expect(placeInView(index, { lat: 0, lng: 179, spanLat: 10, spanLng: 20 })?.id).toBe("east");
-    expect(placeInView(index, { lat: 0, lng: -179, spanLat: 10, spanLng: 20 })?.id).toBe("west");
+    const eastView: MapView = { lat: 0, lng: 179, spanLat: 10, spanLng: 20 };
+    const westView: MapView = { lat: 0, lng: -179, spanLat: 10, spanLng: 20 };
+    expect(placeInView(index, eastView)?.id).toBe("east");
+    expect(placeInView(index, westView)?.id).toBe("west");
   });
 
   it("clusters overlapping pins deterministically", () => {
@@ -189,7 +191,9 @@ describe("map viewport", () => {
     });
     expect(Math.abs(fitted.lng)).toBeCloseTo(180);
     expect(fitted.spanLng).toBeLessThan(20);
-    expect(placeEntries([entry("east", 0, 175), entry("west", 0, -175)], fitted)).toHaveLength(2);
+    expect(
+      placeEntries([entry("east", 0, 175), entry("west", 0, -175)], fitted),
+    ).toHaveLength(2);
   });
 
   it("describes the scale it is showing", () => {
