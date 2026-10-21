@@ -19,6 +19,60 @@ export interface GeoViewport {
   spanLng: number;
 }
 
+/** Maximum latitude or longitude span allowed for a server-side viewport read. */
+export const MAX_VIEWPORT_QUERY_SPAN_DEGREES = 1.5;
+
+function longitudeSpanDegrees(bounds: GeoBounds): number {
+  return bounds.minLng <= bounds.maxLng
+    ? bounds.maxLng - bounds.minLng
+    : 360 - bounds.minLng + bounds.maxLng;
+}
+
+/** A client should fetch viewport records only at a bounded, zoomed-in scale. */
+export function isViewportQueryAllowed(view: GeoViewport): boolean {
+  if (
+    !Number.isFinite(view.lat) ||
+    view.lat < -90 ||
+    view.lat > 90 ||
+    !Number.isFinite(view.lng) ||
+    view.lng < -180 ||
+    view.lng > 180 ||
+    !Number.isFinite(view.spanLat) ||
+    view.spanLat <= 0 ||
+    view.spanLat > MAX_VIEWPORT_QUERY_SPAN_DEGREES ||
+    !Number.isFinite(view.spanLng) ||
+    view.spanLng <= 0 ||
+    view.spanLng > MAX_VIEWPORT_QUERY_SPAN_DEGREES
+  ) {
+    return false;
+  }
+
+  try {
+    const bounds = geoBoundsForViewport(view);
+    return (
+      bounds.maxLat - bounds.minLat <= MAX_VIEWPORT_QUERY_SPAN_DEGREES &&
+      longitudeSpanDegrees(bounds) <= MAX_VIEWPORT_QUERY_SPAN_DEGREES
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Enforce a small maximum window at the server boundary too. Client-side zoom
+ * checks improve UX, but they are not a security or query-cost boundary.
+ */
+export function assertViewportQueryBounds(value: unknown): asserts value is GeoBounds {
+  assertGeoBounds(value);
+  const bounds = value;
+  if (
+    bounds.maxLat - bounds.minLat > MAX_VIEWPORT_QUERY_SPAN_DEGREES ||
+    longitudeSpanDegrees(bounds) > MAX_VIEWPORT_QUERY_SPAN_DEGREES
+  ) {
+    throw new TypeError("Geographic viewport exceeds the maximum query span.");
+  }
+}
+
 export function isGeoBounds(value: unknown): value is GeoBounds {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
   const candidate = value as Record<string, unknown>;
