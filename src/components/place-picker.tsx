@@ -108,6 +108,12 @@ export function PlacePicker() {
             />
           </label>
 
+          {query.trim() && results.length ? (
+            <p role="status" className="sr-only">
+              {results.length} matching place{results.length === 1 ? "" : "s"}
+            </p>
+          ) : null}
+
           {query.trim() ? (
             results.length ? (
               <ul aria-label="Matching places" className="space-y-2">
@@ -118,7 +124,7 @@ export function PlacePicker() {
                       onClick={() => choose(r)}
                       className="focus-ink flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border border-border bg-background px-4 py-2 text-left text-sm hover:border-primary/40 hover:shadow-paper"
                     >
-                      {placePath(index!, r.id, 3)}
+                      <span className="min-w-0 break-words">{placePath(index!, r.id, 3)}</span>
                       <span className="shrink-0 text-xs uppercase tracking-wider text-muted-foreground">
                         {KIND_LABEL[r.kind]}
                       </span>
