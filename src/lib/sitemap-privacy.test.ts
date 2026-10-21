@@ -15,8 +15,8 @@ import { Route as SitemapRoute } from "@/routes/sitemap[.]xml";
 
 /**
  * Regression guard: the fixed-pages sitemap lists only known public screens;
- * the locality sitemap has a separate eligibility gate and regression suite.
- * Private screens never enter either sitemap, and uncertain locality data
+ * locality and service sitemaps have separate eligibility gates and regression suites.
+ * Private screens never enter any sitemap, and uncertain source data
  * fails closed rather than becoming an invented or thin search landing page.
  */
 type Handler = () => Response | Promise<Response>;
@@ -98,7 +98,7 @@ describe("public sitemap privacy", () => {
     expect(PRIVATE_PATHS).toContain("/conversations");
   });
 
-  it("dynamic /sitemap.xml route indexes both public child sitemaps", async () => {
+  it("dynamic /sitemap.xml route indexes all public child sitemaps", async () => {
     const { xml, res } = await body(SitemapRoute);
     expect(res.headers.get("content-type")).toContain("xml");
     expect(xml).toContain("<sitemapindex");
@@ -108,7 +108,7 @@ describe("public sitemap privacy", () => {
     }
   });
 
-  it("API sitemap index names the public pages and locality sitemaps", async () => {
+  it("API sitemap index names all public child sitemaps", async () => {
     const { xml } = await body(IndexRoute);
     expect(locs(xml)).toEqual(PUBLIC_SITEMAP_CHILD_PATHS.map((path) => `${SITE_ORIGIN}${path}`));
   });
