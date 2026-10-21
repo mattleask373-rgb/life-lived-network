@@ -18,11 +18,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { fetchWorld, fetchWorldEntries } from "@/lib/listings";
 import { MAX_LIMIT } from "@/lib/data/contract";
-import {
-  geoBoundsForViewport,
-  isViewportQueryable,
-  type GeoBounds,
-} from "@/lib/geo-bounds";
+import { geoBoundsForViewport, isViewportQueryable, type GeoBounds } from "@/lib/geo-bounds";
 import { densityOf } from "@/lib/trust";
 import { getOpenNeeds } from "@/lib/needs.functions";
 import { PLACE_FALLBACK } from "@/lib/places";
@@ -189,9 +185,7 @@ function Home() {
     viewportPending ||
     (viewportRequestIsCurrent ? !viewportPage && viewportFetching : worldLoading);
   const mapError = viewportRequestIsCurrent ? viewportError && !viewportPage : worldError;
-  const mapRefreshError = Boolean(
-    viewportRequestIsCurrent && viewportPage && viewportRefreshError,
-  );
+  const mapRefreshError = Boolean(viewportRequestIsCurrent && viewportPage && viewportRefreshError);
   const viewportTooBroad = Boolean(view && !isViewportQueryable(view));
   const refetchMap = viewportRequestIsCurrent ? refetchViewport : refetchWorld;
   const canChangeListScope =
