@@ -3,7 +3,7 @@
 ## Canonical baseline
 
 - Repository: mattleask373-rgb/life-lived-network
-- Current main SHA checked via GitHub: `8d79247991187bf64813cf72e3ec75aeb508e2e9` (latest observed 2026-10-21 00:23:29 UTC).
+- Current main SHA at the latest integration update: `ccbcc6acdbc3dcdf6895c0f624b301418257a6e3` (verified as the base of current-main draft branches on 2026-10-21 at approximately 19:30 UTC). The earlier phase-3 queue below is a historical snapshot; use the latest update appended below for current candidate states.
 - Since the earlier `006a98c...` baseline, three commits (`fea27ff`, `8801a50`, `30c2877`) improved PlacePicker/PlaceSearch, then three more (`eb54b10`, `9c4a9e9`, `8d79247`) added an explicitly unavailable “Ask about this place” placeholder and its no-answer contract/test to the locality page. It remains a disabled placeholder, not an active assistant endpoint.
 - **Verified governance blocker:** ruleset [#24946178](https://github.com/mattleask373-rgb/life-lived-network/rules/24946178), “living World - protect main”, reads `enforcement: disabled`. Its required checks include malformed `.github/workflows/verify.yml,`, stale `Verify`, and actual successful GitHub Actions context `verify` (integration id 15368). Repository admin must remove the first two, keep exact `verify`, confirm PR review/stale-review/last-push/thread-resolution/no-bypass rules, then enable enforcement. Connected tooling is read-only for rulesets; branch-protection GET returns 403. Lovable Project Settings → Git target remains UNKNOWN; require a human to confirm repo + non-main sync branch before write-mode edits.
 - No autonomous merge/deploy is authorised. Production data, schema, RLS/grants, secrets and live source activation remain human-gated.
@@ -65,3 +65,31 @@ This snapshot reflects the latest verified GitHub main comparison at `8d79247991
 - Quiet/unknown states stay honest.
 - Demonstration/unpublished/unreviewed/rights-uncleared content is excluded from public claims and indexability.
 - No production writes, schema/RLS/grant changes, secrets, live partner feeds, autonomous publishing, merge or deployment without explicit human approval.
+
+
+## Latest integration execution update — 2026-10-21 19:33 UTC
+
+**This section supersedes the candidate-status and next-action lists above.** Earlier notes recorded the state around 00:23 UTC and must not be treated as current PR merge/state truth. The connected GitHub workspace reports current `main` as `ccbcc6acdbc3dcdf6895c0f624b301418257a6e3` for this integration pass. No candidate below was merged or deployed.
+
+### Current-main draft PRs and exact-head Verify
+
+- **[#242 — bounded viewport discovery](https://github.com/mattleask373-rgb/life-lived-network/pull/242):** draft, based directly on current `main`; Verify passed on exact head via [run #39662081945](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39662081945). It adds validated viewport bounds (1.5° latitude / 2.1° longitude), antimeridian-aware server filtering, cancellable reads, and map/list synchronization with honest broad/error/stale states. Manual responsive, keyboard and map-edge QA remains open.
+- **[#241 — source freshness + approved WorkOpportunity terms](https://github.com/mattleask373-rgb/life-lived-network/pull/241):** draft, based directly on current `main`; Verify passed on exact head via [run #39661782432](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39661782432). It carries the real source check timestamp only for sourced/confirmed non-demo records, adds a tested label formatter, gates optional WorkOpportunity payloads with `isPublishableWorkOpportunity()`, and presents explicit terms in the entry detail sheet. It does not create a database column or assert that live persisted payloads exist; no work inventory is added by this PR.
+- **[#243 — Journey/Road Trip editorial redesign](https://github.com/mattleask373-rgb/life-lived-network/pull/243):** draft, based directly on current `main`; Verify passed on exact head via [run #39662311756](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39662311756). It is a UI/accessibility presentation slice (larger headings, clearer editorial surfaces, improved touch targets, and source-backed photo or honest no-photo states). Manual 375px/1280px and accessibility QA remains open.
+- **[#244 — fixture-first Adzuna staging adapter](https://github.com/mattleask373-rgb/life-lived-network/pull/244):** draft, based directly on current `main`; Verify passed on exact head via [run #39662509662](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39662509662). Pure parser/bridge/composition and fixture tests only. No HTTP, credentials, persistence, scheduler, live provider activation, or published inventory.
+- **[#245 — fail-closed Ask-this-place policy](https://github.com/mattleask373-rgb/life-lived-network/pull/245):** draft, based directly on current `main`; Verify passed on exact head via [run #39662605731](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39662605731). It adds a pure eligibility policy and tests only; no UI wiring, retrieval endpoint, model call, or public assistant activation.
+- **[#239](https://github.com/mattleask373-rgb/life-lived-network/pull/239) is closed unmerged**, superseded by #242 because #242 carries the viewport work directly onto current `main`.
+
+Each candidate is still draft pending independent review and relevant manual evidence. A green Verify is not a human accessibility/security sign-off and does not authorize a merge or release.
+
+### Remaining owner/release gates
+
+1. **Lovable continuity:** Project Settings → Git repository + sync branch remain unverified. Issue [#133](https://github.com/mattleask373-rgb/life-lived-network/issues/133) records a prior direct-main write during a nominally read-only Lovable turn. Do not send write-capable implementation prompts until an owner verifies a non-main sync branch.
+2. **Branch protection:** ruleset [#24946178](https://github.com/mattleask373-rgb/life-lived-network/rules/24946178) was last documented as disabled. Repository administration must verify current enforcement and configure the exact observed successful check before any merge.
+3. **Authentication storage:** [PR #235](https://github.com/mattleask373-rgb/life-lived-network/pull/235) remains a separate security-review track; do not merge it with product/UI work.
+4. **Ask-this-place:** keep the public UI disabled. Issue #209's server-side canonical retrieval, eligibility evidence, isolation, citation/freshness, prompt-injection, shared rate/cost limits, observability, and independent release gate remain prerequisites.
+5. **Adzuna/work data:** the parser remains staging-only; source terms, canonical locality, freshness, market policy, compensation/engagement evidence and human publication approval remain prerequisites. No country/source is marked live.
+6. **Robots/sitemap:** current source files and tests include private-path disallows and static/dynamic sitemap routes, but this pass could not independently reach the live Lovable endpoints with the available web verifier. Live host behavior therefore remains **unverified**; require a fresh owner-authorized GET check after any approved republish/hosting diagnosis.
+7. **Visual QA:** #241/#242/#243 require real browser checks at mobile/desktop breakpoints, keyboard-only operation, visible focus, screen-reader names, zoom/reduced-motion, map/list interactions, sourced-photo/no-photo states and honest quiet/error/freshness states.
+
+The canonical invariants remain unchanged: `findSupply()` is the sole possibility/need-discovery authority; no fabricated supply, no publication from unknown rights/review evidence, no public assistant activation, and no merge/deployment/production mutation without the relevant human approval.
