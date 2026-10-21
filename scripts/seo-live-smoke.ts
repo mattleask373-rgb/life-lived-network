@@ -100,7 +100,9 @@ export function evaluateSeoSmoke(
       if (url.origin !== origin || url.protocol !== "https:") {
         failures.push(`sitemap.xml: URL is outside the canonical HTTPS origin: ${location}`);
       }
-      if (PRIVATE_PATHS.some((path) => url.pathname === path || url.pathname.startsWith(`${path}/`))) {
+      if (
+        PRIVATE_PATHS.some((path) => url.pathname === path || url.pathname.startsWith(`${path}/`))
+      ) {
         failures.push(`sitemap.xml: private route must not be listed: ${url.pathname}`);
       }
     } catch {
@@ -116,7 +118,9 @@ export function evaluateSeoSmoke(
   if (!/text\/html/i.test(documents.homepage.contentType ?? "")) {
     failures.push("homepage: expected an HTML content type");
   }
-  const canonicalTag = documents.homepage.body.match(/<link\b[^>]*rel=["']canonical["'][^>]*>/i)?.[0];
+  const canonicalTag = documents.homepage.body.match(
+    /<link\b[^>]*rel=["']canonical["'][^>]*>/i,
+  )?.[0];
   const canonicalHref = canonicalTag?.match(/\bhref=["']([^"']+)["']/i)?.[1];
   if (canonicalHref !== `${origin}/`) {
     failures.push("homepage: missing or incorrect canonical link");
@@ -131,7 +135,11 @@ export function evaluateSeoSmoke(
   if (!/<title>\s*[^<]+<\/title>/i.test(documents.homepage.body)) {
     failures.push("homepage: missing a non-empty title element");
   }
-  if (!/<meta\b(?=[^>]*\bname=["']description["'])(?=[^>]*\bcontent=["'][^"']+["'])[^>]*>/i.test(documents.homepage.body)) {
+  if (
+    !/<meta\b(?=[^>]*\bname=["']description["'])(?=[^>]*\bcontent=["'][^"']+["'])[^>]*>/i.test(
+      documents.homepage.body,
+    )
+  ) {
     failures.push("homepage: missing a non-empty meta description");
   }
 
@@ -181,7 +189,9 @@ export async function runSeoSmoke(): Promise<number> {
   console.log(`Public SEO smoke check — ${new Date().toISOString()}`);
   console.log(`Origin: ${origin}`);
   for (const [label, document] of Object.entries(documents)) {
-    console.log(`- ${label}: HTTP ${document.status}; content-type ${document.contentType ?? "(none)"}`);
+    console.log(
+      `- ${label}: HTTP ${document.status}; content-type ${document.contentType ?? "(none)"}`,
+    );
   }
   if (failures.length) {
     console.error(`FAILED: ${failures.length} check(s)`);
