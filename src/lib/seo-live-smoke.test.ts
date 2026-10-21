@@ -20,17 +20,17 @@ function healthyDocuments(): SeoSmokeDocuments {
 ${urls.map((path) => `<url><loc>${origin}${path}</loc></url>`).join("\n")}
 </urlset>`;
   const privatePaths = [
-    "/auth", "/profile", "/conversations", "/need", "/help", "/moderation",
-    "/sources", "/memories", "/partners", "/partner-tracker", "/earn",
-  ];
-  const robots = [
-    "User-agent: *",
-    "Allow: /",
-    ...privatePaths.map((path) => `Disallow: ${path}`),
-    `Sitemap: ${origin}/sitemap.xml`,
-  ].join("\n");
-  const homepage = `<!doctype html><html><head>
-<title>Real World Atlas</title>
+    "/auth",
+    "/profile",
+    "/conversations",
+    "/need",
+    "/help",
+    "/moderation",
+    "/sources",
+    "/memories",
+    "/partners",
+    "/partner-tracker",
+    "/earn",
 <meta name="description" content="Discover useful things in the real world.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="${origin}/">
@@ -80,6 +80,6 @@ describe("public SEO live smoke contract", () => {
   it("rejects a final response that redirects to a different origin", () => {
     const documents = healthyDocuments();
     documents.homepage.finalUrl = "https://attacker.example/";
-    expect(evaluateSeoSmoke(documents)).toContain("homepage: final response left the expected origin");
+      "homepage: final response left the expected origin",
   });
 });
