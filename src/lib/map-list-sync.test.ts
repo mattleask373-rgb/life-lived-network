@@ -42,10 +42,7 @@ describe("map/list synchronization", () => {
     const partition = partitionMapList(entries, view);
 
     expect(partition.inView.map((item) => item.id)).toEqual(["inside"]);
-    expect(partition.unpinned.map((item) => item.id)).toEqual([
-      "unpinned",
-      "invalid-coordinates",
-    ]);
+    expect(partition.unpinned.map((item) => item.id)).toEqual(["unpinned", "invalid-coordinates"]);
     expect(partition.outsideView.map((item) => item.id)).toEqual(["outside"]);
   });
 
