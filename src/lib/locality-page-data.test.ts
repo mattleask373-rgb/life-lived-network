@@ -19,7 +19,11 @@ describe("locality page entry loading", () => {
 
   it("recognises a structured server error if the data boundary serialises it", async () => {
     const error = Object.assign(new Error("safe scope error"), { code: "SCOPE_TOO_WIDE" });
-    await expect(loadLocalityEntries(async () => { throw error; })).resolves.toEqual({
+    await expect(
+      loadLocalityEntries(async () => {
+        throw error;
+      }),
+    ).resolves.toEqual({
       entries: [],
       scopeTooWide: true,
     });
@@ -27,6 +31,10 @@ describe("locality page entry loading", () => {
 
   it("continues to surface unrelated data errors", async () => {
     const failure = new DataError("DATA_UNAVAILABLE");
-    await expect(loadLocalityEntries(async () => { throw failure; })).rejects.toBe(failure);
+    await expect(
+      loadLocalityEntries(async () => {
+        throw failure;
+      }),
+    ).rejects.toBe(failure);
   });
 });
