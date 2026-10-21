@@ -1,0 +1,47 @@
+name: Validate Load Test Scripts
+
+on:
+  pull_request:
+    paths:
+      - "tests/load/**"
+      - ".github/workflows/validate-load-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tests/load/**"
+      - ".github/workflows/validate-load-tests.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: load-test-validation-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  inspect:
+    name: Parse k6 scripts without sending traffic
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Pin the action to the verified v1.2.1 commit. Keep the k6 CLI version explicit.
+      - name: Set up k6
+        uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065
+        with:
+          k6-version: "2.3.0"
+
+      - name: Inspect script requirements (no test execution or HTTP requests)
+        env:
+          LOAD_TEST_ENV: staging
+          LOAD_TEST_BASE_URL: https://preview.staging.example.invalid
+          LOAD_TEST_APPROVED: YES_I_APPROVE_STAGING_LOAD
+        run: >-
+          k6 inspect
+          --execution-requirements
+          --include-system-env-vars
+          tests/load/staging-public-read.js
