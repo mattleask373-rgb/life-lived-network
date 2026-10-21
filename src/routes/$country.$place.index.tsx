@@ -21,6 +21,7 @@ import {
 } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
+import { AskThisPlace } from "@/components/ask-this-place";
 import { EntrySheet } from "@/components/entry-sheet";
 import { EmptyPlace } from "@/components/data-state";
 import { LocalityQuestions } from "@/components/locality-questions";
@@ -265,6 +266,7 @@ function LocalityPage() {
       ) : (
         <div className="mt-6">
           <LocalityQuestions placeName={place.name} questions={questions} />
+          <AskThisPlace placeName={place.name} />
 
           <div className="mt-6">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
