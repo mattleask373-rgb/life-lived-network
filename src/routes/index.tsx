@@ -45,17 +45,6 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-function sameBounds(a: GeoBounds | null, b: GeoBounds | null): boolean {
-  return Boolean(
-    a &&
-      b &&
-      a.minLat === b.minLat &&
-      a.maxLat === b.maxLat &&
-      a.minLng === b.minLng &&
-      a.maxLng === b.maxLng,
-  );
-}
-
 function Home() {
   const [layers, setLayers] = useState<LayerId[]>([]);
   const [mobileListOpen, setMobileListOpen] = useState(false);
@@ -129,7 +118,7 @@ function Home() {
   const regionName = ancestors[0]?.name ?? "";
   const placeBlurb = place?.blurb || PLACE_FALLBACK.blurb;
 
-  const viewportMatchesView = sameBounds(viewportBounds, expectedViewportBounds);
+  const viewportMatchesView = viewportBounds === expectedViewportBounds;
   const viewportLoaded = Boolean(viewportMatchesView && viewportPage);
   const mapSourceEntries = useMemo(
     () => (viewportLoaded && viewportPage ? mergeViewportEntries(viewportPage.items, all) : all),
