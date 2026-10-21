@@ -2,7 +2,7 @@ import { publicPage } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Check, ChevronDown, ChevronUp, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, ImageOff, Plus, RotateCcw, Trash2 } from "lucide-react";
 
 import { EntrySheet } from "@/components/entry-sheet";
 import { eventDate, layerText } from "@/components/layer-colour";
@@ -11,6 +11,7 @@ import { PlaceSearch } from "@/components/place-search";
 import { Button } from "@/components/ui/button";
 import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
+import { cardPhoto, NO_PHOTO_LABEL } from "@/lib/entry-card-view";
 import { descendantIdsOf, distanceKm, type Place } from "@/lib/places";
 import {
   ROAD_TRIP_DRAFT_KEY,
@@ -155,14 +156,16 @@ function RoadTrip() {
   return (
     <main className="paper-grain min-h-screen">
       <div className="mx-auto max-w-5xl px-4 pt-8 pb-20 sm:px-6">
-        <h1 className="text-3xl">Plan a road trip</h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
+        <h1 className="font-display text-4xl leading-tight tracking-tight sm:text-5xl">
+          Plan a road trip
+        </h1>
+        <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
           Say where you are going. We will show what is genuinely along the way — nothing invented,
           nothing ranked in secret, and every card saying where it came from.
         </p>
 
         <form
-          className="mt-6 grid gap-4 rounded-2xl border border-border bg-card p-4 sm:grid-cols-2"
+          className="mt-6 grid gap-5 rounded-3xl border border-border bg-card/90 p-5 shadow-paper sm:grid-cols-2 sm:p-7"
           onSubmit={(e) => {
             e.preventDefault();
             if (!origin || !to) return;
@@ -200,7 +203,7 @@ function RoadTrip() {
                   size="sm"
                   onClick={() => setMode(option.id)}
                   aria-pressed={mode === option.id}
-                  className="rounded-full"
+                  className="min-h-11 rounded-full px-4"
                 >
                   {option.label}
                 </Button>
@@ -216,7 +219,7 @@ function RoadTrip() {
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="focus-ink mt-1 w-full rounded-full border border-border bg-card px-3 py-2.5 text-sm text-foreground"
+                className="focus-ink mt-1 min-h-11 w-full rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-foreground"
               />
             </label>
             <label className="text-sm text-muted-foreground" htmlFor="trip-interests">
@@ -226,13 +229,13 @@ function RoadTrip() {
                 value={interests}
                 onChange={(e) => setInterests(e.target.value)}
                 placeholder="music, walking, repair"
-                className="focus-ink mt-1 w-full rounded-full border border-border bg-card px-3 py-2.5 text-sm text-foreground"
+                className="focus-ink mt-1 min-h-11 w-full rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-foreground"
               />
             </label>
           </div>
 
           <div className="sm:col-span-2">
-            <Button type="submit" disabled={!origin || !to} className="rounded-full">
+            <Button type="submit" disabled={!origin || !to} className="min-h-11 rounded-full px-6">
               Plan this journey
             </Button>
           </div>
@@ -240,7 +243,7 @@ function RoadTrip() {
 
         {planned && summary ? (
           <section className="mt-8" aria-labelledby="route-summary">
-            <h2 id="route-summary" className="text-2xl">
+            <h2 id="route-summary" className="font-display text-2xl leading-tight sm:text-3xl">
               {planned.from.name} to {planned.to.name}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -313,7 +316,7 @@ function RoadTrip() {
                 </Button>
               </div>
             ) : discoveries.length === 0 ? (
-              <p className="mt-6 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
+              <p className="mt-6 rounded-2xl border border-border bg-card/90 p-5 text-sm text-muted-foreground shadow-paper">
                 <strong className="block font-medium text-foreground">
                   Nothing found along this route
                 </strong>
@@ -325,7 +328,7 @@ function RoadTrip() {
                 if (!items.length) return null;
                 return (
                   <section key={group} className="mt-8">
-                    <h3 className="text-xl">{GROUP_LABEL[group]}</h3>
+                    <h3 className="font-display text-2xl">{GROUP_LABEL[group]}</h3>
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       {items.map((item) => (
                         <RoadTripCard
@@ -377,40 +380,80 @@ function RoadTripCard({
   onOpen: () => void;
 }) {
   const { entry } = discovery;
+  const photo = cardPhoto(entry);
   const timing = entry.startsAt ? eventDate(entry.startsAt, entry.timezone) : "";
   const routeReason = discovery.reasons[0];
   return (
-    <article className="card-paper flex h-full flex-col p-4">
-      <p className={`text-xs uppercase tracking-widest ${layerText[entry.layer]}`}>
-        {GROUP_LABEL[discovery.group]}
-      </p>
-      <h4 className="mt-1 text-lg leading-snug">{entry.title}</h4>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {entry.place} · {entry.neighbourhood}
-      </p>
-      {entry.summary ? (
-        <p className="mt-3 line-clamp-2 text-sm text-foreground/80">{entry.summary}</p>
-      ) : null}
-      <div className="mt-3 space-y-1 text-xs text-muted-foreground">
-        {discovery.matchedInterests.length ? (
-          <p>
-            <span className="text-foreground">Matches:</span>{" "}
-            {discovery.matchedInterests.join(" · ")}
-          </p>
+    <article className="card-paper flex h-full flex-col overflow-hidden rounded-3xl shadow-paper">
+      <div className="relative aspect-[4/3] overflow-hidden border-b border-border bg-muted">
+        {photo ? (
+          <img
+            src={photo.url}
+            alt={photo.alt}
+            loading="lazy"
+            decoding="async"
+            className="size-full object-cover"
+          />
+        ) : (
+          <div
+            role="img"
+            aria-label={`No photograph supplied for ${entry.title}`}
+            className="photo-placeholder flex size-full flex-col items-center justify-center gap-1 text-muted-foreground"
+          >
+            <ImageOff aria-hidden size={20} strokeWidth={1.5} />
+            <span className="text-xs">{NO_PHOTO_LABEL}</span>
+          </div>
+        )}
+        {photo?.credit ? (
+          <span className="absolute bottom-1.5 right-1.5 max-w-[80%] truncate rounded-full bg-card/90 px-2 py-0.5 text-[0.65rem] text-muted-foreground">
+            Photo: {photo.credit}
+          </span>
         ) : null}
-        {routeReason ? <p>{routeReason}</p> : null}
-        {timing ? <p className="font-medium text-foreground">{timing}</p> : null}
-        {discovery.freshnessLabel ? <p>{discovery.freshnessLabel}</p> : null}
-        {discovery.evidenceLabel ? <p>{discovery.evidenceLabel}</p> : null}
       </div>
-      <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
-        <Button type="button" size="sm" onClick={onAdd} disabled={added}>
-          {added ? <Check aria-hidden="true" /> : <Plus aria-hidden="true" />}
-          {added ? "Added to journey" : "Add to journey"}
-        </Button>
-        <Button type="button" size="sm" variant="ghost" onClick={onOpen}>
-          View details
-        </Button>
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
+        <p className={`text-xs font-semibold uppercase tracking-widest ${layerText[entry.layer]}`}>
+          {GROUP_LABEL[discovery.group]}
+        </p>
+        <h4 className="mt-1 font-display text-xl leading-snug">{entry.title}</h4>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {entry.place} · {entry.neighbourhood}
+        </p>
+        {entry.summary ? (
+          <p className="mt-3 line-clamp-2 text-sm text-foreground/80">{entry.summary}</p>
+        ) : null}
+        <div className="mt-4 space-y-2 text-xs text-muted-foreground">
+          {discovery.matchedInterests.length ? (
+            <p>
+              <span className="text-foreground">Matches:</span>{" "}
+              {discovery.matchedInterests.join(" · ")}
+            </p>
+          ) : null}
+          {routeReason ? <p>{routeReason}</p> : null}
+          {timing ? <p className="font-medium text-foreground">{timing}</p> : null}
+          {discovery.freshnessLabel ? <p>{discovery.freshnessLabel}</p> : null}
+          {discovery.evidenceLabel ? <p>{discovery.evidenceLabel}</p> : null}
+        </div>
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
+          <Button
+            type="button"
+            size="sm"
+            onClick={onAdd}
+            disabled={added}
+            className="min-h-11 rounded-full"
+          >
+            {added ? <Check aria-hidden="true" /> : <Plus aria-hidden="true" />}
+            {added ? "Added to journey" : "Add to journey"}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={onOpen}
+            className="min-h-11 rounded-full"
+          >
+            View details
+          </Button>
+        </div>
       </div>
     </article>
   );
