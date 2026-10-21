@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   assertGeoBounds,
+  assertQueryableGeoBounds,
   geoBoundsForViewport,
   isGeoBounds,
+  isGeoBoundsQueryable,
   isViewportQueryable,
   longitudeInBounds,
 } from "./geo-bounds";
@@ -68,6 +70,31 @@ describe("geographic viewport bounds", () => {
   ])("rejects invalid bounds: %s", (candidate) => {
     expect(isGeoBounds(candidate)).toBe(false);
     expect(() => assertGeoBounds(candidate)).toThrow("Invalid geographic viewport bounds.");
+  });
+
+  it("allows only queryable server bounds, including the exact span caps", () => {
+    const bounds = { minLat: 50, maxLat: 51.5, minLng: -2, maxLng: 0.1 };
+    expect(isGeoBoundsQueryable(bounds)).toBe(true);
+    expect(() => assertQueryableGeoBounds(bounds)).not.toThrow();
+  });
+
+  it.each([
+    { minLat: -90, maxLat: 90, minLng: -180, maxLng: 180 },
+    { minLat: 50, maxLat: 51.5001, minLng: -2, maxLng: -1 },
+    { minLat: 50, maxLat: 51, minLng: -2, maxLng: 0.1001 },
+    { minLat: 0, maxLat: 1, minLng: 179, maxLng: -178.8 },
+  ])("rejects coordinate-valid but over-wide server bounds: %s", (bounds) => {
+    expect(isGeoBounds(bounds)).toBe(true);
+    expect(isGeoBoundsQueryable(bounds)).toBe(false);
+    expect(() => assertQueryableGeoBounds(bounds)).toThrow(
+      "Geographic viewport exceeds the maximum queryable bounds.",
+    );
+  });
+
+  it("correctly measures a narrow antimeridian-crossing query", () => {
+    const bounds = { minLat: -0.5, maxLat: 0.5, minLng: 179, maxLng: -179.5 };
+    expect(isGeoBoundsQueryable(bounds)).toBe(true);
+    expect(() => assertQueryableGeoBounds(bounds)).not.toThrow();
   });
 
   it("rejects non-finite or impossible map viewport values", () => {
