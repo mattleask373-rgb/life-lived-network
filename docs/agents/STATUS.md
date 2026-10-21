@@ -1,11 +1,11 @@
-# Agent System Status — 2026-10-20 (global integration phase)
+# Agent System Status — 2026-10-21 (Grok redesign integration / global integration phase)
 
 ## Canonical baseline
 
 - Repository: mattleask373-rgb/life-lived-network
-- Current main SHA checked via GitHub: 14e409e90a027305902f381de3d0a9fbd912dc71
-- Latest main commit message: “Applied Grok redesign to home” (Lovable sync commit).
-- The repository branch API reports main as unprotected, with required status checks disabled. This is a release-process risk; propose branch protection/required checks for human approval, but do not change settings autonomously.
+- Current main SHA checked via GitHub: `30c2877f93ee0218e7fee5e365ee55101f8b3afd` (current as of the latest audit on 2026-10-21).
+- Latest main commit: “Enhanced picker UX and checks” with a Lovable edit ID. Three concurrent commits since `006a98c...` update `src/components/place-picker.tsx` and `src/components/place-search.tsx`.
+- A prior repository audit reported main unprotected and required checks disabled. Current protection settings have not been independently re-read through this connector; treat enforcement as unverified until a repository administrator confirms current rules and required checks. The editor's configured Lovable sync target also remains unverified; the Lovable project snapshot now matches this main SHA, but this does not prove its settings. Confirm the editor destination is a non-main branch before further editor edits.
 - No autonomous merge/deploy is authorised. Production data, schema, RLS/grants, secrets and live source activation remain human-gated.
 
 ## Foundation confirmed on main
@@ -25,14 +25,21 @@
 - The Grok-inspired visual direction is being implemented in the canonical application; do not rebuild a second frontend or restore old branches wholesale.
 - Current main includes the Grok-inspired home redesign. Extend the current component system surface-by-surface.
 - Lovable remains an editing/sync path, not authority for domain contracts. GitHub main, reviewed changes and tests are the integration source of truth.
-- Entry-card keyboard/accessibility fix remains draft PR #193. Automated CI from an earlier head does not replace exact-head Verify or manual 375px/desktop, keyboard and screen-reader checks.
-- The detail/map and traveller UI work is split across stacked branches; reconcile the base and shared files before integration.
+- The current integration candidate is draft PR #211 (`integration/grok-redesign-ui-current-main-2026-10-21`, head `023eac1cc6789db783836443c3bb9041a780a8e0`, originally based on `006a98c...`). Exact-head Verify passed in [run #39519544983](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39519544983). It is three commits behind current main and still needs manual visual, keyboard, screen-reader and photo QA.
+- Draft PR #216 (`integration/grok-map-list-sync-2026-10-21`, head `83434f54c2bdbc0c4830803740d12750271479c1`) stacks on #211. Exact-head Verify passed in [run #39520456514](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39520456514): 46 test files / 347 tests, lint 0 errors / 7 warnings, production build succeeded. It pairs in-view listings with the existing `LivingMap`, keeps unpinned items in the list, and clearly labels the broader mode “Show all loaded records.” Manual QA remains.
+- Draft PR #213 (`integration/grok-traveller-current-main-2026-10-21-v2`, head `ed04b8c3778b87b60739625043033f5fd1e84d0f`) also stacks on #211; exact-head Verify passed in [run #39519664036](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39519664036). It changes Journey and Road Trip surfaces only; manual QA remains.
+- PR #212 is the earlier Journey/Road Trip branch with a recorded Prettier/lint failure [run #39519498330](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39519498330); tests/build were skipped. Treat it as superseded by #213 unless a human chooses otherwise.
+- PR #210 is the open documentation-only handoff draft. It now contains a parity matrix, branch/CI status and source-provenance caveats; it is based on `006a98c...` and needs to be reconciled before any human merge.
 
 ## Active integration queue (snapshot; verify each head before acting)
 
 ### Design / accessibility
-- #193 — EntryCard accessibility; base is current main, draft. Exact-head Verify and manual accessibility QA required.
-- #195 — Grok detail/map controls; #201 is stacked on its branch. Confirm #195's latest status/head before using it as an integration base.
+- #211 — current-main Grok design foundation candidate (parent PR; draft, exact-head Verify passed, manual QA pending).
+- #216 — map/list synchronization dependent on #211 (draft, exact-head Verify passed; manual QA pending).
+- #213 — Journey/Road Trip styling dependent on #211 (draft, exact-head Verify passed; manual QA pending).
+- #212 — previous Journey/Road Trip candidate with lint failure; superseded by #213 for current planning.
+- #210 — shared redesign handoff / parity matrix (documentation-only draft).
+- The PR branches are based on `006a98c...` / #211's head and current main advanced to `30c2877...`; current files do not overlap the three main-side PlacePicker/PlaceSearch commits, but each PR must be rechecked/rebased/retargeted and exact-head Verify rerun as the parent merges.
 
 ### WorkOpportunity / ingestion
 - #203 — reviewed WorkOpportunity contract ported onto current main; current-main base, draft. Candidate contract branch.
@@ -59,12 +66,12 @@
 
 ## Next actions
 
-1. Reconcile one design/accessibility chain against current main; exact-head CI plus manual visual/keyboard/screen-reader checks.
-2. Choose one WorkOpportunity contract branch (#203 is the current-main candidate), then one downstream staging/surface chain; mark duplicate alternatives superseded.
-3. Reconcile the indexability gate so locality/service metadata and sitemap enumeration use one explainable policy. Verify empty/demo-only pages remain noindex and absent from sitemaps.
-4. Keep source ingestion fixture-first and staged; rights, credentials, country coverage and publication remain human gates.
-5. Define and test the read-only assistant context boundary before implementing its UI or public model endpoint.
-6. Decide branch protection and required CI checks for main; no repository settings change made by this update.
+1. Confirm the actual Lovable Project Settings → Git sync destination is a non-main branch, and have an administrator confirm enforced main protection / required checks. Do not infer either setting from matching SHAs.
+2. Review #211 and complete manual visual, keyboard, screen-reader and photo QA. Human approves/merges it only through the repository's controls; then reconcile #216 and #213 one at a time onto current main and rerun exact-head Verify.
+3. Obtain the reported original `grok-workspace.zip` (reported SHA-256 `6eae21ffddcb1cd1b62025c416cd979ae2fa500321fce83b158b870c838c72a6`, not independently verified in this environment) or durable screens/source. Record a manifest before claiming full redesign parity.
+4. Choose one WorkOpportunity contract branch (#203 is the current-main candidate), then one downstream staging/surface chain; mark duplicate alternatives superseded.
+5. Reconcile the indexability gate so locality/service metadata and sitemap enumeration use one explainable policy. Verify empty/demo-only pages remain noindex and absent from sitemaps.
+6. Keep source ingestion fixture-first; rights, credentials, country coverage, production access and publication remain human gates. Define/read-only assistant evaluation before any public endpoint.
 
 ## Canonical invariants
 
