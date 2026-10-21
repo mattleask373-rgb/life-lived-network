@@ -112,6 +112,34 @@ const workOpportunitySchema = z
       });
     }
 
+    if (value.compensation.status === "explicitly_unpaid") {
+      if (value.engagementKind === "paid_work") {
+        context.addIssue({
+          code: "custom",
+          path: ["engagementKind"],
+          message: "Paid work cannot have explicitly unpaid compensation",
+        });
+      } else if (
+        value.compensation.classification === "volunteering" &&
+        value.engagementKind !== "volunteering"
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["engagementKind"],
+          message: "Explicitly unpaid volunteering must use the volunteering engagement kind",
+        });
+      } else if (
+        value.compensation.classification === "training" &&
+        value.engagementKind !== "unpaid_training"
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["engagementKind"],
+          message: "Explicitly unpaid training must use the unpaid_training engagement kind",
+        });
+      }
+    }
+
     if (value.publicationStatus === "published") {
       if (value.engagementKind === "not_stated") {
         context.addIssue({
