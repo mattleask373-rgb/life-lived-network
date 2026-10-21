@@ -1,11 +1,10 @@
 import type { PlaceIndex } from "./places";
-import { localityPath } from "./locality-path";
-import { SERVICE_CATEGORIES } from "./service-taxonomy";
-import { servicePageIndexable, servicePageListings, servicePagePath } from "./service-page";
+import { categoriesOf } from "./service-taxonomy";
+import { isService } from "./services";
+import { servicePagePath } from "./service-page";
 import type { WorldEntry } from "./world-data";
 import {
   LOCALITY_FILTER_CAP,
-  LOCALITY_SITEMAP_LISTING_SCAN_LIMIT,
   LOCALITY_SITEMAP_PAGE_SIZE,
   LOCALITY_SITEMAP_PLACE_LIMIT,
   type PublicListingSitemapRow,
@@ -72,11 +71,22 @@ export function indexableServicePaths(
       .map((row) => entriesById.get(row.id))
       .filter((entry): entry is WorldEntry => entry !== undefined);
 
-    for (const category of SERVICE_CATEGORIES) {
-      const listings = servicePageListings(entries, category.slug);
-      if (listings && servicePageIndexable(listings)) {
-        candidates.push(servicePagePath(canonical, category));
+    // Match each rendered entry once, then publish only categories with at
+    // least one current, genuine service. This is equivalent to the page
+    // servicePageListings() + servicePageIndexable() gates without repeating
+    // a full taxonomy scan for every category on every locality.
+    const eligibleCategories = new Map<string, (typeof entries)[number]>();
+    for (const entry of entries) {
+      if (entry.demonstration || entry.quality === "expired" || entry.cancellation || !isService(entry)) {
+        continue;
       }
+      for (const match of categoriesOf(entry)) {
+        eligibleCategories.set(match.category.slug, entry);
+      }
+    }
+    for (const categorySlug of eligibleCategories.keys()) {
+      const category = categoriesOf(entries.find((entry) => eligibleCategories.get(categorySlug) === entry)!)[0]?.category;
+      if (category) candidates.push(servicePagePath(canonical, category));
     }
   }
 
