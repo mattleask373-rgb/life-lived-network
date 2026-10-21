@@ -12,7 +12,9 @@ const place = {
   blurb: "A factual description of this locality.",
 };
 
-function entry(overrides: Partial<WorldEntry> = {}): WorldEntry {
+function entry(
+  overrides: Partial<WorldEntry> & { lastCheckedAt?: string | null } = {},
+): WorldEntry & { lastCheckedAt?: string | null } {
   return {
     id: "entry-1",
     placeId: place.id,
@@ -55,6 +57,39 @@ describe("service page indexability", () => {
       reasons: [],
       sitemapEligible: true,
     });
+  });
+
+  it("keeps sourced service pages out of search until freshness evidence is explicit", () => {
+    const missingFreshness = servicePageListings(
+      [
+        entry({
+          origin: "source",
+          sourceName: "Public source",
+          sourceUrl: "https://example.org/listing",
+          quality: "verified",
+        }),
+      ],
+      "gardening",
+    )!;
+    expect(
+      evaluateServicePageIndexability({ place, listings: missingFreshness, now }).sitemapEligible,
+    ).toBe(false);
+
+    const withFreshness = servicePageListings(
+      [
+        entry({
+          origin: "source",
+          sourceName: "Public source",
+          sourceUrl: "https://example.org/listing",
+          quality: "recently updated",
+          lastCheckedAt: new Date(now - 60_000).toISOString(),
+        }),
+      ],
+      "gardening",
+    )!;
+    expect(
+      evaluateServicePageIndexability({ place, listings: withFreshness, now }).sitemapEligible,
+    ).toBe(true);
   });
 
   it("keeps empty and demo-only service pages out of search", () => {
