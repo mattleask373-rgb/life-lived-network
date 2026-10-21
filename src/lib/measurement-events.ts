@@ -15,7 +15,8 @@ export const MEASUREMENT_SCHEMA_VERSION = 1 as const;
 
 export type EntryPoint = "home" | "header" | "locality" | "direct";
 export type QueryLengthBucket = "empty" | "1_3" | "4_7" | "8_15" | "16_plus";
-export type LocalityKind = "country" | "region" | "county" | "city" | "town" | "village" | "neighbourhood" | "unknown";
+export type LocalityKind =
+  "country" | "region" | "county" | "city" | "town" | "village" | "neighbourhood" | "unknown";
 export type ConfidenceBucket = "high" | "medium" | "low" | "unknown";
 export type IntentFamily =
   | "whats_on"
@@ -29,12 +30,7 @@ export type IntentFamily =
   | "unknown";
 export type IntentCertainty = "clear" | "likely" | "unclear";
 export type ResultCountBucket =
-  | "zero"
-  | "one"
-  | "two"
-  | "three_to_five"
-  | "six_to_ten"
-  | "eleven_plus";
+  "zero" | "one" | "two" | "three_to_five" | "six_to_ten" | "eleven_plus";
 export type FreshnessState = "current" | "aging" | "unknown" | "mixed";
 export type QuietReason =
   | "no_verified_results"
@@ -77,19 +73,9 @@ export type UsefulOutcome =
   | "contribution_received"
   | "other";
 export type ReportedContentKind =
-  | "profile"
-  | "listing"
-  | "need"
-  | "message"
-  | "external_link"
-  | "other";
+  "profile" | "listing" | "need" | "message" | "external_link" | "other";
 export type ReportCategory =
-  | "spam"
-  | "impersonation"
-  | "unsafe"
-  | "incorrect"
-  | "harassment"
-  | "other";
+  "spam" | "impersonation" | "unsafe" | "incorrect" | "harassment" | "other";
 export type ProviderResponse = "responded" | "declined" | "no_response" | "unknown";
 
 interface MeasurementBase {
