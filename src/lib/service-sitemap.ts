@@ -68,6 +68,9 @@ export function indexableServicePaths(
         ? globalFirstPage
         : (rowsByPlace.get(place.id) ?? []);
     const entries = pageRows
+      // Keep raw page positions stable; unverified imported rows consume a slot
+      // but do not count as evidence for an indexable service URL.
+      .filter((row) => row.sourceLifecycleEligible)
       .map((row) => entriesById.get(row.id))
       .filter((entry): entry is WorldEntry => entry !== undefined);
 
