@@ -59,7 +59,9 @@ describe("service page indexability", () => {
 
   it("keeps empty and demo-only service pages out of search", () => {
     const empty = servicePageListings([], "gardening")!;
-    expect(evaluateServicePageIndexability({ place, listings: empty, now }).sitemapEligible).toBe(false);
+    expect(
+      evaluateServicePageIndexability({ place, listings: empty, now }).sitemapEligible,
+    ).toBe(false);
 
     const demos = servicePageListings([entry({ demonstration: true })], "gardening")!;
     const decision = evaluateServicePageIndexability({ place, listings: demos, now });
@@ -69,7 +71,9 @@ describe("service page indexability", () => {
 
   it("blocks stale records and sourced entries without a usable citation URL", () => {
     const stale = servicePageListings([entry({ quality: "may have changed" })], "gardening")!;
-    expect(evaluateServicePageIndexability({ place, listings: stale, now }).sitemapEligible).toBe(false);
+    expect(
+      evaluateServicePageIndexability({ place, listings: stale, now }).sitemapEligible,
+    ).toBe(false);
 
     const missingSource = servicePageListings([
       entry({ origin: "source", sourceName: "External source", sourceUrl: "javascript:alert(1)" }),
