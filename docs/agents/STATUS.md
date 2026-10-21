@@ -20,43 +20,29 @@
 - A disabled “Ask about this place” placeholder and an always-unavailable state contract now exist on the locality page. They make no model call and carry no answer; no active read-only assistant endpoint is confirmed. Grounded matching is not an LLM assistant.
 - Australia is not live. No rights-cleared pilot inventory should be implied by staging work.
 
-## Design direction
+## Design direction and active integration queue — 21 October 2026, 00:30 UTC
 
-- The Grok-inspired visual direction is being implemented in the canonical application; do not rebuild a second frontend or restore old branches wholesale.
-- Current main includes the Grok-inspired home redesign. Extend the current component system surface-by-surface.
-- Lovable remains an editing/sync path, not authority for domain contracts. GitHub main, reviewed changes and tests are the integration source of truth.
-- Draft PR #211 (`integration/grok-redesign-ui-current-main-2026-10-21`, latest head `e7b732d25cd951f3ab3c1007257442563e361336`) is the design/accessibility foundation. Its newest commit adds a source-checkpoint note only; exact-head Verify passed in [run #39520719116](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39520719116). It remains based on older `006a98c...` ancestry and needs reconciliation against current main `8d792479...`, plus manual visual, keyboard, screen-reader and photo QA.
-- Draft PR #220 (`integration/grok-map-list-sync-main-2026-10-21`, head `e8fd148fa0223707fd317b80b19a47944c0bf1a2`) was based on `30c2877...`; exact-head Verify passed in [run #39520945717](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39520945717): 45 test files / 342 tests, lint 0 errors / 7 warnings, production build succeeded. Main subsequently advanced three commits touching only AskThisPlace/locality paths, not the changed home route/helper/test. It remains draft and GitHub reports mergeable, but bring the PR merge result/current head up to date and rerun exact-head Verify before review/merge.
-- PR #216 is closed unmerged as superseded. Its prior Verify passed, but it was stacked on a moving parent; use #220 only as the map/list review target.
-- Draft PR #213 (`integration/grok-traveller-current-main-2026-10-21-v2`, head `ed04b8c3778b87b60739625043033f5fd1e84d0f`) covers Journey/Road Trip only. Its exact-head Verify passed in [run #39519664036](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39519664036) on the previous parent head; retarget/reconcile and rerun Verify after #211's current parent state is settled. Manual QA remains.
-- PR #212 is the historical Journey/Road Trip branch with a Prettier/lint failure in [run #39519498330](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39519498330); tests/build were skipped. Treat it as superseded by #213.
-- PR #210 is the open documentation-only handoff draft. It now includes the parity matrix, current PR/CI status, source provenance caveat and this status snapshot. This docs PR is based on the older `006a98c...` main ancestor and requires review/base reconciliation before any human merge.
+This is the latest verified cross-agent snapshot from GitHub. The branches below remain review candidates, not production baselines.
 
-## Active integration queue (snapshot; verify each head before acting)
+### Design and accessibility
+- **PR #211 — Grok foundation:** open draft at head b492c262d6ea73f0f2028300db96c41ee0b6c289. A non-rewriting merge commit brought current main 8d79247991187bf64813cf72e3ec75aeb508e2e9 into the candidate as first parent and retained prior head e7b732d25cd951f3ab3c1007257442563e361336 as second parent. Current main compared with the candidate is 24 commits ahead / 0 behind; the review diff remains the same 13 design/reference files with no overlap with the six current-main changed paths. Exact-head Verify passed in [run #39521447625](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39521447625) and [run #39521441841](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39521441841). Still draft; human visual, keyboard, screen-reader, photo-provenance and responsive QA are outstanding.
+- **PR #213 — Journey / Road Trip:** open draft at head a96a8f491db47328b886bfde97aff3704afdfe14. Updated onto the refreshed #211 parent without overlapping its three route/test files. Exact-head Verify passed in [run #39521649010](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39521649010) and [run #39521643610](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39521643610). It remains dependent on #211 and must not be treated as accepted until its parent receives human review.
+- **PR #220 — map/list synchronization:** open draft at head 6a50f7d3d390c7e3af33103accf65fc0f340febe. Current main was brought in as first parent; previous head e8fd148fa0223707fd317b80b19a47944c0bf1a2 remains in history. The diff remains three files: src/routes/index.tsx, src/lib/map-list-sync.ts and its tests; current-main changed paths do not overlap. Exact-head Verify passed in [run #39521546086](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39521546086) and [run #39521540270](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39521540270). This candidate is independent of #211. Mobile/tablet/desktop and keyboard QA remain.
+- **PR #216:** closed unmerged and superseded; do not treat it as integrated.
+- **PR #221 — source-refresh health:** open draft at head 7352f86d464da447a6ba0b579bf98f6cd7ddc338, based on current main 8d79247991187bf64813cf72e3ec75aeb508e2e9. Adds deterministic source connection health labels to the authenticated admin/moderator-only /sources panel, with unit tests. Exact-head Verify passed in [run #39521313627](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39521313627) and [run #39521311442](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39521311442). Browser/accessibility QA and human review remain; it is operational status, not a live-feed scheduler or public feature.
+- **PR #210 — shared handoff:** open draft documentation PR. Its branch has now been refreshed onto current main via merge commit 51fe0467e680742c868a360baf94e46c9a2d537a; this snapshot is being updated in that branch, not written to main.
+- **Original Grok source:** the reported grok-workspace.zip is not present as bytes in this repository. The SHA-256 in prior handoff notes is reported provenance only and has not been independently recalculated. Complete visual parity cannot be claimed until the source archive/screenshots are available.
+- **Latest main addition:** commit 8d79247991187bf64813cf72e3ec75aeb508e2e9 adds an “Ask about this place” UI placeholder. The component is disabled and always returns an unavailable state; it makes no model call and is not a functioning public assistant.
 
-### Design / accessibility
-- #211 — Grok design/accessibility foundation, draft; latest head Verify passed, old base ancestry, manual QA pending.
-- #220 — map/list synchronization directly based on current main; draft, exact-head Verify passed, manual QA pending.
-- #216 — closed unmerged as superseded by #220.
-- #213 — Journey/Road Trip styling; draft, Verify passed before the latest #211 parent commit; reconcile and rerun Verify.
-- #212 — previous Journey/Road Trip candidate with lint failure; superseded by #213.
-- #210 — shared redesign handoff and status snapshot; documentation-only draft.
-- The old #211/#213 stack and documentation PR #210 still descend from `006a98c...` while current main is `30c2877...`; the three main-side commits touch PlacePicker/PlaceSearch only. #220 is based directly on current main and has no #211 dependency. Do not retarget stacked PRs blindly; reconcile their base and rerun exact-head Verify.
+### Work opportunities, ingestion and SEO
+- There are competing open draft chains. The newer contract candidate is **#215** (head 5963b51f46a9c7e55f76950cdc7abe900bed2d25) but its recorded main base is still 006a98c64a52d5bd6028ac5f9457acd31a72746a. **#223** stages Adzuna on that #215 branch. **#218** is an older work-opportunity surfaces chain based on contract head b28bc8d5b4f4075058e2a87b467b2ac1befbf68f; **#222** is another SEO chain based on integration/work-opportunity-surfaces-current-main-v2. Older #203/#204/#206 and #199/#200/#202 also remain open but are based on older commits. Do not combine these chains blindly: a human integration owner must choose one, reconcile its base with current main, and rerun exact-head Verify.
+- The older Adzuna bridge #217 remains on contract head b28bc8d5b4f4075058e2a87b467b2ac1befbf68f and is not interchangeable with #223. All ingestion work remains staging-only; no feed activation, credentials or publication is implied.
+- Live SEO responses for robots.txt and sitemap.xml were not revalidated in this execution. Do not claim a hosted fix without a timestamped check of the deployed responses after an approved release.
 
-### WorkOpportunity / ingestion
-- #203 — reviewed WorkOpportunity contract ported onto current main; current-main base, draft. Candidate contract branch.
-- #204 — Adzuna staging bridge stacked on #203. Staging only; no live feed or credentials.
-- #206 — work-opportunity surfaces stacked on #203. Review against the contract and the canonical findSupply() path.
-- #197 and #205, plus #199, are competing/older work-opportunity branches. Do not merge multiple implementations of the same contract or surface; compare unique changes and choose one chain.
-- #175 remains a non-writing place-staging validator branch on an older base. Reconcile only if the staging validator is still needed; do not seed/publish Australian inventory as a side effect.
-
-### SEO / conversion
-- #200 is stacked on #199, and #202 is stacked on #200. This is a competing older chain relative to current-main route work and must be reconciled before integration.
-- #173/#174/#176 were closed without merge after becoming stale; treat them as historical source material, not current merge candidates.
-- #178 is a draft integration audit. Keep its findings useful, but do not assume its old base represents current main.
-
-### Security
-- #194 is a documentation-only least-privilege ACL proposal. It is not authorisation to change grants or RLS. The target Supabase project identity and effective access still need human verification.
+### Governance and unresolved blockers
+- The repository ruleset “living World - protect main” (#24946178) currently reports enforcement disabled. A repository administrator must enable and verify the expected PR, review and required-check controls through the approved human process.
+- Lovable’s Project Settings → Git destination is still unverified. The connected project history may sync commits to its selected branch; do not use Lovable edit/build mode until an administrator confirms the selected sync target is not main.
+- No merge or deployment was performed. Production data, schema/RLS/grants, credentials, live source activation, and public AI activation remain human-gated.
 
 ## AI and global-scale direction
 
@@ -68,12 +54,13 @@
 
 ## Next actions
 
-1. Confirm the actual Lovable Project Settings → Git sync destination is a non-main branch, and have an administrator confirm enforced main protection / required checks. Matching project/main SHAs do not prove the sync setting.
-2. Review #211 and complete manual visual, keyboard, screen-reader and photo QA. Reconcile its now-multiple-commit-behind main ancestry, then a human may approve/merge only through repository controls.
-3. Review #220 with manual responsive/keyboard/screen-reader QA at mobile/tablet/desktop widths. Its current-main exact-head Verify passes and it has no #211 dependency; do not treat CI as merge approval. #216 is closed as superseded.
-4. Reconcile #213 to the current #211 parent after that parent is accepted and rerun exact-head Verify; do not edit Journey/Road Trip files in parallel.
-5. Obtain the reported original `grok-workspace.zip` (reported SHA-256 `6eae21ffddcb1cd1b62025c416cd979ae2fa500321fce83b158b870c838c72a6`, not independently verified in this environment) or an accessible source/screenshots. Record a manifest before claiming complete design parity.
-6. Choose one WorkOpportunity contract branch (#203 remains the current-main candidate), align locality/service metadata with the sitemap indexability gate, and keep ingestion fixture-first. Rights, credentials, country coverage, production access and publication remain human gates. Design any read-only assistant context/evaluation before a public endpoint.
+1. **Repository administrator:** verify and enable main branch protections / required PR reviews and checks; confirm the Lovable Project Settings → Git sync target is a non-main branch. Ruleset #24946178 currently reports enforcement disabled.
+2. **Human design reviewer:** review #211 (Verify green on exact head b492c262d6ea73f0f2028300db96c41ee0) and manually inspect 375px/390px mobile, 768px tablet, 1280px/1440px desktop, keyboard/focus, screen reader, contrast, and sourced-photo states before deciding on approval/merge.
+3. **Frontend reviewer:** review #220 (Verify green on exact head 6a50f7d3d390c7e3af33103accf65fc0f340febe) at viewport edges and on all required widths; check card-to-pin and pin-to-detail synchronization and unpinned records. It does not depend on #211.
+4. **Frontend reviewer:** review #213 (Verify green on exact head a96a8f491db47328b886bfde97aff3704afdfe14) against the refreshed #211 parent and test Journey/Road Trip interactions. It stays draft until its parent is human-approved.
+5. **Ingestion/reliability reviewer:** review #221, verify the source-health labels describe source connection health only, and manually check the internal reviewer-only /sources panel. No public “real-time” guarantees or new polling were added.
+6. **AI/security owner:** continue Issue #209 only after server-side eligibility evidence, citations, prompt-injection tests, and approved rate/cost controls exist. “Ask about this place” on main is a disabled placeholder, not an active assistant.
+7. **Design-source owner:** obtain the original Grok ZIP or accessible screenshots, record a verified manifest/checksum, and only then close the remaining screen-parity gaps.
 
 ## Canonical invariants
 
