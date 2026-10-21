@@ -26,7 +26,7 @@ describe("first-party service-offer contract", () => {
     });
   });
 
-  it("normalizes valid public http/https booking links", () => {
+  it("normalizes valid public HTTP/HTTPS booking links", () => {
     expect(
       parseServiceOfferDraft(
         input({
@@ -38,22 +38,24 @@ describe("first-party service-offer contract", () => {
   });
 
   it("requires the category to be selected from the shared taxonomy", () => {
-    expect(() => parseServiceOfferDraft(input({ serviceCategory: "invented-category" }))).toThrow(
-      ServiceOfferValidationError,
-    );
-    expect(() => parseServiceOfferDraft(input({ serviceCategory: "short-term-work" }))).toThrow(
-      /not a job category/i,
-    );
+    expect(() =>
+      parseServiceOfferDraft(input({ serviceCategory: "invented-category" })),
+    ).toThrow(ServiceOfferValidationError);
+    expect(() =>
+      parseServiceOfferDraft(input({ serviceCategory: "short-term-work" })),
+    ).toThrow(/not a job category/i);
   });
 
-  it.each(["javascript:alert(1)", "data:text/html,hi", "https://user:pass@provider.example/book", "not a URL"])(
-    "rejects unsafe booking link %s",
-    (bookingUrl) => {
-      expect(() =>
-        parseServiceOfferDraft(input({ bookingState: "external", bookingUrl })),
-      ).toThrow(/valid public http or https/i);
-    },
-  );
+  it.each([
+    "javascript:alert(1)",
+    "data:text/html,hi",
+    "https://user:pass@provider.example/book",
+    "not a URL",
+  ])("rejects unsafe booking link %s", (bookingUrl) => {
+    expect(() =>
+      parseServiceOfferDraft(input({ bookingState: "external", bookingUrl })),
+    ).toThrow(/valid public http or https/i);
+  });
 
   it("requires a link only for explicit bookable or external-booking states", () => {
     expect(() =>
@@ -63,21 +65,25 @@ describe("first-party service-offer contract", () => {
       parseServiceOfferDraft(input({ bookingState: "bookable", bookingUrl: "" })),
     ).toThrow(/booking link/i);
     expect(() =>
-      parseServiceOfferDraft(input({ bookingState: "enquire", bookingUrl: "https://provider.example" })),
+      parseServiceOfferDraft(
+        input({ bookingState: "enquire", bookingUrl: "https://provider.example" }),
+      ),
     ).toThrow(/before adding/i);
   });
 
   it("keeps optional provider details bounded and trims them", () => {
-    expect(parseServiceOfferDraft(input({ organisation: "  ", providerNote: "  " }))).toMatchObject({
+    expect(
+      parseServiceOfferDraft(input({ organisation: "  ", providerNote: "  " })),
+    ).toMatchObject({
       organisation: "",
       provider_note: "",
     });
-    expect(() => parseServiceOfferDraft(input({ organisation: "x".repeat(121) }))).toThrow(
-      /120 characters or fewer/i,
-    );
-    expect(() => parseServiceOfferDraft(input({ providerNote: "x".repeat(1001) }))).toThrow(
-      /1000 characters or fewer/i,
-    );
+    expect(() =>
+      parseServiceOfferDraft(input({ organisation: "x".repeat(121) })),
+    ).toThrow(/120 characters or fewer/i);
+    expect(() =>
+      parseServiceOfferDraft(input({ providerNote: "x".repeat(1001) })),
+    ).toThrow(/1000 characters or fewer/i);
   });
 
   it.each(["", "-1", "NaN", "Infinity"])(
