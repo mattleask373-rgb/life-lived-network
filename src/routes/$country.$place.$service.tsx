@@ -24,9 +24,9 @@ import { fetchWorldEntries } from "@/lib/listings";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
 import { KIND_LABEL } from "@/lib/places";
 import { privatePage, publicPage } from "@/lib/seo";
+import { evaluateServiceLocalityPage } from "@/lib/service-locality-indexability";
 import {
   servicePageCopy,
-  servicePageIndexable,
   servicePageListings,
   servicePagePath,
 } from "@/lib/service-page";
@@ -51,12 +51,16 @@ export const Route = createFileRoute("/$country/$place/$service")({
   },
   head: ({ loaderData }) => {
     if (!loaderData) return privatePage({ path: "", title: "A service", description: "" });
-    const { geography, listings } = loaderData;
+    const { geography, entries, listings } = loaderData;
     const path = servicePagePath(geography.place, listings.category);
     const copy = servicePageCopy(geography.place.name, listings);
-    // Until a page has something genuinely useful on it, it is not offered to
-    // search engines. It still exists for anybody who arrives.
-    return servicePageIndexable(listings)
+    // Metadata and sitemap enumeration share the same fail-closed evidence gate.
+    const indexability = evaluateServiceLocalityPage({
+      place: geography.place,
+      serviceSlug: listings.category.slug,
+      entries,
+    });
+    return indexability.status === "INDEXABLE"
       ? publicPage({ path, ...copy })
       : privatePage({ path, ...copy });
   },
