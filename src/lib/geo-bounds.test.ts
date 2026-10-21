@@ -69,15 +69,17 @@ describe("geographic viewport bounds", () => {
 
   it("allows viewport queries only for small, zoomed-in rectangles", () => {
     const compactView = { lat: 52.4, lng: -1.9, spanLat: 0.8, spanLng: 1.2 };
+    const maximumView = { lat: 0, lng: 0, spanLat: 1.5, spanLng: 1.5 };
     expect(isViewportQueryAllowed(compactView)).toBe(true);
-    expect(isViewportQueryAllowed({ ...compactView, spanLat: 1.6 })).toBe(false);
-    expect(isViewportQueryAllowed({ ...compactView, spanLng: 1.6 })).toBe(false);
+    expect(isViewportQueryAllowed(maximumView)).toBe(true);
+    expect(isViewportQueryAllowed({ ...maximumView, spanLat: 1.5000001 })).toBe(false);
+    expect(isViewportQueryAllowed({ ...maximumView, spanLng: 1.5000001 })).toBe(false);
     expect(isViewportQueryAllowed({ ...compactView, spanLat: Number.NaN })).toBe(false);
   });
 
   it("accepts a narrow antimeridian query but rejects a broad wrapped interval", () => {
     expect(() =>
-      assertViewportQueryBounds({ minLat: -0.2, maxLat: 0.2, minLng: 179.7, maxLng: -179.7 }),
+      assertViewportQueryBounds({ minLat: -0.75, maxLat: 0.75, minLng: 179.25, maxLng: -179.25 }),
     ).not.toThrow();
 
     expect(() =>
