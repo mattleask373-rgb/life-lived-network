@@ -176,9 +176,7 @@ function Sources() {
                 </div>
               </dl>
               <p className="mt-3 text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">
-                  Refresh health: {health.label}.
-                </span>{" "}
+                <span className="font-medium text-foreground">Refresh health: {health.label}.</span>{" "}
                 {health.explanation}
               </p>
               {source.lastOutcome ? (
