@@ -53,11 +53,6 @@ async function readWorld(
     // the request itself the bottleneck; the browser only says where it is.
     let insideIds = context.placeIds ?? [];
     let insideSlugs = context.placeSlugs ?? [];
-    if (!context.bounds) {
-      // A selected locality must never silently become a global listing query
-      // when its descendant set exceeds PostgREST's practical filter budget.
-      assertLocalityFilterBounded(insideIds);
-    }
     if (!context.bounds && context.placeId && !insideIds.length) {
       const { loadPlaceIndex } = await import("./place-index.server");
       const { descendantIdsOf } = await import("./places");
@@ -66,6 +61,12 @@ async function readWorld(
       insideSlugs = insideIds
         .map((id) => index.byId.get(id)?.slug)
         .filter((slug): slug is string => Boolean(slug));
+    }
+
+    if (!context.bounds) {
+      // Check after canonical hierarchy expansion: large parents may exceed the
+      // cap even when the client did not supply descendant IDs.
+      assertLocalityFilterBounded(insideIds);
     }
 
     let query = supabase
