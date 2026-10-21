@@ -14,11 +14,15 @@ import { ThreeHours } from "@/components/three-hours";
 import { DoSomethingToday } from "@/components/do-something-today";
 import { LayerIcon } from "@/components/layer-icon";
 import { useLifeList } from "@/hooks/use-life-list";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { fetchWorld, fetchWorldEntries } from "@/lib/listings";
 import { MAX_LIMIT } from "@/lib/data/contract";
-import { geoBoundsForViewport, type GeoBounds } from "@/lib/geo-bounds";
+import {
+  geoBoundsForViewport,
+  isViewportQueryable,
+  type GeoBounds,
+} from "@/lib/geo-bounds";
 import { densityOf } from "@/lib/trust";
 import { getOpenNeeds } from "@/lib/needs.functions";
 import { PLACE_FALLBACK } from "@/lib/places";
@@ -52,6 +56,7 @@ function Home() {
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle, ids } = useLifeList();
 
+  const queryClient = useQueryClient();
   const { place, ancestors, setPlaceSlug, loading, index } = useWorldContext();
   const [view, setView] = useState<MapView | null>(null);
   const [viewportBounds, setViewportBounds] = useState<GeoBounds | null>(null);
@@ -60,15 +65,20 @@ function Home() {
   // Debounce the transient view; a pointer move should not trigger a request.
   // This changes the records shown, never the selected discovery locality.
   useEffect(() => {
+    // Cancel the previous rectangle as soon as a new pan/zoom begins, instead
+    // of letting obsolete requests compete during the debounce interval.
+    void queryClient.cancelQueries({ queryKey: ["world-viewport"] });
     if (!view) {
       setViewportBounds(null);
       return;
     }
     const timer = window.setTimeout(() => {
-      setViewportBounds(geoBoundsForViewport(view));
+      setViewportBounds(
+        isViewportQueryable(view) ? geoBoundsForViewport(view) : null,
+      );
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [view]);
+  }, [view, queryClient]);
   const exploredPlace = exploredSlug && index ? index.bySlug.get(exploredSlug) : null;
   const discoveryPlace = exploredPlace ?? place;
 
@@ -86,14 +96,15 @@ function Home() {
     data: viewportPage,
     isFetching: viewportFetching,
     isError: viewportError,
+    isRefetchError: viewportRefreshError,
     refetch: refetchViewport,
   } = useQuery({
     queryKey: ["world-viewport", viewportBounds],
     enabled: Boolean(place && viewportBounds),
     staleTime: 15_000,
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       if (!viewportBounds) throw new Error("Map viewport bounds are required.");
-      return fetchWorld({ bounds: viewportBounds, limit: MAX_LIMIT });
+      return fetchWorld({ bounds: viewportBounds, limit: MAX_LIMIT }, signal);
     },
   });
 
@@ -160,6 +171,8 @@ function Home() {
       : mapPartition.unpinned.length + " unpinned · map view preparing";
   const mapLoading = viewportBounds ? !viewportPage && viewportFetching : worldLoading;
   const mapError = viewportBounds ? viewportError && !viewportPage : worldError;
+  const mapRefreshError = Boolean(viewportBounds && viewportPage && viewportRefreshError);
+  const viewportTooBroad = Boolean(view && !isViewportQueryable(view));
   const refetchMap = viewportBounds ? refetchViewport : refetchWorld;
   const canChangeListScope =
     showAllLoaded ||
@@ -397,6 +410,8 @@ function Home() {
                   onViewChange={setView}
                   loading={mapLoading}
                   error={mapError}
+                  refreshError={mapRefreshError}
+                  viewportTooBroad={viewportTooBroad}
                   onRetry={() => void refetchMap()}
                 />
               </div>
