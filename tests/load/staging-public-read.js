@@ -47,10 +47,10 @@ if (knownProductionHosts.has(hostname)) {
   stop("the known production hostname is blocked.");
 }
 
-const isLocalHost = ["localhost", "127.0.0.1", "::1"].includes(hostname);
+const isLocalHost = ["localhost", "127.0.0.1"].includes(hostname);
 if (targetEnvironment === "local") {
   if (!isLocalHost) {
-    stop("local mode only permits localhost, 127.0.0.1, or ::1.");
+    stop("local mode only permits localhost or 127.0.0.1.");
   }
 } else {
   if (isLocalHost || parsedBaseUrl.protocol !== "https:") {
