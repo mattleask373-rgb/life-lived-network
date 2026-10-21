@@ -15,4 +15,27 @@ describe("detail panel touch targets", () => {
     expect(src).toMatch(/min-h-11 rounded-full px-4 py-2 text-sm transition-colors/);
     expect(src).toMatch(/min-h-11 rounded-full border border-border bg-card px-4 py-2 text-sm/);
   });
+
+  it("keeps map pins and controls comfortably tappable", () => {
+    const src = read("components/living-map.tsx");
+    expect(src).toContain("h-11 w-11 -translate-x-1/2 -translate-y-full");
+    expect(src).toContain(
+      "grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-lift",
+    );
+    expect(src).toContain(
+      'aria-label={centreName ? `Map around ${centreName}` : "Map of recorded places"}',
+    );
+  });
+
+  it("sets the Grok visual type and warm paper/cream/forest palette", () => {
+    const styles = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
+    expect(styles).toContain('--font-sans: "Manrope"');
+    expect(styles).toContain("--paper: #f3f0e8");
+    expect(styles).toContain("--card: #fffcf7");
+    expect(styles).toContain("--primary: #0c6b56");
+    expect(styles).toContain("--sage: #e3f2eb");
+    // Keep the shared shadcn accent semantic as a readable action colour.
+    expect(styles).toContain("--accent: oklch(0.652 0.132 46)");
+    expect(styles).toContain("--accent-foreground: oklch(0.985 0.012 92)");
+  });
 });
