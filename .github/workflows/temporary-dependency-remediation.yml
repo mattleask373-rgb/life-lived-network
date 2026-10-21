@@ -1,0 +1,38 @@
+name: Temporary dependency remediation
+
+on:
+  push:
+    branches:
+      - agent/chatgpt/continuous-security-automation-2026-10-21
+
+permissions:
+  contents: write
+
+jobs:
+  apply-reviewed-range-fixes:
+    if: github.event.head_commit.message == "ci: trigger dependency remediation"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out isolated review branch
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Apply fixes within existing dependency ranges
+        run: bun audit fix
+
+      - name: Commit dependency manifest and lockfile changes to this branch only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json bun.lock
+          if git diff --cached --quiet; then
+            echo "No lockfile or manifest changes were produced."
+            exit 0
+          fi
+          git commit -m "chore(deps): apply audited fixes"
+          git push origin HEAD:${GITHUB_REF_NAME}
