@@ -23,7 +23,7 @@ import { densityOf } from "@/lib/trust";
 import { getOpenNeeds } from "@/lib/needs.functions";
 import { PLACE_FALLBACK } from "@/lib/places";
 import { placeInView, type MapView } from "@/lib/map-view";
-import { entriesForMapList, partitionMapList } from "@/lib/map-list-sync";
+import { entriesForMapList, mergeViewportEntries, partitionMapList } from "@/lib/map-list-sync";
 import { useWorldContext } from "@/lib/world-context";
 import { LocalityQuestions } from "@/components/locality-questions";
 import { WhatsHappening } from "@/components/whats-happening";
@@ -110,25 +110,13 @@ function Home() {
   const placeBlurb = place?.blurb || PLACE_FALLBACK.blurb;
 
   const viewportLoaded = Boolean(viewportBounds && viewportPage);
-  const mapSourceEntries = useMemo(() => {
-    if (!viewportLoaded || !viewportPage) return all;
-
-    // Keep unpinned records in the list, but never assign them guessed points.
-    const unpinned = all.filter(
-      (entry) =>
-        typeof entry.lat !== "number" ||
-        !Number.isFinite(entry.lat) ||
-        entry.lat < -90 ||
-        entry.lat > 90 ||
-        typeof entry.lng !== "number" ||
-        !Number.isFinite(entry.lng) ||
-        entry.lng < -180 ||
-        entry.lng > 180,
-    );
-    const unique = new Map<string, WorldEntry>();
-    for (const entry of [...viewportPage.items, ...unpinned]) unique.set(entry.id, entry);
-    return [...unique.values()];
-  }, [all, viewportLoaded, viewportPage]);
+  const mapSourceEntries = useMemo(
+    () =>
+      viewportLoaded && viewportPage
+        ? mergeViewportEntries(viewportPage.items, all)
+        : all,
+    [all, viewportLoaded, viewportPage],
+  );
 
   const mapBaseFilteredEntries = useMemo(
     () =>
