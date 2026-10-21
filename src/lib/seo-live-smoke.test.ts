@@ -17,7 +17,7 @@ function healthyDocuments(): SeoSmokeDocuments {
   const urls = ["/", "/journey", "/road-trip", "/life-list", "/give", "/make"];
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((path) => `<url><loc>${origin}${path}</loc></url>`).join("\\n")}
+${urls.map((path) => `<url><loc>${origin}${path}</loc></url>`).join("\n")}
 </urlset>`;
   const privatePaths = [
     "/auth",
@@ -37,7 +37,7 @@ ${urls.map((path) => `<url><loc>${origin}${path}</loc></url>`).join("\\n")}
     "Allow: /",
     ...privatePaths.map((path) => `Disallow: ${path}`),
     `Sitemap: ${origin}/sitemap.xml`,
-  ].join("\\n");
+  ].join("\n");
   const homepage = `<!doctype html><html><head>
 <title>Real World Atlas</title>
 <meta name="description" content="Discover useful things in the real world.">
@@ -58,7 +58,7 @@ describe("public SEO live smoke contract", () => {
 
   it("rejects the currently documented platform-default robots and missing XML sitemap", () => {
     const documents = healthyDocuments();
-    documents.robots.body = "User-agent: *\\nAllow: /";
+    documents.robots.body = "User-agent: *\nAllow: /";
     documents.sitemap = {
       status: 404,
       contentType: "text/html; charset=utf-8",
