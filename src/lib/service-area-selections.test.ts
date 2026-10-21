@@ -27,6 +27,7 @@ describe("service area selection conversion", () => {
         area(BRIGHTON, "travelling_through", "anywhere"),
       ],
       [BIRMINGHAM],
+      [],
       [BRIGHTON],
     );
 
@@ -40,6 +41,7 @@ describe("service area selection conversion", () => {
     const result = buildServiceAreaSelections(
       [area(BRIGHTON, "travelling_through", "anywhere")],
       [BIRMINGHAM],
+      [],
       [BRIGHTON],
     );
 
@@ -51,8 +53,14 @@ describe("service area selection conversion", () => {
     expect(result.find((value) => value.placeId === BRIGHTON)?.relation).not.toBe("serves");
   });
 
+  it("keeps an available-in declaration separate from serving an area", () => {
+    expect(buildServiceAreaSelections([], [], [BRIGHTON], [])).toEqual([
+      { placeId: BRIGHTON, relation: "available_in", travelWillingness: "local" },
+    ]);
+  });
+
   it("makes a newly selected work area explicit and keeps work/journey choices disjoint", () => {
-    expect(buildServiceAreaSelections([], [BIRMINGHAM], [BIRMINGHAM])).toEqual([
+    expect(buildServiceAreaSelections([], [BIRMINGHAM], [], [BIRMINGHAM])).toEqual([
       { placeId: BIRMINGHAM, relation: "serves", travelWillingness: "local" },
     ]);
   });
