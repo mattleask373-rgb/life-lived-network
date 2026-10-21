@@ -89,7 +89,7 @@ export function privatePage(meta: Omit<PageMeta, "image">): {
   };
 }
 
-/** Fixed public app screens. Eligible locality URLs are listed by the bounded locality child sitemap. */
+/** Fixed public app screens. Eligible locality and service URLs live in bounded child sitemaps. */
 export const PUBLIC_PATHS: readonly string[] = [
   "/",
   "/journey",
@@ -172,7 +172,7 @@ export function robotsTxt(): string {
     ...PRIVATE_PATHS.map((path) => `Disallow: ${path}`),
     "",
     "# /sitemap.xml is a sitemap index. Its child sitemaps list public screens",
-    "# and only localities that pass the current public-content indexability gate.",
+    "# locality/service pages that pass their current public-content indexability gates.",
     `Sitemap: ${SITE_ORIGIN}/sitemap.xml`,
     "",
   ];
