@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   apply-reviewed-range-fixes:
-    if: github.event.head_commit.message == "ci: trigger dependency remediation"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
