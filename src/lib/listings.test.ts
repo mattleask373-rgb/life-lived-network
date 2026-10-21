@@ -82,5 +82,4 @@ describe("rowToEntry is the single normalisation seam", () => {
     const resident = rowToEntry({ ...row, last_checked_at: lastCheckedAt });
     expect(resident.lastCheckedAt).toBeUndefined();
   });
-
 });
