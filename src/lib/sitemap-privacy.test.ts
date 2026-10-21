@@ -8,10 +8,10 @@ import { Route as RobotsRoute } from "@/routes/robots[.]txt";
 import { Route as SitemapRoute } from "@/routes/sitemap[.]xml";
 
 /**
- * Regression guard: the public sitemaps list fixed public screens only.
- * They never read records, so private, blocked, reported, demonstration or
- * otherwise ineligible entries cannot appear. If record-level sitemaps are
- * added later, they must come with their own eligibility tests.
+ * Regression guard: the fixed-pages sitemap lists only known public screens;
+ * the locality sitemap has a separate eligibility gate and regression suite.
+ * Private screens never enter either sitemap, and uncertain locality data
+ * fails closed rather than becoming an invented or thin search landing page.
  */
 type Handler = () => Response | Promise<Response>;
 const handler = (route: unknown): Handler =>
