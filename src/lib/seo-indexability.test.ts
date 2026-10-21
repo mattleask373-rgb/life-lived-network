@@ -59,10 +59,13 @@ describe("shared public SEO indexability policy", () => {
   });
 
   it("uses an explicit route-specific threshold when supplied", () => {
-    expect(
-      evaluateIndexability({ publishedRecordCount: 1, minimumPublishedRecords: 1 }).status,
-    ).toBe("INDEXABLE");
-    expect(evaluateIndexability(eligible({ publishedRecordCount: 1 })).status).toBe("NOINDEX");
+    const lowerThreshold = evaluateIndexability(
+      eligible({ publishedRecordCount: 1, minimumPublishedRecords: 1 }),
+    );
+    expect(lowerThreshold.status).toBe("INDEXABLE");
+
+    const defaultThreshold = evaluateIndexability(eligible({ publishedRecordCount: 1 }));
+    expect(defaultThreshold.status).toBe("NOINDEX");
   });
 
   it("does not add a sitemap URL when information is incomplete", () => {
