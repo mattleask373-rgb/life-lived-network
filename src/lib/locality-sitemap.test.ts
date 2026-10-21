@@ -62,7 +62,12 @@ describe("locality sitemap indexability", () => {
   it("does not count imported rows without lifecycle proof as real SEO evidence", () => {
     const rows = [
       ...rowsFor("city", 2),
-      { ...rowsFor("city", 1)[0]!, sourceLifecycleEligible: false },
+      {
+        id: "city-imported-1",
+        place_id: "city",
+        demonstration: false,
+        sourceLifecycleEligible: false,
+      },
     ];
     expect(indexableLocalityPaths(geography, rows)).not.toContain("/gb/birmingham");
     expect(indexableLocalityPaths(geography, rows)).not.toContain("/gb/west-midlands");
