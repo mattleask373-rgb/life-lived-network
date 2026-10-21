@@ -50,12 +50,12 @@ function service(id: string, overrides: Partial<WorldEntry> = {}): WorldEntry {
 describe("gated locality and service sitemap candidates", () => {
   it("includes only indexable pages for the exact place scope", () => {
     const index = buildPlaceIndex([place]);
-    const eligibleLocality = [
-      service("one"),
-      service("two"),
-      service("three"),
-    ];
-    const result = buildGatedPlaceSitemapPaths(index, eligibleLocality, Date.parse("2026-10-21T12:00:00Z"));
+    const eligibleLocality = [service("one"), service("two"), service("three")];
+    const result = buildGatedPlaceSitemapPaths(
+      index,
+      eligibleLocality,
+      Date.parse("2026-10-21T12:00:00Z"),
+    );
     expect(result.localityPaths).toEqual(["/gb/example-place"]);
     expect(result.servicePaths).toEqual(["/gb/example-place/cleaning"]);
   });
@@ -72,7 +72,11 @@ describe("gated locality and service sitemap candidates", () => {
     const index = buildPlaceIndex([place, child]);
     const result = buildGatedPlaceSitemapPaths(
       index,
-      [service("one", { placeId: child.id }), service("two", { placeId: child.id }), service("three", { placeId: child.id })],
+      [
+        service("one", { placeId: child.id }),
+        service("two", { placeId: child.id }),
+        service("three", { placeId: child.id }),
+      ],
       Date.parse("2026-10-21T12:00:00Z"),
     );
     expect(result.localityPaths).toEqual(["/gb/child-place"]);
