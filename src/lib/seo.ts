@@ -1,3 +1,5 @@
+import { SERVICE_SITEMAP_SHARD_PATHS } from "./sitemap-shards";
+
 /**
  * The public face of Real World Atlas.
  *
@@ -88,8 +90,6 @@ export function privatePage(meta: Omit<PageMeta, "image">): {
     links: [],
   };
 }
-
-import { SERVICE_SITEMAP_SHARD_PATHS } from "./sitemap-shards";
 
 /** Fixed public screens and bounded locality/service URL sets. */
 export const PUBLIC_SITEMAP_CHILD_PATHS: readonly string[] = [
