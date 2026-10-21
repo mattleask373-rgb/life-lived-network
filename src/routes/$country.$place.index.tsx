@@ -29,6 +29,7 @@ import { WhatsHappening } from "@/components/whats-happening";
 import { WhatsHere } from "@/components/whats-here";
 import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
+import { loadLocalityEntries } from "@/lib/locality-page-data";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
 import { localityPath } from "@/lib/locality-path";
 import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
@@ -54,23 +55,28 @@ export const Route = createFileRoute("/$country/$place/")({
     const canonical = localityPath(geography.place);
     if (canonical !== `/${params.country}/${params.place}`) throw redirect({ to: canonical });
 
-    const entries = await fetchWorldEntries({ placeId: geography.place.id, limit: 60 });
-    return { geography, entries };
+    const { entries, scopeTooWide } = await loadLocalityEntries(() =>
+      fetchWorldEntries({ placeId: geography.place.id, limit: 60 }),
+    );
+    return { geography, entries, scopeTooWide };
   },
   head: ({ loaderData }) => {
     if (!loaderData) return privatePage({ path: "", title: "Somewhere", description: "" });
-    const { geography, entries } = loaderData;
+    const { geography, entries, scopeTooWide } = loaderData;
     const name = geography.place.name;
     const wider = geography.ancestors[0]?.name;
     const label = wider ? `${name}, ${wider}` : name;
     const path = localityPath(geography.place);
     const current = entries.filter((entry) => !entry.demonstration);
     const title = `${label} — what's happening and what's here | Real World Atlas`;
-    const description = current.length
-      ? `Real things happening in ${name}, the services and practices recorded there, and what people nearby have offered or asked for.`
-      : `${name} in Real World Atlas. Nothing has been recorded here yet — add the first thing.`;
+    const description = scopeTooWide
+      ? `${name} is a larger area than can be queried in one request. Choose a smaller place to explore its records.`
+      : current.length
+        ? `Real things happening in ${name}, the services and practices recorded there, and what people nearby have offered or asked for.`
+        : `${name} in Real World Atlas. Nothing has been recorded here yet — add the first thing.`;
     // Share one fail-closed evidence policy with future sitemap generation.
-    // The page remains reachable to people even when its content is not ready for search.
+    // Over-wide areas remain reachable but are neither called empty nor indexed.
+    if (scopeTooWide) return privatePage({ path, title, description });
     const indexability = evaluateLocalityIndexability({ place: geography.place, entries });
     return indexability.status === "INDEXABLE"
       ? publicPage({ path, title, description })
@@ -181,7 +187,7 @@ function PlaceLinks({ title, places }: { title: string; places: PlaceBrief[] }) 
 
 function LocalityPage() {
   const navigate = useNavigate();
-  const { geography, entries } = Route.useLoaderData();
+  const { geography, entries, scopeTooWide } = Route.useLoaderData();
   const { place, ancestors, children, siblings } = geography;
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle } = useLifeList();
@@ -250,7 +256,16 @@ function LocalityPage() {
         </section>
       ) : null}
 
-      {entries.length === 0 ? (
+      {scopeTooWide ? (
+        <section role="status" className="card-paper mt-6 p-5">
+          <h2 className="text-xl">Choose a smaller place</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            This area contains more places than one discovery request can safely cover. To avoid
+            showing results from outside this area, listings are hidden here. Choose one of the
+            smaller places below to explore its recorded activity.
+          </p>
+        </section>
+      ) : entries.length === 0 ? (
         <EmptyPlace
           placeName={place.name}
           needCount={0}
