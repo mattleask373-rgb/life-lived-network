@@ -19,3 +19,19 @@ jobs:
       - run: bun run lint
       - run: bun run test
       - run: bun run build
+
+      - name: Set up k6 for load-test script validation
+        if: ${{ hashFiles('tests/load/staging-public-read.js') != '' }}
+        uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065
+        with:
+          k6-version: "2.3.0"
+
+      - name: Parse k6 script without sending traffic
+        if: ${{ hashFiles('tests/load/staging-public-read.js') != '' }}
+        run: >-
+          k6 inspect
+          --execution-requirements
+          --env LOAD_TEST_ENV=staging
+          --env LOAD_TEST_BASE_URL=https://preview.staging.example.invalid
+          --env LOAD_TEST_APPROVED=YES_I_APPROVE_STAGING_LOAD
+          tests/load/staging-public-read.js
