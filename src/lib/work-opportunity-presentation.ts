@@ -29,16 +29,16 @@ function statedPay(compensation: WorkOpportunity["compensation"]): string {
 
   try {
     // Currency digit precision comes from Intl, not a global assumption that every
-    // currency uses two decimals. amountCents is stored as integer minor units.
+    // currency uses two decimals. amountMinorUnits is stored in the currency's integer minor units.
     const formatter = new Intl.NumberFormat("en", {
       style: "currency",
       currency: compensation.currency,
     });
     const fractionDigits = formatter.resolvedOptions().maximumFractionDigits;
-    const amount = compensation.amountCents / 10 ** fractionDigits;
+    const amount = compensation.amountMinorUnits / 10 ** fractionDigits;
     return `${formatter.format(amount)} per ${compensation.basis}`;
   } catch {
-    return `${compensation.amountCents} minor units ${compensation.currency} per ${compensation.basis}`;
+    return `${compensation.amountMinorUnits} minor units ${compensation.currency} per ${compensation.basis}`;
   }
 }
 
