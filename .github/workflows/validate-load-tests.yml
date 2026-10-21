@@ -36,12 +36,10 @@ jobs:
           k6-version: "2.3.0"
 
       - name: Inspect script requirements (no test execution or HTTP requests)
-        env:
-          LOAD_TEST_ENV: staging
-          LOAD_TEST_BASE_URL: https://preview.staging.example.invalid
-          LOAD_TEST_APPROVED: YES_I_APPROVE_STAGING_LOAD
         run: >-
           k6 inspect
           --execution-requirements
-          --include-system-env-vars
+          --env LOAD_TEST_ENV=staging
+          --env LOAD_TEST_BASE_URL=https://preview.staging.example.invalid
+          --env LOAD_TEST_APPROVED=YES_I_APPROVE_STAGING_LOAD
           tests/load/staging-public-read.js
