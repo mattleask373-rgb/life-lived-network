@@ -22,6 +22,7 @@ import {
 import { useMemo, useState } from "react";
 
 import { AskThisPlace } from "@/components/ask-this-place";
+import { LocalityRefresh } from "@/components/locality-refresh";
 import { EntrySheet } from "@/components/entry-sheet";
 import { EmptyPlace } from "@/components/data-state";
 import { LocalityQuestions } from "@/components/locality-questions";
@@ -250,6 +251,7 @@ function LocalityPage() {
         {ancestors[0] ? ` in ${ancestors[0].name}` : ""}
       </p>
       {place.blurb ? <p className="mt-3 max-w-2xl text-base">{place.blurb}</p> : null}
+      <LocalityRefresh key={place.id} placeId={place.id} />
 
       {q ? (
         <section aria-label="Your search" className="card-paper mt-6 max-w-2xl p-5 text-sm">
