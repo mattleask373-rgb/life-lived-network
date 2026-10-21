@@ -7,6 +7,7 @@ import {
   servicePagePath,
 } from "./service-page";
 import type { WorldEntry } from "./world-data";
+import { parseWorkOpportunity } from "./work-opportunities";
 
 function entry(overrides: Partial<WorldEntry>): WorldEntry {
   return {
@@ -57,6 +58,36 @@ describe("servicePageListings", () => {
     const result = servicePageListings([expired, cancelled], "gardening");
     expect(result?.real).toEqual([]);
     expect(result?.demonstration).toEqual([]);
+  });
+
+  it("includes a published, rights-cleared work opportunity through the existing category", () => {
+    const opportunity = entry({
+      id: "w1",
+      kind: "work",
+      title: "Short-term cleaning shift",
+      serviceCategory: "cleaning",
+      workOpportunity: parseWorkOpportunity({
+        arrangement: "short_term",
+        engagementKind: "paid_work",
+        compensation: {
+          status: "stated_paid",
+          amountCents: 2500,
+          currency: "AUD",
+          basis: "hour",
+        },
+        accommodation: "not_stated",
+        skillRequirements: ["Cleaning experience"],
+        hostExpectations: ["Confirm the shift"],
+        conditions: [],
+        jurisdictionCountryCode: "AU",
+        policyReviewStatus: "approved_by_human",
+        publicationStatus: "published",
+        provenance: { kind: "owner_declared", sourceName: "Opportunity owner" },
+        rightsStatus: "cleared",
+      }),
+    });
+    const result = servicePageListings([opportunity], "cleaning");
+    expect(result?.real.map((item) => item.id)).toEqual(["w1"]);
   });
 
   it("does not stretch a record into a category its words do not support", () => {
