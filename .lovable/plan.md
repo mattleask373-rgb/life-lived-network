@@ -1,60 +1,57 @@
-# Phase 2 integration plan (plan only, no edits)
+# Phase 3 — Reconciliation report and first map slice (staged)
 
-## Verified baseline (GitHub API, 18:25 UTC)
+## Baseline (read-only, observed this turn)
 
-| Ref | Head | Notes |
+| Fact | Evidence | Status |
 |---|---|---|
-| main | ccbcc6a | protected: true; rules unreadable (401) |
-| integration/phase-2-current-main-2026-10-21 | ccbcc6a | equals main; protected: false |
-| Loveable/work/safely (PR #235) | cebd6d6 | only previewAuthStorage.ts; Lovable is still synced here |
+| Project branch | `edit/edt-688caf13-…` (internal Lovable edit branch), clean tree | Observed |
+| Project SHA | `3f3831efadadfa984b1fdcf82006542814d46b4e` = merge of PR #208, on top of PR #207 | Observed |
+| Local `main` ref | `14e409e…` (stale snapshot; 8 commits behind project HEAD) | Observed |
+| GitHub main SHA | Not reachable from sandbox (only internal remotes, no `gh`) | UNKNOWN |
+| PR #205 reachable | No #205 merge commit in local history | Not found locally; GitHub state UNKNOWN |
+| Lovable GitHub sync destination / branch | Not visible from sandbox | UNKNOWN — blocks edits |
+| main protections / `verify` / bot bypass | Not visible | UNKNOWN |
 
-| PR | Draft | Base SHA | Head | Mergeable | Files |
-|---|---|---|---|---|---|
-| #233 Ask-place policy | yes | 8d79247 (stale) | 6b91db1 | clean | ask-place-policy.ts + test (new files only) |
-| #214 Route guard tests | yes | 006a98c (stale) | 625341f | clean | route-auth-guards.test.ts |
-| #234 Viewport/map-list | no | ccbcc6a (current) | 2751b93 | clean | living-map, data/contract, geo-bounds(+test), map-list-sync(+test), map-view, world.functions, routes/index |
-| #195 Detail sheet/map a11y | yes | 14e409e (very stale) | 6624f78 | dirty | entry-sheet, living-map, grounded-matching(+test), touch-targets.test, styles.css |
-| #193 Entry card a11y | yes | 14e409e | 5ac6d3d | dirty | entry-card, entry-card-a11y.test, grounded-matching(+test) |
-| #197 WorkOpportunity/Adzuna | yes | 14e409e | a4e76f4 | dirty | 27 files: ingest/adzuna*, work-opportunities, listings, world-data, service-page/taxonomy, need-prefill, three routes, roadmap, STATUS |
+## What already exists
 
-## Already on main (present in project tree)
-- `map-list-sync.ts`, `ask-place.ts` (always unavailable), `route-auth-guards.test.ts`, `work-opportunities.ts` exist. Each PR must be diffed against these, not assumed new. #214 likely modifies the existing test; #197 overlaps an existing module.
+- `LivingMap` (`src/components/living-map.tsx`) used on home and road-trip; pure viewport math in `src/lib/map-view.ts` (zoom/pan/fit, clustering, `placeInView` offers rather than imposes locality changes) with tests.
+- Viewport and discovery locality are already kept apart by design.
+- `findSupply()` is need-centred (need + people + entries); it has **no bounding-box input**. Map entries come from public listing retrieval in `world.functions.ts` / `listings.ts`, scoped by locality.
+- Ingestion contract `src/lib/ingest/contract.ts` (`SourceEvent`, `SourceRow`, `SourceAdapter.parse`), plus dedupe, freshness, normalise, a Ticketmaster adapter and a fixture source.
+- No geolocation usage anywhere in `src/`.
 
-## Overlap hot spots
-- `living-map.tsx`: #234 and #195.
-- `grounded-matching.ts` (+test): #195, #193, #197 — three-way conflict; all three are stale-based at 14e409e.
-- `world.functions.ts`/`data/contract.ts`: #234 (viewport input) vs #197 (`listings.ts`, `world-data.ts`) — contract drift risk.
-- `$country.$place.index.tsx`: #197 plus earlier Ask-this-place work on main.
-- `styles.css`: #195 vs PR #211 token changes.
+## Missing capabilities
 
-## Dependency-aware order
-1. #233 — new files only, fail-closed policy. Rebase onto integration branch; no wiring into UI; confirm `askPlaceState()` stays "unavailable".
-2. #214 — tests only. Rebase; ensure it asserts current guards without weakening.
-3. #234 — current base. Review gate: viewport bounds must only filter already-scoped listing retrieval, not `findSupply()`; caps, debounce, stale-request cancel; no inferred coordinates. Needs explicit review because it touches the server data contract.
-4. #193 — rebuild on integration after 1–3; resolve grounded-matching by keeping main's version unless the change is ranking-only.
-5. #195 — rebuild after #193 and #234 (living-map, grounded-matching).
-6. #197 — last, split into: (a) WorkOpportunity presentation/types, (b) Adzuna adapter fixture-only under `src/lib/ingest/` with no scheduler, no secret, no live fetch, no `listings.ts` publishing change. Founder gate for any live activation.
+- Desktop map/list split and mobile bottom sheet tied to one selection state.
+- Opt-in "Locate me".
+- Server-side viewport querying (would be a contract change — proposal only).
+- ICS/civic adapter; grounded AI filter contract (design only).
 
-## Gates per PR (exact head)
-- Rebase/recreate onto `integration/phase-2-current-main-2026-10-21`; new head SHA recorded.
-- `verify` green on that exact head; independent human review; no self-merge.
-- Merge into integration branch only; main receives one final PR after full Verify + manual QA (375/1280, keyboard, screen reader).
+## Gate
 
-## Safest first slice
-#233 retargeted to the integration branch: two new files, no consumers, fail-closed. Then #214.
+Because the sync destination cannot be proven non-main, **no code is edited** until the owner supplies a screenshot of Lovable Project Settings → Git showing the repository `mattleask373-rgb/life-lived-network`, the exact non-main sync branch, and connected status — plus confirmation that GitHub `main` requires a PR and `verify` with no bot bypass.
 
-## Switching Lovable safely
-1. Do not switch while PR #235 is open and unmerged; first merge or close #235 so `Loveable/work/safely` carries nothing pending.
-2. Pause Lovable edits; in Project settings → Git pick `integration/phase-2-current-main-2026-10-21` (not main, not Loveable/work/safely).
-3. Confirm the sync card shows that branch and 0 ahead / 0 behind at the expected SHA.
-4. Prefer keeping Lovable off the integration branch entirely: integrate PRs on GitHub; give Lovable a separate per-slice branch so its auto-commits never land on the integration branch.
-5. Protect the integration branch (PR required, `verify` required).
+## Proposed smallest safe slice (after gate clears)
 
-## Blockers
-- #235 unmerged; Lovable still on Loveable/work/safely.
-- main ruleset bypass list unverified (Issue #133 open).
-- Integration branch unprotected.
-- #193/#195/#197 stale (14e409e) and dirty; grounded-matching three-way conflict.
-- #234 server-contract change needs Founder review.
-- #197 live Adzuna use needs credentials and Founder approval; stays fixture-only.
-- Issue #209 still gates any Ask-this-place enablement.
+"Map and list stay in sync" on the home locality view, frontend only:
+1. Desktop 1280px+: map beside the existing entry list; list shows only entries currently placed in the viewport (the same locality-scoped records already loaded — no new fetch, no global inventory pull), with an exact count "N of M here are in view".
+2. Mobile: map above a peekable list panel with a real button to expand/collapse (no swipe-only control), 44px targets.
+3. Selecting a card highlights its pin and vice versa; entries without coordinates are listed as "Location not pinned" and never placed at the locality centre.
+4. Separate states: loading, load failure, quiet locality, nothing in this view (with "Show whole locality").
+5. Reduced-motion respected; no EntryCard internal changes (PR #193 overlap).
+
+Not in this slice: Locate me, new filters, viewport server queries, ingestion, AI.
+
+## Follow-on (separate PRs, proposal only)
+
+- Opt-in Locate me: centres map in browser only, not stored or sent; denial/timeout fallbacks.
+- Typed bounding-box proposal for listing retrieval (not `findSupply()`), with caps, debounce and stale-request tests.
+- One fixture-only ICS adapter against the existing `SourceAdapter` contract.
+- Grounded filter schema validated against the service taxonomy, feature-flagged off.
+- Agent lanes recorded in `docs/agents/SPECIALIST-LANES.md`; no new framework.
+
+## Technical details
+
+- New pure helper `src/lib/map-list-sync.ts` (in-view filter, counts, unpinned split) with vitest tests: viewport change, unpinned exclusion, selection sync, empty-in-view.
+- Edit `living-map.tsx` to accept `selectedId` / `onSelect` / `onViewChange`; edit home route layout only.
+- Checks: `bunx vitest run`, lint, typecheck, build; Playwright at 375 and 1280 for overflow and console errors. Manual keyboard/screen-reader QA marked NOT RUN unless performed by a person.
