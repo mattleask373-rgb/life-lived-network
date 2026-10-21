@@ -6,6 +6,7 @@ Allow: /
 # PRIVATE_PATHS in src/lib/seo.ts. robots.txt is crawler policy, not access control.
 Disallow: /auth
 Disallow: /profile
+Disallow: /life-list
 Disallow: /conversations
 Disallow: /need
 Disallow: /help
