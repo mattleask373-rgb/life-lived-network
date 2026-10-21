@@ -111,10 +111,7 @@ function Home() {
 
   const viewportLoaded = Boolean(viewportBounds && viewportPage);
   const mapSourceEntries = useMemo(
-    () =>
-      viewportLoaded && viewportPage
-        ? mergeViewportEntries(viewportPage.items, all)
-        : all,
+    () => (viewportLoaded && viewportPage ? mergeViewportEntries(viewportPage.items, all) : all),
     [all, viewportLoaded, viewportPage],
   );
 
