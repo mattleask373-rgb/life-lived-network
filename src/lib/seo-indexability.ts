@@ -8,7 +8,7 @@ import type { WorldEntry } from "./world-data";
 
 export type PublicPageKind = "locality" | "service";
 export type IndexabilityStatus =
-  | "INDEXABLE" | "INDEXABLE_WITH_LIMITATIONS" | "NOINDEX"
+  "INDEXABLE" | "INDEXABLE_WITH_LIMITATIONS" | "NOINDEX"
   | "NOT_PUBLISHED";
 
 export type IndexabilityReason =
