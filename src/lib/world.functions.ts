@@ -31,6 +31,7 @@ export const getWorld = createServerFn({ method: "GET" })
       "world.page",
       () => readWorld(data, signal),
       (page) => page.items.length,
+      { signal },
     );
   });
 
@@ -211,6 +212,9 @@ async function readWorld(
     }
     return page;
   } catch (error) {
+    if (signal.aborted || (error instanceof Error && error.name === "AbortError")) {
+      throw error;
+    }
     throw asDataError(error);
   }
 }
