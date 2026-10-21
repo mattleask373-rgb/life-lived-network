@@ -16,7 +16,6 @@ Disallow: /partners
 Disallow: /partner-tracker
 Disallow: /earn
 
-# Static and dynamic /sitemap.xml for deploy reliability. Dynamic /api/public/sitemap.xml remains
-# for environments that serve TanStack Start server routes; all list only
-# PUBLIC_PATHS.
+# /sitemap.xml is a sitemap index. Its child sitemaps list public screens
+# and only localities that pass the current public-content indexability gate.
 Sitemap: https://life-lived-network.lovable.app/sitemap.xml
