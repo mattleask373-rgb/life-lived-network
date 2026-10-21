@@ -51,7 +51,9 @@ export function assertGeoBounds(value: unknown): asserts value is GeoBounds {
 }
 
 function normaliseLongitude(longitude: number): number {
-  return (((longitude + 180) % 360) + 360) % 360 - 180;
+  const shifted = longitude + 180;
+  const wrapped = ((shifted % 360) + 360) % 360;
+  return wrapped - 180;
 }
 
 /**
