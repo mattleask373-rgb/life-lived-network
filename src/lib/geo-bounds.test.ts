@@ -42,9 +42,9 @@ describe("geographic viewport bounds", () => {
   });
 
   it("allows bounded viewport queries at the exact configured limits", () => {
-    expect(isViewportQueryable({ lat: 51.5, lng: -1.9, spanLat: 1.5, spanLng: 2.1 })).toBe(
-      true,
-    );
+    expect(
+      isViewportQueryable({ lat: 51.5, lng: -1.9, spanLat: 1.5, spanLng: 2.1 }),
+    ).toBe(true);
   });
 
   it.each([
