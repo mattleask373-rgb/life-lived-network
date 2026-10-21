@@ -259,6 +259,8 @@ export interface NewListing {
   band: TimeBand;
   minutes: number;
   cost: number;
+  /** ISO currency for the amount, inherited from the selected locality. */
+  currency: string;
   give: string | null;
   social: WorldEntry["social"];
   outdoors: boolean;
