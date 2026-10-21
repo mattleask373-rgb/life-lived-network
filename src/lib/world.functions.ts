@@ -10,7 +10,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 
-import { decodeCursor, encodeCursor, pageLimit, type DiscoveryContext, type Page } from "./data/contract";
+import {
+  decodeCursor,
+  encodeCursor,
+  pageLimit,
+  type DiscoveryContext,
+  type Page,
+} from "./data/contract";
 import { asDataError } from "./data/errors";
 import {
   decideSourceLifecycle,
