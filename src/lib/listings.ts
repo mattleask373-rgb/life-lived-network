@@ -217,9 +217,13 @@ export function rowToEntry(
  * The caller says where and how much; paging, limits, batching, fixtures policy
  * and future providers all live below this line.
  */
-export async function fetchWorld(context: DiscoveryContext = {}): Promise<Page<WorldEntry>> {
+export async function fetchWorld(
+  context: DiscoveryContext = {},
+  options: { signal?: AbortSignal } = {},
+): Promise<Page<WorldEntry>> {
   const { getWorld } = await import("./world.functions");
-  return getWorld({ data: context });
+  // Forward cancellation so a superseded map viewport does not keep fetching.
+  return getWorld({ data: context, signal: options.signal });
 }
 
 /** Convenience for screens that just want the current page of entries. */
