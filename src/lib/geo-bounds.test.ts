@@ -68,18 +68,11 @@ describe("geographic viewport bounds", () => {
   });
 
   it("allows viewport queries only for small, zoomed-in rectangles", () => {
-    expect(
-      isViewportQueryAllowed({ lat: 52.4, lng: -1.9, spanLat: 0.8, spanLng: 1.2 }),
-    ).toBe(true);
-    expect(
-      isViewportQueryAllowed({ lat: 52.4, lng: -1.9, spanLat: 1.6, spanLng: 1.2 }),
-    ).toBe(false);
-    expect(
-      isViewportQueryAllowed({ lat: 52.4, lng: -1.9, spanLat: 0.8, spanLng: 1.6 }),
-    ).toBe(false);
-    expect(
-      isViewportQueryAllowed({ lat: 0, lng: 0, spanLat: Number.NaN, spanLng: 1 }),
-    ).toBe(false);
+    const compactView = { lat: 52.4, lng: -1.9, spanLat: 0.8, spanLng: 1.2 };
+    expect(isViewportQueryAllowed(compactView)).toBe(true);
+    expect(isViewportQueryAllowed({ ...compactView, spanLat: 1.6 })).toBe(false);
+    expect(isViewportQueryAllowed({ ...compactView, spanLng: 1.6 })).toBe(false);
+    expect(isViewportQueryAllowed({ ...compactView, spanLat: Number.NaN })).toBe(false);
   });
 
   it("accepts a narrow antimeridian query but rejects a broad wrapped interval", () => {
@@ -97,5 +90,4 @@ describe("geographic viewport bounds", () => {
       assertViewportQueryBounds({ minLat: 50, maxLat: 52, minLng: -2, maxLng: -1 }),
     ).toThrow("Geographic viewport exceeds the maximum query span.");
   });
-
 });
