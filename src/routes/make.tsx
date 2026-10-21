@@ -417,7 +417,9 @@ function MakePage() {
               </label>
               <label className="block text-sm">
                 <span className="text-muted-foreground">
-                  Which locality{path ? ` (inside ${path})` : ""}
+                  {kind === "service"
+                    ? `Locality where you say this service is offered${path ? ` (inside ${path})` : ""}`
+                    : `Which locality${path ? ` (inside ${path})` : ""}`}
                 </span>
                 <select
                   value={areaId || (place?.id ?? "")}
@@ -431,7 +433,9 @@ function MakePage() {
                   ))}
                 </select>
                 <span className="mt-1 block text-xs text-muted-foreground">
-                  Somewhere else? Change where you are at the top of this page.
+                  {kind === "service"
+                    ? "This does not imply service coverage outside this listing locality."
+                    : "Somewhere else? Change where you are at the top of this page."}
                 </span>
               </label>
               <label className="block text-sm">
