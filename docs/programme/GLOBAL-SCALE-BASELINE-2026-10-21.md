@@ -127,19 +127,24 @@ Assumptions, solely to make the scale discussion calculable:
 - 20 dynamic application/API requests per DAU per day, excluding static assets and most media delivery.
 - Peak request rate is 10× the daily average.
 - Peak concurrent users equal 5% of DAU.
-- Every request number is an aggregate planning number; caching, session behavior, endpoint mix, writes, bots and third-party calls can materially change it.
+- 10% of dynamic requests are writes (illustrative read/write ratio 9:1).
+- 1 KB of new persistent application data per DAU per day, excluding indexes, replicas, backups, logs and media.
+- Average response payload of 20 KB per dynamic request, excluding large media.
+- Separate AI envelope of 0.1 model/agent calls per DAU per day (for example, one call per ten DAU daily); it is not assumed to be part of every request.
+- Every number is an aggregate planning assumption; cache hit rate, session behavior, endpoint mix, bots, media, third-party source polling and AI request patterns can materially change it.
 
-| DAU scenario | Dynamic requests/day | Average RPS | Illustrative peak RPS (10×) | Concurrent users at 5% |
-|---:|---:|---:|---:|---:|
-| 10,000 | 200,000 | 2.3 | 23 | 500 |
-| 100,000 | 2,000,000 | 23 | 231 | 5,000 |
-| 1 million | 20,000,000 | 231 | 2,315 | 50,000 |
-| 10 million | 200,000,000 | 2,315 | 23,148 | 500,000 |
-| 100 million | 2,000,000,000 | 23,148 | 231,481 | 5 million |
-| 1 billion | 20,000,000,000 | 231,481 | 2,314,815 | 50 million |
+| DAU scenario | Dynamic requests/day | Average RPS | Illustrative peak RPS (10×) | Concurrent users at 5% | Write ops/day (10%) | New raw app data/day (1 KB/DAU) | Egress/day (20 KB/request) | AI calls/day (0.1/DAU) |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 10,000 | 200,000 | 2.3 | 23 | 500 | 20,000 | 10 MB | 4 GB | 1,000 |
+| 100,000 | 2,000,000 | 23 | 231 | 5,000 | 200,000 | 100 MB | 40 GB | 10,000 |
+| 1 million | 20,000,000 | 231 | 2,315 | 50,000 | 2 million | 1 GB | 400 GB | 100,000 |
+| 10 million | 200,000,000 | 2,315 | 23,148 | 500,000 | 20 million | 10 GB | 4 TB | 1 million |
+| 100 million | 2,000,000,000 | 23,148 | 231,481 | 5 million | 200 million | 100 GB | 40 TB | 10 million |
+| 1 billion | 20,000,000,000 | 231,481 | 2,314,815 | 50 million | 2 billion | 1 TB | 400 TB | 100 million |
+
+These volumes are intentionally simple order-of-magnitude envelopes. They are not forecasts, benchmarks, budgets, or a sizing recommendation. Media delivery, index/replica/backup storage, bot traffic, retries, source ingestion, external API quotas and inference token usage are excluded or simplified and could dominate actual cost.
 
 At the illustrative billion-DAU tier, even 20 requests per person per day is 20 billion requests/day. That implies distributed edge delivery, aggressive cacheability for public content, sharded/partitioned data where justified, regional traffic management and significant operational ownership. It does **not** imply the current app is remotely validated for this load.
-
 ### Evidence-triggered scaling path
 
 - **10k DAU:** retain the monolith; establish request metrics, query budgets, connection-pool visibility, basic response caching for public routes, rate limits, backups and a repeatable k6/Artillery load test.
