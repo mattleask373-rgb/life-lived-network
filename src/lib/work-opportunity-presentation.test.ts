@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  hasPublicWorkOpportunity,
-  workOpportunityFacts,
-} from "./work-opportunity-presentation";
+import { hasPublicWorkOpportunity, workOpportunityFacts } from "./work-opportunity-presentation";
 import type { WorldEntry } from "./world-data";
 import type { WorkOpportunity } from "./work-opportunities";
 
@@ -66,7 +63,12 @@ describe("work opportunity presentation", () => {
   it("formats currencies with zero decimal minor units correctly", () => {
     const facts = workOpportunityFacts({
       ...opportunity,
-      compensation: { status: "stated_paid", amountMinorUnits: 2500, currency: "JPY", basis: "hour" },
+      compensation: {
+        status: "stated_paid",
+        amountMinorUnits: 2500,
+        currency: "JPY",
+        basis: "hour",
+      },
     });
     const pay = facts.find((fact) => fact.label === "Pay")?.value ?? "";
     expect(pay).toContain("2,500");
@@ -82,12 +84,16 @@ describe("work opportunity presentation", () => {
     expect(hasPublicWorkOpportunity(entry({ layer: "experience" }))).toBe(false);
     expect(
       hasPublicWorkOpportunity(
-        entry({ workOpportunity: { ...opportunity, publicationStatus: "draft" } as WorkOpportunity }),
+        entry({
+          workOpportunity: { ...opportunity, publicationStatus: "draft" } as WorkOpportunity,
+        }),
       ),
     ).toBe(false);
     expect(
       hasPublicWorkOpportunity(
-        entry({ workOpportunity: { ...opportunity, rightsStatus: "restricted" } as WorkOpportunity }),
+        entry({
+          workOpportunity: { ...opportunity, rightsStatus: "restricted" } as WorkOpportunity,
+        }),
       ),
     ).toBe(false);
   });
