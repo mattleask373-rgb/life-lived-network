@@ -44,7 +44,11 @@ export function evaluateSeoSmoke(
   const failures: string[] = [];
   const origin = new URL(expectedOrigin).origin;
 
-  for (const [label, document] of Object.entries(documents)) {
+  for (const [label, document] of Object.entries({
+    "robots.txt": documents.robots,
+    "sitemap.xml": documents.sitemap,
+    homepage: documents.homepage,
+  })) {
     if (document.networkError) {
       failures.push(`${label}: request failed (${document.networkError})`);
     }
