@@ -371,10 +371,7 @@ function LocalityPage() {
       ) : null}
 
       {workOpportunities.length ? (
-        <section
-          className="mt-10"
-          aria-label={`Published work opportunities in ${place.name}`}
-        >
+        <section className="mt-10" aria-label={`Published work opportunities in ${place.name}`}>
           <h2 className="text-2xl">Work opportunities recorded here</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             Only explicitly reviewed, rights-cleared records with published terms appear here. This
