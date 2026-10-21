@@ -68,10 +68,40 @@ export function isGeoBounds(value: unknown): value is GeoBounds {
   );
 }
 
+/**
+ * A valid rectangle can still be too expensive for a viewport lookup.
+ * Apply the same span cap on the server, where browser checks can be bypassed.
+ * Wrapped longitudes cross the antimeridian (for example 179° to -179°).
+ */
+export function isGeoBoundsQueryable(value: unknown): value is GeoBounds {
+  if (!isGeoBounds(value)) return false;
+
+  const latitudeSpan = value.maxLat - value.minLat;
+  const longitudeSpan =
+    value.minLng <= value.maxLng
+      ? value.maxLng - value.minLng
+      : 360 - (value.minLng - value.maxLng);
+
+  return (
+    latitudeSpan > 0 &&
+    latitudeSpan <= MAX_QUERYABLE_SPAN_LAT &&
+    longitudeSpan > 0 &&
+    longitudeSpan <= MAX_QUERYABLE_SPAN_LNG
+  );
+}
+
 /** Reject invalid client-supplied bounds instead of silently widening the read. */
 export function assertGeoBounds(value: unknown): asserts value is GeoBounds {
   if (!isGeoBounds(value)) {
     throw new TypeError("Invalid geographic viewport bounds.");
+  }
+}
+
+/** Reject valid but unbounded rectangles before they reach the database query. */
+export function assertQueryableGeoBounds(value: unknown): asserts value is GeoBounds {
+  assertGeoBounds(value);
+  if (!isGeoBoundsQueryable(value)) {
+    throw new TypeError("Geographic viewport exceeds the maximum queryable bounds.");
   }
 }
 
