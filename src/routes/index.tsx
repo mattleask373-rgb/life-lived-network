@@ -1,6 +1,7 @@
 import { publicPage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { LivingMap } from "@/components/living-map";
 import { LayerFilter } from "@/components/layer-filter";
 import { EntrySheet } from "@/components/entry-sheet";
@@ -20,6 +21,7 @@ import { densityOf } from "@/lib/trust";
 import { getOpenNeeds } from "@/lib/needs.functions";
 import { PLACE_FALLBACK } from "@/lib/places";
 import { placeInView, type MapView } from "@/lib/map-view";
+import { entriesForMapList, partitionMapList } from "@/lib/map-list-sync";
 import { useWorldContext } from "@/lib/world-context";
 import { LocalityQuestions } from "@/components/locality-questions";
 import { WhatsHappening } from "@/components/whats-happening";
@@ -43,7 +45,8 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const [layers, setLayers] = useState<LayerId[]>([]);
-  const [mode, setMode] = useState<"map" | "list">("map");
+  const [mobileListOpen, setMobileListOpen] = useState(false);
+  const [showAllLoaded, setShowAllLoaded] = useState(false);
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle, ids } = useLifeList();
 
@@ -75,10 +78,15 @@ function Home() {
   const regionName = ancestors[0]?.name ?? "";
   const placeBlurb = place?.blurb || PLACE_FALLBACK.blurb;
 
-  const entries = useMemo(() => {
-    const filtered = layers.length ? all.filter((e) => layers.includes(e.layer)) : all;
-    return layers.length ? filtered : meaningfulVariety(filtered);
-  }, [all, layers]);
+  const allFilteredEntries = useMemo(
+    () => (layers.length ? all.filter((entry) => layers.includes(entry.layer)) : all),
+    [all, layers],
+  );
+  const entries = useMemo(
+    () => (layers.length ? allFilteredEntries : meaningfulVariety(allFilteredEntries)),
+    [allFilteredEntries, layers.length],
+  );
+  const mapEntries = showAllLoaded ? allFilteredEntries : entries;
   const snapshot = useMemo(() => activitySnapshot(all), [all]);
   const events = useMemo(() => upcomingEvents(all), [all]);
   const groups = useMemo(() => providerGroups(all), [all]);
@@ -86,6 +94,112 @@ function Home() {
   const needCount = openNeeds?.length ?? 0;
   const questions = useMemo(() => localityQuestions(all, needCount), [all, needCount]);
   const quiet = Boolean(place) && !worldLoading && !loading && !worldError && all.length === 0;
+  const mapPartition = useMemo(() => partitionMapList(mapEntries, view), [mapEntries, view]);
+  const mapListEntries = useMemo(
+    () => entriesForMapList(mapEntries, mapPartition, showAllLoaded),
+    [mapEntries, mapPartition, showAllLoaded],
+  );
+  const unpinnedIds = useMemo(
+    () => new Set(mapPartition.unpinned.map((entry) => entry.id)),
+    [mapPartition.unpinned],
+  );
+  const locatedCount = mapEntries.length - mapPartition.unpinned.length;
+  const mapListSummary = showAllLoaded
+    ? mapListEntries.length + " loaded records for " + (discoveryPlace?.name ?? placeName)
+    : view
+      ? mapPartition.inView.length +
+        " of " +
+        locatedCount +
+        " located records in view · " +
+        mapPartition.unpinned.length +
+        " unpinned"
+      : mapPartition.unpinned.length + " unpinned · map view preparing";
+  const canChangeListScope =
+    showAllLoaded ||
+    !view ||
+    mapPartition.outsideView.length > 0 ||
+    allFilteredEntries.length > entries.length;
+
+  const mapListContents = (
+    <>
+      {worldLoading || loading ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          Checking what's recorded here…
+        </p>
+      ) : !place ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          Choose a supported place to see its records.
+        </p>
+      ) : worldError ? (
+        <p role="alert" className="text-sm text-muted-foreground">
+          We couldn't load what's here.{" "}
+          <button
+            type="button"
+            onClick={() => void refetchWorld()}
+            className="focus-ink min-h-11 underline underline-offset-4"
+          >
+            Try again
+          </button>
+        </p>
+      ) : mapEntries.length === 0 ? (
+        emptyListState(all.length, layers.length > 0) === "filtered-out" ? (
+          <p className="text-sm text-muted-foreground">
+            Nothing matches these filters, but {all.length} other{" "}
+            {all.length === 1 ? "thing is" : "things are"} recorded here.{" "}
+            <button
+              type="button"
+              onClick={() => setLayers([])}
+              className="focus-ink min-h-11 underline underline-offset-4"
+            >
+              Show everything
+            </button>
+          </p>
+        ) : (
+          <p role="status" className="text-sm text-muted-foreground">
+            Nothing recorded here yet.
+          </p>
+        )
+      ) : mapListEntries.length === 0 ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          {!view && !showAllLoaded
+            ? "Preparing the map view. "
+            : "Nothing with a pin is in this view. "}
+          <button
+            type="button"
+            onClick={() => setShowAllLoaded(true)}
+            className="focus-ink min-h-11 font-medium text-primary underline underline-offset-4"
+          >
+            Show all loaded records
+          </button>
+        </p>
+      ) : (
+        <ul className="grid gap-3">
+          {mapListEntries.map((entry) => {
+            const selected = open?.id === entry.id;
+            const unpinned = unpinnedIds.has(entry.id);
+            return (
+              <li
+                key={entry.id}
+                className={
+                  selected
+                    ? "rounded-2xl ring-2 ring-primary ring-offset-2 ring-offset-background"
+                    : undefined
+                }
+              >
+                {selected ? <span className="sr-only">Selected on the map.</span> : null}
+                {unpinned ? (
+                  <p className="mb-1 px-1 text-xs text-muted-foreground">
+                    Location not pinned — available in the list, not on the map
+                  </p>
+                ) : null}
+                <EntryCard entry={entry} onOpen={setOpen} />
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </>
+  );
 
   return (
     <main className="min-h-screen bg-background">
@@ -198,98 +312,118 @@ function Home() {
                   ? "Choose a place"
                   : worldError
                     ? "Unavailable"
-                    : `${entries.length} things`}
+                    : `${mapEntries.length} things`}
             </p>
           </div>
           <div className="mt-3">
             <LayerFilter active={layers} onChange={setLayers} />
           </div>
-          <div
-            role="group"
-            aria-label="Show as"
-            className="mt-3 inline-flex rounded-full border border-border bg-card p-1 text-sm"
-          >
-            {(["map", "list"] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                aria-pressed={mode === m}
-                onClick={() => setMode(m)}
-                className={`focus-ink min-h-11 rounded-full px-4 ${mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+          <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1.12fr)_minmax(20rem,0.88fr)]">
+            <div className="relative min-w-0">
+              <div className="h-[62vh] min-h-80 sm:h-[30rem] lg:h-[calc(100vh-17rem)] lg:min-h-[34rem] lg:max-h-[48rem]">
+                <LivingMap
+                  entries={mapEntries}
+                  activeId={open?.id}
+                  onSelect={setOpen}
+                  centre={place ? { lat: place.lat, lng: place.lng } : null}
+                  centreName={place?.name}
+                  area={
+                    index && view
+                      ? (() => {
+                          const found = placeInView(index, view, place?.id ?? null);
+                          return found ? { name: found.name, slug: found.slug } : null;
+                        })()
+                      : null
+                  }
+                  onExploreArea={setExploredSlug}
+                  onAdoptArea={(slug) => {
+                    setPlaceSlug(slug);
+                    setExploredSlug(null);
+                    setShowAllLoaded(false);
+                  }}
+                  onViewChange={setView}
+                  loading={worldLoading}
+                  error={worldError}
+                  onRetry={() => void refetchWorld()}
+                />
+              </div>
+              <section
+                aria-label="Nearby listings"
+                className="absolute inset-x-2 bottom-2 z-20 rounded-2xl border border-border bg-card/95 p-3 shadow-lift backdrop-blur-sm lg:hidden"
               >
-                {m === "map" ? "Map" : "List"}
-              </button>
-            ))}
+                <button
+                  type="button"
+                  aria-expanded={mobileListOpen}
+                  aria-controls="mobile-map-list-panel"
+                  onClick={() => setMobileListOpen((current) => !current)}
+                  className="focus-ink flex min-h-11 w-full items-center justify-between gap-3 text-left"
+                >
+                  <span className="flex min-w-0 flex-col">
+                    <span className="font-semibold">
+                      {mobileListOpen ? "Nearby listings" : "Browse nearby listings"}
+                    </span>
+                    <span className="truncate text-xs text-muted-foreground">{mapListSummary}</span>
+                  </span>
+                  {mobileListOpen ? (
+                    <ChevronDown aria-hidden="true" size={20} />
+                  ) : (
+                    <ChevronUp aria-hidden="true" size={20} />
+                  )}
+                </button>
+                <div
+                  id="mobile-map-list-panel"
+                  hidden={!mobileListOpen}
+                  className="mt-3 max-h-[38vh] overflow-y-auto overscroll-contain pr-1"
+                >
+                  {canChangeListScope ? (
+                    <div className="mb-3 flex justify-end">
+                      <button
+                        type="button"
+                        aria-pressed={showAllLoaded}
+                        onClick={() => setShowAllLoaded((current) => !current)}
+                        className="focus-ink min-h-11 rounded-full border border-border px-3 text-sm"
+                      >
+                        {showAllLoaded ? "Focus on this map view" : "Show all loaded records"}
+                      </button>
+                    </div>
+                  ) : null}
+                  {mapListContents}
+                </div>
+              </section>
+            </div>
+            <section
+              aria-labelledby="desktop-map-list-heading"
+              className="hidden min-w-0 rounded-2xl border border-border bg-card p-4 lg:block"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 id="desktop-map-list-heading" className="font-display text-xl">
+                    {showAllLoaded ? "All loaded locality records" : "In this map view"}
+                  </h3>
+                  <p
+                    role="status"
+                    aria-live="polite"
+                    className="mt-1 text-sm text-muted-foreground"
+                  >
+                    {mapListSummary}
+                  </p>
+                </div>
+                {canChangeListScope ? (
+                  <button
+                    type="button"
+                    aria-pressed={showAllLoaded}
+                    onClick={() => setShowAllLoaded((current) => !current)}
+                    className="focus-ink min-h-11 rounded-full border border-border px-3 text-sm"
+                  >
+                    {showAllLoaded ? "Focus on this map view" : "Show all loaded records"}
+                  </button>
+                ) : null}
+              </div>
+              <div className="mt-3 max-h-[calc(100vh-21rem)] min-h-[14rem] overflow-y-auto overscroll-contain pr-1">
+                {mapListContents}
+              </div>
+            </section>
           </div>
-          {mode === "list" ? (
-            <div className="mt-3">
-              {worldLoading ? (
-                <p role="status" className="text-sm text-muted-foreground">
-                  Looking…
-                </p>
-              ) : worldError ? (
-                <p role="alert" className="text-sm">
-                  We couldn't load what's here.{" "}
-                  <button
-                    type="button"
-                    onClick={() => void refetchWorld()}
-                    className="focus-ink underline underline-offset-4"
-                  >
-                    Try again
-                  </button>
-                </p>
-              ) : entries.length ? (
-                <ul className="grid gap-3 sm:grid-cols-2">
-                  {entries.map((e) => (
-                    <li key={e.id}>
-                      <EntryCard entry={e} onOpen={setOpen} />
-                    </li>
-                  ))}
-                </ul>
-              ) : emptyListState(all.length, layers.length > 0) === "filtered-out" ? (
-                <p className="text-sm text-muted-foreground">
-                  Nothing matches these filters, but {all.length} other{" "}
-                  {all.length === 1 ? "thing is" : "things are"} recorded here.{" "}
-                  <button
-                    type="button"
-                    onClick={() => setLayers([])}
-                    className="focus-ink underline underline-offset-4"
-                  >
-                    Show everything
-                  </button>
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground">Nothing recorded here yet.</p>
-              )}
-            </div>
-          ) : (
-            <div className="mt-3 h-[62vh] min-h-80 sm:h-[30rem]">
-              <LivingMap
-                entries={entries}
-                activeId={open?.id}
-                onSelect={setOpen}
-                centre={place ? { lat: place.lat, lng: place.lng } : null}
-                centreName={place?.name}
-                area={
-                  index && view
-                    ? (() => {
-                        const found = placeInView(index, view, place?.id ?? null);
-                        return found ? { name: found.name, slug: found.slug } : null;
-                      })()
-                    : null
-                }
-                onExploreArea={setExploredSlug}
-                onAdoptArea={(slug) => {
-                  setPlaceSlug(slug);
-                  setExploredSlug(null);
-                }}
-                onViewChange={setView}
-                loading={worldLoading}
-                error={worldError}
-                onRetry={() => void refetchWorld()}
-              />
-            </div>
-          )}
           {exploredPlace ? (
             <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
               <span className="text-muted-foreground">
