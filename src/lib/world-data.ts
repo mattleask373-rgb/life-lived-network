@@ -91,6 +91,8 @@ export interface WorldEntry {
   sourceName?: string;
   /** The source's own page for this. Where "find out more" goes. */
   sourceUrl?: string;
+  /** Actual last-checked timestamp from ingestion; not a promise of availability. */
+  lastCheckedAt?: string | null;
   /** Where tickets are actually sold, when the source says. */
   ticketUrl?: string;
   organiser?: string;

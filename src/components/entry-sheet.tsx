@@ -12,6 +12,8 @@ import {
   qualificationLine,
 } from "@/lib/services";
 import { usableSourcePhotos } from "@/lib/entry-card-view";
+import { SourceLastChecked } from "@/components/source-last-checked";
+import { WorkOpportunityFacts } from "@/components/work-opportunity-facts";
 import { duration, eventDate, layerText, money } from "./layer-colour";
 import { LayerIcon } from "./layer-icon";
 
@@ -236,6 +238,9 @@ export function EntrySheet({
               </div>
             </div>
           ) : null}
+
+          <SourceLastChecked entry={entry} />
+          <WorkOpportunityFacts entry={entry} />
 
           <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
             {entry.details.map((d) => (
