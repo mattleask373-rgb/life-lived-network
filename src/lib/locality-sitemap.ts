@@ -7,7 +7,7 @@
  * this helper mirrors that first-page indexability gate rather than promising
  * that a locality is indexable from records the page itself would not render.
  */
-import { buildPlaceIndex, type Place, type PlaceIndex } from "./places";
+import type { PlaceIndex } from "./places";
 import { localityPath } from "./locality-path";
 
 export const LOCALITY_SITEMAP_PLACE_LIMIT = 5000;
@@ -18,20 +18,6 @@ export const LOCALITY_FILTER_CAP = 400;
 export interface PublicListingSitemapRow {
   place_id: string | null;
   demonstration: boolean | null;
-}
-
-export interface LocalitySitemapPlace {
-  id: string;
-  parent_id: string | null;
-  kind: Place["kind"];
-  name: string;
-  slug: string;
-  country_code: string;
-  timezone: string;
-  currency: string;
-  lat: number | null;
-  lng: number | null;
-  blurb: string;
 }
 
 export interface LocalitySitemapBuildOptions {
@@ -114,9 +100,4 @@ export function indexableLocalityPaths(
 
   // Stable order helps crawlers, tests and incident comparisons.
   return [...new Set(candidates)].sort((a, b) => a.localeCompare(b));
-}
-
-/** Small adapter for fixture tests and future data providers. */
-export function localitySitemapIndex(places: LocalitySitemapPlace[]): PlaceIndex {
-  return buildPlaceIndex(places);
 }
