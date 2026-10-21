@@ -33,7 +33,10 @@ export const getWorld = createServerFn({ method: "GET" })
     );
   });
 
-async function readWorld(context: DiscoveryContext, signal: AbortSignal): Promise<Page<WorldEntry>> {
+async function readWorld(
+  context: DiscoveryContext,
+  signal: AbortSignal,
+): Promise<Page<WorldEntry>> {
   const limit = pageLimit(context.limit);
   const offset = decodeCursor(context.cursor);
 
