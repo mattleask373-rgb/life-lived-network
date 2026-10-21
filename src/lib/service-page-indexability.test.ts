@@ -75,9 +75,16 @@ describe("service page indexability", () => {
       false,
     );
 
-    const missingSource = servicePageListings([
-      entry({ origin: "source", sourceName: "External source", sourceUrl: "javascript:alert(1)" }),
-    ], "gardening")!;
+    const missingSource = servicePageListings(
+      [
+        entry({
+          origin: "source",
+          sourceName: "External source",
+          sourceUrl: "javascript:alert(1)",
+        }),
+      ],
+      "gardening",
+    );
     const decision = evaluateServicePageIndexability({ place, listings: missingSource, now });
     expect(decision.sitemapEligible).toBe(false);
     expect(decision.reasons).toContain("missing_provenance");
