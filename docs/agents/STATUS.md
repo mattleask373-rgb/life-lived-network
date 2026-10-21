@@ -127,3 +127,25 @@ The authenticated GitHub listing exposed multiple similarly named repositories. 
 **Required owner action:** confirm the production/Lovable GitHub repository, deployed commit and sync branch in project settings. Until then, continue PR-only in the active app repository, do not sync or migrate between similarly named repositories, and do not claim the sidecar agent/marketing/monetisation/compliance repositories implement working systems.
 
 The canonical invariants remain unchanged: `findSupply()` is the sole possibility/need-discovery authority; no fabricated supply, no publication from unknown rights/review evidence, no public assistant activation, and no merge/deployment/production mutation without the relevant human approval.
+
+
+## Follow-up integration audit — Grok one-year prompt and SEO sitemap slice
+
+This update follows the 19:33 UTC integration snapshot above. It records new draft candidates created after that snapshot; it does not supersede the need to verify current PR state on the next work cycle.
+
+### New draft PRs and final-head verification
+
+- **[#248 — rolling one-year Grok Dream Team master prompt](https://github.com/mattleask373-rgb/life-lived-network/pull/248):** draft, documentation only. Current document head \`541c8c82c9e8feec9d51e855a5c1058d08dcf654\` passed exact-head Verify via [run #39666859630](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39666859630). The prompt covers a rolling one-year plan with no fixed completion deadline; project-specific engineering invariants; autonomy levels; real 24/7 task-queue/heartbeat/monitoring/kill-switch requirements; governed AI and user support; APIs, SEO, growth, partnerships and monetization; and budget controls. It treats one billion daily users as an aspirational north star, not a forecast. It includes an official-source-checked capability/billing matrix for The X Subscription, Grok Bot, Cursor, web/X search, code execution, Collections, connectors/MCP, Imagine and multi-agent features. It does not configure those services or create an always-on agent by itself.
+- **[#252 — fail-closed locality/service sitemap integration](https://github.com/mattleask373-rgb/life-lived-network/pull/252):** draft, current-main based. Exact-head Verify passed on \`5e6db8c403a767c2209a456c975664789ee7d936\` via [run #39666595390](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39666595390). Adds a shared locality/service indexability gate, canonical-data-backed candidate enumeration, bounded numbered sitemap shards, dynamic sitemap index entries and static/generated robots.txt references. It uses the canonical public listing read and fails closed on incomplete scans. No new inventory, schema, RLS/grant, auth, credentials, provider activation, production data or deployment was changed.
+- All PRs #241–#245, #248 and #252 are reported as still open draft candidates at the time of this update. Green exact-head CI is not equivalent to independent review, visual/accessibility QA, security sign-off, merge, deployment or live-host verification.
+
+### Remaining gates and overlap guidance
+
+- The public Lovable endpoints \`/robots.txt\`, \`/sitemap.xml\`, \`/api/public/sitemap.xml\` and generated child sitemaps have **not** been live-verified. The source and CI are evidence of intended behavior only. Owner-approved hosting verification is required before claiming SEO has been fixed in production.
+- Lovable Project Settings → Git target still needs owner confirmation. Do not issue write-capable Lovable instructions until the connected repository and non-main sync branch are verified. Similar repository names are not proof of the deployed source of truth.
+- PR #235 remains an independent authentication-storage security review. Keep it separate from product/SEO/UI work and do not merge around it.
+- Compare overlapping open candidates before merging: #242 vs #234 (viewport/map-list); #241 vs #240 (source freshness); #245 vs #233 (Ask-this-place policy); #244 vs earlier work-opportunity/Adzuna chains. Preserve unique review findings and do not merge duplicate implementations.
+- Keep public Ask-this-place disabled pending Issue #209. The fail-closed policy helper alone does not authenticate attestations or provide an eligible server-side retrieval source.
+- No PR merge or deployment was performed in the work represented by this update. The one-year prompt requires the eventual persistent executor to be separately implemented and tested; this documentation is not proof that a 24/7 runner is alive.
+
+The core invariants remain: \`findSupply()\` is the single discovery authority; user/private memories never become public supply; demo and unreviewed/rights-uncleared content is not published or indexed; and protected release/production actions require the appropriate human authority.
