@@ -11,7 +11,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 
 import { decodeCursor, pageLimit, toPage, type DiscoveryContext, type Page } from "./data/contract";
-import { asDataError } from "./data/errors";
+import { isLocalityScopeFilterable, MAX_LOCALITY_FILTER_IDS } from "./data/locality-scope";
+import { asDataError, DataError } from "./data/errors";
 import { rowToEntry, type ListingRow } from "./listings";
 import { assertQueryableGeoBounds } from "./geo-bounds";
 import type { SourcePhoto, WorldEntry } from "./world-data";
@@ -62,6 +63,16 @@ async function readWorld(
         .filter((slug): slug is string => Boolean(slug));
     }
 
+    // A large hierarchy must never silently become an unfiltered world query.
+    // Chunked, globally ordered pagination is a separate contract; until then,
+    // fail closed instead of returning records from unrelated localities.
+    if (!context.bounds && !isLocalityScopeFilterable(insideIds)) {
+      throw new DataError(
+        "SCOPE_TOO_WIDE",
+        `Selected locality has ${insideIds.length} descendants; one filter supports at most ${MAX_LOCALITY_FILTER_IDS}.`,
+      );
+    }
+
     let query = supabase
       .from("listings")
       .select("*")
@@ -90,13 +101,10 @@ async function readWorld(
         query = query.or(`lng.gte.${bounds.minLng},lng.lte.${bounds.maxLng}`);
       }
     } else {
-      // A very wide locality selection can name more IDs than a sensible filter.
-      // Drop the filter instead of hiding activity from an arbitrary ID slice;
-      // the bounded page limit still applies.
-      const LOCALITY_FILTER_CAP = 400;
-      if (insideIds.length && insideIds.length <= LOCALITY_FILTER_CAP) {
+      // Oversized descendant scopes were rejected above, not widened.
+      if (insideIds.length) {
         query = query.in("place_id", insideIds);
-      } else if (!insideIds.length && context.placeId) {
+      } else if (context.placeId) {
         query = query.eq("place_id", context.placeId);
       }
     }
