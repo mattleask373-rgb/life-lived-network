@@ -384,9 +384,13 @@ function Home() {
             <LayerFilter active={layers} onChange={setLayers} />
           </div>
           {mapRefreshError ? (
-            <p role="status" className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
-              We couldn't refresh {viewportRequestActive ? "records for this map view" : "what's here"}.
-              Showing the last loaded records.{" "}
+            <p
+              role="status"
+              className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground"
+            >
+              We couldn't refresh{" "}
+              {viewportRequestActive ? "records for this map view" : "what's here"}. Showing the
+              last loaded records.{" "}
               <button
                 type="button"
                 onClick={() => void refetchMap()}
