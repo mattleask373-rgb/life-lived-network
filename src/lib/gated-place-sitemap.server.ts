@@ -6,7 +6,10 @@
 import { fetchWorld } from "./listings";
 import { loadPlaceIndex } from "./place-index.server";
 import { publicServerClient } from "./supabase-public.server";
-import { buildGatedPlaceSitemapPaths, type GatedPlaceSitemapPaths } from "./place-sitemap-candidates";
+import {
+  buildGatedPlaceSitemapPaths,
+  type GatedPlaceSitemapPaths,
+} from "./place-sitemap-candidates";
 import type { WorldEntry } from "./world-data";
 
 const PAGE_LIMIT = 200;
