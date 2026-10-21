@@ -32,6 +32,10 @@ interface Props {
   onViewChange?: ((view: MapView) => void) | undefined;
   loading?: boolean | undefined;
   error?: boolean | undefined;
+  /** A refresh failed after usable results had already loaded. */
+  refreshError?: boolean | undefined;
+  /** The map is zoomed too far out to issue a bounded viewport query. */
+  viewportTooBroad?: boolean | undefined;
   onRetry?: (() => void) | undefined;
 }
 
@@ -57,6 +61,8 @@ export function LivingMap({
   onViewChange,
   loading = false,
   error = false,
+  refreshError = false,
+  viewportTooBroad = false,
   onRetry,
 }: Props) {
   // Depend on the coordinates themselves, not on a freshly-built object, so a
@@ -292,6 +298,30 @@ export function LivingMap({
             </button>
           ) : null}
         </div>
+      ) : refreshError ? (
+        <div
+          className="absolute left-3 top-3 z-20 max-w-sm rounded-lg border border-border bg-card/95 p-3 text-xs shadow-paper"
+          role="alert"
+        >
+          <p>Couldn't update this map view. Showing the last loaded results.</p>
+          {onRetry ? (
+            <button
+              type="button"
+              className="focus-ink mt-2 inline-flex min-h-11 items-center underline underline-offset-4"
+              onClick={onRetry}
+            >
+              Try again
+            </button>
+          ) : null}
+        </div>
+      ) : viewportTooBroad ? (
+        <p
+          className="absolute left-3 top-3 z-20 max-w-sm rounded-lg border border-border bg-card/95 p-3 text-xs shadow-paper"
+          role="status"
+        >
+          Zoom in to search a smaller map area. Showing records already loaded for{" "}
+          {centreName ?? "this place"}.
+        </p>
       ) : entries.length === 0 ? (
         <p className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card/95 p-4 text-center text-sm text-muted-foreground shadow-paper">
           Nothing has been recorded in this view yet.
