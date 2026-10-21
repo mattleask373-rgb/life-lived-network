@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   assertGeoBounds,
+  assertViewportQueryBounds,
   geoBoundsForViewport,
   isGeoBounds,
+  isViewportQueryAllowed,
   longitudeInBounds,
 } from "./geo-bounds";
 
@@ -64,4 +66,36 @@ describe("geographic viewport bounds", () => {
       }),
     ).toThrow("Invalid map viewport.");
   });
+
+  it("allows viewport queries only for small, zoomed-in rectangles", () => {
+    expect(
+      isViewportQueryAllowed({ lat: 52.4, lng: -1.9, spanLat: 0.8, spanLng: 1.2 }),
+    ).toBe(true);
+    expect(
+      isViewportQueryAllowed({ lat: 52.4, lng: -1.9, spanLat: 1.6, spanLng: 1.2 }),
+    ).toBe(false);
+    expect(
+      isViewportQueryAllowed({ lat: 52.4, lng: -1.9, spanLat: 0.8, spanLng: 1.6 }),
+    ).toBe(false);
+    expect(
+      isViewportQueryAllowed({ lat: 0, lng: 0, spanLat: Number.NaN, spanLng: 1 }),
+    ).toBe(false);
+  });
+
+  it("accepts a narrow antimeridian query but rejects a broad wrapped interval", () => {
+    expect(() =>
+      assertViewportQueryBounds({ minLat: -0.2, maxLat: 0.2, minLng: 179.7, maxLng: -179.7 }),
+    ).not.toThrow();
+
+    expect(() =>
+      assertViewportQueryBounds({ minLat: -0.2, maxLat: 0.2, minLng: 170, maxLng: -170 }),
+    ).toThrow("Geographic viewport exceeds the maximum query span.");
+  });
+
+  it("rejects broad bounds on the server-side viewport boundary", () => {
+    expect(() =>
+      assertViewportQueryBounds({ minLat: 50, maxLat: 52, minLng: -2, maxLng: -1 }),
+    ).toThrow("Geographic viewport exceeds the maximum query span.");
+  });
+
 });
