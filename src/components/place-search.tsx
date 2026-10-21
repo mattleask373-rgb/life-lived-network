@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 
 import { KIND_LABEL, placePath, searchPlaces, type Place, type PlaceIndex } from "@/lib/places";
@@ -23,37 +23,61 @@ export function PlaceSearch({
   onChange: (place: Place) => void;
 }) {
   const [query, setQuery] = useState("");
+  const inputId = useId();
+  const selectedId = useId();
+  const searching = query.trim().length > 1;
   const results = useMemo(
-    () => (index && query.trim().length > 1 ? searchPlaces(index, query, 8) : []),
-    [index, query],
+    () => (index && searching ? searchPlaces(index, query, 8) : []),
+    [index, query, searching],
   );
 
   return (
     <div>
-      <label className="block text-sm text-muted-foreground" htmlFor={`place-${label}`}>
+      <label className="block text-sm text-muted-foreground" htmlFor={inputId}>
         {label}
       </label>
       <div className="relative mt-1">
         <Search
           size={15}
+          aria-hidden="true"
           className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
         />
         <input
-          id={`place-${label}`}
+          id={inputId}
+          type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder ?? (value ? value.name : "Search by name")}
-          className="focus-ink w-full rounded-full border border-border bg-card py-2.5 pl-9 pr-3 text-sm"
+          aria-describedby={value ? selectedId : undefined}
+          className="focus-ink min-h-11 w-full rounded-full border border-border bg-card py-2.5 pl-9 pr-3 text-base sm:text-sm"
           autoComplete="off"
         />
       </div>
       {value ? (
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p id={selectedId} className="mt-1 break-words text-xs text-muted-foreground">
+          <span className="sr-only">Selected: </span>
           {index ? placePath(index, value.id) : value.name} · {KIND_LABEL[value.kind]}
         </p>
       ) : null}
+      {!index && searching ? (
+        <p role="status" className="mt-2 text-xs text-muted-foreground">
+          Place records are still loading.
+        </p>
+      ) : null}
+      {index && searching ? (
+        <p role="status" className="sr-only">
+          {results.length
+            ? `${results.length} matching place${results.length === 1 ? "" : "s"}`
+            : "No matching places"}
+        </p>
+      ) : null}
+      {index && searching && !results.length ? (
+        <p className="mt-2 text-xs text-muted-foreground">
+          That name isn't in the current place records. Try a nearby town, region or country.
+        </p>
+      ) : null}
       {results.length ? (
-        <ul className="mt-2 space-y-1">
+        <ul aria-label={`${label}: matching places`} className="mt-2 space-y-1">
           {results.map((place) => (
             <li key={place.id}>
               <button
@@ -62,10 +86,11 @@ export function PlaceSearch({
                   onChange(place);
                   setQuery("");
                 }}
-                className="focus-ink w-full rounded-lg border border-border bg-card px-3 py-2 text-left text-sm"
+                aria-pressed={value?.id === place.id}
+                className="focus-ink min-h-11 w-full rounded-lg border border-border bg-card px-3 py-2 text-left text-sm hover:border-primary/40"
               >
-                {place.name}
-                <span className="block text-xs text-muted-foreground">
+                <span className="break-words">{place.name}</span>
+                <span className="block break-words text-xs text-muted-foreground">
                   {index ? placePath(index, place.id) : ""} · {KIND_LABEL[place.kind]}
                 </span>
               </button>
