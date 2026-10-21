@@ -13,7 +13,7 @@ describe("sourceLastCheckedLabel", () => {
   });
 
   it("uses an absolute local timestamp for checks older than a week", () => {
-    expect(sourceLastCheckedLabel("2026-10-01T12:00:00.000Z", NOW)).toMatch(/^on /);
+    expect(sourceLastCheckedLabel("2026-10-01T12:00:00.000Z", NOW)).toBe("on 2026-10-01 UTC");
   });
 
   it("does not invent an age when the timestamp is absent, invalid or in the future", () => {
