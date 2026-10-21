@@ -69,9 +69,9 @@ describe("privacy-minimised measurement event contract", () => {
       "message",
       "url",
     ]) {
-      expect(() =>
-        parseMeasurementEvent({ ...base, [field]: "not permitted" }),
-      ).toThrow(/unsupported fields/i);
+      expect(() => parseMeasurementEvent({ ...base, [field]: "not permitted" })).toThrow(
+        /unsupported fields/i,
+      );
     }
   });
 
