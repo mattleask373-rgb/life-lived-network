@@ -8,6 +8,7 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 
 import { decodeCursor, pageLimit, toPage, type DiscoveryContext, type Page } from "./data/contract";
 import { asDataError } from "./data/errors";
@@ -22,15 +23,17 @@ export const getWorld = createServerFn({ method: "GET" })
     return context;
   })
   .handler(async ({ data }): Promise<Page<WorldEntry>> => {
+    // Propagate a cancelled viewport RPC to the underlying public-data reads.
+    const signal = getRequest().signal;
     const { observe } = await import("./data/observe.server");
     return observe(
       "world.page",
-      () => readWorld(data),
+      () => readWorld(data, signal),
       (page) => page.items.length,
     );
   });
 
-async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
+async function readWorld(context: DiscoveryContext, signal: AbortSignal): Promise<Page<WorldEntry>> {
   const limit = pageLimit(context.limit);
   const offset = decodeCursor(context.cursor);
 
@@ -66,7 +69,8 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       // else keeps its existing most-recent-first order.
       .order("starts_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+      .range(offset, offset + limit - 1)
+      .abortSignal(signal);
     // The selected locality and visible map rectangle are different scopes.
     // A viewport takes precedence over place filters so panning can retrieve new
     // records without changing the person's selected discovery locality.
@@ -113,7 +117,9 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
         .from("profiles")
         .select("id, display_name")
         .in("id", creatorIds)
-        .eq("discoverable", true);
+        .eq("discoverable", true)
+        .abortSignal(signal);
+      throwIfAborted(signal);
       for (const p of profiles ?? []) {
         if (p.display_name) names.set(p.id, p.display_name);
       }
@@ -127,7 +133,9 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
           "listing_id",
           listings.map((listing) => listing.id),
         )
-        .order("position", { ascending: true });
+        .order("position", { ascending: true })
+        .abortSignal(signal);
+      throwIfAborted(signal);
       if (photoError) throw photoError;
       for (const photo of photoRows ?? []) {
         const current = photos.get(photo.listing_id) ?? [];
@@ -153,14 +161,18 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
         .in(
           "listing_id",
           imported.map((r) => r.id),
-        );
+        )
+        .abortSignal(signal);
+      throwIfAborted(signal);
       const sourceIds = [...new Set((records ?? []).map((r) => r.source_id))];
       const sourceNames = new Map<string, string>();
       if (sourceIds.length) {
         const { data: sources } = await supabaseAdmin
           .from("sources")
           .select("id, name, attribution")
-          .in("id", sourceIds);
+          .in("id", sourceIds)
+          .abortSignal(signal);
+        throwIfAborted(signal);
         for (const source of sources ?? []) {
           sourceNames.set(source.id, source.attribution || source.name);
         }
@@ -199,6 +211,16 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
     }
     return page;
   } catch (error) {
+    // Preserve cancellation as cancellation; it is not a user-facing data failure.
+    if (signal.aborted) throw error;
     throw asDataError(error);
+  }
+}
+
+function throwIfAborted(signal: AbortSignal): void {
+  if (signal.aborted) {
+    const error = new Error("The request was aborted.");
+    error.name = "AbortError";
+    throw signal.reason ?? error;
   }
 }
