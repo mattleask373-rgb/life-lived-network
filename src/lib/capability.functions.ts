@@ -8,6 +8,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { parseServiceAreaUpdate } from "./service-area-selections";
 
 import {
   rowToCapability,
@@ -173,36 +174,86 @@ export const removeCapability = createServerFn({ method: "POST" })
 
 export const setServiceAreas = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
-    (input: {
-      placeIds: string[];
-      relation?: string;
-      travelWillingness?: string;
-      travellingThroughPlaceIds?: string[];
-    }) => input,
-  )
+  .inputValidator(parseServiceAreaUpdate)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await supabase.from("service_areas").delete().eq("user_id", userId);
-    const rows = [
-      ...data.placeIds.map((placeId) => ({
-        user_id: userId,
-        place_id: placeId,
-        relation: data.relation ?? "serves",
-        travel_willingness: data.travelWillingness ?? "local",
-      })),
-      // Passing through is stored as its own kind of thing.
-      ...(data.travellingThroughPlaceIds ?? []).map((placeId) => ({
-        user_id: userId,
-        place_id: placeId,
-        relation: "travelling_through",
-        travel_willingness: "anywhere",
-      })),
-    ];
-    if (rows.length) {
-      const { error } = await supabase.from("service_areas").insert(rows);
+    const placeIds = data.serviceAreas.map((area) => area.placeId);
+
+    // Validate canonical place ids before changing existing profile data.
+    if (placeIds.length) {
+      const { data: places, error: placesError } = await supabase
+        .from("places")
+        .select("id")
+        .in("id", placeIds);
+      if (placesError) throw placesError;
+      if ((places ?? []).length !== placeIds.length) {
+        throw new Error("One or more selected places could not be found.");
+      }
+    }
+
+    const { data: existing, error: existingError } = await supabase
+      .from("service_areas")
+      .select("id, place_id, relation, travel_willingness")
+      .eq("user_id", userId);
+    if (existingError) throw existingError;
+
+    const existingByPlace = new Map<string, typeof existing>();
+    for (const area of existing ?? []) {
+      const rows = existingByPlace.get(area.place_id) ?? [];
+      rows.push(area);
+      existingByPlace.set(area.place_id, rows);
+    }
+
+    // Upsert/update the desired set before deleting stale rows. A failed insert
+    // therefore cannot wipe every previous service-area declaration.
+    const retainedIds = new Set<string>();
+    for (const requested of data.serviceAreas) {
+      const rows = existingByPlace.get(requested.placeId) ?? [];
+      const current = rows.find((area) => !retainedIds.has(area.id));
+      if (current) {
+        retainedIds.add(current.id);
+        if (
+          current.relation !== requested.relation ||
+          current.travel_willingness !== requested.travelWillingness
+        ) {
+          const { error } = await supabase
+            .from("service_areas")
+            .update({
+              relation: requested.relation,
+              travel_willingness: requested.travelWillingness,
+            })
+            .eq("id", current.id)
+            .eq("user_id", userId);
+          if (error) throw error;
+        }
+      } else {
+        const { data: inserted, error } = await supabase
+          .from("service_areas")
+          .insert({
+            user_id: userId,
+            place_id: requested.placeId,
+            relation: requested.relation,
+            travel_willingness: requested.travelWillingness,
+          })
+          .select("id")
+          .single();
+        if (error) throw error;
+        if (inserted?.id) retainedIds.add(inserted.id);
+      }
+    }
+
+    const staleIds = (existing ?? [])
+      .filter((area) => !retainedIds.has(area.id))
+      .map((area) => area.id);
+    if (staleIds.length) {
+      const { error } = await supabase
+        .from("service_areas")
+        .delete()
+        .eq("user_id", userId)
+        .in("id", staleIds);
       if (error) throw error;
     }
+
     return { ok: true };
   });
 
