@@ -95,7 +95,11 @@ export function fitView(
   }
   const lats = points.map((p) => p.lat);
   const referenceLng =
-    centre && typeof centre.lng === "number" && Number.isFinite(centre.lng)
+    centre &&
+    typeof centre.lng === "number" &&
+    Number.isFinite(centre.lng) &&
+    centre.lng >= -180 &&
+    centre.lng <= 180
       ? centre.lng
       : (points[0]?.lng ?? 0);
   // Unwrap points relative to a stable reference so places at +175° and -175°
