@@ -7,9 +7,7 @@ import {
   type PublicListingSitemapRow,
 } from "./locality-sitemap";
 
-function place(
-  overrides: Partial<Place> & Pick<Place, "id" | "name" | "slug" | "kind">,
-): Place {
+function place(overrides: Partial<Place> & Pick<Place, "id" | "name" | "slug" | "kind">): Place {
   return {
     parent_id: null,
     country_code: "GB",
@@ -47,17 +45,13 @@ describe("locality sitemap indexability", () => {
 
   it("excludes demo-only supply and mixed pages with fewer than three real records", () => {
     expect(indexableLocalityPaths(geography, rowsFor("city", 8, true))).toEqual([]);
-    expect(indexableLocalityPaths(geography, [
-      ...rowsFor("city", 2),
-      ...rowsFor("quiet", 10, true),
-    ])).not.toContain("/gb/birmingham");
+    expect(
+      indexableLocalityPaths(geography, [...rowsFor("city", 2), ...rowsFor("quiet", 10, true)]),
+    ).not.toContain("/gb/birmingham");
   });
 
   it("uses only the first 60 records the locality page renders", () => {
-    const rows = [
-      ...rowsFor("city", 60, true),
-      ...rowsFor("city", 3, false),
-    ];
+    const rows = [...rowsFor("city", 60, true), ...rowsFor("city", 3, false)];
     expect(indexableLocalityPaths(geography, rows)).not.toContain("/gb/birmingham");
   });
 
@@ -77,10 +71,9 @@ describe("locality sitemap indexability", () => {
       place({ id: "first", name: "First", slug: "same", kind: "city" }),
       place({ id: "second", name: "Second", slug: "same", kind: "town" }),
     ]);
-    expect(indexableLocalityPaths(colliding, [
-      ...rowsFor("first", 3),
-      ...rowsFor("second", 3),
-    ])).toEqual(["/gb/same"]);
+    expect(
+      indexableLocalityPaths(colliding, [...rowsFor("first", 3), ...rowsFor("second", 3)]),
+    ).toEqual(["/gb/same"]);
   });
 
   it("does not index localities if the place hierarchy hits its hard cap", () => {
