@@ -47,15 +47,18 @@ function decide(
 
 describe("public source lifecycle policy", () => {
   it("uses the most recent eligible live source record and its attribution", () => {
-    const result = decide([
-      record({ sourceState: "removed", lastSeenAt: "2026-10-21T10:00:00.000Z" }),
-      record({
-        sourceId: "source-2",
-        sourceUrl: "https://second.example/event",
-        sourceState: "live",
-        lastSeenAt: "2026-10-21T11:45:00.000Z",
-      }),
-    ], [source(), source({ id: "source-2", name: "Second Source", attribution: "Second Source" })]);
+    const result = decide(
+      [
+        record({ sourceState: "removed", lastSeenAt: "2026-10-21T10:00:00.000Z" }),
+        record({
+          sourceId: "source-2",
+          sourceUrl: "https://second.example/event",
+          sourceState: "live",
+          lastSeenAt: "2026-10-21T11:45:00.000Z",
+        }),
+      ],
+      [source(), source({ id: "source-2", name: "Second Source", attribution: "Second Source" })],
+    );
 
     expect(result).toMatchObject({
       eligible: true,
@@ -91,21 +94,22 @@ describe("public source lifecycle policy", () => {
 
   it("does not let an older removed source erase a fresher independent live source", () => {
     expect(
-      decide([
-        record({ sourceState: "removed", lastSeenAt: "2026-10-21T10:00:00.000Z" }),
-        record({
-          sourceId: "source-2",
-          sourceUrl: "https://second.example/event",
-          lastSeenAt: "2026-10-21T11:45:00.000Z",
-        }),
-      ], [source(), source({ id: "source-2", name: "Second", attribution: "Second" })]),
+      decide(
+        [
+          record({ sourceState: "removed", lastSeenAt: "2026-10-21T10:00:00.000Z" }),
+          record({
+            sourceId: "source-2",
+            sourceUrl: "https://second.example/event",
+            lastSeenAt: "2026-10-21T11:45:00.000Z",
+          }),
+        ],
+        [source(), source({ id: "source-2", name: "Second", attribution: "Second" })],
+      ),
     ).toMatchObject({ eligible: true, sourceId: "source-2" });
   });
 
   it("keeps historical information through a temporary source failure but degrades its quality", () => {
-    expect(
-      decide([record()], [source({ consecutiveFailures: 2 })]),
-    ).toMatchObject({
+    expect(decide([record()], [source({ consecutiveFailures: 2 })])).toMatchObject({
       eligible: true,
       reason: "eligible",
       dataQualityOverride: "may have changed",
@@ -113,7 +117,9 @@ describe("public source lifecycle policy", () => {
   });
 
   it("does not describe paused or credential-blocked sources as freshly checked", () => {
-    expect(decide([record()], [source({ enabled: false })]).dataQualityOverride).toBe("may have changed");
+    expect(
+      decide([record()], [source({ enabled: false })]).dataQualityOverride,
+    ).toBe("may have changed");
     expect(
       decide([record()], [source({ status: "requires_credentials" })]).dataQualityOverride,
     ).toBe("may have changed");
@@ -129,9 +135,9 @@ describe("public source lifecycle policy", () => {
     expect(decide([record({ sourceUrl: "javascript:alert(1)" })])).toMatchObject({
       eligible: false,
     });
-    expect(decide([record({ sourceUrl: "https://user:pass@source.example/event" })])).toMatchObject({
-      eligible: false,
-    });
+    expect(
+      decide([record({ sourceUrl: "https://user:pass@source.example/event" })]),
+    ).toMatchObject({ eligible: false });
     expect(decide([record({ sourceState: "unknown" })])).toMatchObject({ eligible: false });
   });
 
@@ -144,10 +150,17 @@ describe("public source lifecycle policy", () => {
 
   it("treats tied observations conservatively when one says live and another says removed", () => {
     expect(
-      decide([
-        record({ sourceState: "live", lastSeenAt: "2026-10-21T11:30:00.000Z" }),
-        record({ sourceId: "source-2", sourceState: "removed", lastSeenAt: "2026-10-21T11:30:00.000Z" }),
-      ], [source(), source({ id: "source-2", name: "Second", attribution: "Second" })]),
+      decide(
+        [
+          record({ sourceState: "live", lastSeenAt: "2026-10-21T11:30:00.000Z" }),
+          record({
+            sourceId: "source-2",
+            sourceState: "removed",
+            lastSeenAt: "2026-10-21T11:30:00.000Z",
+          }),
+        ],
+        [source(), source({ id: "source-2", name: "Second", attribution: "Second" })],
+      ),
     ).toMatchObject({ eligible: false, reason: "source_record_not_live" });
   });
 });
