@@ -67,6 +67,28 @@ const SHAPES: { name: string; idea: string; priority: LayerId[] }[] = [
   },
 ];
 
+/**
+ * A journey may only use records that are still meaningful as possibilities.
+ *
+ * "Expired" and cancelled records are never allowed into a journey. For
+ * time-specific records with a real end instant, an already-finished activity
+ * is also excluded. This is an eligibility gate, not a ranking rule.
+ */
+export function isJourneyEligible(entry: WorldEntry, now = Date.now()): boolean {
+  if (entry.quality === "expired" || entry.cancellation) return false;
+
+  if (entry.endsAt) {
+    const endsAt = Date.parse(entry.endsAt);
+    if (Number.isFinite(endsAt) && endsAt < now) return false;
+  }
+
+  return true;
+}
+
+export function journeyEligibleEntries(world: WorldEntry[], now = Date.now()): WorldEntry[] {
+  return world.filter((entry) => isJourneyEligible(entry, now));
+}
+
 function pick(
   band: TimeBand,
   priority: LayerId[],
@@ -74,7 +96,7 @@ function pick(
   used: Set<string>,
   world: WorldEntry[],
 ): WorldEntry | undefined {
-  const pool = world.filter((e) => e.band === band && !used.has(e.id));
+  const pool = world.filter((e) => isJourneyEligible(e) && e.band === band && !used.has(e.id));
   const scored = pool
     .map((e) => {
       let score = 0;
@@ -135,7 +157,7 @@ function reason(entry: WorldEntry, brief: JourneyBrief): string {
  * all work here unchanged. An empty world honestly yields no journeys.
  */
 export function planJourney(brief: JourneyBrief, world: WorldEntry[]): Journey[] {
-  const pool = world;
+  const pool = journeyEligibleEntries(world);
   return SHAPES.map((shape) => buildShape(shape, brief, pool))
     .filter((j) => j.steps.length >= 2)
     .sort((a, b) => {
@@ -155,7 +177,7 @@ export interface HoursBrief {
 
 /** "I have three hours." Returns a small handful from the supplied world. */
 export function whatIsPossible(brief: HoursBrief, world: WorldEntry[]): WorldEntry[] {
-  return world
+  return journeyEligibleEntries(world)
     .filter((e) => e.minutes > 0)
     .filter((e) => e.minutes <= brief.minutes + 30)
     .filter((e) => Math.max(0, e.cost) <= brief.spend)

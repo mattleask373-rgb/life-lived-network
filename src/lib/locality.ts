@@ -9,6 +9,7 @@
  */
 
 import { isService } from "./services";
+import { journeyEligibleEntries } from "./journey-engine";
 import type { WorldEntry } from "./world-data";
 
 /** Something with a real instant, still ahead of us, not called off. */
@@ -85,6 +86,7 @@ export function localityQuestions(
   now = Date.now(),
 ): LocalityQuestion[] {
   const services = providerGroups(entries);
+  const possible = journeyEligibleEntries(entries, now);
   return [
     {
       id: "happening",
@@ -117,7 +119,7 @@ export function localityQuestions(
     {
       id: "possible",
       question: "What could happen?",
-      count: entries.length,
+      count: possible.length,
       unit: "real things to build from",
       href: "/journey",
     },
