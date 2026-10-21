@@ -55,6 +55,7 @@ function rowsFor(entries: WorldEntry[]): PublicListingSitemapRow[] {
     id: value.id,
     place_id: "city",
     demonstration: value.demonstration ?? false,
+    sourceLifecycleEligible: true,
   }));
 }
 
@@ -68,6 +69,22 @@ describe("service sitemap indexability", () => {
     );
     expect(paths).toContain("/gb/birmingham/cleaning");
     expect(paths).toContain("/gb/west-midlands/cleaning");
+  });
+
+  it("does not publish a service path from imported rows without lifecycle proof", () => {
+    const imported = entry({
+      id: "imported-cleaner",
+      origin: "source",
+      sourceName: "Outside source",
+      sourceUrl: "https://source.example/listing/1",
+    });
+    const rows = rowsFor([imported]).map((row) => ({
+      ...row,
+      sourceLifecycleEligible: false,
+    }));
+    expect(
+      indexableServicePaths(index, rows, new Map([[imported.id, imported]])),
+    ).toEqual([]);
   });
 
   it("excludes demonstration-only services", () => {
