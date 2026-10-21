@@ -49,22 +49,32 @@ function isObject(value: unknown): value is Candidate {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function hasControlCharacters(value: string): boolean {
+  return Array.from(value).some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 0x1f || code === 0x7f;
+  });
+}
+
 function isIdentifier(value: unknown): value is string {
   return (
     typeof value === "string" &&
     value.length > 0 &&
     value.length <= ASK_PLACE_POLICY_LIMITS.placeOrRecordIdChars &&
     value.trim() === value &&
-    !/[\u0000-\u001f\u007f]/.test(value)
+    !hasControlCharacters(value)
   );
 }
 
 function cleanText(value: string, maxChars: number): string {
-  return value
-    .replace(/\r\n?/g, "\n")
-    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, " ")
-    .trim()
-    .slice(0, maxChars);
+  const withoutControls = Array.from(value.replace(/\r\n?/g, "\n"), (character) => {
+    const code = character.charCodeAt(0);
+    return code <= 0x08 || code === 0x0b || code === 0x0c || (code >= 0x0e && code <= 0x1f) || code === 0x7f
+      ? " "
+      : character;
+  }).join("");
+
+  return withoutControls.trim().slice(0, maxChars);
 }
 
 function isCitableHttpUrl(value: unknown): value is string {
