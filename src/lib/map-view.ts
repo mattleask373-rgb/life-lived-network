@@ -94,7 +94,13 @@ export function fitView(
     return { lat: 54.5, lng: -4, spanLat: 12, spanLng: 12 * aspect };
   }
   const lats = points.map((p) => p.lat);
-  const lngs = points.map((p) => p.lng);
+  const referenceLng =
+    centre && typeof centre.lng === "number" && Number.isFinite(centre.lng)
+      ? centre.lng
+      : (points[0]?.lng ?? 0);
+  // Unwrap points relative to a stable reference so places at +175° and -175°
+  // fit a local viewport around the date line instead of a 350° span.
+  const lngs = points.map((point) => referenceLng + longitudeOffset(point.lng, referenceLng));
   const minLat = Math.min(...lats);
   const maxLat = Math.max(...lats);
   const minLng = Math.min(...lngs);
@@ -102,7 +108,7 @@ export function fitView(
   const spanLat = clampSpan(Math.max((maxLat - minLat) * 1.6, 0.04));
   return {
     lat: (minLat + maxLat) / 2,
-    lng: (minLng + maxLng) / 2,
+    lng: normaliseLongitude((minLng + maxLng) / 2),
     spanLat,
     spanLng: clampSpan(Math.max(spanLat * aspect, (maxLng - minLng) * 1.4)),
   };
