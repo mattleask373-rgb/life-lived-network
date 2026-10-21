@@ -23,13 +23,9 @@ import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
 import { KIND_LABEL } from "@/lib/places";
+import { evaluateServicePageIndexability } from "@/lib/service-page-indexability";
 import { privatePage, publicPage } from "@/lib/seo";
-import {
-  servicePageCopy,
-  servicePageIndexable,
-  servicePageListings,
-  servicePagePath,
-} from "@/lib/service-page";
+import { servicePageCopy, servicePageListings, servicePagePath } from "@/lib/service-page";
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import type { WorldEntry } from "@/lib/world-data";
 import { localityPath } from "@/lib/locality-path";
@@ -56,7 +52,11 @@ export const Route = createFileRoute("/$country/$place/$service")({
     const copy = servicePageCopy(geography.place.name, listings);
     // Until a page has something genuinely useful on it, it is not offered to
     // search engines. It still exists for anybody who arrives.
-    return servicePageIndexable(listings)
+    const indexability = evaluateServicePageIndexability({
+      place: geography.place,
+      listings,
+    });
+    return indexability.status === "INDEXABLE"
       ? publicPage({ path, ...copy })
       : privatePage({ path, ...copy });
   },
