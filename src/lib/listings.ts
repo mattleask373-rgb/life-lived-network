@@ -100,6 +100,12 @@ export const KINDS: {
     blurb: "Something being built that needs help",
     layer: "community",
   },
+  {
+    id: "service",
+    label: "Offer a local service",
+    blurb: "A specific service you say you provide in this place",
+    layer: "experience",
+  },
   { id: "skill", label: "Offer a skill", blurb: "An hour of what you're good at", layer: "art" },
   {
     id: "community",
@@ -132,7 +138,7 @@ const LAYER_IDS: LayerId[] = [
   "nature",
   "food",
 ];
-const BANDS: TimeBand[] = ["now", "today", "tonight", "tomorrow", "weekend"];
+const BANDS: TimeBand[] = ["now", "today", "tonight", "tomorrow", "weekend", "by_arrangement"];
 
 function asLayer(v: string): LayerId {
   return (LAYER_IDS as string[]).includes(v) ? (v as LayerId) : "experience";
@@ -266,6 +272,12 @@ export interface NewListing {
   /** Approximate, place-level coordinates — never an address. */
   lat: number | null;
   lng: number | null;
+  /** Service fields are present only for an explicitly declared service offer. */
+  service_category?: string;
+  organisation?: string;
+  provider_note?: string;
+  booking_state?: "bookable" | "enquire" | "external" | "not_bookable";
+  booking_url?: string;
 }
 
 export async function createListing(input: NewListing, creatorId: string) {
