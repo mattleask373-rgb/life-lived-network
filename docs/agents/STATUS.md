@@ -69,13 +69,12 @@
 
 ## Next actions
 
-1. Confirm the actual Lovable Project Settings → Git sync destination is a non-main branch, and have an administrator confirm enforced main protection / required checks. Do not infer either setting from matching SHAs.
-2. Review #211 and complete manual visual, keyboard, screen-reader and photo QA. Human approves/merges it only through repository controls; reconcile the #213 base after the parent settles.
-3. Review #220 with manual responsive/keyboard/screen-reader QA. Its CI passes on current main; it has no #211 dependency. Do not treat CI as approval to merge.
-3. Obtain the reported original `grok-workspace.zip` (reported SHA-256 `6eae21ffddcb1cd1b62025c416cd979ae2fa500321fce83b158b870c838c72a6`, not independently verified in this environment) or durable screens/source. Record a manifest before claiming full redesign parity.
-4. Choose one WorkOpportunity contract branch (#203 is the current-main candidate), then one downstream staging/surface chain; mark duplicate alternatives superseded.
-5. Reconcile the indexability gate so locality/service metadata and sitemap enumeration use one explainable policy. Verify empty/demo-only pages remain noindex and absent from sitemaps.
-6. Keep source ingestion fixture-first; rights, credentials, country coverage, production access and publication remain human gates. Define/read-only assistant evaluation before any public endpoint.
+1. Confirm the actual Lovable Project Settings → Git sync destination is a non-main branch, and have an administrator confirm enforced main protection / required checks. Matching project/main SHAs do not prove the sync setting.
+2. Review #211 and complete manual visual, keyboard, screen-reader and photo QA. Reconcile its three-commit-behind main ancestry, then human approve/merge only through repository controls.
+3. Review #220 with manual responsive/keyboard/screen-reader QA at mobile/tablet/desktop widths. Its current-main exact-head Verify passes and it has no #211 dependency; do not treat CI as merge approval. #216 is closed as superseded.
+4. Reconcile #213 to the current #211 parent after that parent is accepted and rerun exact-head Verify; do not edit Journey/Road Trip files in parallel.
+5. Obtain the reported original `grok-workspace.zip` (reported SHA-256 `6eae21ffddcb1cd1b62025c416cd979ae2fa500321fce83b158b870c838c72a6`, not independently verified in this environment) or an accessible source/screenshots. Record a manifest before claiming complete design parity.
+6. Choose one WorkOpportunity contract branch (#203 remains the current-main candidate), align locality/service metadata with the sitemap indexability gate, and keep ingestion fixture-first. Rights, credentials, country coverage, production access and publication remain human gates. Design any read-only assistant context/evaluation before a public endpoint.
 
 ## Canonical invariants
 
