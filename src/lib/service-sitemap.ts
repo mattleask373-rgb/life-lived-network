@@ -77,7 +77,12 @@ export function indexableServicePaths(
     // a full taxonomy scan for every category on every locality.
     const eligibleCategories = new Map<string, ServiceCategory>();
     for (const entry of entries) {
-      if (entry.demonstration || entry.quality === "expired" || entry.cancellation || !isService(entry)) {
+      if (
+        entry.demonstration ||
+        entry.quality === "expired" ||
+        entry.cancellation ||
+        !isService(entry)
+      ) {
         continue;
       }
       for (const match of categoriesOf(entry)) {
