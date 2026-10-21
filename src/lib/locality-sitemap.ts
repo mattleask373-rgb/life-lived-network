@@ -16,6 +16,7 @@ export const LOCALITY_SITEMAP_PAGE_SIZE = 60;
 export const LOCALITY_FILTER_CAP = 400;
 
 export interface PublicListingSitemapRow {
+  id: string;
   place_id: string | null;
   demonstration: boolean | null;
 }
