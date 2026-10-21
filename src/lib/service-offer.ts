@@ -101,7 +101,9 @@ export function parseServiceOfferDraft(input: unknown): ServiceOfferFields {
   const rawUrl = optionalText(record.bookingUrl, "Booking link", 2000);
   const needsLink = bookingState === "bookable" || bookingState === "external";
   if (needsLink && !rawUrl) {
-    throw new ServiceOfferValidationError("Add the provider's booking link for this booking state.");
+    throw new ServiceOfferValidationError(
+      "Add the provider's booking link for this booking state.",
+    );
   }
   if (!needsLink && rawUrl) {
     throw new ServiceOfferValidationError(
