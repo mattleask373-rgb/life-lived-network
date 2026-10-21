@@ -36,6 +36,7 @@ describe("public sitemap privacy", () => {
     for (const path of PRIVATE_PATHS) {
       expect(locs(xml)).not.toContain(`${SITE_ORIGIN}${path}`);
     }
+    expect(locs(xml)).not.toContain(`${SITE_ORIGIN}/life-list`);
   });
 
   it("robots.txt disallows every route marked private", () => {
