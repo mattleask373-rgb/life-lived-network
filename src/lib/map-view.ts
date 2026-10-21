@@ -94,7 +94,7 @@ export function fitView(
     return { lat: 54.5, lng: -4, spanLat: 12, spanLng: 12 * aspect };
   }
   const lats = points.map((p) => p.lat);
-    const referenceLng =
+  const referenceLng =
     centre &&
     typeof centre.lng === "number" &&
     Number.isFinite(centre.lng) &&
