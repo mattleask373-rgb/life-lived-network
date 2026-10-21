@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { planJourney, whatIsPossible } from "./journey-engine";
+import { isJourneyCandidate, whatIsPossible } from "./journey-engine";
 import type { WorldEntry } from "./world-data";
 
 function entry(overrides: Partial<WorldEntry> = {}): WorldEntry {
@@ -51,7 +51,7 @@ describe("service offers stay out of personal activity planning", () => {
     expect(results.map((result) => result.id)).toEqual(["community-music"]);
   });
 
-  it("does not schedule a service offer into a journey window even if it has a time band", () => {
+  it("does not treat a service offer as a journey candidate even if it has a time band", () => {
     const service = entry({
       id: "service-cleaning",
       kind: "service",
@@ -60,17 +60,14 @@ describe("service offers stay out of personal activity planning", () => {
       when: "Today",
       minutes: 60,
     });
-    const plan = planJourney(
-      {
-        days: 1,
-        budget: 100,
-        interests: ["experience"],
-        wantsPaidWork: false,
-        social: "friendly",
-      },
-      [service],
-    );
 
-    expect(plan.steps.some((step) => step.entry.kind === "service")).toBe(false);
+    expect(isJourneyCandidate(service, "today", new Set())).toBe(false);
+  });
+
+  it("continues to allow an ordinary activity as a journey candidate", () => {
+    const activity = entry({ id: "community-music", kind: "event" });
+
+    expect(isJourneyCandidate(activity, "today", new Set())).toBe(true);
+    expect(isJourneyCandidate(activity, "today", new Set(["community-music"]))).toBe(false);
   });
 });
