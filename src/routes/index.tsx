@@ -1,6 +1,6 @@
 import { publicPage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { LivingMap } from "@/components/living-map";
 import { LayerFilter } from "@/components/layer-filter";
@@ -16,12 +16,14 @@ import { LayerIcon } from "@/components/layer-icon";
 import { useLifeList } from "@/hooks/use-life-list";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { fetchWorldEntries } from "@/lib/listings";
+import { fetchWorld, fetchWorldEntries } from "@/lib/listings";
+import { MAX_LIMIT } from "@/lib/data/contract";
+import { geoBoundsForViewport, type GeoBounds } from "@/lib/geo-bounds";
 import { densityOf } from "@/lib/trust";
 import { getOpenNeeds } from "@/lib/needs.functions";
 import { PLACE_FALLBACK } from "@/lib/places";
 import { placeInView, type MapView } from "@/lib/map-view";
-import { entriesForMapList, partitionMapList } from "@/lib/map-list-sync";
+import { entriesForMapList, mergeViewportEntries, partitionMapList } from "@/lib/map-list-sync";
 import { useWorldContext } from "@/lib/world-context";
 import { LocalityQuestions } from "@/components/locality-questions";
 import { WhatsHappening } from "@/components/whats-happening";
@@ -52,7 +54,21 @@ function Home() {
 
   const { place, ancestors, setPlaceSlug, loading, index } = useWorldContext();
   const [view, setView] = useState<MapView | null>(null);
+  const [viewportBounds, setViewportBounds] = useState<GeoBounds | null>(null);
   const [exploredSlug, setExploredSlug] = useState<string | null>(null);
+
+  // Debounce the transient view; a pointer move should not trigger a request.
+  // This changes the records shown, never the selected discovery locality.
+  useEffect(() => {
+    if (!view) {
+      setViewportBounds(null);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setViewportBounds(geoBoundsForViewport(view));
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [view]);
   const exploredPlace = exploredSlug && index ? index.bySlug.get(exploredSlug) : null;
   const discoveryPlace = exploredPlace ?? place;
 
@@ -66,6 +82,21 @@ function Home() {
     enabled: Boolean(discoveryPlace),
     queryFn: () => fetchWorldEntries({ placeId: discoveryPlace?.id ?? null }),
   });
+  const {
+    data: viewportPage,
+    isFetching: viewportFetching,
+    isError: viewportError,
+    refetch: refetchViewport,
+  } = useQuery({
+    queryKey: ["world-viewport", viewportBounds],
+    enabled: Boolean(place && viewportBounds),
+    staleTime: 15_000,
+    queryFn: () => {
+      if (!viewportBounds) throw new Error("Map viewport bounds are required.");
+      return fetchWorld({ bounds: viewportBounds, limit: MAX_LIMIT });
+    },
+  });
+
   const openNeedsFn = useServerFn(getOpenNeeds);
   const { data: openNeeds } = useQuery({
     queryKey: ["open-needs", place?.id ?? null],
@@ -78,15 +109,24 @@ function Home() {
   const regionName = ancestors[0]?.name ?? "";
   const placeBlurb = place?.blurb || PLACE_FALLBACK.blurb;
 
-  const allFilteredEntries = useMemo(
-    () => (layers.length ? all.filter((entry) => layers.includes(entry.layer)) : all),
-    [all, layers],
+  const viewportLoaded = Boolean(viewportBounds && viewportPage);
+  const mapSourceEntries = useMemo(
+    () => (viewportLoaded && viewportPage ? mergeViewportEntries(viewportPage.items, all) : all),
+    [all, viewportLoaded, viewportPage],
   );
-  const entries = useMemo(
-    () => (layers.length ? allFilteredEntries : meaningfulVariety(allFilteredEntries)),
-    [allFilteredEntries, layers.length],
+
+  const mapBaseFilteredEntries = useMemo(
+    () =>
+      layers.length
+        ? mapSourceEntries.filter((entry) => layers.includes(entry.layer))
+        : mapSourceEntries,
+    [mapSourceEntries, layers],
   );
-  const mapEntries = showAllLoaded ? allFilteredEntries : entries;
+  const mapEntries = showAllLoaded
+    ? mapBaseFilteredEntries
+    : layers.length
+      ? mapBaseFilteredEntries
+      : meaningfulVariety(mapBaseFilteredEntries);
   const snapshot = useMemo(() => activitySnapshot(all), [all]);
   const events = useMemo(() => upcomingEvents(all), [all]);
   const groups = useMemo(() => providerGroups(all), [all]);
@@ -105,47 +145,55 @@ function Home() {
   );
   const locatedCount = mapEntries.length - mapPartition.unpinned.length;
   const mapListSummary = showAllLoaded
-    ? mapListEntries.length + " loaded records for " + (discoveryPlace?.name ?? placeName)
+    ? mapListEntries.length +
+      (viewportLoaded
+        ? " loaded records in this map view"
+        : " loaded records for " + (discoveryPlace?.name ?? placeName))
     : view
       ? mapPartition.inView.length +
         " of " +
         locatedCount +
         " located records in view · " +
         mapPartition.unpinned.length +
-        " unpinned"
+        " unpinned" +
+        (viewportLoaded && viewportPage?.hasMore ? " · page full; more may exist" : "")
       : mapPartition.unpinned.length + " unpinned · map view preparing";
+  const mapLoading = viewportBounds ? !viewportPage && viewportFetching : worldLoading;
+  const mapError = viewportBounds ? viewportError && !viewportPage : worldError;
+  const refetchMap = viewportBounds ? refetchViewport : refetchWorld;
   const canChangeListScope =
     showAllLoaded ||
     !view ||
     mapPartition.outsideView.length > 0 ||
-    allFilteredEntries.length > entries.length;
+    mapBaseFilteredEntries.length > mapEntries.length;
 
   const mapListContents = (
     <>
-      {worldLoading || loading ? (
+      {mapLoading || loading ? (
         <p role="status" className="text-sm text-muted-foreground">
-          Checking what's recorded here…
+          {viewportBounds ? "Loading records for this map view…" : "Checking what's recorded here…"}
         </p>
       ) : !place ? (
         <p role="status" className="text-sm text-muted-foreground">
           Choose a supported place to see its records.
         </p>
-      ) : worldError ? (
+      ) : mapError ? (
         <p role="alert" className="text-sm text-muted-foreground">
-          We couldn't load what's here.{" "}
+          We couldn't load {viewportBounds ? "records for this map view" : "what's here"}.{" "}
           <button
             type="button"
-            onClick={() => void refetchWorld()}
+            onClick={() => void refetchMap()}
             className="focus-ink min-h-11 underline underline-offset-4"
           >
             Try again
           </button>
         </p>
       ) : mapEntries.length === 0 ? (
-        emptyListState(all.length, layers.length > 0) === "filtered-out" ? (
+        emptyListState(mapBaseFilteredEntries.length, layers.length > 0) === "filtered-out" ? (
           <p className="text-sm text-muted-foreground">
-            Nothing matches these filters, but {all.length} other{" "}
-            {all.length === 1 ? "thing is" : "things are"} recorded here.{" "}
+            Nothing matches these filters, but {mapBaseFilteredEntries.length} other{" "}
+            {mapBaseFilteredEntries.length === 1 ? "thing is" : "things are"} recorded{" "}
+            {viewportLoaded ? "in this map view or without a safe pin" : "here"}.{" "}
             <button
               type="button"
               onClick={() => setLayers([])}
@@ -156,7 +204,9 @@ function Home() {
           </p>
         ) : (
           <p role="status" className="text-sm text-muted-foreground">
-            Nothing recorded here yet.
+            {viewportLoaded
+              ? "Nothing with usable location coordinates is recorded in this map view yet."
+              : "Nothing recorded here yet."}
           </p>
         )
       ) : mapListEntries.length === 0 ? (
@@ -306,13 +356,15 @@ function Home() {
               What's around you
             </h2>
             <p role="status" aria-live="polite" className="shrink-0 text-sm text-muted-foreground">
-              {worldLoading
+              {mapLoading
                 ? "Looking…"
                 : !place
                   ? "Choose a place"
-                  : worldError
+                  : mapError
                     ? "Unavailable"
-                    : `${mapEntries.length} things`}
+                    : viewportLoaded
+                      ? `${viewportPage?.items.length ?? 0} located records in this view${viewportPage?.hasMore ? " · page full" : ""}`
+                      : `${mapEntries.length} things`}
             </p>
           </div>
           <div className="mt-3">
@@ -323,6 +375,7 @@ function Home() {
               <div className="h-[62vh] min-h-80 sm:h-[30rem] lg:h-[calc(100vh-17rem)] lg:min-h-[34rem] lg:max-h-[48rem]">
                 <LivingMap
                   entries={mapEntries}
+                  viewBasisEntries={all}
                   activeId={open?.id}
                   onSelect={setOpen}
                   centre={place ? { lat: place.lat, lng: place.lng } : null}
@@ -342,9 +395,9 @@ function Home() {
                     setShowAllLoaded(false);
                   }}
                   onViewChange={setView}
-                  loading={worldLoading}
-                  error={worldError}
-                  onRetry={() => void refetchWorld()}
+                  loading={mapLoading}
+                  error={mapError}
+                  onRetry={() => void refetchMap()}
                 />
               </div>
               <section
