@@ -156,6 +156,9 @@ export interface HoursBrief {
 /** "I have three hours." Returns a small handful from the supplied world. */
 export function whatIsPossible(brief: HoursBrief, world: WorldEntry[]): WorldEntry[] {
   return world
+    // A service listing is an offer to a potential customer, not an activity
+    // to insert into the person's own three-hour plan.
+    .filter((e) => e.kind !== "service")
     .filter((e) => e.minutes > 0)
     .filter((e) => e.minutes <= brief.minutes + 30)
     .filter((e) => Math.max(0, e.cost) <= brief.spend)
