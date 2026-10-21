@@ -195,7 +195,9 @@ function Home() {
       ) : null}
       {mapLoading || loading ? (
         <p role="status" className="text-sm text-muted-foreground">
-          {viewportRequestActive ? "Loading records for this map view…" : "Checking what's recorded here…"}
+          {viewportRequestActive
+            ? "Loading records for this map view…"
+            : "Checking what's recorded here…"}
         </p>
       ) : !place ? (
         <p role="status" className="text-sm text-muted-foreground">
