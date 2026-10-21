@@ -28,9 +28,9 @@ describe("sourceHealth", () => {
   });
 
   it("reports when a source is overdue by more than three intervals", () => {
-    expect(
-      sourceHealth(input({ lastSuccessAt: "2026-10-21T10:30:00.000Z" })).state,
-    ).toBe("overdue");
+    expect(sourceHealth(input({ lastSuccessAt: "2026-10-21T10:30:00.000Z" })).state).toBe(
+      "overdue",
+    );
   });
 
   it("prioritises a disabled source over its previous refresh time", () => {
@@ -39,9 +39,9 @@ describe("sourceHealth", () => {
 
   it("flags a source that needs configuration or credentials", () => {
     expect(sourceHealth(input({ status: "requires_review" })).state).toBe("needs_setup");
-    expect(
-      sourceHealth(input({ credentialRequired: true, credentialPresent: false })).state,
-    ).toBe("needs_setup");
+    expect(sourceHealth(input({ credentialRequired: true, credentialPresent: false })).state).toBe(
+      "needs_setup",
+    );
   });
 
   it("reports consecutive failures without claiming old records changed", () => {
@@ -61,8 +61,8 @@ describe("sourceHealth", () => {
 
   it("fails closed for an invalid or future success timestamp", () => {
     expect(sourceHealth(input({ lastSuccessAt: "not-a-time" })).state).toBe("unknown");
-    expect(
-      sourceHealth(input({ lastSuccessAt: "2026-10-21T12:01:00.000Z" })).state,
-    ).toBe("unknown");
+    expect(sourceHealth(input({ lastSuccessAt: "2026-10-21T12:01:00.000Z" })).state).toBe(
+      "unknown",
+    );
   });
 });
