@@ -14,10 +14,7 @@
 
 export type SourceRecordState = "live" | "cancelled" | "postponed" | "removed";
 export type SourceLifecycleStatus =
-  | "ready"
-  | "requires_credentials"
-  | "requires_review"
-  | "not_suitable";
+  "ready" | "requires_credentials" | "requires_review" | "not_suitable";
 
 export interface SourceRecordLifecycleInput {
   listingId: string | null;
