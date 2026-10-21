@@ -28,10 +28,7 @@ function hasUsableCoordinates(entry: WorldEntry): boolean {
  * projection as LivingMap. This does not fetch data, infer coordinates, or
  * change the selected discovery locality.
  */
-export function partitionMapList(
-  entries: WorldEntry[],
-  view: MapView | null,
-): MapListPartition {
+export function partitionMapList(entries: WorldEntry[], view: MapView | null): MapListPartition {
   const unpinned = entries.filter((entry) => !hasUsableCoordinates(entry));
   const located = entries.filter(hasUsableCoordinates);
 
