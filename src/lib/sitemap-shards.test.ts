@@ -21,8 +21,9 @@ describe("bounded sitemap shards", () => {
 
   it("calculates counts at the URL limit boundaries", () => {
     expect(sitemapShardCount([])).toBe(0);
-    expect(sitemapShardCount(Array.from({ length: SITEMAP_URLS_PER_SHARD }, (_, i) => String(i))))
-      .toBe(1);
+    expect(
+      sitemapShardCount(Array.from({ length: SITEMAP_URLS_PER_SHARD }, (_, i) => String(i))),
+    ).toBe(1);
     expect(
       sitemapShardCount(Array.from({ length: SITEMAP_URLS_PER_SHARD + 1 }, (_, i) => String(i))),
     ).toBe(2);
@@ -40,7 +41,14 @@ describe("bounded sitemap shards", () => {
 
   it("rejects invalid shard numbers instead of guessing", () => {
     const paths = ["/gb/a", "/gb/b"];
-    for (const shard of [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, MAX_SERVICE_SITEMAP_SHARDS + 1]) {
+    for (const shard of [
+      0,
+      -1,
+      1.5,
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      MAX_SERVICE_SITEMAP_SHARDS + 1,
+    ]) {
       expect(sitemapShard(paths, shard)).toBeNull();
     }
   });
