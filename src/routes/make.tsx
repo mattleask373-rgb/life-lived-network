@@ -325,6 +325,86 @@ function MakePage() {
               </label>
             </div>
 
+            {kind === "service" ? (
+              <section className="card-paper space-y-4 p-5">
+                <div>
+                  <h2 className="text-lg">Describe the service you offer</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    This is a self-declared offer for the selected locality. It does not confirm
+                    a time slot, platform verification, professional qualification, or service in
+                    other localities.
+                  </p>
+                </div>
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">Service category (choose explicitly)</span>
+                  <select
+                    required
+                    value={form.serviceCategory}
+                    onChange={(e) => setForm({ ...form, serviceCategory: e.target.value })}
+                    className={input}
+                  >
+                    <option value="">Choose a service category</option>
+                    {SERVICE_CATEGORIES.filter((category) => category.group !== "work").map(
+                      (category) => (
+                        <option key={category.slug} value={category.slug}>
+                          {category.label}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </label>
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">Provider / business name (optional)</span>
+                  <input
+                    value={form.organisation}
+                    onChange={(e) => setForm({ ...form, organisation: e.target.value })}
+                    maxLength={120}
+                    placeholder="Name used by the provider"
+                    className={input}
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">
+                    What is included, price basis or important boundaries (optional)
+                  </span>
+                  <textarea
+                    rows={3}
+                    value={form.providerNote}
+                    onChange={(e) => setForm({ ...form, providerNote: e.target.value })}
+                    maxLength={1000}
+                    placeholder="For example, what a typical price covers or what the service does not include"
+                    className={input}
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">Booking / enquiry pathway</span>
+                  <select
+                    value={form.bookingState}
+                    onChange={(e) => setForm({ ...form, bookingState: e.target.value })}
+                    className={input}
+                  >
+                    <option value="not_bookable">No booking pathway yet</option>
+                    <option value="enquire">Enquiries only — no booking confirmed here</option>
+                    <option value="external">Provider's external booking page</option>
+                  </select>
+                </label>
+                {form.bookingState === "external" ? (
+                  <label className="block text-sm">
+                    <span className="text-muted-foreground">Public booking URL (http or https)</span>
+                    <input
+                      required
+                      type="url"
+                      value={form.bookingUrl}
+                      onChange={(e) => setForm({ ...form, bookingUrl: e.target.value })}
+                      maxLength={2000}
+                      placeholder="https://provider.example/booking"
+                      className={input}
+                    />
+                  </label>
+                ) : null}
+              </section>
+            ) : null}
+
             <div className="card-paper grid gap-4 p-5 sm:grid-cols-2">
               <label className="block text-sm">
                 <span className="text-muted-foreground">Where (a place name, not an address)</span>
