@@ -160,6 +160,8 @@ function Home() {
         (viewportLoaded && viewportPage?.hasMore ? " · more may exist; zoom in to narrow" : "")
       : mapPartition.unpinned.length + " unpinned · map view preparing";
   const viewportRequestActive = Boolean(viewportBounds && !viewportTooWide);
+  const viewportTooWideMessage =
+    "Zoom in to search a smaller map area. Showing records already loaded for this locality; no broad-area query was sent.";
   const mapLoading = viewportRequestActive ? !viewportPage && viewportFetching : worldLoading;
   const mapError = viewportRequestActive ? viewportError && !viewportPage : worldError && !world;
   const mapRefreshError = viewportRequestActive
@@ -378,9 +380,11 @@ function Home() {
             <LayerFilter active={layers} onChange={setLayers} />
           </div>
           {viewportTooWide ? (
-            <p role="status" className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
-              Zoom in to search a smaller map area. Showing records already loaded for this locality; no
-              broad-area query was sent.
+            <p
+              role="status"
+              className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground"
+            >
+              {viewportTooWideMessage}
             </p>
           ) : null}
           {mapRefreshError ? (
