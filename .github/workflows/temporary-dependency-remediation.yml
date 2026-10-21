@@ -22,7 +22,7 @@ jobs:
           bun-version: latest
 
       - name: Apply fixes within existing dependency ranges
-        run: bun audit fix
+        run: bun audit fix || true
 
       - name: Commit dependency manifest and lockfile changes to this branch only
         run: |
