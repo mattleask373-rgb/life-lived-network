@@ -21,21 +21,23 @@ const PLACE_SELECT =
 const QUERY_PAGE_SIZE = 1000;
 const SNAPSHOT_TTL_MS = 60 * 60 * 1000;
 
+class SitemapSourceLimitError extends Error {}
+
 interface PublicSitemapSnapshot {
   index: ReturnType<typeof buildPlaceIndex>;
   rows: ListingRow[];
   orderedRows: PublicListingSitemapRow[];
 }
 
-let cachedSnapshot: { expiresAt: number; value: PublicSitemapSnapshot | null } | null = null;
-let snapshotInFlight: Promise<PublicSitemapSnapshot | null> | null = null;
+let cachedSnapshot: { expiresAt: number; value: PublicSitemapSnapshot } | null = null;
+let snapshotInFlight: Promise<PublicSitemapSnapshot> | null = null;
 
 /**
  * The locality and service feeds share the same source snapshot. Reuse it for
  * an hour per warm server instance and deduplicate concurrent crawler requests;
  * CDN caching remains an additional layer, not the only protection.
  */
-async function readPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot | null> {
+async function readPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot> {
   if (cachedSnapshot && cachedSnapshot.expiresAt > Date.now()) return cachedSnapshot.value;
   if (snapshotInFlight) return snapshotInFlight;
 
@@ -49,7 +51,7 @@ async function readPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot | null
   }
 }
 
-async function loadPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot | null> {
+async function loadPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot> {
   const supabase = publicServerClient();
   const { data: placeRows, error: placesError } = await supabase
     .from("places")
@@ -57,7 +59,9 @@ async function loadPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot | null
     .limit(LOCALITY_SITEMAP_PLACE_LIMIT + 1);
   if (placesError) throw placesError;
   const places = (placeRows ?? []) as unknown as Place[];
-  if (places.length >= LOCALITY_SITEMAP_PLACE_LIMIT) return null;
+  if (places.length >= LOCALITY_SITEMAP_PLACE_LIMIT) {
+    throw new SitemapSourceLimitError("Place hierarchy reached the sitemap source cap");
+  }
 
   const index = buildPlaceIndex(places);
   const settled = new Date(Date.now() - 3 * 3_600_000).toISOString();
@@ -84,7 +88,9 @@ async function loadPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot | null
       created_at: string;
     })[];
     rows.push(...page);
-    if (rows.length > LOCALITY_SITEMAP_LISTING_SCAN_LIMIT) return null;
+    if (rows.length > LOCALITY_SITEMAP_LISTING_SCAN_LIMIT) {
+      throw new SitemapSourceLimitError("Listing scan reached the sitemap source cap");
+    }
     if (page.length < end - offset + 1) break;
   }
 
@@ -102,14 +108,12 @@ async function loadPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot | null
 /** Empty means a complete, verified scan found no eligible locality pages. */
 export async function fetchPublicLocalitySitemapPaths(): Promise<string[]> {
   const snapshot = await readPublicSitemapSnapshot();
-  if (!snapshot) return [];
   return indexableLocalityPaths(snapshot.index, snapshot.orderedRows, { complete: true });
 }
 
 /** Empty means a complete, verified scan found no eligible service pages. */
 export async function fetchPublicServiceSitemapPaths(): Promise<string[]> {
   const snapshot = await readPublicSitemapSnapshot();
-  if (!snapshot) return [];
   const entriesById = new Map(snapshot.rows.map((row) => [row.id, rowToEntry(row)]));
   return indexableServicePaths(snapshot.index, snapshot.orderedRows, entriesById, {
     complete: true,
