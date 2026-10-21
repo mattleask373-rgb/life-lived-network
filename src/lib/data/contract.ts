@@ -1,3 +1,5 @@
+import type { GeoBounds } from "../geo-bounds";
+
 /**
  * The data contract.
  *
@@ -25,6 +27,11 @@ export interface DiscoveryContext {
   lng?: number | null;
   /** Kilometres around the point above. */
   radiusKm?: number | null;
+  /**
+   * The transient map rectangle. When present it takes precedence over place
+   * filters; minLng > maxLng denotes a viewport crossing the antimeridian.
+   */
+  bounds?: GeoBounds | null;
   /** ISO timestamps, when a screen genuinely knows them. */
   startTime?: string | null;
   endTime?: string | null;

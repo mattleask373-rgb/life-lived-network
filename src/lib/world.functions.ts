@@ -8,24 +8,37 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 
 import { decodeCursor, pageLimit, toPage, type DiscoveryContext, type Page } from "./data/contract";
 import { asDataError } from "./data/errors";
 import { rowToEntry, type ListingRow } from "./listings";
+import { assertQueryableGeoBounds } from "./geo-bounds";
 import type { SourcePhoto, WorldEntry } from "./world-data";
 
 export const getWorld = createServerFn({ method: "GET" })
-  .inputValidator((input: DiscoveryContext | undefined) => input ?? {})
+  .inputValidator((input: DiscoveryContext | undefined) => {
+    const context = input ?? {};
+    if (context.bounds !== undefined && context.bounds !== null) {
+      assertQueryableGeoBounds(context.bounds);
+    }
+    return context;
+  })
   .handler(async ({ data }): Promise<Page<WorldEntry>> => {
+    // Propagate a cancelled viewport RPC to the underlying public-data reads.
+    const signal = getRequest().signal;
     const { observe } = await import("./data/observe.server");
     return observe(
       "world.page",
-      () => readWorld(data),
+      () => readWorld(data, signal),
       (page) => page.items.length,
     );
   });
 
-async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
+async function readWorld(
+  context: DiscoveryContext,
+  signal: AbortSignal,
+): Promise<Page<WorldEntry>> {
   const limit = pageLimit(context.limit);
   const offset = decodeCursor(context.cursor);
 
@@ -39,7 +52,7 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
     // the request itself the bottleneck; the browser only says where it is.
     let insideIds = context.placeIds ?? [];
     let insideSlugs = context.placeSlugs ?? [];
-    if (context.placeId && !insideIds.length) {
+    if (!context.bounds && context.placeId && !insideIds.length) {
       const { loadPlaceIndex } = await import("./place-index.server");
       const { descendantIdsOf } = await import("./places");
       const index = await loadPlaceIndex(supabase);
@@ -61,20 +74,31 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       // else keeps its existing most-recent-first order.
       .order("starts_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
-    // A locality, or a locality and everywhere inside it. Either way the read
-    // stays bounded by the same page limit.
-    //
-    // A very wide selection — a nation, or the whole world region — can name
-    // more localities than it is sensible to put in one filter. Rather than
-    // quietly filtering by an arbitrary slice of them, which would hide real
-    // activity, the locality filter is dropped: at that width it excludes
-    // almost nothing anyway, and the page limit still bounds the read.
-    const LOCALITY_FILTER_CAP = 400;
-    if (insideIds.length && insideIds.length <= LOCALITY_FILTER_CAP) {
-      query = query.in("place_id", insideIds);
-    } else if (!insideIds.length && context.placeId) {
-      query = query.eq("place_id", context.placeId);
+      .range(offset, offset + limit - 1)
+      .abortSignal(signal);
+    // The selected locality and visible map rectangle are different scopes.
+    // A viewport takes precedence over place filters so panning can retrieve new
+    // records without changing the person's selected discovery locality.
+    if (context.bounds) {
+      const bounds = context.bounds;
+      query = query.gte("lat", bounds.minLat).lte("lat", bounds.maxLat);
+      if (bounds.minLng <= bounds.maxLng) {
+        query = query.gte("lng", bounds.minLng).lte("lng", bounds.maxLng);
+      } else {
+        // A wrapped longitude interval crosses the antimeridian. Bounds were
+        // validated before reaching this query, so only finite numbers enter OR.
+        query = query.or(`lng.gte.${bounds.minLng},lng.lte.${bounds.maxLng}`);
+      }
+    } else {
+      // A very wide locality selection can name more IDs than a sensible filter.
+      // Drop the filter instead of hiding activity from an arbitrary ID slice;
+      // the bounded page limit still applies.
+      const LOCALITY_FILTER_CAP = 400;
+      if (insideIds.length && insideIds.length <= LOCALITY_FILTER_CAP) {
+        query = query.in("place_id", insideIds);
+      } else if (!insideIds.length && context.placeId) {
+        query = query.eq("place_id", context.placeId);
+      }
     }
 
     // An event that has finished is never upcoming. Anything without a start
@@ -85,6 +109,7 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
 
     const { data: rows, error } = await query;
     if (error) throw error;
+    throwIfAborted(signal);
 
     const listings = (rows ?? []) as unknown as ListingRow[];
     // One extra query for all creators, never one per listing.
@@ -98,7 +123,9 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
         .from("profiles")
         .select("id, display_name")
         .in("id", creatorIds)
-        .eq("discoverable", true);
+        .eq("discoverable", true)
+        .abortSignal(signal);
+      throwIfAborted(signal);
       for (const p of profiles ?? []) {
         if (p.display_name) names.set(p.id, p.display_name);
       }
@@ -112,7 +139,9 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
           "listing_id",
           listings.map((listing) => listing.id),
         )
-        .order("position", { ascending: true });
+        .order("position", { ascending: true })
+        .abortSignal(signal);
+      throwIfAborted(signal);
       if (photoError) throw photoError;
       for (const photo of photoRows ?? []) {
         const current = photos.get(photo.listing_id) ?? [];
@@ -138,14 +167,18 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
         .in(
           "listing_id",
           imported.map((r) => r.id),
-        );
+        )
+        .abortSignal(signal);
+      throwIfAborted(signal);
       const sourceIds = [...new Set((records ?? []).map((r) => r.source_id))];
       const sourceNames = new Map<string, string>();
       if (sourceIds.length) {
         const { data: sources } = await supabaseAdmin
           .from("sources")
           .select("id, name, attribution")
-          .in("id", sourceIds);
+          .in("id", sourceIds)
+          .abortSignal(signal);
+        throwIfAborted(signal);
         for (const source of sources ?? []) {
           sourceNames.set(source.id, source.attribution || source.name);
         }
@@ -159,6 +192,7 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       }
     }
 
+    throwIfAborted(signal);
     const page = toPage(
       listings.map((r) =>
         rowToEntry(
@@ -176,14 +210,25 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
     // looked at, and only ever labelled as a demonstration. A locality with no
     // trial records stays quiet rather than borrowing someone else's.
     // Production never receives demonstration records, whatever is selected.
-    if (offset === 0 && fixturesAllowed()) {
+    if (offset === 0 && !context.bounds && fixturesAllowed()) {
       const { DEMO_ENTRIES } = await import("./fixtures/world-entries");
       const { demoEntriesFor } = await import("./data/demo-layer");
       const matching = demoEntriesFor(DEMO_ENTRIES, new Set(insideSlugs), true);
       if (matching.length) return { ...page, items: [...page.items, ...matching] };
     }
+    throwIfAborted(signal);
     return page;
   } catch (error) {
+    // Preserve cancellation as cancellation; it is not a user-facing data failure.
+    if (signal.aborted) throw error;
     throw asDataError(error);
+  }
+}
+
+function throwIfAborted(signal: AbortSignal): void {
+  if (signal.aborted) {
+    const error = new Error("The request was aborted.");
+    error.name = "AbortError";
+    throw signal.reason ?? error;
   }
 }

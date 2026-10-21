@@ -64,9 +64,29 @@ export function fitView(
   aspect = 1.4,
 ): MapView {
   const points = entries
-    .filter((e) => typeof e.lat === "number" && typeof e.lng === "number")
-    .map((e) => ({ lat: e.lat as number, lng: e.lng as number }));
-  if (centre && typeof centre.lat === "number" && typeof centre.lng === "number") {
+    .filter(
+      (entry) =>
+        typeof entry.lat === "number" &&
+        Number.isFinite(entry.lat) &&
+        entry.lat >= -90 &&
+        entry.lat <= 90 &&
+        typeof entry.lng === "number" &&
+        Number.isFinite(entry.lng) &&
+        entry.lng >= -180 &&
+        entry.lng <= 180,
+    )
+    .map((entry) => ({ lat: entry.lat as number, lng: entry.lng as number }));
+  if (
+    centre &&
+    typeof centre.lat === "number" &&
+    Number.isFinite(centre.lat) &&
+    centre.lat >= -90 &&
+    centre.lat <= 90 &&
+    typeof centre.lng === "number" &&
+    Number.isFinite(centre.lng) &&
+    centre.lng >= -180 &&
+    centre.lng <= 180
+  ) {
     points.push({ lat: centre.lat, lng: centre.lng });
   }
   if (!points.length) {

@@ -24,6 +24,22 @@ function hasUsableCoordinates(entry: WorldEntry): boolean {
 }
 
 /**
+ * Use fresh viewport-scoped records for the map while retaining locality records
+ * that cannot be safely pinned. Missing coordinates are not inferred. If a
+ * record appears in both sets, the viewport representation wins.
+ */
+export function mergeViewportEntries(
+  viewportEntries: WorldEntry[],
+  localityEntries: WorldEntry[],
+): WorldEntry[] {
+  const viewportIds = new Set(viewportEntries.map((entry) => entry.id));
+  const unpinned = localityEntries.filter(
+    (entry) => !hasUsableCoordinates(entry) && !viewportIds.has(entry.id),
+  );
+  return [...viewportEntries, ...unpinned];
+}
+
+/**
  * Split the currently loaded locality records using the same viewport
  * projection as LivingMap. This does not fetch data, infer coordinates, or
  * change the selected discovery locality.
