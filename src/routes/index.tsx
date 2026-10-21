@@ -55,6 +55,7 @@ function Home() {
   const { place, ancestors, setPlaceSlug, loading, index } = useWorldContext();
   const [view, setView] = useState<MapView | null>(null);
   const [viewportBounds, setViewportBounds] = useState<GeoBounds | null>(null);
+  const viewportTooWide = Boolean(view && !isViewportQueryAllowed(view));
   const [exploredSlug, setExploredSlug] = useState<string | null>(null);
 
   // Debounce the transient view; a pointer move should not trigger a request.
@@ -89,7 +90,7 @@ function Home() {
     refetch: refetchViewport,
   } = useQuery({
     queryKey: ["world-viewport", viewportBounds],
-    enabled: Boolean(place && viewportBounds),
+    enabled: Boolean(place && viewportBounds && !viewportTooWide),
     staleTime: 15_000,
     queryFn: ({ signal }) => {
       if (!viewportBounds) throw new Error("Map viewport bounds are required.");
@@ -109,8 +110,7 @@ function Home() {
   const regionName = ancestors[0]?.name ?? "";
   const placeBlurb = place?.blurb || PLACE_FALLBACK.blurb;
 
-  const viewportTooWide = Boolean(view && !isViewportQueryAllowed(view));
-  const viewportLoaded = Boolean(viewportBounds && viewportPage);
+  const viewportLoaded = Boolean(!viewportTooWide && viewportBounds && viewportPage);
   const mapSourceEntries = useMemo(
     () => (viewportLoaded && viewportPage ? mergeViewportEntries(viewportPage.items, all) : all),
     [all, viewportLoaded, viewportPage],
@@ -157,11 +157,15 @@ function Home() {
         " located records in view · " +
         mapPartition.unpinned.length +
         " unpinned" +
-        (viewportLoaded && viewportPage?.hasMore ? " · page full; more may exist" : "")
+        (viewportLoaded && viewportPage?.hasMore ? " · more may exist; zoom in to narrow" : "")
       : mapPartition.unpinned.length + " unpinned · map view preparing";
-  const mapLoading = viewportBounds ? !viewportPage && viewportFetching : worldLoading;
-  const mapError = viewportBounds ? viewportError && !viewportPage : worldError;
-  const refetchMap = viewportBounds ? refetchViewport : refetchWorld;
+  const viewportRequestActive = Boolean(viewportBounds && !viewportTooWide);
+  const mapLoading = viewportRequestActive ? !viewportPage && viewportFetching : worldLoading;
+  const mapError = viewportRequestActive ? viewportError && !viewportPage : worldError && !world;
+  const mapRefreshError = viewportRequestActive
+    ? viewportError && Boolean(viewportPage)
+    : worldError && Boolean(world);
+  const refetchMap = viewportRequestActive ? refetchViewport : refetchWorld;
   const canChangeListScope =
     showAllLoaded ||
     !view ||
@@ -176,9 +180,22 @@ function Home() {
           broad-area query was sent.
         </p>
       ) : null}
+      {mapRefreshError ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          We couldn't refresh {viewportRequestActive ? "records for this map view" : "what's here"}.
+          Showing the last loaded records.{" "}
+          <button
+            type="button"
+            onClick={() => void refetchMap()}
+            className="focus-ink min-h-11 underline underline-offset-4"
+          >
+            Try again
+          </button>
+        </p>
+      ) : null}
       {mapLoading || loading ? (
         <p role="status" className="text-sm text-muted-foreground">
-          {viewportBounds ? "Loading records for this map view…" : "Checking what's recorded here…"}
+          {viewportRequestActive ? "Loading records for this map view…" : "Checking what's recorded here…"}
         </p>
       ) : !place ? (
         <p role="status" className="text-sm text-muted-foreground">
@@ -186,7 +203,7 @@ function Home() {
         </p>
       ) : mapError ? (
         <p role="alert" className="text-sm text-muted-foreground">
-          We couldn't load {viewportBounds ? "records for this map view" : "what's here"}.{" "}
+          We couldn't load {viewportRequestActive ? "records for this map view" : "what's here"}.{" "}
           <button
             type="button"
             onClick={() => void refetchMap()}
@@ -370,7 +387,7 @@ function Home() {
                   : mapError
                     ? "Unavailable"
                     : viewportLoaded
-                      ? `${viewportPage?.items.length ?? 0} located records in this view${viewportPage?.hasMore ? " · page full" : ""}`
+                      ? `${viewportPage?.items.length ?? 0} located records in this view${viewportPage?.hasMore ? " · more may exist; zoom in" : ""}`
                       : `${mapEntries.length} things`}
             </p>
           </div>
