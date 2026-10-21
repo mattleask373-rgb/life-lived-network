@@ -68,6 +68,22 @@ export function LivingMap({
   const frame = useRef<HTMLDivElement | null>(null);
   const drag = useRef<{ x: number; y: number } | null>(null);
   const [moved, setMoved] = useState(false);
+  const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
+
+  // Measure the actual viewport so marker clustering respects the 44px controls.
+  useEffect(() => {
+    const node = frame.current;
+    if (!node) return;
+    const measure = () => setFrameSize({ width: node.clientWidth, height: node.clientHeight });
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   // A new locality (or its first activity) resets the view to fit it.
   useEffect(() => {
@@ -86,10 +102,15 @@ export function LivingMap({
 
   const placed = useMemo(() => placeEntries(entries, view), [entries, view]);
   const scale = scaleOf(view);
-  // Wide views cluster; close up, every pin is its own.
+  // Each threshold matches the 48px space needed by a 44px target plus a small gap.
+  const fallbackCell = scale === "neighbourhood" ? 12 : 8;
+  const clusterCellX =
+    frameSize.width > 0 ? Math.min(50, (48 / frameSize.width) * 100) : fallbackCell;
+  const clusterCellY =
+    frameSize.height > 0 ? Math.min(50, (48 / frameSize.height) * 100) : fallbackCell;
   const clusters = useMemo(
-    () => clusterPlaced(placed, scale === "neighbourhood" ? 3 : 8),
-    [placed, scale],
+    () => clusterPlaced(placed, clusterCellX, clusterCellY),
+    [placed, clusterCellX, clusterCellY],
   );
 
   const onPointerDown = (e: React.PointerEvent) => {
