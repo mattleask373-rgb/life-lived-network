@@ -103,6 +103,30 @@ export function isFreshIndexableRecord(entry: WorldEntry, now: number): boolean 
     return false;
   }
 
+  if (entry.origin === "source" || entry.origin === "confirmed") {
+    // Main currently drops listings.last_checked_at in rowToEntry(). Treat
+    // missing source-check evidence as unknown, never as current. The narrow
+    // structural type lets the reviewed freshness PR add this field without
+    // creating a competing WorldEntry model in this policy change.
+    const lastCheckedAt = (
+      entry as WorldEntry & { lastCheckedAt?: string | null }
+    ).lastCheckedAt;
+    if (!lastCheckedAt) return false;
+    const checkedAt = Date.parse(lastCheckedAt);
+    if (!Number.isFinite(checkedAt) || checkedAt > now) return false;
+
+    // "unverified" conflates current and aging in the current ingestion mapper.
+    // Until that contract exposes precise freshness, only explicit verified or
+    // recently-updated evidence is safe enough to authorize public indexing.
+    if (
+      entry.quality !== "verified" &&
+      entry.quality !== "recently updated" &&
+      entry.quality !== "community confirmed"
+    ) {
+      return false;
+    }
+  }
+
   const startsAt = entry.startsAt ? Date.parse(entry.startsAt) : undefined;
   const endsAt = entry.endsAt ? Date.parse(entry.endsAt) : undefined;
   if (startsAt !== undefined && !Number.isFinite(startsAt)) return false;
