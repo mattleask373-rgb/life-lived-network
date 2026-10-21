@@ -53,6 +53,13 @@ describe("what a page says about itself", () => {
   it("keeps public and private screens apart", () => {
     for (const path of PRIVATE_PATHS) expect(PUBLIC_PATHS).not.toContain(path);
   });
+
+  it("keeps the personal life list out of public indexability and sitemaps", () => {
+    expect(PRIVATE_PATHS).toContain("/life-list");
+    expect(PUBLIC_PATHS).not.toContain("/life-list");
+    expect(privatePage({ path: "/life-list", title: "Your life list", description: "A private list." }).meta)
+      .toContainEqual({ name: "robots", content: "noindex, nofollow" });
+  });
 });
 
 describe("sitemaps", () => {
