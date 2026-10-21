@@ -90,13 +90,7 @@ export function privatePage(meta: Omit<PageMeta, "image">): {
 }
 
 /** Public app screens that exist today. Locality and service pages arrive later. */
-export const PUBLIC_PATHS: readonly string[] = [
-  "/",
-  "/journey",
-  "/road-trip",
-  "/give",
-  "/make",
-];
+export const PUBLIC_PATHS: readonly string[] = ["/", "/journey", "/road-trip", "/give", "/make"];
 
 /** Screens that must never be crawled: personal, private or internal. */
 export const PRIVATE_PATHS: readonly string[] = [
