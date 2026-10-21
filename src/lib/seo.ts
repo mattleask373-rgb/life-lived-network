@@ -171,9 +171,8 @@ export function robotsTxt(): string {
     "# PRIVATE_PATHS in src/lib/seo.ts. robots.txt is crawler policy, not access control.",
     ...PRIVATE_PATHS.map((path) => `Disallow: ${path}`),
     "",
-    "# Static and dynamic /sitemap.xml for deploy reliability. Dynamic /api/public/sitemap.xml remains",
-    "# for environments that serve TanStack Start server routes; all list only",
-    "# PUBLIC_PATHS.",
+    "# /sitemap.xml is a sitemap index. Its child sitemaps list public screens",
+    "# and only localities that pass the current public-content indexability gate.",
     `Sitemap: ${SITE_ORIGIN}/sitemap.xml`,
     "",
   ];
