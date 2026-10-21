@@ -18,7 +18,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { fetchWorld, fetchWorldEntries } from "@/lib/listings";
 import { MAX_LIMIT } from "@/lib/data/contract";
-import { geoBoundsForViewport, type GeoBounds } from "@/lib/geo-bounds";
+import { geoBoundsForViewport, isViewportQueryAllowed, type GeoBounds } from "@/lib/geo-bounds";
 import { densityOf } from "@/lib/trust";
 import { getOpenNeeds } from "@/lib/needs.functions";
 import { PLACE_FALLBACK } from "@/lib/places";
@@ -65,7 +65,7 @@ function Home() {
       return;
     }
     const timer = window.setTimeout(() => {
-      setViewportBounds(geoBoundsForViewport(view));
+      setViewportBounds(isViewportQueryAllowed(view) ? geoBoundsForViewport(view) : null);
     }, 300);
     return () => window.clearTimeout(timer);
   }, [view]);
@@ -91,9 +91,9 @@ function Home() {
     queryKey: ["world-viewport", viewportBounds],
     enabled: Boolean(place && viewportBounds),
     staleTime: 15_000,
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       if (!viewportBounds) throw new Error("Map viewport bounds are required.");
-      return fetchWorld({ bounds: viewportBounds, limit: MAX_LIMIT });
+      return fetchWorld({ bounds: viewportBounds, limit: MAX_LIMIT }, { signal });
     },
   });
 
@@ -109,6 +109,7 @@ function Home() {
   const regionName = ancestors[0]?.name ?? "";
   const placeBlurb = place?.blurb || PLACE_FALLBACK.blurb;
 
+  const viewportTooWide = Boolean(view && !isViewportQueryAllowed(view));
   const viewportLoaded = Boolean(viewportBounds && viewportPage);
   const mapSourceEntries = useMemo(
     () => (viewportLoaded && viewportPage ? mergeViewportEntries(viewportPage.items, all) : all),
@@ -169,6 +170,12 @@ function Home() {
 
   const mapListContents = (
     <>
+      {viewportTooWide ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          Zoom in to search a smaller map area. Showing records already loaded for this locality;
+          no broad-area query was sent.
+        </p>
+      ) : null}
       {mapLoading || loading ? (
         <p role="status" className="text-sm text-muted-foreground">
           {viewportBounds ? "Loading records for this map view…" : "Checking what's recorded here…"}
