@@ -140,11 +140,15 @@ export function decideSourceLifecycle(input: {
     });
 
   if (!candidates.length) {
+    const listingRecords = input.records.filter((record) => record.listingId === input.listingId);
+    if (!listingRecords.length) return { eligible: false, reason: "no_source_record" };
+    const policyHeld = listingRecords.some((record) => {
+      const source = input.sources.get(record.sourceId);
+      return source !== undefined && !sourceMaySupportPublicRead(source);
+    });
     return {
       eligible: false,
-      reason: input.records.some((record) => record.listingId === input.listingId)
-        ? "invalid_source_evidence"
-        : "no_source_record",
+      reason: policyHeld ? "no_eligible_source" : "invalid_source_evidence",
     };
   }
 
