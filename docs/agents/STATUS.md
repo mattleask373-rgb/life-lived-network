@@ -1,75 +1,51 @@
-# Agent System Status — 2026-10-20 (global integration phase)
+# Agent System Status — 2026-10-21 (coordination cycle)
 
 ## Canonical baseline
 
 - Repository: mattleask373-rgb/life-lived-network
-- Current main SHA checked via GitHub: 14e409e90a027305902f381de3d0a9fbd912dc71
-- Latest main commit message: “Applied Grok redesign to home” (Lovable sync commit).
-- The repository branch API reports main as unprotected, with required status checks disabled. This is a release-process risk; propose branch protection/required checks for human approval, but do not change settings autonomously.
-- No autonomous merge/deploy is authorised. Production data, schema, RLS/grants, secrets and live source activation remain human-gated.
+- Current main SHA checked via GitHub: `8d79247991187bf64813cf72e3ec75aeb508e2e9`
+- Latest main commit: “Added Ask about this place box” (lovable-dev[bot] / gpt-engineer-app[bot] sync).
+- Main remains unprotected; required status checks not enforced. Propose branch protection for human approval only; do not change settings autonomously.
+- No autonomous merge/deploy authorised. Production data, schema, RLS/grants, secrets and live source activation remain human-gated.
+- findSupply() remains the sole discovery engine. place_memories are owner-only.
 
 ## Foundation confirmed on main
 
-- Canonical place model and hierarchy: src/lib/places.ts and server-side place/locality functions.
-- Shared service taxonomy: src/lib/service-taxonomy.ts.
-- Single possibility/discovery authority: findSupply() in src/lib/supply-engine.ts.
-- Deterministic evidence-based ranking seam: src/lib/grounded-matching.ts; doSomethingToday uses it through src/lib/intents.ts.
-- Public listing retrieval and normalisation: src/lib/world.functions.ts and src/lib/listings.ts.
-- Generic locality route and generic service-locality route exist on main. The remaining SEO task is to reconcile the explicit fail-closed indexability gate and ensure page metadata and sitemap enumeration use the same decision.
-- Existing AI draft assistant: src/lib/draft-assist.functions.ts and src/lib/draft-assist.server.ts. It is signed-in, schema-bounded and saves no draft automatically.
-- No read-only “Ask this place” assistant is confirmed as implemented. Grounded matching is not an LLM assistant.
-- Australia is not live. No rights-cleared pilot inventory should be implied by staging work.
+- Canonical place model, service taxonomy, findSupply(), groundedMatch() / doSomethingToday, public listing retrieval present.
+- Env hygiene: tracked root .env removed (PR #157 merged). .env.example present.
+- SEO crawler policy: PR #129 merged. `public/robots.txt` contains Disallows for PRIVATE_PATHS + Sitemap directive. Static `public/sitemap.xml` lists only PUBLIC_PATHS.
+- Live origin (https://life-lived-network.lovable.app) as of 2026-10-21: robots.txt is platform-default Allow:/ (no Disallows, no Sitemap); sitemap.xml returns 404 HTML. Repo is ahead of published snapshot (deploy lag).
+- “Ask about this place” is a disabled placeholder on main; no model call. Full grounded assistant remains gated.
 
-## Design direction
+## Active open draft PRs (snapshot; verify exact heads and CI before acting)
 
-- The Grok-inspired visual direction is being implemented in the canonical application; do not rebuild a second frontend or restore old branches wholesale.
-- Current main includes the Grok-inspired home redesign. Extend the current component system surface-by-surface.
-- Lovable remains an editing/sync path, not authority for domain contracts. GitHub main, reviewed changes and tests are the integration source of truth.
-- Entry-card keyboard/accessibility fix remains draft PR #193. Automated CI from an earlier head does not replace exact-head Verify or manual 375px/desktop, keyboard and screen-reader checks.
-- The detail/map and traveller UI work is split across stacked branches; reconcile the base and shared files before integration.
+Prefer reconciling existing green/current-main bases over spawning duplicates.
 
-## Active integration queue (snapshot; verify each head before acting)
+- SEO indexability / dynamic sitemaps: #222 (stacked)
+- Auth / private route guards tests: #232 (current-main)
+- Ask-this-place eligibility policy: #233
+- Work-opportunity contract / surfaces / Adzuna staging: #215 → #219 → #223 (stacked)
+- Freshness / last-checked: #229 (stacked on redesign)
+- Grok redesign extensions: #211, #231, #220, #210 (handoff docs)
+- Locality refresh: #228 (stacked on #222)
+- Older items: #154 (open needs) may need rebase; #156 auth tests; #131 fixtures closed unmerged; #133 type-version decision still open.
 
-### Design / accessibility
-- #193 — EntryCard accessibility; base is current main, draft. Exact-head Verify and manual accessibility QA required.
-- #195 — Grok detail/map controls; #201 is stacked on its branch. Confirm #195's latest status/head before using it as an integration base.
+## Live SEO gap
 
-### WorkOpportunity / ingestion
-- #203 — reviewed WorkOpportunity contract ported onto current main; current-main base, draft. Candidate contract branch.
-- #204 — Adzuna staging bridge stacked on #203. Staging only; no live feed or credentials.
-- #206 — work-opportunity surfaces stacked on #203. Review against the contract and the canonical findSupply() path.
-- #197 and #205, plus #199, are competing/older work-opportunity branches. Do not merge multiple implementations of the same contract or surface; compare unique changes and choose one chain.
-- #175 remains a non-writing place-staging validator branch on an older base. Reconcile only if the staging validator is still needed; do not seed/publish Australian inventory as a side effect.
-
-### SEO / conversion
-- #200 is stacked on #199, and #202 is stacked on #200. This is a competing older chain relative to current-main route work and must be reconciled before integration.
-- #173/#174/#176 were closed without merge after becoming stale; treat them as historical source material, not current merge candidates.
-- #178 is a draft integration audit. Keep its findings useful, but do not assume its old base represents current main.
-
-### Security
-- #194 is a documentation-only least-privilege ACL proposal. It is not authorisation to change grants or RLS. The target Supabase project identity and effective access still need human verification.
-
-## AI and global-scale direction
-
-- First AI feature to design is a read-only, place-scoped “Ask this place” assistant over approved public records.
-- Use existing server retrieval, canonical place hierarchy, findSupply() and groundedMatch(); do not introduce another discovery/ranking authority.
-- Require server-side eligibility checks, record-backed citations, freshness/uncertainty, prompt-injection handling, bounded inputs/outputs, rate/cost controls, evaluation tests and an explicit feature gate before public activation.
-- Existing AI drafting remains user-reviewed and must not invent facts or publish automatically.
-- Grok design is a direction for this web app, not an automatic dependency on the external Grok product. A separately hosted Grok app would require a human architecture decision covering hosting, auth, API boundaries and ownership.
+Code on main is aligned. Published Lovable origin does not yet serve the repo robots.txt or sitemap. Human authorised republish required, then re-verify live HTTP.
 
 ## Next actions
 
-1. Reconcile one design/accessibility chain against current main; exact-head CI plus manual visual/keyboard/screen-reader checks.
-2. Choose one WorkOpportunity contract branch (#203 is the current-main candidate), then one downstream staging/surface chain; mark duplicate alternatives superseded.
-3. Reconcile the indexability gate so locality/service metadata and sitemap enumeration use one explainable policy. Verify empty/demo-only pages remain noindex and absent from sitemaps.
-4. Keep source ingestion fixture-first and staged; rights, credentials, country coverage and publication remain human gates.
-5. Define and test the read-only assistant context boundary before implementing its UI or public model endpoint.
-6. Decide branch protection and required CI checks for main; no repository settings change made by this update.
+1. Human review of highest-priority green drafts (SEO gate #222 after parents, auth tests #232, Ask-place #233).
+2. Authorised publish of current main to close live robots/sitemap gap; re-probe.
+3. Confirm #133 generated type change and Lovable sync target (must not be main for write mode).
+4. Keep ingestion fixture-first and rights-gated. No fabricated inventory.
+5. Refresh this STATUS after merges or publish.
 
 ## Canonical invariants
 
-- findSupply() remains the sole possibility/discovery authority.
+- findSupply() sole possibility/discovery authority.
 - No fabricated inventory, people, events, jobs, local knowledge or availability.
 - Quiet/unknown states stay honest.
-- Demonstration/unpublished/unreviewed/rights-uncleared content is excluded from public claims and indexability.
+- Demonstration/unpublished/unreviewed/rights-uncleared content excluded from public claims and indexability.
 - No production writes, schema/RLS/grant changes, secrets, live partner feeds, autonomous publishing, merge or deployment without explicit human approval.
