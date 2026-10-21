@@ -10,7 +10,7 @@ import { buildPlaceIndex, type Place } from "./places";
 import {
   indexableLocalityPaths,
   LOCALITY_SITEMAP_LISTING_SCAN_LIMIT,
-  LOCALITY_SITEMAP_PAGE_SIZE,
+  LOCALITY_SITEMAP_PLACE_LIMIT,
   type PublicListingSitemapRow,
 } from "./locality-sitemap";
 import { publicServerClient } from "./supabase-public.server";
@@ -26,10 +26,10 @@ export async function fetchPublicLocalitySitemapPaths(): Promise<string[]> {
   const { data: placeRows, error: placesError } = await supabase
     .from("places")
     .select(PLACE_SELECT)
-    .limit(5001);
+    .limit(LOCALITY_SITEMAP_PLACE_LIMIT + 1);
   if (placesError) throw placesError;
   const places = (placeRows ?? []) as unknown as Place[];
-  if (places.length > 5000) return [];
+  if (places.length >= LOCALITY_SITEMAP_PLACE_LIMIT) return [];
 
   const index = buildPlaceIndex(places);
   const settled = new Date(Date.now() - 3 * 3_600_000).toISOString();
