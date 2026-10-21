@@ -19,6 +19,7 @@ import { publicServerClient } from "./supabase-public.server";
 const PLACE_SELECT =
   "id, parent_id, kind, name, slug, country_code, timezone, currency, lat, lng, blurb";
 const QUERY_PAGE_SIZE = 1000;
+const SNAPSHOT_TTL_MS = 60 * 60 * 1000;
 
 interface PublicSitemapSnapshot {
   index: ReturnType<typeof buildPlaceIndex>;
@@ -26,7 +27,29 @@ interface PublicSitemapSnapshot {
   orderedRows: PublicListingSitemapRow[];
 }
 
+let cachedSnapshot: { expiresAt: number; value: PublicSitemapSnapshot | null } | null = null;
+let snapshotInFlight: Promise<PublicSitemapSnapshot | null> | null = null;
+
+/**
+ * The locality and service feeds share the same source snapshot. Reuse it for
+ * an hour per warm server instance and deduplicate concurrent crawler requests;
+ * CDN caching remains an additional layer, not the only protection.
+ */
 async function readPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot | null> {
+  if (cachedSnapshot && cachedSnapshot.expiresAt > Date.now()) return cachedSnapshot.value;
+  if (snapshotInFlight) return snapshotInFlight;
+
+  snapshotInFlight = loadPublicSitemapSnapshot();
+  try {
+    const value = await snapshotInFlight;
+    cachedSnapshot = { expiresAt: Date.now() + SNAPSHOT_TTL_MS, value };
+    return value;
+  } finally {
+    snapshotInFlight = null;
+  }
+}
+
+async function loadPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot | null> {
   const supabase = publicServerClient();
   const { data: placeRows, error: placesError } = await supabase
     .from("places")
