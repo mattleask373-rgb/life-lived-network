@@ -25,11 +25,7 @@ import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
 import { KIND_LABEL } from "@/lib/places";
 import { evaluateServicePageIndexability } from "@/lib/service-page-indexability";
 import { privatePage, publicPage } from "@/lib/seo";
-import {
-  servicePageCopy,
-  servicePageListings,
-  servicePagePath,
-} from "@/lib/service-page";
+import { servicePageCopy, servicePageListings, servicePagePath } from "@/lib/service-page";
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import type { WorldEntry } from "@/lib/world-data";
 import { localityPath } from "@/lib/locality-path";
