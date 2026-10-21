@@ -46,7 +46,7 @@ export const Route = createFileRoute("/")({
 function Home() {
   const [layers, setLayers] = useState<LayerId[]>([]);
   const [mobileListOpen, setMobileListOpen] = useState(false);
-  const [showWholeLocality, setShowWholeLocality] = useState(false);
+  const [showAllLoaded, setShowAllLoaded] = useState(false);
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle, ids } = useLifeList();
 
@@ -78,10 +78,15 @@ function Home() {
   const regionName = ancestors[0]?.name ?? "";
   const placeBlurb = place?.blurb || PLACE_FALLBACK.blurb;
 
-  const entries = useMemo(() => {
-    const filtered = layers.length ? all.filter((e) => layers.includes(e.layer)) : all;
-    return layers.length ? filtered : meaningfulVariety(filtered);
-  }, [all, layers]);
+  const allFilteredEntries = useMemo(
+    () => (layers.length ? all.filter((entry) => layers.includes(entry.layer)) : all),
+    [all, layers],
+  );
+  const entries = useMemo(
+    () => (layers.length ? allFilteredEntries : meaningfulVariety(allFilteredEntries)),
+    [allFilteredEntries, layers.length],
+  );
+  const mapEntries = showAllLoaded ? allFilteredEntries : entries;
   const snapshot = useMemo(() => activitySnapshot(all), [all]);
   const events = useMemo(() => upcomingEvents(all), [all]);
   const groups = useMemo(() => providerGroups(all), [all]);
@@ -89,18 +94,18 @@ function Home() {
   const needCount = openNeeds?.length ?? 0;
   const questions = useMemo(() => localityQuestions(all, needCount), [all, needCount]);
   const quiet = Boolean(place) && !worldLoading && !loading && !worldError && all.length === 0;
-  const mapPartition = useMemo(() => partitionMapList(entries, view), [entries, view]);
+  const mapPartition = useMemo(() => partitionMapList(mapEntries, view), [entries, view]);
   const mapListEntries = useMemo(
-    () => entriesForMapList(entries, mapPartition, showWholeLocality),
-    [entries, mapPartition, showWholeLocality],
+    () => entriesForMapList(mapEntries, mapPartition, showAllLoaded),
+    [entries, mapPartition, showAllLoaded],
   );
   const unpinnedIds = useMemo(
     () => new Set(mapPartition.unpinned.map((entry) => entry.id)),
     [mapPartition.unpinned],
   );
-  const locatedCount = entries.length - mapPartition.unpinned.length;
-  const mapListSummary = showWholeLocality
-    ? mapListEntries.length + " records for " + placeName
+  const locatedCount = mapEntries.length - mapPartition.unpinned.length;
+  const mapListSummary = showAllLoaded
+    ? mapListEntries.length + " loaded records for " + placeName
     : view
       ? mapPartition.inView.length +
         " of " +
@@ -109,7 +114,7 @@ function Home() {
         mapPartition.unpinned.length +
         " unpinned"
       : mapPartition.unpinned.length + " unpinned · map view preparing";
-  const canChangeListScope = showWholeLocality || !view || mapPartition.outsideView.length > 0;
+  const canChangeListScope = showAllLoaded || !view || mapPartition.outsideView.length > 0;
 
   const mapListContents = (
     <>
@@ -132,7 +137,7 @@ function Home() {
             Try again
           </button>
         </p>
-      ) : entries.length === 0 ? (
+       ) : mapEntries.length === 0 ? (
         emptyListState(all.length, layers.length > 0) === "filtered-out" ? (
           <p className="text-sm text-muted-foreground">
             Nothing matches these filters, but {all.length} other{" "}
@@ -152,12 +157,12 @@ function Home() {
         )
       ) : mapListEntries.length === 0 ? (
         <p role="status" className="text-sm text-muted-foreground">
-          {!view && !showWholeLocality
+          {!view && !showAllLoaded
             ? "Preparing the map view. "
             : "Nothing with a pin is in this view. "}
           <button
             type="button"
-            onClick={() => setShowWholeLocality(true)}
+            onClick={() => setShowAllLoaded(true)}
             className="focus-ink min-h-11 font-medium text-primary underline underline-offset-4"
           >
             Show whole locality
@@ -303,7 +308,7 @@ function Home() {
                   ? "Choose a place"
                   : worldError
                     ? "Unavailable"
-                    : `${entries.length} things`}
+                    : `${mapEntries.length} things`}
             </p>
           </div>
           <div className="mt-3">
@@ -313,7 +318,7 @@ function Home() {
             <div className="relative min-w-0">
               <div className="h-[62vh] min-h-80 sm:h-[30rem] lg:h-[calc(100vh-17rem)] lg:min-h-[34rem] lg:max-h-[48rem]">
                 <LivingMap
-                  entries={entries}
+                  entries={mapEntries}
                   activeId={open?.id}
                   onSelect={setOpen}
                   centre={place ? { lat: place.lat, lng: place.lng } : null}
@@ -330,7 +335,7 @@ function Home() {
                   onAdoptArea={(slug) => {
                     setPlaceSlug(slug);
                     setExploredSlug(null);
-                    setShowWholeLocality(false);
+                    setShowAllLoaded(false);
                   }}
                   onViewChange={setView}
                   loading={worldLoading}
@@ -370,11 +375,11 @@ function Home() {
                     <div className="mb-3 flex justify-end">
                       <button
                         type="button"
-                        aria-pressed={showWholeLocality}
-                        onClick={() => setShowWholeLocality((current) => !current)}
+                        aria-pressed={showAllLoaded}
+                        onClick={() => setShowAllLoaded((current) => !current)}
                         className="focus-ink min-h-11 rounded-full border border-border px-3 text-sm"
                       >
-                        {showWholeLocality ? "Show only in this view" : "Show whole locality"}
+                        {showAllLoaded ? "Focus on this map view" : "Show all loaded records"}
                       </button>
                     </div>
                   ) : null}
@@ -402,11 +407,11 @@ function Home() {
                 {canChangeListScope ? (
                   <button
                     type="button"
-                    aria-pressed={showWholeLocality}
-                    onClick={() => setShowWholeLocality((current) => !current)}
+                    aria-pressed={showAllLoaded}
+                    onClick={() => setShowAllLoaded((current) => !current)}
                     className="focus-ink min-h-11 rounded-full border border-border px-3 text-sm"
                   >
-                    {showWholeLocality ? "Show only in this view" : "Show whole locality"}
+                    {showAllLoaded ? "Focus on this map view" : "Show all loaded records"}
                   </button>
                 ) : null}
               </div>
