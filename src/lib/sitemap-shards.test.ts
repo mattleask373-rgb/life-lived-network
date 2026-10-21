@@ -30,7 +30,7 @@ describe("bounded sitemap shards", () => {
   });
 
   it("returns non-overlapping stable slices and empty valid shards", () => {
-    const paths = Array.from({ length: SITEMAP_URLS_PER_SHARD + 2 }, (_, i) => `/gb/place-\${i}`);
+    const paths = Array.from({ length: SITEMAP_URLS_PER_SHARD + 2 }, (_, i) => `/gb/place-${i}`);
     const first = sitemapShard(paths, 1);
     const second = sitemapShard(paths, 2);
     expect(first).toHaveLength(SITEMAP_URLS_PER_SHARD);
@@ -56,7 +56,7 @@ describe("bounded sitemap shards", () => {
   it("fails closed if path count outgrows the fixed sitemap index capacity", () => {
     const paths = Array.from(
       { length: SITEMAP_URLS_PER_SHARD * MAX_SERVICE_SITEMAP_SHARDS + 1 },
-      (_, i) => `/gb/place-\${i}`,
+      (_, i) => `/gb/place-${i}`,
     );
     expect(sitemapShardCount(paths)).toBe(MAX_SERVICE_SITEMAP_SHARDS + 1);
     expect(sitemapShard(paths, 1)).toBeNull();
