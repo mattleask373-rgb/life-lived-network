@@ -245,7 +245,9 @@ function MakePage() {
           <div className="card-paper mt-6 p-5">
             <p>It's on the map.</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              People will see it marked as not yet checked until someone who went confirms it.
+              {doneKind === "service"
+                ? "This is a self-declared service offer. It is shown as not yet checked; no appointment or live availability is confirmed here."
+                : "People will see it marked as not yet checked until someone who went confirms it."}
             </p>
             <Link
               to="/"
