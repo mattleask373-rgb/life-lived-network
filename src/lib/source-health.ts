@@ -35,11 +35,7 @@ export interface SourceHealth {
 
 const MINUTE = 60_000;
 
-function result(
-  state: SourceHealthState,
-  label: string,
-  explanation: string,
-): SourceHealth {
+function result(state: SourceHealthState, label: string, explanation: string): SourceHealth {
   return { state, label, explanation };
 }
 
@@ -77,11 +73,7 @@ export function sourceHealth(input: SourceHealthInput): SourceHealth {
           "No successful refresh yet",
           "A refresh was attempted, but none has succeeded.",
         )
-      : result(
-          "never_checked",
-          "Not yet checked",
-          "No refresh attempt has been recorded.",
-        );
+      : result("never_checked", "Not yet checked", "No refresh attempt has been recorded.");
   }
 
   const now = (input.now ?? new Date()).getTime();
