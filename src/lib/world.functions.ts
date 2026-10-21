@@ -12,10 +12,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { decodeCursor, pageLimit, toPage, type DiscoveryContext, type Page } from "./data/contract";
 import { asDataError } from "./data/errors";
 import { rowToEntry, type ListingRow } from "./listings";
+import { assertGeoBounds } from "./geo-bounds";
 import type { SourcePhoto, WorldEntry } from "./world-data";
 
 export const getWorld = createServerFn({ method: "GET" })
-  .inputValidator((input: DiscoveryContext | undefined) => input ?? {})
+  .inputValidator((input: DiscoveryContext | undefined) => {
+    const context = input ?? {};
+    if (context.bounds !== undefined && context.bounds !== null) assertGeoBounds(context.bounds);
+    return context;
+  })
   .handler(async ({ data }): Promise<Page<WorldEntry>> => {
     const { observe } = await import("./data/observe.server");
     return observe(
@@ -39,7 +44,7 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
     // the request itself the bottleneck; the browser only says where it is.
     let insideIds = context.placeIds ?? [];
     let insideSlugs = context.placeSlugs ?? [];
-    if (context.placeId && !insideIds.length) {
+    if (!context.bounds && context.placeId && !insideIds.length) {
       const { loadPlaceIndex } = await import("./place-index.server");
       const { descendantIdsOf } = await import("./places");
       const index = await loadPlaceIndex(supabase);
@@ -62,19 +67,29 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       .order("starts_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
-    // A locality, or a locality and everywhere inside it. Either way the read
-    // stays bounded by the same page limit.
-    //
-    // A very wide selection — a nation, or the whole world region — can name
-    // more localities than it is sensible to put in one filter. Rather than
-    // quietly filtering by an arbitrary slice of them, which would hide real
-    // activity, the locality filter is dropped: at that width it excludes
-    // almost nothing anyway, and the page limit still bounds the read.
-    const LOCALITY_FILTER_CAP = 400;
-    if (insideIds.length && insideIds.length <= LOCALITY_FILTER_CAP) {
-      query = query.in("place_id", insideIds);
-    } else if (!insideIds.length && context.placeId) {
-      query = query.eq("place_id", context.placeId);
+    // The selected locality and visible map rectangle are different scopes.
+    // A viewport takes precedence over place filters so panning can retrieve new
+    // records without changing the person's selected discovery locality.
+    if (context.bounds) {
+      const bounds = context.bounds;
+      query = query.gte("lat", bounds.minLat).lte("lat", bounds.maxLat);
+      if (bounds.minLng <= bounds.maxLng) {
+        query = query.gte("lng", bounds.minLng).lte("lng", bounds.maxLng);
+      } else {
+        // A wrapped longitude interval crosses the antimeridian. Bounds were
+        // validated before reaching this query, so only finite numbers enter OR.
+        query = query.or(`lng.gte.${bounds.minLng},lng.lte.${bounds.maxLng}`);
+      }
+    } else {
+      // A very wide locality selection can name more IDs than a sensible filter.
+      // Drop the filter instead of hiding activity from an arbitrary ID slice;
+      // the bounded page limit still applies.
+      const LOCALITY_FILTER_CAP = 400;
+      if (insideIds.length && insideIds.length <= LOCALITY_FILTER_CAP) {
+        query = query.in("place_id", insideIds);
+      } else if (!insideIds.length && context.placeId) {
+        query = query.eq("place_id", context.placeId);
+      }
     }
 
     // An event that has finished is never upcoming. Anything without a start
@@ -176,7 +191,7 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
     // looked at, and only ever labelled as a demonstration. A locality with no
     // trial records stays quiet rather than borrowing someone else's.
     // Production never receives demonstration records, whatever is selected.
-    if (offset === 0 && fixturesAllowed()) {
+    if (offset === 0 && !context.bounds && fixturesAllowed()) {
       const { DEMO_ENTRIES } = await import("./fixtures/world-entries");
       const { demoEntriesFor } = await import("./data/demo-layer");
       const matching = demoEntriesFor(DEMO_ENTRIES, new Set(insideSlugs), true);
