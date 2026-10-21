@@ -159,24 +159,80 @@ export interface Cluster {
 }
 
 /**
- * Grid clustering, so a wide view shows how much is somewhere rather than a
- * thousand overlapping pins. Deterministic: same input, same clusters.
+ * Cluster markers whose interactive hit areas would overlap.
+ *
+ * Coordinates are percentages of the visible frame. Callers pass separate
+ * horizontal and vertical thresholds derived from the rendered map dimensions,
+ * so a 48px minimum spacing stays 48px on both a phone and a desktop map.
+ * Nearby markers are joined across grid boundaries; identical input gives
+ * deterministic output.
  */
-export function clusterPlaced(placed: Placed[], cell = 8): Cluster[] {
-  const cells = new Map<string, Placed[]>();
-  for (const item of placed) {
-    const key = `${Math.floor(item.left / cell)}:${Math.floor(item.top / cell)}`;
-    const list = cells.get(key);
-    if (list) list.push(item);
-    else cells.set(key, [item]);
-  }
-  return [...cells.entries()]
-    .map(([key, items]) => ({
-      key,
-      left: items.reduce((n, i) => n + i.left, 0) / items.length,
-      top: items.reduce((n, i) => n + i.top, 0) / items.length,
-      entries: items.map((i) => i.entry),
-    }))
+export function clusterPlaced(placed: Placed[], cellX = 8, cellY = cellX): Cluster[] {
+  if (placed.length === 0) return [];
+  const xThreshold = Number.isFinite(cellX) && cellX > 0 ? cellX : 8;
+  const yThreshold = Number.isFinite(cellY) && cellY > 0 ? cellY : xThreshold;
+  const parents = placed.map((_, index) => index);
+
+  const find = (index: number): number => {
+    let root = index;
+    while (parents[root] !== root) root = parents[root];
+    while (parents[index] !== index) {
+      const next = parents[index];
+      parents[index] = root;
+      index = next;
+    }
+    return root;
+  };
+  const union = (left: number, right: number) => {
+    const leftRoot = find(left);
+    const rightRoot = find(right);
+    if (leftRoot !== rightRoot) parents[rightRoot] = leftRoot;
+  };
+
+  // Spatial buckets keep comparisons local rather than comparing every pair.
+  const buckets = new Map<string, number[]>();
+  placed.forEach((item, index) => {
+    const x = Math.floor(item.left / xThreshold);
+    const y = Math.floor(item.top / yThreshold);
+    for (let dx = -1; dx <= 1; dx += 1) {
+      for (let dy = -1; dy <= 1; dy += 1) {
+        const nearby = buckets.get(`${x + dx}:${y + dy}`) ?? [];
+        for (const otherIndex of nearby) {
+          const other = placed[otherIndex];
+          if (
+            other &&
+            Math.abs(item.left - other.left) < xThreshold &&
+            Math.abs(item.top - other.top) < yThreshold
+          ) {
+            union(index, otherIndex);
+          }
+        }
+      }
+    }
+    const key = `${x}:${y}`;
+    const items = buckets.get(key);
+    if (items) items.push(index);
+    else buckets.set(key, [index]);
+  });
+
+  const groups = new Map<number, Placed[]>();
+  placed.forEach((item, index) => {
+    const root = find(index);
+    const group = groups.get(root);
+    if (group) group.push(item);
+    else groups.set(root, [item]);
+  });
+
+  return [...groups.values()]
+    .map((items) => {
+      const ids = items.map((item) => item.entry.id).sort();
+      return {
+        key: ids.join("|"),
+        left: items.reduce((sum, item) => sum + item.left, 0) / items.length,
+        top: items.reduce((sum, item) => sum + item.top, 0) / items.length,
+        entries: items.map((item) => item.entry),
+      };
+    })
     .sort((a, b) => a.key.localeCompare(b.key));
 }
 
