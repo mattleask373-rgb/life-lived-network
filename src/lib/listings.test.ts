@@ -69,4 +69,17 @@ describe("rowToEntry is the single normalisation seam", () => {
     expect(entry.photos).toHaveLength(6);
     expect(entry.photos?.[0]?.sourceUrl).toBe("https://events.example/real-event");
   });
+  it("passes the last checked timestamp through only for outside-source records", () => {
+    const lastCheckedAt = "2026-10-21T00:00:00.000Z";
+    const imported = rowToEntry(
+      { ...row, origin: "source", last_checked_at: lastCheckedAt },
+      undefined,
+      [],
+      { sourceName: "Ticketmaster", sourceUrl: "https://events.example/item" },
+    );
+    expect(imported.lastCheckedAt).toBe(lastCheckedAt);
+
+    const resident = rowToEntry({ ...row, last_checked_at: lastCheckedAt });
+    expect(resident.lastCheckedAt).toBeUndefined();
+  });
 });

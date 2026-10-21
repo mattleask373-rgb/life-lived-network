@@ -12,6 +12,7 @@ import {
   qualificationLine,
 } from "@/lib/services";
 import { usableSourcePhotos } from "@/lib/entry-card-view";
+import { SourceLastChecked } from "@/components/source-last-checked";
 import { duration, eventDate, layerText, money } from "./layer-colour";
 import { LayerIcon } from "./layer-icon";
 
@@ -234,6 +235,7 @@ export function EntrySheet({
                   </a>
                 ) : null}
               </div>
+              <SourceLastChecked entry={entry} />
             </div>
           ) : null}
 
