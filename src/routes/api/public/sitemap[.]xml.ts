@@ -11,10 +11,7 @@ export const Route = createFileRoute("/api/public/sitemap.xml")({
   server: {
     handlers: {
       GET: () =>
-        new Response(
-          sitemapIndexXml(PUBLIC_SITEMAP_CHILD_PATHS),
-          { headers: XML_HEADERS },
-        ),
+        new Response(sitemapIndexXml(PUBLIC_SITEMAP_CHILD_PATHS), { headers: XML_HEADERS }),
     },
   },
 });
