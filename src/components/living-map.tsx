@@ -17,6 +17,8 @@ import { LayerIcon } from "./layer-icon";
 
 interface Props {
   entries: WorldEntry[];
+  /** Stable entries used to fit the initial view when displayed map entries change. */
+  viewBasisEntries?: WorldEntry[] | undefined;
   activeId?: string | undefined;
   onSelect: (entry: WorldEntry) => void;
   /** Approximate centre of the locality being looked at, when it is known. */
@@ -44,6 +46,7 @@ interface Props {
  */
 export function LivingMap({
   entries,
+  viewBasisEntries,
   activeId,
   onSelect,
   centre,
@@ -60,9 +63,10 @@ export function LivingMap({
   // re-render of the page never re-fits the view underneath the person.
   const centreLat = centre?.lat ?? null;
   const centreLng = centre?.lng ?? null;
+  const fitEntries = viewBasisEntries ?? entries;
   const home = useMemo(
-    () => fitView(entries, { lat: centreLat, lng: centreLng }),
-    [entries, centreLat, centreLng],
+    () => fitView(fitEntries, { lat: centreLat, lng: centreLng }),
+    [fitEntries, centreLat, centreLng],
   );
   const [view, setView] = useState<MapView>(home);
   const frame = useRef<HTMLDivElement | null>(null);
