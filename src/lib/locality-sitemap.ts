@@ -19,6 +19,8 @@ export interface PublicListingSitemapRow {
   id: string;
   place_id: string | null;
   demonstration: boolean | null;
+  /** False when the anonymous sitemap snapshot cannot verify imported-source lifecycle eligibility. */
+  sourceLifecycleEligible: boolean;
 }
 
 export interface LocalitySitemapBuildOptions {
@@ -93,7 +95,10 @@ export function indexableLocalityPaths(
       (placeCount.get(place.id) ?? 1) > LOCALITY_FILTER_CAP
         ? globalFirstPage
         : (rowsByPlace.get(place.id) ?? []);
-    const realCount = firstPage.filter((row) => row.demonstration !== true).length;
+    // Unknown imported-source lifecycle is not positive evidence for indexability.
+    const realCount = firstPage.filter(
+      (row) => row.demonstration !== true && row.sourceLifecycleEligible,
+    ).length;
     if (realCount < 3) continue;
 
     candidates.push(localityPath({ slug: place.slug, countrySegment: code }));
