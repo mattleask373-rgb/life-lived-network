@@ -6,6 +6,7 @@ import { Route as IndexRoute } from "@/routes/api/public/sitemap[.]xml";
 import { Route as PagesRoute } from "@/routes/api/public/sitemap-pages[.]xml";
 import { Route as RobotsRoute } from "@/routes/robots[.]txt";
 import { Route as SitemapRoute } from "@/routes/sitemap[.]xml";
+import { Route as LifeListRoute } from "@/routes/life-list";
 
 /**
  * Regression guard: the public sitemaps list fixed public screens only.
@@ -14,6 +15,8 @@ import { Route as SitemapRoute } from "@/routes/sitemap[.]xml";
  * added later, they must come with their own eligibility tests.
  */
 type Handler = () => Response | Promise<Response>;
+type Head = () => { meta: Array<Record<string, string>>; links: Array<Record<string, string>> };
+const lifeListHead = (LifeListRoute as unknown as { options: { head: Head } }).options.head;
 const handler = (route: unknown): Handler =>
   (route as { options: { server: { handlers: { GET: Handler } } } }).options.server.handlers.GET;
 
@@ -37,6 +40,12 @@ describe("public sitemap privacy", () => {
       expect(locs(xml)).not.toContain(`${SITE_ORIGIN}${path}`);
     }
     expect(locs(xml)).not.toContain(`${SITE_ORIGIN}/life-list`);
+  });
+
+  it("marks the personal life-list route noindex without a canonical URL", () => {
+    const head = lifeListHead();
+    expect(head.meta).toContainEqual({ name: "robots", content: "noindex, nofollow" });
+    expect(head.links).toEqual([]);
   });
 
   it("robots.txt disallows every route marked private", () => {
