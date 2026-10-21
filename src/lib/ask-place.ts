@@ -14,14 +14,14 @@ export const ASK_PLACE_GATES = [
   "Empty result answers 'No verified results' and adds nothing",
 ] as const;
 
-export type AskPlaceState =
-  | { status: "unavailable"; reason: string; gates: readonly string[] };
+export type AskPlaceState = { status: "unavailable"; reason: string; gates: readonly string[] };
 
 /** Always unavailable until a reviewed server contract exists. */
 export function askPlaceState(): AskPlaceState {
   return {
     status: "unavailable",
-    reason: "Not available yet. Asking questions about this place needs checks that aren't finished.",
+    reason:
+      "Not available yet. Asking questions about this place needs checks that aren't finished.",
     gates: ASK_PLACE_GATES,
   };
 }
