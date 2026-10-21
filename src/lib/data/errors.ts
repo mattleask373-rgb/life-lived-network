@@ -12,7 +12,8 @@ export type DataErrorCode =
   | "NOT_FOUND"
   | "STALE_DATA"
   | "PROVIDER_DEGRADED"
-  | "INVALID_CONTEXT";
+  | "INVALID_CONTEXT"
+  | "SCOPE_TOO_WIDE";
 
 export const DATA_ERROR_MESSAGE: Record<DataErrorCode, string> = {
   DATA_UNAVAILABLE: "We couldn't reach this just now. Try again in a moment.",
@@ -22,6 +23,7 @@ export const DATA_ERROR_MESSAGE: Record<DataErrorCode, string> = {
   STALE_DATA: "This information may be out of date.",
   PROVIDER_DEGRADED: "One of our sources is quiet right now, so this may be incomplete.",
   INVALID_CONTEXT: "Something about that request didn't make sense.",
+  SCOPE_TOO_WIDE: "This area is too broad to load safely at once. Choose a smaller place.",
 };
 
 export class DataError extends Error {
