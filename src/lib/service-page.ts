@@ -10,12 +10,9 @@
  *                 genuinely a service, and in the category by the record's own
  *                 words or its owner's declaration. Demonstration records are
  *                 separated out, never counted as supply.
- *   INDEXABILITY  whether the page is useful enough to offer a search engine.
- *                 Reuses the established publicPage/privatePage convention —
- *                 the canonical INDEXABLE / NOINDEX gate from the SEO slice is
- *                 still a backend dependency; when it lands, this function is
- *                 the single seam to re-point. A page with no genuine listing
- *                 says so to people and stays out of the index.
+ *   INDEXABILITY  the route uses service-locality-indexability.ts to apply the
+ *                 same evidence gate as dynamic sitemap enumeration. A page
+ *                 with no qualifying real listing stays out of search indexes.
  *
  * Nothing here writes copy about a place or a provider that the records do
  * not already contain.
