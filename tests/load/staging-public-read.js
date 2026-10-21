@@ -4,8 +4,7 @@ import { check, sleep } from "k6";
 
 const rawBaseUrl = (__ENV.LOAD_TEST_BASE_URL || "").trim();
 const targetEnvironment = (__ENV.LOAD_TEST_ENV || "").trim().toLowerCase();
-const explicitlyApproved =
-  (__ENV.LOAD_TEST_APPROVED || "") === "YES_I_APPROVE_STAGING_LOAD";
+const explicitlyApproved = (__ENV.LOAD_TEST_APPROVED || "") === "YES_I_APPROVE_STAGING_LOAD";
 
 function stop(message) {
   throw new Error(`[load-test safety stop] ${message}`);
@@ -39,9 +38,7 @@ if (parsedBaseUrl.pathname !== "/" && parsedBaseUrl.pathname !== "") {
 }
 
 const hostname = parsedBaseUrl.hostname.toLowerCase().replace(/\.$/, "");
-const knownProductionHosts = new Set([
-  "life-lived-network.lovable.app",
-]);
+const knownProductionHosts = new Set(["life-lived-network.lovable.app"]);
 
 if (knownProductionHosts.has(hostname)) {
   stop("the known production hostname is blocked.");
@@ -56,7 +53,11 @@ if (targetEnvironment === "local") {
   if (isLocalHost || parsedBaseUrl.protocol !== "https:") {
     stop("staging mode requires HTTPS on a non-local hostname.");
   }
-  if (!/(^|[.-])(staging|stage|preview|test|testing|qa|perf|performance|load)([.-]|$)/i.test(hostname)) {
+  if (
+    !/(^|[.-])(staging|stage|preview|test|testing|qa|perf|performance|load)([.-]|$)/i.test(
+      hostname,
+    )
+  ) {
     stop("staging hostname must contain a staging/preview/test/QA/performance label.");
   }
 }
@@ -101,8 +102,7 @@ export default function () {
   });
 
   check(response, {
-    [`${route.path} returns HTTP 2xx`]: (res) =>
-      res.status >= 200 && res.status < 300,
+    [`${route.path} returns HTTP 2xx`]: (res) => res.status >= 200 && res.status < 300,
     [`${route.path} has expected content type`]: (res) =>
       route.contentType.test(String(res.headers["Content-Type"] || "")),
   });
