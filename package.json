@@ -14,7 +14,8 @@
   },
   "overrides": {
     "rolldown": "1.2.1",
-    "js-yaml": "4.3.2"
+    "js-yaml": "4.3.2",
+    "@esbuild-kit/esm-loader": "npm:tsx@^4.21.0"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.84",
@@ -94,7 +95,8 @@
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "8.1.5",
-    "vitest": "^5.0.1"
+    "vite": "8.1.6",
+    "vitest": "^5.0.1",
+    "tsx": "^4.21.0"
   }
 }
