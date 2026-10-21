@@ -14,7 +14,7 @@ import { DraftHelper } from "@/components/draft-helper";
 
 const title = "Make something happen — Real World Atlas";
 const description =
-  "Offer work, host an experience, put on an event, share a project, open a table or offer an hour of what you're good at.";
+  "Offer work, host an experience, post an event, share a project, offer a local service or open a table.";
 
 export const Route = createFileRoute("/make")({
   head: () => publicPage({ path: "/make", title, description }),
