@@ -17,5 +17,5 @@ Disallow: /partner-tracker
 Disallow: /earn
 
 # /sitemap.xml is a sitemap index. Its child sitemaps list public screens
-# and only localities that pass the current public-content indexability gate.
+# locality/service pages that pass their current public-content indexability gates.
 Sitemap: https://life-lived-network.lovable.app/sitemap.xml
