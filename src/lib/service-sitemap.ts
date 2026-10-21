@@ -1,5 +1,5 @@
 import type { PlaceIndex } from "./places";
-import { categoriesOf } from "./service-taxonomy";
+import { categoriesOf, type ServiceCategory } from "./service-taxonomy";
 import { isService } from "./services";
 import { servicePagePath } from "./service-page";
 import type { WorldEntry } from "./world-data";
@@ -75,18 +75,17 @@ export function indexableServicePaths(
     // least one current, genuine service. This is equivalent to the page
     // servicePageListings() + servicePageIndexable() gates without repeating
     // a full taxonomy scan for every category on every locality.
-    const eligibleCategories = new Map<string, (typeof entries)[number]>();
+    const eligibleCategories = new Map<string, ServiceCategory>();
     for (const entry of entries) {
       if (entry.demonstration || entry.quality === "expired" || entry.cancellation || !isService(entry)) {
         continue;
       }
       for (const match of categoriesOf(entry)) {
-        eligibleCategories.set(match.category.slug, entry);
+        eligibleCategories.set(match.category.slug, match.category);
       }
     }
-    for (const categorySlug of eligibleCategories.keys()) {
-      const category = categoriesOf(entries.find((entry) => eligibleCategories.get(categorySlug) === entry)!)[0]?.category;
-      if (category) candidates.push(servicePagePath(canonical, category));
+    for (const category of eligibleCategories.values()) {
+      candidates.push(servicePagePath(canonical, category));
     }
   }
 
