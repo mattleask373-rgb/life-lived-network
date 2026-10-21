@@ -20,10 +20,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Convert the two profile selections into one explicit relationship per place.
+ * Convert the three profile selections into one explicit relationship per place.
  * Existing "available_in" and travel-willingness choices are preserved when
  * that place remains selected; a newly selected service area is self-declared
- * as "serves", while a passing-through place always stays a journey-only fact.
+ * as "serves", while a passing-through place stays a journey-only fact.
  */
 export function buildServiceAreaSelections(
   existing: readonly ExistingArea[],
