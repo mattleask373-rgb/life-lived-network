@@ -1,8 +1,10 @@
+import { categoryBySlug } from "@/lib/service-taxonomy";
 import {
   hasPublicWorkOpportunity,
   workOpportunityFacts,
 } from "@/lib/work-opportunity-presentation";
 import type { WorldEntry } from "@/lib/world-data";
+import { RequestMatchLink } from "./request-match-link";
 
 function safeHttpUrl(value: string | undefined): string | null {
   if (!value) return null;
@@ -22,6 +24,7 @@ export function WorkOpportunityFacts({ entry }: { entry: WorldEntry }) {
   const facts = workOpportunityFacts(opportunity);
   const provenance = opportunity.provenance;
   const sourceUrl = provenance.kind === "owner_declared" ? null : safeHttpUrl(provenance.sourceUrl);
+  const requestCategory = entry.serviceCategory ? categoryBySlug(entry.serviceCategory) : null;
 
   return (
     <section
@@ -59,6 +62,9 @@ export function WorkOpportunityFacts({ entry }: { entry: WorldEntry }) {
         Terms are shown as recorded. Confirm dates and conditions with the named source; this page
         does not guarantee a place, pay, or availability.
       </p>
+      {requestCategory ? (
+        <RequestMatchLink title={entry.title} category={requestCategory.label} />
+      ) : null}
     </section>
   );
 }
