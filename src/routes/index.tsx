@@ -1,3 +1,4 @@
+import { DATA_ERROR_MESSAGE } from "@/lib/data/errors";
 import { publicPage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -82,6 +83,7 @@ function Home() {
 
   const {
     data: world,
+    error: worldQueryError,
     isLoading: worldLoading,
     isError: worldError,
     refetch: refetchWorld,
@@ -92,6 +94,7 @@ function Home() {
   });
   const {
     data: viewportPage,
+    error: viewportQueryError,
     isFetching: viewportFetching,
     isError: viewportError,
     isRefetchError: viewportRefreshError,
@@ -174,6 +177,9 @@ function Home() {
     viewportPending ||
     (viewportRequestIsCurrent ? !viewportPage && viewportFetching : worldLoading);
   const mapError = viewportRequestIsCurrent ? viewportError && !viewportPage : worldError;
+  const scopeTooWideError = [worldQueryError, viewportQueryError].some(
+    (error) => error instanceof Error && error.message === DATA_ERROR_MESSAGE.SCOPE_TOO_WIDE,
+  );
   const mapRefreshError = Boolean(viewportRequestIsCurrent && viewportPage && viewportRefreshError);
   const viewportTooBroad = Boolean(view && !isViewportQueryable(view));
   const refetchMap = viewportRequestIsCurrent ? refetchViewport : refetchWorld;
@@ -195,14 +201,21 @@ function Home() {
         </p>
       ) : mapError ? (
         <p role="alert" className="text-sm text-muted-foreground">
-          We couldn't load {viewportBounds ? "records for this map view" : "what's here"}.{" "}
-          <button
-            type="button"
-            onClick={() => void refetchMap()}
-            className="focus-ink min-h-11 underline underline-offset-4"
-          >
-            Try again
-          </button>
+          {scopeTooWideError
+            ? DATA_ERROR_MESSAGE.SCOPE_TOO_WIDE
+            : `We couldn't load ${viewportBounds ? "records for this map view" : "what's here"}.`}
+          {scopeTooWideError ? null : (
+            <>
+              {" "}
+              <button
+                type="button"
+                onClick={() => void refetchMap()}
+                className="focus-ink min-h-11 underline underline-offset-4"
+              >
+                Try again
+              </button>
+            </>
+          )}
         </p>
       ) : mapEntries.length === 0 ? (
         emptyListState(mapBaseFilteredEntries.length, layers.length > 0) === "filtered-out" ? (
