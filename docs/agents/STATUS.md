@@ -1,10 +1,10 @@
-# Agent System Status — 2026-10-21 (Grok redesign integration / global integration phase)
+# Agent System Status — 2026-10-21 (coordination cycle update)
 
 ## Canonical baseline
 
 - Repository: mattleask373-rgb/life-lived-network
-- Current main SHA checked via GitHub: `8d79247991187bf64813cf72e3ec75aeb508e2e9` (latest observed 2026-10-21 00:23:29 UTC).
-- Since the earlier `006a98c...` baseline, three commits (`fea27ff`, `8801a50`, `30c2877`) improved PlacePicker/PlaceSearch, then three more (`eb54b10`, `9c4a9e9`, `8d79247`) added an explicitly unavailable “Ask about this place” placeholder and its no-answer contract/test to the locality page. It remains a disabled placeholder, not an active assistant endpoint.
+- Current main SHA checked via GitHub: `ccbcc6acdbc3dcdf6895c0f624b301418257a6e3` (latest observed 2026-10-21 ~16:08 UTC; merge of docs/grok-redesign-agent-handoff).
+- Previous baseline `8d79247991187bf64813cf72e3ec75aeb508e2e9` is superseded.
 - **Verified governance blocker:** ruleset [#24946178](https://github.com/mattleask373-rgb/life-lived-network/rules/24946178), “living World - protect main”, reads `enforcement: disabled`. Its required checks include malformed `.github/workflows/verify.yml,`, stale `Verify`, and actual successful GitHub Actions context `verify` (integration id 15368). Repository admin must remove the first two, keep exact `verify`, confirm PR review/stale-review/last-push/thread-resolution/no-bypass rules, then enable enforcement. Connected tooling is read-only for rulesets; branch-protection GET returns 403. Lovable Project Settings → Git target remains UNKNOWN; require a human to confirm repo + non-main sync branch before write-mode edits.
 - No autonomous merge/deploy is authorised. Production data, schema, RLS/grants, secrets and live source activation remain human-gated.
 
@@ -19,45 +19,32 @@
 - Existing AI draft assistant: src/lib/draft-assist.functions.ts and src/lib/draft-assist.server.ts. It is signed-in, schema-bounded and saves no draft automatically.
 - A disabled “Ask about this place” placeholder and an always-unavailable state contract now exist on the locality page. They make no model call and carry no answer; no active read-only assistant endpoint is confirmed. Grounded matching is not an LLM assistant.
 - Australia is not live. No rights-cleared pilot inventory should be implied by staging work.
+- Root `.env` is no longer tracked on main (404 on contents).
 
-## Design direction and active integration queue — 21 October 2026, current audit
+## Live SEO probe (independent GET, 2026-10-21)
 
-This snapshot reflects the latest verified GitHub main comparison at `8d79247991187bf64813cf72e3ec75aeb508e2e9`. Review candidates are still drafts, not production baselines.
+- Live `https://life-lived-network.lovable.app/robots.txt` returns platform-default Allow-only content (Googlebot/Bingbot/Twitterbot/facebookexternalhit/* Allow: /). Does **not** match repository `public/robots.txt` which Disallows private paths and names the sitemap.
+- Live `https://life-lived-network.lovable.app/sitemap.xml` returns HTML 404 page ("Page not found").
+- Repository static and dynamic routes are aligned with PRIVATE_PATHS; live publish/hosting has not reflected the latest assets. Human-approved republish + fresh GET verification remains a launch gate.
 
-### Design and accessibility
-- #211 — Grok foundation, open draft; head `b492c262d6ea73f0f2028300db96c41ee0b6c289`, 13-file diff against current main. Verify passed [#39521447625](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39521447625). Manual visual/keyboard/screen-reader and source-photo review remain.
-- #220 — home map/list synchronization, open draft; head `6a50f7d3d390c7e3af33103accf65fc0f340febe`, exactly three changed files relative to current main. Verify passed [#39521546086](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39521546086). Independent of #211; manual map/list QA remains. #216 is closed unmerged/superseded.
-- #231 — Journey/Road Trip, open draft; head `0e5f0f1a8ce746b3090ae0ecfcbd4aaa063c9d1c`, child of #211. Verify passed [#39522486798](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39522486798). #213 and #212 are superseded/closed unmerged.
-- #229 — source `last_checked_at` display, open draft; head `ae6c2b58face1086fecd6ee709b368b8701632de`, child of #211. Verify passed [#39523136027](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39523136027). Resolve its `WorldEntry`/`rowToEntry` overlap with #215/#219 and add a combined regression test before merge.
-- #232 — private-route guard tests, open draft, head `f4a98108eb79b40874afc420d790b86c7950913c`; Verify passed [#39522559252](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39522559252). Test-only.
-- #233 — fail-closed Ask-this-place policy, open draft, head `6b91db1717cbbc63e1f586a1d4be322f2f546cbb`; Verify passed [#39526369799](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39526369799). Policy and tests only; public assistant endpoint remains absent.
+## Design direction and active integration queue — 21 October 2026
 
-### Work opportunities, ingestion, SEO and locality
-- #215 contract `047b9cc...` — Verify [#39525518931](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39525518931).
-- #219 opportunity surfaces `39dd142...` — Verify [#39525605892](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39525605892).
-- #223 Adzuna staging bridge `e4e1b7d...` — Verify [#39525559104](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39525559104); fixture/staging-only, no credentials or live feed.
-- #222 indexability/sitemap gate `03e81aba...` — Verify [#39525688153](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39525688153), child of #219.
-- #228 manual locality refresh `dcfaf299...` — Verify [#39525738594](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39525738594), child of #222; calls client router invalidation only.
-- #230 quiet-service Need prefill `90cd6d98...` — Verify [#39525756267](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39525756267), child of #222; draft only, no submission.
-- #221 source-refresh health `7352f86...` — Verify [#39521313627](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39521313627); authenticated admin/moderator status labels, not a scheduler or real-time feed.
+This snapshot reflects main at `ccbcc6acdbc3dcdf6895c0f624b301418257a6e3`. Many prior review candidates remain open drafts or dirty against current main; do not treat them as production baseline.
 
 ### Launch, security and autonomy gates
 - Current main includes the home visual redesign, place-picker/search improvements, and a disabled “Ask about this place” placeholder. The Ask UI makes no model call. Grounded matching backs `doSomethingToday`; `findSupply()` remains the sole discovery authority.
-- Current source appears to correct the issue #130 fixture bug: `fixturesAllowed()` is unconditionally false in production and tests cover `WORLD_FIXTURES=true`; issue #130 remains open for maintainer reconciliation.
+- Issue #130 fixture bug appears corrected in source (`fixturesAllowed()` unconditionally false in production); issue remains open for maintainer reconciliation.
 - #164 remains an open database default-ACL least-privilege finding; no grant/RLS change without a matrix and disposable-environment proof.
 - #133 remains an open incident about a Lovable read-only request causing a direct main write to generated Supabase types. Lovable Project Settings → Git sync target remains unverified; do not send write-capable requests until non-main sync is confirmed. Prior ruleset audit reported main protection disabled; admin must verify/enable protection.
-- Latest logged live probe in Issue #125 around 09:08 UTC reported live `/robots.txt` still platform-default Allow and `/sitemap.xml` returning HTML 404 while repository assets/routes are aligned. This chat could not independently refetch the live URLs; human-approved republish/hosting diagnosis plus fresh GET verification remains a launch gate.
 - Issue #121 and #116–#119 define a future durable 24/7 agent control plane. **No verified persistent executor heartbeat/always-on worker is evidenced.** Do not claim autonomous 24/7 operation.
-- Original `grok-workspace.zip` / `grok-workspace-2.zip` were reported byte-identical by the Lovable read-only scan (reported SHA-256 `6eae21ffddcb1cd1b62025c416cd979ae2fa500321fce83b158b870c838c72a6`); source archive remains outside canonical repo, and font/photo rights are unknown. Five screenshot observations are source-reference evidence, not browser QA of PR branches.
 
 ## Next actions
 
 1. Repository administrator: confirm Project Settings → Git repo + synced branch, switch to non-main if necessary, and verify enforced main protections/required checks.
-2. Human UI reviewer: inspect #211 at 375/390/768/1280/1440px; run keyboard, screen-reader, contrast, 200% zoom, reduced-motion and source-photo/no-photo checks. Human approves/merges only after evidence is recorded.
-3. Frontend reviewer: review #220 map/list selection both ways, viewport edge cases and unpinned list items; rerun exact-head Verify after #211 changes the map foundation if merged first.
-4. Data/security owners: review #232, #233 and #229; reconcile freshness with WorkOpportunity normalization; keep Ask-this-place disabled until endpoint prerequisites pass.
-5. Product/release owners: review #215→#219 with #223 staging and #222→#228/#230 children, verify live robots/sitemap after an authorized release, and stage the 24/7 control-plane proof in a confirmed disposable environment.
- 
+2. Human reviewer: reconcile or close stale dirty PRs (#154 discovery, #156 auth tests, #120 env hygiene already largely done, etc.) against current main.
+3. Product/release owners: diagnose and fix live robots.txt / sitemap.xml publish gap; re-probe after authorized deploy.
+4. Keep Ask-this-place disabled until endpoint prerequisites pass.
+
 ## Canonical invariants
 
 - findSupply() remains the sole possibility/discovery authority.
