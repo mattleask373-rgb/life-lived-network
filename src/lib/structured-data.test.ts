@@ -14,8 +14,18 @@ describe("breadcrumb JSON-LD", () => {
     expect(data["@type"]).toBe("BreadcrumbList");
     expect(data["itemListElement"]).toEqual([
       { "@type": "ListItem", position: 1, name: "Real World Atlas", item: `${SITE_ORIGIN}/` },
-      { "@type": "ListItem", position: 2, name: "Birmingham", item: `${SITE_ORIGIN}/gb/birmingham` },
-      { "@type": "ListItem", position: 3, name: "Cleaning", item: `${SITE_ORIGIN}/gb/birmingham/cleaning` },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Birmingham",
+        item: `${SITE_ORIGIN}/gb/birmingham`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: "Cleaning",
+        item: `${SITE_ORIGIN}/gb/birmingham/cleaning`,
+      },
     ]);
   });
 
