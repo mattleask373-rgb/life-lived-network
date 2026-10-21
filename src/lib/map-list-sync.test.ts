@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { entriesForMapList, partitionMapList } from "./map-list-sync";
+import { entriesForMapList, mergeViewportEntries, partitionMapList } from "./map-list-sync";
 import type { MapView } from "./map-view";
 import type { WorldEntry } from "./world-data";
 
@@ -100,6 +100,21 @@ describe("map/list synchronization", () => {
       "out-of-range-longitude",
     ]);
     expect(partition.outsideView).toEqual([]);
+  });
+
+  it("merges viewport results with only unpinned locality records and prefers fresh coordinates", () => {
+    const fresh = entry("fresh", 51.5, -0.12);
+    const updated = entry("updated", 51.51, -0.13);
+    const staleUnpinned = entry("updated", null, null);
+    const unpinned = entry("unpinned", null, null);
+    const outsideView = entry("outside", 40, -3);
+
+    expect(
+      mergeViewportEntries([fresh, updated], [staleUnpinned, unpinned, outsideView]).map(
+        (item) => item.id,
+      ),
+    ).toEqual(["fresh", "updated", "unpinned"]);
+    expect(mergeViewportEntries([updated], [staleUnpinned])[0]).toBe(updated);
   });
 
   it("returns no viewport matches for an empty input", () => {
