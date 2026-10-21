@@ -132,7 +132,7 @@ describe("service + locality route evidence", () => {
           engagementKind: "paid_work",
           compensation: {
             status: "stated_paid",
-            amountCents: 3200,
+            amountMinorUnits: 3200,
             currency: "AUD",
             basis: "hour",
           },
