@@ -34,6 +34,13 @@ import { localityPath } from "@/lib/locality-path";
 import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
 import { KIND_LABEL } from "@/lib/places";
 import { privatePage, publicPage } from "@/lib/seo";
+import { evaluateLocalityPage } from "@/lib/locality-indexability";
+import {
+  breadcrumbListSchema,
+  eventSchema,
+  localBusinessSchema,
+  safeJsonLd,
+} from "@/lib/structured-data";
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import { publicWorkOpportunityEntries } from "@/lib/work-opportunity-presentation";
 import { filterEntriesByText, parseQuerySearch } from "@/lib/search-context";
@@ -60,18 +67,18 @@ export const Route = createFileRoute("/$country/$place/")({
   head: ({ loaderData }) => {
     if (!loaderData) return privatePage({ path: "", title: "Somewhere", description: "" });
     const { geography, entries } = loaderData;
-    const name = geography.place.name;
+    const { place } = geography;
+    const name = place.name;
     const wider = geography.ancestors[0]?.name;
     const label = wider ? `${name}, ${wider}` : name;
-    const path = localityPath(geography.place);
-    const current = entries.filter((entry) => !entry.demonstration);
+    const path = localityPath(place);
+    const gate = evaluateLocalityPage({ place, entries });
     const title = `${label} — what's happening and what's here | Real World Atlas`;
-    const description = current.length
-      ? `Real things happening in ${name}, the services and practices recorded there, and what people nearby have offered or asked for.`
-      : `${name} in Real World Atlas. Nothing has been recorded here yet — add the first thing.`;
-    // Until a page has something genuinely useful on it, it is not offered to
-    // search engines. It still exists for anybody who arrives.
-    return current.length >= 3
+    const description =
+      gate.status === "INDEXABLE"
+        ? `Real things recorded in ${name}: services, events and offers with current, attributable information.`
+        : `${name} in Real World Atlas. Search indexing stays off until published records meet the locality quality gate.`;
+    return gate.status === "INDEXABLE"
       ? publicPage({ path, title, description })
       : privatePage({ path, title, description });
   },
@@ -182,6 +189,14 @@ function LocalityPage() {
   const navigate = useNavigate();
   const { geography, entries } = Route.useLoaderData();
   const { place, ancestors, children, siblings } = geography;
+  const breadcrumbItems = [
+    { name: "Real World Atlas", path: "/" },
+    ...[...ancestors].reverse().map((ancestor) => ({
+      name: ancestor.name,
+      path: localityPath(ancestor),
+    })),
+    { name: place.name, path: localityPath(place) },
+  ];
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle } = useLifeList();
   const { q } = Route.useSearch();
@@ -202,6 +217,30 @@ function LocalityPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-5 pb-24 pt-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbListSchema(breadcrumbItems)) }}
+      />
+      {events.map((entry) => {
+        const schema = eventSchema(entry);
+        return schema ? (
+          <script
+            key={`event-schema-${entry.id}`}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }}
+          />
+        ) : null;
+      })}
+      {groups.map((group) => {
+        const schema = localBusinessSchema(group, place.name);
+        return schema ? (
+          <script
+            key={`business-schema-${group.organisation}`}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }}
+          />
+        ) : null;
+      })}
       <Crumbs ancestors={ancestors} place={place} />
 
       <h1 className="mt-3 text-4xl leading-tight">{place.name}</h1>
