@@ -69,7 +69,11 @@ function isIdentifier(value: unknown): value is string {
 function cleanText(value: string, maxChars: number): string {
   const withoutControls = Array.from(value.replace(/\r\n?/g, "\n"), (character) => {
     const code = character.charCodeAt(0);
-    return code <= 0x08 || code === 0x0b || code === 0x0c || (code >= 0x0e && code <= 0x1f) || code === 0x7f
+    return code <= 0x08 ||
+      code === 0x0b ||
+      code === 0x0c ||
+      (code >= 0x0e && code <= 0x1f) ||
+      code === 0x7f
       ? " "
       : character;
   }).join("");
