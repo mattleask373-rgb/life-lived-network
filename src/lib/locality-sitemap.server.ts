@@ -88,5 +88,7 @@ export async function fetchPublicServiceSitemapPaths(): Promise<string[]> {
   const snapshot = await readPublicSitemapSnapshot();
   if (!snapshot) return [];
   const entriesById = new Map(snapshot.rows.map((row) => [row.id, rowToEntry(row)]));
-  return indexableServicePaths(snapshot.index, snapshot.orderedRows, entriesById, { complete: true });
+  return indexableServicePaths(snapshot.index, snapshot.orderedRows, entriesById, {
+    complete: true,
+  });
 }
