@@ -5,7 +5,7 @@ import {
   evaluateSeoSmoke,
   type SeoSmokeDocuments,
   type SmokeDocument,
-} from "../scripts/seo-live-smoke";
+} from "../../scripts/seo-live-smoke";
 
 const origin = DEFAULT_SEO_SMOKE_ORIGIN;
 
