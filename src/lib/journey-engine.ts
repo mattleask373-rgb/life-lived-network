@@ -74,7 +74,7 @@ function pick(
   used: Set<string>,
   world: WorldEntry[],
 ): WorldEntry | undefined {
-  const pool = world.filter((e) => e.band === band && !used.has(e.id) && e.kind !== "service");
+  const pool = world.filter((entry) => isJourneyCandidate(entry, band, used));
   const scored = pool
     .map((e) => {
       let score = 0;
@@ -134,6 +134,13 @@ function reason(entry: WorldEntry, brief: JourneyBrief): string {
  * no demo constants: real listings, fixtures, cached or future provider records
  * all work here unchanged. An empty world honestly yields no journeys.
  */
+export function isJourneyCandidate(
+  entry: WorldEntry,
+  band: TimeBand,
+  used: ReadonlySet<string>,
+): boolean {
+  return entry.band === band && !used.has(entry.id) && entry.kind !== "service";
+}
 export function planJourney(brief: JourneyBrief, world: WorldEntry[]): Journey[] {
   const pool = world;
   return SHAPES.map((shape) => buildShape(shape, brief, pool))
