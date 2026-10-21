@@ -31,6 +31,7 @@ import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
 import { localityPath } from "@/lib/locality-path";
+import { breadcrumbListJsonLd, jsonLdScript } from "@/lib/structured-data";
 import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
 import { KIND_LABEL } from "@/lib/places";
 import { privatePage, publicPage } from "@/lib/seo";
@@ -70,9 +71,23 @@ export const Route = createFileRoute("/$country/$place/")({
       : `${name} in Real World Atlas. Nothing has been recorded here yet — add the first thing.`;
     // Until a page has something genuinely useful on it, it is not offered to
     // search engines. It still exists for anybody who arrives.
-    return current.length >= 3
-      ? publicPage({ path, title, description })
-      : privatePage({ path, title, description });
+    if (current.length < 3) return privatePage({ path, title, description });
+
+    return {
+      ...publicPage({ path, title, description }),
+      scripts: [
+        jsonLdScript(
+          breadcrumbListJsonLd([
+            { name: "Real World Atlas", path: "/" },
+            ...[...geography.ancestors].reverse().map((step) => ({
+              name: step.name,
+              path: localityPath(step),
+            })),
+            { name, path },
+          ]),
+        ),
+      ],
+    };
   },
   component: LocalityPage,
   errorComponent: LocalityError,
