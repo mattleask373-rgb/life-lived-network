@@ -12,7 +12,7 @@ import type { WorkOpportunity } from "./work-opportunities";
 const opportunity: WorkOpportunity = {
   arrangement: "short_term",
   engagementKind: "paid_work",
-  compensation: { status: "stated_paid", amountCents: 2500, currency: "AUD", basis: "hour" },
+  compensation: { status: "stated_paid", amountMinorUnits: 2500, currency: "AUD", basis: "hour" },
   duration: { amount: 4, unit: "hours" },
   startDate: "2026-10-20",
   endDate: "2026-10-21",
@@ -63,6 +63,21 @@ describe("work opportunity presentation", () => {
     expect(facts).toContainEqual({ label: "Dates", value: "Starts 2026-10-20 · Ends 2026-10-21" });
     expect(facts).toContainEqual({ label: "Accommodation", value: "Not stated" });
     expect(facts).toContainEqual({ label: "Conditions", value: "Bring closed shoes" });
+  });
+
+  it("formats currencies using their own minor-unit precision", () => {
+    const facts = workOpportunityFacts({
+      ...opportunity,
+      compensation: {
+        status: "stated_paid",
+        amountMinorUnits: 2500,
+        currency: "JPY",
+        basis: "hour",
+      },
+    });
+    const pay = facts.find((fact) => fact.label === "Pay")?.value ?? "";
+    expect(pay).toContain("2,500");
+    expect(pay).not.toContain(".00");
   });
 
   it("keeps unknown pay, duration, dates and conditions explicit", () => {
