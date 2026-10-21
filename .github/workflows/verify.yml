@@ -4,6 +4,17 @@ on:
   push:
   pull_request:
 
+# Keep only the newest verification run for a given source branch/repository.
+# This prevents rapid agent commits from leaving obsolete test runs consuming
+# runners while preserving full lint, test, and build gates on the latest commit.
+concurrency:
+  group: verify-${{ github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
+# The workflow only checks out code and runs local commands; it needs no write token.
+permissions:
+  contents: read
+
 jobs:
   verify:
     runs-on: ubuntu-latest
