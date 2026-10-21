@@ -44,6 +44,12 @@
   --color-paper-deep: var(--paper-deep);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
+  --color-canvas: var(--paper);
+  --color-surface: var(--card);
+  --color-line: var(--border);
+  --color-primary-fg: var(--primary-foreground);
+  --color-sage: var(--sage);
+  --color-sand: var(--sand);
   --color-land: var(--land);
   --color-land-high: var(--land-high);
   --color-water: var(--water);
@@ -60,7 +66,7 @@
   --color-food: var(--food);
 
   --font-display: "Fraunces", Georgia, serif;
-  --font-sans: "Karla", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
 
   --shadow-paper:
     0 1px 0 color-mix(in oklab, var(--ink) 6%, transparent),
@@ -72,34 +78,34 @@
   /* Grok-inspired palette: warm paper canvas, cream surfaces, deep pine. */
   --radius: 1.1rem;
 
-  --paper: oklch(0.954 0.011 85);
-  --paper-deep: oklch(0.927 0.022 80);
-  --ink: oklch(0.215 0.005 70);
-  --ink-soft: oklch(0.52 0.015 70);
+  --paper: #f3f0e8;
+  --paper-deep: #efe6d6;
+  --ink: #1b1916;
+  --ink-soft: #6e675e;
 
-  --sage: oklch(0.948 0.02 160);
-  --sand: oklch(0.927 0.022 80);
+  --sage: #e3f2eb;
+  --sand: #efe6d6;
 
   --background: var(--paper);
   --foreground: var(--ink);
-  --card: oklch(0.991 0.006 80);
+  --card: #fffcf7;
   --card-foreground: var(--ink);
-  --popover: oklch(0.991 0.006 80);
+  --popover: #fffcf7;
   --popover-foreground: var(--ink);
 
-  --primary: oklch(0.46 0.085 170);
-  --primary-foreground: oklch(0.98 0.01 170);
+  --primary: #0c6b56;
+  --primary-foreground: #f3fbf8;
   --secondary: var(--sand);
   --secondary-foreground: var(--ink);
-  --muted: oklch(0.932 0.012 82);
+  --muted: #f0ede5;
   --muted-foreground: var(--ink-soft);
-  --accent: oklch(0.652 0.132 46);
-  --accent-foreground: oklch(0.985 0.012 92);
+  --accent: var(--sage);
+  --accent-foreground: var(--ink);
   --destructive: oklch(0.512 0.152 28);
   --destructive-foreground: oklch(0.98 0.01 90);
-  --border: oklch(0.902 0.014 80);
-  --input: oklch(0.89 0.014 80);
-  --ring: oklch(0.46 0.085 170);
+  --border: #e4ded3;
+  --input: #e4ded3;
+  --ring: #0c6b56;
 
   --land: oklch(0.938 0.028 92);
   --land-high: oklch(0.902 0.038 96);
