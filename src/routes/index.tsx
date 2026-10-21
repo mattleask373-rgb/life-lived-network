@@ -109,8 +109,7 @@ function Home() {
         mapPartition.unpinned.length +
         " unpinned"
       : mapPartition.unpinned.length + " unpinned · map view preparing";
-  const canChangeListScope =
-    showWholeLocality || !view || mapPartition.outsideView.length > 0;
+  const canChangeListScope = showWholeLocality || !view || mapPartition.outsideView.length > 0;
 
   const mapListContents = (
     <>
@@ -354,9 +353,7 @@ function Home() {
                     <span className="font-semibold">
                       {mobileListOpen ? "Nearby listings" : "Browse nearby listings"}
                     </span>
-                    <span className="truncate text-xs text-muted-foreground">
-                      {mapListSummary}
-                    </span>
+                    <span className="truncate text-xs text-muted-foreground">{mapListSummary}</span>
                   </span>
                   {mobileListOpen ? (
                     <ChevronDown aria-hidden="true" size={20} />
@@ -394,7 +391,11 @@ function Home() {
                   <h3 id="desktop-map-list-heading" className="font-display text-xl">
                     In this map view
                   </h3>
-                  <p role="status" aria-live="polite" className="mt-1 text-sm text-muted-foreground">
+                  <p
+                    role="status"
+                    aria-live="polite"
+                    className="mt-1 text-sm text-muted-foreground"
+                  >
                     {mapListSummary}
                   </p>
                 </div>
