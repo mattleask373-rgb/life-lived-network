@@ -17,6 +17,7 @@ import { useWorldContext } from "@/lib/world-context";
 import { amISafetyReviewer } from "@/lib/moderation.functions";
 import { listSources, refreshSource, type SourcePanelRow } from "@/lib/ingest.functions";
 import type { IngestOutcome } from "@/lib/ingest/contract";
+import { sourceHealth } from "@/lib/source-health";
 
 const title = "Sources — internal";
 const description = "Internal panel for refreshing outside sources of activity. Not a public page.";
@@ -107,7 +108,18 @@ function Sources() {
       {sources.isLoading ? <p className="mt-6 text-muted-foreground">Loading.</p> : null}
 
       <ul className="mt-6 space-y-3">
-        {(sources.data ?? []).map((source: SourcePanelRow) => (
+        {(sources.data ?? []).map((source: SourcePanelRow) => {
+          const health = sourceHealth({
+            enabled: source.enabled,
+            status: source.status,
+            credentialRequired: source.credentialRequired,
+            credentialPresent: source.credentialPresent,
+            refreshMinutes: source.refreshMinutes,
+            lastRunAt: source.lastRunAt,
+            lastSuccessAt: source.lastSuccessAt,
+            consecutiveFailures: source.consecutiveFailures,
+          });
+          return (
           <li key={source.id} className="card-paper p-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <div>
@@ -163,11 +175,16 @@ function Sources() {
                 </dd>
               </div>
             </dl>
+            <p className="mt-3 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">Refresh health: {health.label}.</span>{" "}
+              {health.explanation}
+            </p>
             {source.lastOutcome ? (
               <p className="mt-2 text-xs text-muted-foreground">{source.lastOutcome}</p>
             ) : null}
           </li>
-        ))}
+          );
+        })}
       </ul>
 
       {failure ? <p className="mt-4 text-sm text-destructive">{failure}</p> : null}
