@@ -8,29 +8,37 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 
 import { decodeCursor, pageLimit, toPage, type DiscoveryContext, type Page } from "./data/contract";
 import { asDataError } from "./data/errors";
 import { rowToEntry, type ListingRow } from "./listings";
-import { assertGeoBounds } from "./geo-bounds";
+import { assertViewportQueryBounds } from "./geo-bounds";
 import type { SourcePhoto, WorldEntry } from "./world-data";
 
 export const getWorld = createServerFn({ method: "GET" })
   .inputValidator((input: DiscoveryContext | undefined) => {
     const context = input ?? {};
-    if (context.bounds !== undefined && context.bounds !== null) assertGeoBounds(context.bounds);
+    if (context.bounds !== undefined && context.bounds !== null) {
+      assertViewportQueryBounds(context.bounds);
+    }
     return context;
   })
   .handler(async ({ data }): Promise<Page<WorldEntry>> => {
+    const signal = getRequest().signal;
     const { observe } = await import("./data/observe.server");
     return observe(
       "world.page",
-      () => readWorld(data),
+      () => readWorld(data, signal),
       (page) => page.items.length,
+      { signal },
     );
   });
 
-async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
+async function readWorld(
+  context: DiscoveryContext,
+  signal: AbortSignal,
+): Promise<Page<WorldEntry>> {
   const limit = pageLimit(context.limit);
   const offset = decodeCursor(context.cursor);
 
@@ -66,7 +74,8 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
       // else keeps its existing most-recent-first order.
       .order("starts_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+      .range(offset, offset + limit - 1)
+      .abortSignal(signal);
     // The selected locality and visible map rectangle are different scopes.
     // A viewport takes precedence over place filters so panning can retrieve new
     // records without changing the person's selected discovery locality.
@@ -113,7 +122,8 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
         .from("profiles")
         .select("id, display_name")
         .in("id", creatorIds)
-        .eq("discoverable", true);
+        .eq("discoverable", true)
+        .abortSignal(signal);
       for (const p of profiles ?? []) {
         if (p.display_name) names.set(p.id, p.display_name);
       }
@@ -127,7 +137,8 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
           "listing_id",
           listings.map((listing) => listing.id),
         )
-        .order("position", { ascending: true });
+        .order("position", { ascending: true })
+        .abortSignal(signal);
       if (photoError) throw photoError;
       for (const photo of photoRows ?? []) {
         const current = photos.get(photo.listing_id) ?? [];
@@ -153,14 +164,16 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
         .in(
           "listing_id",
           imported.map((r) => r.id),
-        );
+        )
+        .abortSignal(signal);
       const sourceIds = [...new Set((records ?? []).map((r) => r.source_id))];
       const sourceNames = new Map<string, string>();
       if (sourceIds.length) {
         const { data: sources } = await supabaseAdmin
           .from("sources")
           .select("id, name, attribution")
-          .in("id", sourceIds);
+          .in("id", sourceIds)
+          .abortSignal(signal);
         for (const source of sources ?? []) {
           sourceNames.set(source.id, source.attribution || source.name);
         }
@@ -199,6 +212,9 @@ async function readWorld(context: DiscoveryContext): Promise<Page<WorldEntry>> {
     }
     return page;
   } catch (error) {
+    if (signal.aborted || (error instanceof Error && error.name === "AbortError")) {
+      throw error;
+    }
     throw asDataError(error);
   }
 }

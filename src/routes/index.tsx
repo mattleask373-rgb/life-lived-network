@@ -18,7 +18,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { fetchWorld, fetchWorldEntries } from "@/lib/listings";
 import { MAX_LIMIT } from "@/lib/data/contract";
-import { geoBoundsForViewport, type GeoBounds } from "@/lib/geo-bounds";
+import { geoBoundsForViewport, isViewportQueryAllowed, type GeoBounds } from "@/lib/geo-bounds";
 import { densityOf } from "@/lib/trust";
 import { getOpenNeeds } from "@/lib/needs.functions";
 import { PLACE_FALLBACK } from "@/lib/places";
@@ -55,6 +55,7 @@ function Home() {
   const { place, ancestors, setPlaceSlug, loading, index } = useWorldContext();
   const [view, setView] = useState<MapView | null>(null);
   const [viewportBounds, setViewportBounds] = useState<GeoBounds | null>(null);
+  const viewportTooWide = Boolean(view && !isViewportQueryAllowed(view));
   const [exploredSlug, setExploredSlug] = useState<string | null>(null);
 
   // Debounce the transient view; a pointer move should not trigger a request.
@@ -65,7 +66,7 @@ function Home() {
       return;
     }
     const timer = window.setTimeout(() => {
-      setViewportBounds(geoBoundsForViewport(view));
+      setViewportBounds(isViewportQueryAllowed(view) ? geoBoundsForViewport(view) : null);
     }, 300);
     return () => window.clearTimeout(timer);
   }, [view]);
@@ -89,11 +90,11 @@ function Home() {
     refetch: refetchViewport,
   } = useQuery({
     queryKey: ["world-viewport", viewportBounds],
-    enabled: Boolean(place && viewportBounds),
+    enabled: Boolean(place && viewportBounds && !viewportTooWide),
     staleTime: 15_000,
-    queryFn: () => {
+    queryFn: ({ signal }) => {
       if (!viewportBounds) throw new Error("Map viewport bounds are required.");
-      return fetchWorld({ bounds: viewportBounds, limit: MAX_LIMIT });
+      return fetchWorld({ bounds: viewportBounds, limit: MAX_LIMIT }, { signal });
     },
   });
 
@@ -109,7 +110,7 @@ function Home() {
   const regionName = ancestors[0]?.name ?? "";
   const placeBlurb = place?.blurb || PLACE_FALLBACK.blurb;
 
-  const viewportLoaded = Boolean(viewportBounds && viewportPage);
+  const viewportLoaded = Boolean(!viewportTooWide && viewportBounds && viewportPage);
   const mapSourceEntries = useMemo(
     () => (viewportLoaded && viewportPage ? mergeViewportEntries(viewportPage.items, all) : all),
     [all, viewportLoaded, viewportPage],
@@ -156,11 +157,17 @@ function Home() {
         " located records in view · " +
         mapPartition.unpinned.length +
         " unpinned" +
-        (viewportLoaded && viewportPage?.hasMore ? " · page full; more may exist" : "")
+        (viewportLoaded && viewportPage?.hasMore ? " · more may exist; zoom in to narrow" : "")
       : mapPartition.unpinned.length + " unpinned · map view preparing";
-  const mapLoading = viewportBounds ? !viewportPage && viewportFetching : worldLoading;
-  const mapError = viewportBounds ? viewportError && !viewportPage : worldError;
-  const refetchMap = viewportBounds ? refetchViewport : refetchWorld;
+  const viewportRequestActive = Boolean(viewportBounds && !viewportTooWide);
+  const viewportTooWideMessage =
+    "Zoom in to search a smaller map area. Showing records already loaded for this locality; no broad-area query was sent.";
+  const mapLoading = viewportRequestActive ? !viewportPage && viewportFetching : worldLoading;
+  const mapError = viewportRequestActive ? viewportError && !viewportPage : worldError && !world;
+  const mapRefreshError = viewportRequestActive
+    ? viewportError && Boolean(viewportPage)
+    : worldError && Boolean(world);
+  const refetchMap = viewportRequestActive ? refetchViewport : refetchWorld;
   const canChangeListScope =
     showAllLoaded ||
     !view ||
@@ -171,7 +178,9 @@ function Home() {
     <>
       {mapLoading || loading ? (
         <p role="status" className="text-sm text-muted-foreground">
-          {viewportBounds ? "Loading records for this map view…" : "Checking what's recorded here…"}
+          {viewportRequestActive
+            ? "Loading records for this map view…"
+            : "Checking what's recorded here…"}
         </p>
       ) : !place ? (
         <p role="status" className="text-sm text-muted-foreground">
@@ -179,7 +188,7 @@ function Home() {
         </p>
       ) : mapError ? (
         <p role="alert" className="text-sm text-muted-foreground">
-          We couldn't load {viewportBounds ? "records for this map view" : "what's here"}.{" "}
+          We couldn't load {viewportRequestActive ? "records for this map view" : "what's here"}.{" "}
           <button
             type="button"
             onClick={() => void refetchMap()}
@@ -363,13 +372,38 @@ function Home() {
                   : mapError
                     ? "Unavailable"
                     : viewportLoaded
-                      ? `${viewportPage?.items.length ?? 0} located records in this view${viewportPage?.hasMore ? " · page full" : ""}`
+                      ? `${viewportPage?.items.length ?? 0} located records in this view${viewportPage?.hasMore ? " · more may exist; zoom in" : ""}`
                       : `${mapEntries.length} things`}
             </p>
           </div>
           <div className="mt-3">
             <LayerFilter active={layers} onChange={setLayers} />
           </div>
+          {viewportTooWide ? (
+            <p
+              role="status"
+              className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground"
+            >
+              {viewportTooWideMessage}
+            </p>
+          ) : null}
+          {mapRefreshError ? (
+            <p
+              role="status"
+              className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground"
+            >
+              We couldn't refresh{" "}
+              {viewportRequestActive ? "records for this map view" : "what's here"}. Showing the
+              last loaded records.{" "}
+              <button
+                type="button"
+                onClick={() => void refetchMap()}
+                className="focus-ink min-h-11 underline underline-offset-4"
+              >
+                Try again
+              </button>
+            </p>
+          ) : null}
           <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1.12fr)_minmax(20rem,0.88fr)]">
             <div className="relative min-w-0">
               <div className="h-[62vh] min-h-80 sm:h-[30rem] lg:h-[calc(100vh-17rem)] lg:min-h-[34rem] lg:max-h-[48rem]">
