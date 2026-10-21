@@ -13,7 +13,11 @@
  */
 
 export type SourceRecordState = "live" | "cancelled" | "postponed" | "removed";
-export type SourceLifecycleStatus = "ready" | "requires_credentials" | "requires_review" | "not_suitable";
+export type SourceLifecycleStatus =
+  | "ready"
+  | "requires_credentials"
+  | "requires_review"
+  | "not_suitable";
 
 export interface SourceRecordLifecycleInput {
   listingId: string | null;
@@ -135,8 +139,10 @@ export function decideSourceLifecycle(input: {
       if (time !== 0) return time;
       // On equal observation time, fail closed if the sources disagree.
       const statePriority = (state: SourceRecordState) => (state === "live" ? 0 : 1);
-      return statePriority(b.record.sourceState as SourceRecordState) -
-        statePriority(a.record.sourceState as SourceRecordState);
+      return (
+        statePriority(b.record.sourceState as SourceRecordState) -
+        statePriority(a.record.sourceState as SourceRecordState)
+      );
     });
 
   if (!candidates.length) {
