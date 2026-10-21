@@ -104,6 +104,7 @@ async function readWorld(context: DiscoveryContext, signal: AbortSignal): Promis
 
     const { data: rows, error } = await query;
     if (error) throw error;
+    throwIfAborted(signal);
 
     const listings = (rows ?? []) as unknown as ListingRow[];
     // One extra query for all creators, never one per listing.
@@ -186,6 +187,7 @@ async function readWorld(context: DiscoveryContext, signal: AbortSignal): Promis
       }
     }
 
+    throwIfAborted(signal);
     const page = toPage(
       listings.map((r) =>
         rowToEntry(
@@ -209,6 +211,7 @@ async function readWorld(context: DiscoveryContext, signal: AbortSignal): Promis
       const matching = demoEntriesFor(DEMO_ENTRIES, new Set(insideSlugs), true);
       if (matching.length) return { ...page, items: [...page.items, ...matching] };
     }
+    throwIfAborted(signal);
     return page;
   } catch (error) {
     // Preserve cancellation as cancellation; it is not a user-facing data failure.
