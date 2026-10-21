@@ -28,32 +28,46 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export function buildServiceAreaSelections(
   existing: readonly ExistingArea[],
   servicePlaceIds: readonly string[],
+  availableInPlaceIds: readonly string[],
   travellingThroughPlaceIds: readonly string[],
 ): ServiceAreaSelection[] {
   const existingByPlace = new Map<string, ExistingArea>();
+  const relationPriority: Record<AreaRelation, number> = {
+    serves: 3,
+    available_in: 2,
+    travelling_through: 1,
+  };
   for (const area of existing) {
     const previous = existingByPlace.get(area.placeId);
-    // In legacy duplicate data, prefer explicit service-area evidence over a
-    // passing-through row. The new write contract permits only one row/place.
-    if (
-      !previous ||
-      (previous.relation === "travelling_through" && area.relation !== "travelling_through")
-    ) {
+    // In legacy duplicate data, prefer the most explicit non-journey relation.
+    if (!previous || relationPriority[area.relation] > relationPriority[previous.relation]) {
       existingByPlace.set(area.placeId, area);
     }
   }
 
   const serviceIds = [...new Set(servicePlaceIds)];
   const serviceSet = new Set(serviceIds);
-  const travelIds = [...new Set(travellingThroughPlaceIds)].filter((id) => !serviceSet.has(id));
+  const availableIds = [...new Set(availableInPlaceIds)].filter((id) => !serviceSet.has(id));
+  const availableSet = new Set([...serviceIds, ...availableIds]);
+  const travelIds = [...new Set(travellingThroughPlaceIds)].filter((id) => !availableSet.has(id));
 
   const serviceSelections = serviceIds.map((placeId): ServiceAreaSelection => {
     const previous = existingByPlace.get(placeId);
-    const keepRelation = previous && previous.relation !== "travelling_through";
+    const keepTravel = previous?.relation === "serves";
     return {
       placeId,
-      relation: keepRelation ? previous.relation : "serves",
-      travelWillingness: keepRelation ? previous.travelWillingness : "local",
+      relation: "serves",
+      travelWillingness: keepTravel ? previous.travelWillingness : "local",
+    };
+  });
+
+  const availableSelections = availableIds.map((placeId): ServiceAreaSelection => {
+    const previous = existingByPlace.get(placeId);
+    const keepTravel = previous?.relation === "available_in";
+    return {
+      placeId,
+      relation: "available_in",
+      travelWillingness: keepTravel ? previous.travelWillingness : "local",
     };
   });
 
@@ -67,7 +81,7 @@ export function buildServiceAreaSelections(
     };
   });
 
-  return [...serviceSelections, ...travelSelections];
+  return [...serviceSelections, ...availableSelections, ...travelSelections];
 }
 
 /** Validate the complete replacement set before the server mutates any rows. */
