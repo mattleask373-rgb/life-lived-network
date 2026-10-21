@@ -95,7 +95,33 @@ function MakePage() {
     const k = KINDS.find((x) => x.id === id);
     setKind(id);
     setDone(false);
-    if (k) setForm((f) => ({ ...f, layer: k.layer, pays: id === "work" }));
+    if (k) {
+      setForm((f) => ({
+        ...f,
+        layer: k.layer,
+        pays: id === "work",
+        band:
+          id === "service"
+            ? "by_arrangement"
+            : f.band === "by_arrangement"
+              ? "today"
+              : f.band,
+        when_text:
+          id === "service"
+            ? f.when_text || "By arrangement — timing not confirmed"
+            : f.when_text === "By arrangement — timing not confirmed"
+              ? ""
+              : f.when_text,
+        cost:
+          id === "service"
+            ? kind === "service"
+              ? f.cost
+              : ""
+            : f.cost.trim()
+              ? f.cost
+              : "0",
+      }));
+    }
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -106,8 +132,18 @@ function MakePage() {
     const amount = Math.abs(Number(form.cost) || 0);
     const drawn = illustrativePosition(form.title || kind);
     try {
-      await createListing(
-        {
+      const serviceFields =
+        kind === "service"
+          ? parseServiceOfferDraft({
+              serviceCategory: form.serviceCategory,
+              organisation: form.organisation,
+              providerNote: form.providerNote,
+              bookingState: form.bookingState,
+              bookingUrl: form.bookingUrl,
+              cost: form.cost,
+            })
+          : undefined;
+      const listing: NewListing = {
           kind,
           layer: form.layer,
           title: form.title,
@@ -120,10 +156,13 @@ function MakePage() {
           neighbourhood: chosen?.name ?? "",
           x: drawn.x,
           y: drawn.y,
-          when_text: form.when_text,
-          band: form.band,
-          minutes: Math.round((Number(form.hours) || 1) * 60),
-          cost: form.pays ? -amount : amount,
+          when_text:
+            kind === "service"
+              ? form.when_text.trim() || "By arrangement — timing not confirmed"
+              : form.when_text,
+          band: kind === "service" ? "by_arrangement" : form.band,
+          minutes: kind === "service" ? 0 : Math.round((Number(form.hours) || 1) * 60),
+          cost: serviceFields?.cost ?? (form.pays ? -amount : amount),
           give: form.give.trim() || null,
           social: form.social,
           outdoors: form.outdoors,
@@ -134,14 +173,31 @@ function MakePage() {
           // Place-level coordinates only. Never an address, never a home.
           lat: chosen?.lat ?? null,
           lng: chosen?.lng ?? null,
-        },
-        user.id,
-      );
+          ...(serviceFields ?? {}),
+        };
+      await createListing(listing, user.id);
+      setDoneKind(kind);
       setDone(true);
       setKind(null);
-      setForm((f) => ({ ...f, title: "", summary: "", details: "", when_text: "" }));
-    } catch {
-      setError("We couldn't save that right now. Please try again.");
+      setForm((f) => ({
+        ...f,
+        title: "",
+        summary: "",
+        details: "",
+        when_text: "",
+        cost: "0",
+        serviceCategory: "",
+        organisation: "",
+        providerNote: "",
+        bookingState: "not_bookable",
+        bookingUrl: "",
+      }));
+    } catch (cause) {
+      setError(
+        cause instanceof ServiceOfferValidationError
+          ? cause.message
+          : "We couldn't save that right now. Please try again.",
+      );
     } finally {
       setBusy(false);
     }
