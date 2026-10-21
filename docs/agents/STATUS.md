@@ -101,6 +101,17 @@ Each candidate is still draft pending independent review and relevant manual evi
 6. **Robots/sitemap:** current source files and tests include private-path disallows and static/dynamic sitemap routes, but this pass could not independently reach the live Lovable endpoints with the available web verifier. Live host behavior therefore remains **unverified**; require a fresh owner-authorized GET check after any approved republish/hosting diagnosis.
 7. **Visual QA:** #241/#242/#243 require real browser checks at mobile/desktop breakpoints, keyboard-only operation, visible focus, screen-reader names, zoom/reduced-motion, map/list interactions, sourced-photo/no-photo states and honest quiet/error/freshness states.
 
+## Confirmed technical SEO gap — sitemap coverage
+
+A fresh source-level read of current `main` found a concrete mismatch between existing public routes and crawler discovery:
+
+- Canonical locality and service route files exist: `src/routes/$country.$place.index.tsx` and `src/routes/$country.$place.$service.tsx`. The locality page becomes indexable only when it has at least three non-demonstration entries; the service page delegates to `servicePageIndexable()`.
+- The public sitemap lists only the six static paths in `PUBLIC_PATHS` (home, journey, road trip, life list, give, make). `src/routes/api/public/sitemap-pages[.]xml.ts` also lists only those paths, and `src/routes/api/public/sitemap[.]xml.ts` currently indexes only that one child sitemap.
+- The committed `public/robots.txt` points crawlers at root `/sitemap.xml`, and `public/sitemap.xml` contains those same six static paths. No locality/service sitemap generator was found in the current route inventory. A dynamic `/robots.txt` handler exists, but live endpoint behaviour could not be independently verified because the public host was inaccessible to the available verifier.
+- This means locality/service pages may be canonical and conditionally indexable yet remain undiscoverable through the declared sitemap. Do not solve this with mass-generated thin URLs.
+
+**Next implementation slice:** derive locality sitemap candidates from the canonical place source, reuse the same route canonicalisation and page indexability rules, include only genuinely eligible localities/services, paginate or shard safely, add those child sitemaps to the index, and test that sitemap inclusion agrees with page `robots` metadata. Verify static-vs-server hosting precedence and `robots.txt` against the real deployed host before claiming the fix is live. No public host or indexation success is currently verified.
+
 ## Connected-repository inventory — live GitHub read, 2026-10-21
 
 The authenticated GitHub listing exposed multiple similarly named repositories. This is a source-of-truth risk; names alone do not prove which code is deployed or connected to Lovable.
