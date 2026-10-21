@@ -91,7 +91,8 @@ export function CapabilityPanel() {
       },
     });
   };
-  const atServiceAreaLimit = chosenAreas.length + chosenTravelThrough.length >= MAX_SERVICE_AREA_SELECTIONS;
+  const atServiceAreaLimit =
+    chosenAreas.length + chosenTravelThrough.length >= MAX_SERVICE_AREA_SELECTIONS;
   const chosenPrefs = data?.preferences ?? [];
   const chosenGives = data?.contributions.map((c) => c.contribution) ?? [];
   const earning = data?.earningPreference ?? "unstated";
@@ -307,9 +308,9 @@ export function CapabilityPanel() {
       <section className="card-paper p-5">
         <h2 className="text-xl">Where you work or can serve</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Places, not addresses. These are areas you explicitly say you serve or can work in;
-          they do not imply you're currently available. Up to {MAX_SERVICE_AREA_SELECTIONS} places
-          can be selected.
+          Places, not addresses. These are areas you explicitly say you serve or can work in; they
+          do not imply you're currently available. Up to {MAX_SERVICE_AREA_SELECTIONS} places can be
+          selected.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {(places ?? []).map((p) => {
