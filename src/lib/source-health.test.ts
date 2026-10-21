@@ -24,9 +24,7 @@ describe("sourceHealth", () => {
   });
 
   it("reports when a refresh is due", () => {
-    expect(
-      sourceHealth(input({ lastSuccessAt: "2026-10-21T11:40:00.000Z" })).state,
-    ).toBe("due");
+    expect(sourceHealth(input({ lastSuccessAt: "2026-10-21T11:40:00.000Z" })).state).toBe("due");
   });
 
   it("reports when a source is overdue by more than three intervals", () => {
