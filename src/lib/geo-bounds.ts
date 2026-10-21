@@ -19,6 +19,31 @@ export interface GeoViewport {
   spanLng: number;
 }
 
+/**
+ * Only query a map rectangle when it is sufficiently local to remain a
+ * bounded discovery request. The longitude allowance keeps the intended
+ * ~1.4:1 map-frame aspect ratio while limiting the latitude span to 1.5°.
+ */
+export const MAX_QUERYABLE_SPAN_LAT = 1.5;
+export const MAX_QUERYABLE_SPAN_LNG = 2.1;
+
+export function isViewportQueryable(view: GeoViewport): boolean {
+  return (
+    Number.isFinite(view.lat) &&
+    view.lat >= -90 &&
+    view.lat <= 90 &&
+    Number.isFinite(view.lng) &&
+    view.lng >= -180 &&
+    view.lng <= 180 &&
+    Number.isFinite(view.spanLat) &&
+    view.spanLat > 0 &&
+    view.spanLat <= MAX_QUERYABLE_SPAN_LAT &&
+    Number.isFinite(view.spanLng) &&
+    view.spanLng > 0 &&
+    view.spanLng <= MAX_QUERYABLE_SPAN_LNG
+  );
+}
+
 export function isGeoBounds(value: unknown): value is GeoBounds {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
   const candidate = value as Record<string, unknown>;
