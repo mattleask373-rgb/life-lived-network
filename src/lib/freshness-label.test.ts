@@ -12,7 +12,7 @@ describe("sourceLastCheckedLabel", () => {
     expect(sourceLastCheckedLabel("2026-10-19T12:00:00.000Z", NOW)).toBe("2 days ago");
   });
 
-  it("uses an absolute local timestamp for checks older than a week", () => {
+  it("uses a stable UTC date for checks older than a week", () => {
     expect(sourceLastCheckedLabel("2026-10-01T12:00:00.000Z", NOW)).toBe("on 2026-10-01 UTC");
   });
 
