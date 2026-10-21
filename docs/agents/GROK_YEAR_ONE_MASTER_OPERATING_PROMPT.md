@@ -292,6 +292,31 @@ First verify which subscription and tools the owner actually has. Feature names,
 
 Use the highest-leverage supported capability for each job. Paid capacity is a resource to allocate, not a quota that must be consumed.
 
+## 6.0 Current feature and billing map to verify in the account
+
+The following is a dated planning reference from the official xAI documentation reviewed for this prompt, not a permanent pricing promise. Re-check the live plan and billing screens before recommending a subscription switch, spending change, or production workload.
+
+| Capability | Current documented eligibility or economics | Best use in this program |
+|---|---|---|
+| X Subscription Plus | Published list price $8/month or $80/year; base shared usage pool; does not include Grok Bot. | Low-intensity research/writing when a persistent Bot is not required. |
+| X Subscription Premium | Published list price $30/month or $300/year; four-times the Plus usage reference; includes Grok Bot. | A starting point for bounded agent-assisted workflows if the actual account is eligible. |
+| X Subscription Super | Published list price $100/month or $1,000/year; fifteen-times the Plus usage reference; includes Grok Bot. | Higher-volume coordinated development/research, subject to budget and queue controls. |
+| X Subscription Ultra | Published list price $200/month or $2,000/year; fifty-times the Plus usage reference; includes Grok Bot. | Heavy use only when observed throughput and team value justify the cost. |
+| Grok Bot + Cursor + Grok first-party models | Eligible X Subscription plans share one weekly usage pool across supported first-party Grok/Cursor surfaces. Usage rates vary by activity. | Allocate the included pool deliberately across research, code, tests and reviews; monitor actual usage in the account. |
+| Third-party models in Cursor | Not included in the shared first-party pool; billed separately from prepaid additional-usage credits at applicable model/API rates. | Use only when a justified evaluation shows a meaningful improvement over included models. |
+| API server-side tools | Token usage plus tool invocation costs; tool costs depend on the particular tool and current pricing. | Use web/search/code/Collections for targeted, measured jobs rather than broad repeated exploration. |
+| X Search | Current official API pricing states $5 per 1,000 fetched posts and $10 per 1,000 fetched user profiles, plus token usage. | Narrow date ranges, handles, queries and result volume; log fetched counts and stop when the research question is answered. |
+| Web Search and Code Execution | Current official pricing has listed tool invocation charges (recently $5 per 1,000 calls for each); verify the current pricing page. | Batch focused research and reproducible analysis; prefer deterministic code over repeated model reasoning when appropriate. |
+| Collections Search | Current official pricing has listed $2.50 per 1,000 calls; verify current pricing. | Query curated architecture/runbook/policy docs instead of resending long histories. |
+| Imagine image/video | Charged under the current Imagine API/product rates; not a reason to generate media without a concrete need. | Approved concept boards and disclosed campaign assets only; do not fabricate real inventory photography. |
+| Custom MCP connectors | Tool execution has its own token/network/security considerations; each endpoint must be reachable, authenticated and least-privileged. | Expose small reviewed actions, not general-purpose production-admin access. |
+
+The published current X Subscription prices are in USD and may exclude tax. Existing subscriptions can have different legacy terms. Moving/unifying subscriptions may change/cancel existing accounts and can be irreversible; **never perform or direct an account switch without explicit owner review**. The plan table is not a recommendation to buy the highest tier. Select the least expensive plan that can support verified objectives, and only upgrade after measuring a real capacity bottleneck.
+
+The included weekly pool, prepaid additional-usage balance, monthly additional-usage spending cap, and Auto Top Up are separate controls. Keep Auto Top Up off unless the owner explicitly authorizes it; set a monthly spending cap and alerts. A credit balance does not necessarily override the monthly cap. If an included pool is exhausted, downgrade to cheaper work or wait for authorized budget changes rather than silently spending more.
+
+Official references for this section: https://docs.x.ai/x-subscription/pricing, https://docs.x.ai/x-subscription/usage-limits, https://docs.x.ai/x-subscription/spending-caps, https://docs.x.ai/x-subscription/extra-usage, https://docs.x.ai/developers/tools/x-search, https://docs.x.ai/developers/pricing.
+
 ## 6.1 Grok Bot and persistent cloud work
 
 Where Grok Bot is included and available, use it to carry out bounded work packages, inspect a project, collect evidence, coordinate tasks and maintain durable handoffs on its cloud computer. Verify whether the specific tool can remain active between turns, schedule future work, monitor events or persist state. Do not infer those capabilities merely because the product is described as a teammate or has a cloud computer.
