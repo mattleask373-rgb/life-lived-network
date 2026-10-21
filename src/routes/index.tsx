@@ -94,10 +94,10 @@ function Home() {
   const needCount = openNeeds?.length ?? 0;
   const questions = useMemo(() => localityQuestions(all, needCount), [all, needCount]);
   const quiet = Boolean(place) && !worldLoading && !loading && !worldError && all.length === 0;
-  const mapPartition = useMemo(() => partitionMapList(mapEntries, view), [entries, view]);
+  const mapPartition = useMemo(() => partitionMapList(mapEntries, view), [mapEntries, view]);
   const mapListEntries = useMemo(
     () => entriesForMapList(mapEntries, mapPartition, showAllLoaded),
-    [entries, mapPartition, showAllLoaded],
+    [mapEntries, mapPartition, showAllLoaded],
   );
   const unpinnedIds = useMemo(
     () => new Set(mapPartition.unpinned.map((entry) => entry.id)),
@@ -105,7 +105,7 @@ function Home() {
   );
   const locatedCount = mapEntries.length - mapPartition.unpinned.length;
   const mapListSummary = showAllLoaded
-    ? mapListEntries.length + " loaded records for " + placeName
+    ? mapListEntries.length + " loaded records for " + (discoveryPlace?.name ?? placeName)
     : view
       ? mapPartition.inView.length +
         " of " +
@@ -114,7 +114,11 @@ function Home() {
         mapPartition.unpinned.length +
         " unpinned"
       : mapPartition.unpinned.length + " unpinned · map view preparing";
-  const canChangeListScope = showAllLoaded || !view || mapPartition.outsideView.length > 0;
+  const canChangeListScope =
+    showAllLoaded ||
+    !view ||
+    mapPartition.outsideView.length > 0 ||
+    allFilteredEntries.length > entries.length;
 
   const mapListContents = (
     <>
@@ -137,7 +141,7 @@ function Home() {
             Try again
           </button>
         </p>
-       ) : mapEntries.length === 0 ? (
+      ) : mapEntries.length === 0 ? (
         emptyListState(all.length, layers.length > 0) === "filtered-out" ? (
           <p className="text-sm text-muted-foreground">
             Nothing matches these filters, but {all.length} other{" "}
@@ -165,7 +169,7 @@ function Home() {
             onClick={() => setShowAllLoaded(true)}
             className="focus-ink min-h-11 font-medium text-primary underline underline-offset-4"
           >
-            Show whole locality
+            Show all loaded records
           </button>
         </p>
       ) : (
@@ -394,7 +398,7 @@ function Home() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h3 id="desktop-map-list-heading" className="font-display text-xl">
-                    In this map view
+                    {showAllLoaded ? "All loaded locality records" : "In this map view"}
                   </h3>
                   <p
                     role="status"
