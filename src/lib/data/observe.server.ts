@@ -18,6 +18,7 @@ export async function observe<T>(
   op: string,
   run: () => Promise<T>,
   count?: (result: T) => number,
+  options: { signal?: AbortSignal } = {},
 ): Promise<T> {
   const started = Date.now();
   try {
@@ -30,6 +31,10 @@ export async function observe<T>(
     });
     return result;
   } catch (error) {
+    // An intentional cancellation is not a failed data read.
+    if (options.signal?.aborted || (error instanceof Error && error.name === "AbortError")) {
+      throw error;
+    }
     log({
       op,
       ms: Date.now() - started,
