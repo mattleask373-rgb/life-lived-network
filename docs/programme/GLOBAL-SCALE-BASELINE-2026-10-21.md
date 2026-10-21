@@ -12,7 +12,7 @@ Real World Atlas is an existing TanStack Start/React application for discovering
 
 The current codebase is **not yet evidenced as a globally scalable production platform**. No verified DAU, peak request rate, p95/p99 latency, database size, availability history, infrastructure cost, Search Console data, or retention/conversion baseline was available in this repository inspection. The aspirational billion-DAU target must remain a planning scenario, not a capacity claim.
 
-The most urgent operational issue is the change queue: the GitHub API returned **93 open PRs**, including **53 drafts**, **58 not updated in the preceding seven days**, and **13 targeting a branch other than `main`**. This creates material merge-conflict, duplicated-effort, review-latency, and verification-cost risk. Prefer triaging and independently validating existing work over creating more overlapping branches.
+The initial queue inventory, captured before this baseline PR was opened, returned **93 open PRs**, including **53 drafts**, **58 not updated in the preceding seven days**, and **13 targeting a branch other than `main`**. PR #254 adds this baseline document as another open PR until it is closed or merged. The queue remains a material merge-conflict, duplicated-effort, review-latency, and verification-cost risk. Prefer triaging and independently validating existing work over creating more overlapping branches.
 
 ### Verified repository facts
 
@@ -202,7 +202,7 @@ Work with existing branches and PRs rather than duplicating them. All changes sh
 **Why first:** a large conflicted queue raises the risk of duplicated fixes and obscures what has actually shipped.  
 **Scope:** open PR inventory, recent commits/unique files, base-branch alignment, checks, duplicate/superseded status, and named owner/next action.  
 **Acceptance criteria:**
-- All 93 currently open PRs have a recorded category, intended base, overlap/duplicate assessment, last check result, and next action.
+- Re-query the live PR list at triage start; the baseline inventory captured 93 open PRs before PR #254 existed. Record category, intended base, overlap/duplicate assessment, last check result, and next action for each current PR.
 - No PR is closed solely for age; unique unmerged work is identified before superseding anything.
 - Cross-cutting overlapping changes (especially #247/#249 SEO and #250/#251 CI) have one explicit integration sequence.
 - A weekly summary reports opened/merged/closed PR count, median time-to-review, stale count, and green-check rate.
