@@ -89,7 +89,7 @@ export function privatePage(meta: Omit<PageMeta, "image">): {
   };
 }
 
-/** Public app screens that exist today. Locality and service pages arrive later. */
+/** Fixed public app screens. Eligible locality URLs are listed by the bounded locality child sitemap. */
 export const PUBLIC_PATHS: readonly string[] = [
   "/",
   "/journey",
