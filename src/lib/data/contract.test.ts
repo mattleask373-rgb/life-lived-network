@@ -47,8 +47,11 @@ describe("data errors stay predictable and quiet", () => {
     expect(error.message).not.toContain("listings");
   });
 
-  it("recognises auth and policy failures", () => {
+  it("recognises auth, policy and oversized locality-scope failures", () => {
     expect(asDataError(new Error("invalid JWT")).code).toBe("UNAUTHENTICATED");
     expect(asDataError(new Error("row-level security policy")).code).toBe("FORBIDDEN");
+    const scopeError = new DataError("SCOPE_TOO_WIDE");
+    expect(asDataError(scopeError)).toBe(scopeError);
+    expect(scopeError.message).toMatch(/too broad/i);
   });
 });
