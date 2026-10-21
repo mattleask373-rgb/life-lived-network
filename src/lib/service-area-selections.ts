@@ -10,7 +10,7 @@ export interface ServiceAreaSelection {
 
 type ExistingArea = Pick<ServiceArea, "placeId" | "relation" | "travelWillingness">;
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 
 const RELATIONS = new Set<AreaRelation>(["serves", "available_in", "travelling_through"]);
 const TRAVEL_WILLINGNESSES = new Set<TravelWillingness>(["local", "will_travel", "anywhere"]);
