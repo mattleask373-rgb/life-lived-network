@@ -74,7 +74,9 @@ function pick(
   used: Set<string>,
   world: WorldEntry[],
 ): WorldEntry | undefined {
-  const pool = world.filter((e) => e.band === band && !used.has(e.id) && e.kind !== "service");
+  const pool = world.filter(
+    (e) => e.band === band && !used.has(e.id) && e.kind !== "service",
+  );
   const scored = pool
     .map((e) => {
       let score = 0;
