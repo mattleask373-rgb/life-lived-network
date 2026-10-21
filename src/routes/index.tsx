@@ -172,8 +172,8 @@ function Home() {
     <>
       {viewportTooWide ? (
         <p role="status" className="text-sm text-muted-foreground">
-          Zoom in to search a smaller map area. Showing records already loaded for this locality;
-          no broad-area query was sent.
+          Zoom in to search a smaller map area. Showing records already loaded for this
+          locality; no broad-area query was sent.
         </p>
       ) : null}
       {mapLoading || loading ? (
