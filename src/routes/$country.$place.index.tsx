@@ -27,6 +27,7 @@ import { EmptyPlace } from "@/components/data-state";
 import { LocalityQuestions } from "@/components/locality-questions";
 import { WhatsHappening } from "@/components/whats-happening";
 import { WhatsHere } from "@/components/whats-here";
+import { WorkOpportunityFacts } from "@/components/work-opportunity-facts";
 import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
@@ -36,6 +37,7 @@ import { KIND_LABEL } from "@/lib/places";
 import { evaluateLocalityIndexability } from "@/lib/locality-indexability";
 import { privatePage, publicPage } from "@/lib/seo";
 import { categoriesPresent } from "@/lib/service-taxonomy";
+import { hasPublicWorkOpportunity } from "@/lib/work-opportunity-presentation";
 import { filterEntriesByText, parseQuerySearch } from "@/lib/search-context";
 import {
   applyTravellerFilters,
@@ -197,6 +199,7 @@ function LocalityPage() {
   const groups = useMemo(() => providerGroups(filtered), [filtered]);
   const offers = useMemo(() => contributions(filtered), [filtered]);
   const categories = useMemo(() => categoriesPresent(entries), [entries]);
+  const workOpportunities = useMemo(() => entries.filter(hasPublicWorkOpportunity), [entries]);
   const questions = useMemo(() => localityQuestions(entries, 0), [entries]);
   const demonstrations = entries.filter((entry) => entry.demonstration).length;
 
@@ -364,6 +367,34 @@ function LocalityPage() {
               </li>
             ))}
           </ul>
+        </section>
+      ) : null}
+
+      {workOpportunities.length ? (
+        <section
+          className="mt-10"
+          aria-label={`Published work opportunities in ${place.name}`}
+        >
+          <h2 className="text-2xl">Work opportunities recorded here</h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            Only explicitly reviewed, rights-cleared records with published terms appear here. This
+            does not guarantee a place, pay, or availability.
+          </p>
+          <ul className="mt-3 grid gap-3 md:grid-cols-2">
+            {workOpportunities.slice(0, 12).map((entry) => (
+              <li className="card-paper p-4" key={entry.id}>
+                <h3 className="text-lg">{entry.title}</h3>
+                {entry.summary.trim() ? <p className="mt-1 text-sm">{entry.summary}</p> : null}
+                <WorkOpportunityFacts entry={entry} />
+              </li>
+            ))}
+          </ul>
+          {workOpportunities.length > 12 || entries.length >= 60 ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Showing up to 12 opportunities from the records currently loaded for this place; more
+              may exist.
+            </p>
+          ) : null}
         </section>
       ) : null}
 
