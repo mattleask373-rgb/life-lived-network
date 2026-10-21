@@ -180,19 +180,6 @@ function Home() {
           broad-area query was sent.
         </p>
       ) : null}
-      {mapRefreshError ? (
-        <p role="status" className="text-sm text-muted-foreground">
-          We couldn't refresh {viewportRequestActive ? "records for this map view" : "what's here"}.
-          Showing the last loaded records.{" "}
-          <button
-            type="button"
-            onClick={() => void refetchMap()}
-            className="focus-ink min-h-11 underline underline-offset-4"
-          >
-            Try again
-          </button>
-        </p>
-      ) : null}
       {mapLoading || loading ? (
         <p role="status" className="text-sm text-muted-foreground">
           {viewportRequestActive
@@ -396,6 +383,19 @@ function Home() {
           <div className="mt-3">
             <LayerFilter active={layers} onChange={setLayers} />
           </div>
+          {mapRefreshError ? (
+            <p role="status" className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
+              We couldn't refresh {viewportRequestActive ? "records for this map view" : "what's here"}.
+              Showing the last loaded records.{" "}
+              <button
+                type="button"
+                onClick={() => void refetchMap()}
+                className="focus-ink min-h-11 underline underline-offset-4"
+              >
+                Try again
+              </button>
+            </p>
+          ) : null}
           <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1.12fr)_minmax(20rem,0.88fr)]">
             <div className="relative min-w-0">
               <div className="h-[62vh] min-h-80 sm:h-[30rem] lg:h-[calc(100vh-17rem)] lg:min-h-[34rem] lg:max-h-[48rem]">
