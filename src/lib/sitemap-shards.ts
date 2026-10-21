@@ -13,7 +13,7 @@ export const MAX_SERVICE_SITEMAP_SHARDS = 8;
 
 export const SERVICE_SITEMAP_SHARD_PATHS: readonly string[] = Array.from(
   { length: MAX_SERVICE_SITEMAP_SHARDS },
-  (_, index) => `/api/public/sitemap-services/\${index + 1}.xml`,
+  (_, index) => `/api/public/sitemap-services/${index + 1}.xml`,
 );
 
 export function sitemapShardCount(paths: readonly string[]): number {
