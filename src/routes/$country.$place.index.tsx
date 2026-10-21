@@ -222,7 +222,12 @@ function LocalityPage() {
           <p>
             You searched for <strong>&ldquo;{q}&rdquo;</strong> in {place.name}.
           </p>
-          {textMatches.length ? (
+          {scopeTooWide ? (
+            <p role="status" className="mt-1 text-muted-foreground">
+              Search results are hidden for this broad area to keep the results within the selected
+              place. Choose a smaller place below, then repeat your search there.
+            </p>
+          ) : textMatches.length ? (
             <>
               <p className="mt-1 text-muted-foreground">
                 {textMatches.length === 1
