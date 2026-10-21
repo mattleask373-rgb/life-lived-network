@@ -55,6 +55,7 @@ describe("public sitemap privacy", () => {
     expect(locs(sitemap)).toEqual([
       `${SITE_ORIGIN}/api/public/sitemap-pages.xml`,
       `${SITE_ORIGIN}/api/public/sitemap-localities.xml`,
+      `${SITE_ORIGIN}/api/public/sitemap-services.xml`,
     ]);
     for (const path of PRIVATE_PATHS) {
       expect(locs(sitemap)).not.toContain(`${SITE_ORIGIN}${path}`);
