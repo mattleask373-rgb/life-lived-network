@@ -1,93 +1,55 @@
-# Independent review: PRs #271, #272, #275, #276 (read-only)
+# Read-only project integration audit: Real World Atlas (b3293d2a-…)
 
-Done on 21 Oct 2026. Nothing besides this note was edited, committed, synced, installed, deployed or queried. The task list was not updated because the request said not to edit files.
+Done on 21 Oct 2026 at 23:03 UTC. Only this note was written. Nothing was committed by me, published, migrated or reconfigured. The task list was not updated because the request said not to edit files.
 
-## 0. Can this Lovable project prove its sync target and commit SHA?
+## 1. Connected GitHub repo and sync branch
 
-No.
-- The only git remotes are Lovable's internal storage and an internal backup. There is no GitHub remote.
-- The local HEAD is `73bcec5…`. That does not match the `main` SHA you gave (`1cf9b21…`), and nothing here links the two.
-- The Git sync repository and branch are not readable from this session.
-- So the sync target, the synced branch, and whether this project equals any GitHub commit are all **unverified**.
+**Settings: UNVERIFIED.** Project Settings → Git cannot be read from this session. The sandbox git remotes are only Lovable internal storage (`lovable-gcp.code.storage/b3293d2a-….git`) and an internal backup. Neither is a GitHub URL.
 
-## 1. What was actually inspected
+**Indirect evidence (strong, but not proof from settings):**
+- This project's current commit `ad0f58aa6658f1c4b1e365075274abc64b7e4094` exists on GitHub in `mattleask373-rgb/life-lived-network`.
+- It is authored by `gpt-engineer-app[bot]` (Lovable's sync identity) and changes only `.lovable/plan.md`.
+- It is the head of branch **`Loveable/work/safely`**, not `main`.
 
-Read through the public GitHub API: each PR's head SHA, base branch, draft state and changed-file list, plus the non-test patches.
+This points to sync going to that repo on the non-main branch `Loveable/work/safely`. Treat it as observed behaviour, not a confirmed setting.
 
-| PR | Head (matches the SHA you gave) | Base | State |
-|---|---|---|---|
-| #271 | `fc264cc` yes | main | draft, open |
-| #272 | `e87438c` yes | main | draft, open |
-| #275 | `e1de845` yes | main | draft, open |
-| #276 | `abfdfc4` yes | main | draft, open |
+## 2. Project commit compared with canonical main
 
-Not inspected:
-- Test file bodies, beyond their names and line counts.
-- CI or check results for any of the four heads.
-- Files the PRs depend on that are missing from this local snapshot, notably `work-opportunity-presentation.ts`, `geo-bounds.ts` and `locality-indexability.ts`.
-- The body of `readBoundedSitemapPages`; the patch output was truncated.
+| | SHA | Date |
+|---|---|---|
+| Project HEAD (sandbox edit branch `edit/edt-84886b95…`) | `ad0f58a` | 21:57 UTC |
+| GitHub `main` | `1cf9b21b6fae9fef2b504b2993d37d2f99766d6d` | 21:13 UTC |
+| Merge base | `ccbcc6acdbc3dcdf6895c0f624b301418257a6e3` | — |
 
-Your report that #276 passed Verify, CodeQL and the dependency audit was **not re-checked**.
+GitHub compare `main...ad0f58a` reports **diverged: 14 commits ahead, 161 behind**. This project lacks the 161 reviewed commits on main, including #262 and everything merged after `ccbcc6a`. Its 14 extra commits are Lovable-side, such as the plan notes and the earlier `map-view.ts` and `work-opportunities.ts` type fixes. Those were not itemised this turn.
 
-## 2. Findings by PR
+## 3. Published hostname and runtime
+- Published URL (project metadata): `https://life-lived-network.lovable.app`. It answers HTTP 200. No custom domain is listed.
+- Runtime: TanStack Start on Cloudflare-Workers-style edge hosting, per `.lovable/project.json` template `tanstack_start_ts_current`. The backend is Lovable Cloud, with one instance shared by preview and published app.
+- **Unverified:** which commit the published site is built from. Publishing is manual, so it may be older than `ad0f58a`.
 
-### #271: route registry and private Life List. Verified correct in direction.
-- One registry (`seo-route-policy.ts`) now feeds `seo.ts`, the sitemaps, robots and the live-smoke script, which previously had its own copies.
-- `/life-list` moved to `PRIVATE_PATHS`, and the page uses `privatePage` (noindex, no canonical).
-- Risk (Medium): nothing forces each route's `head()` to match the registry. A route could still call `publicPage` while listed as private, or the reverse. The old test only checks four hard-coded names.
-  - Smallest missing test: for every path in `PRIVATE_PATHS`, render that route's `head()` and assert `noindex` is present with no canonical link. For every path in `PUBLIC_PATHS`, assert the opposite.
-- Risk (Low): no test checks that the two lists never overlap.
-  - Smallest missing test: assert the intersection of `PUBLIC_PATHS` and `PRIVATE_PATHS` is empty.
-- Note: the `/need` prefix in `PRIVATE_PATHS` also covers `/need/$id`, as intended. `privatePage` on `/need/` passes `path: ""`, which is harmless.
+## 4. Can this project safely take in reviewed PRs through a non-main branch?
 
-### #272: locality scope cap, date-line handling, abort logging
-- Fails closed: more than 400 descendant IDs now throws `SCOPE_TOO_WIDE`, instead of silently dropping the place filter. That matches the invariant that a selected locality never silently broadens.
-  - The detail containing the count is kept server-side, because the `DataError` constructor uses the fixed message. That was verified locally.
-- Risk (High, product): country, region and large-county pages, and any selection whose hierarchy has more than 400 places, now show an error instead of activity. This includes SSR locality pages and the home page.
-  - Need: confirm which real places exceed 400 (read-only count on the place list), plus copy and UI that offer smaller places rather than a dead end.
-  - Test: a parent with 401 descendants returns `SCOPE_TOO_WIDE`; a parent with 400 still queries; and the UI renders the "choose a smaller place" state with a way forward.
-- Abort handling: `observe` re-throws without logging when the signal is aborted or the error is named `AbortError`. Correct.
-  - Edge case: supabase-js may surface a cancelled request as an error object whose name is not `AbortError`. In that case the `signal.aborted` branch is what saves it.
-  - Test: an abort raised as a plain object `{ message: "AbortError" }` is not logged.
-- Date line: `toScreen`, `boundsOf`, `placeInView` and `fitView` now use the shortest longitude offset, and `boundsOf` returns minLng greater than maxLng when the view wraps, matching the server bounds contract.
-  - Risk (Medium): `map-list-sync` and `placeEntries` filter on screen position, so they inherit the fix. But any other caller that compares longitudes against `boundsOf` directly (e.g. `lng >= minLng && lng <= maxLng`) now breaks on wrapped views. A repo-wide search is needed; not done this turn.
-  - Edge case: `fitView` unwraps points relative to the locality centre. A set of points spanning more than 180 degrees around that centre unwraps the wrong way. Acceptable at locality scale, but should be stated.
-  - Tests: points at +179.9 and -179.9 land within a few percent of each other on screen; `fitView` gives a span under 1 degree for that pair; `placeInView` finds a place across the date line.
-- Overlap: this touches `world.functions.ts`, `map-view.ts` and `index.tsx`, the same files as #238 and #242. `assertQueryableGeoBounds` comes from a version of `geo-bounds.ts` not visible here. Merge order matters; rebase on whichever lands first and re-run.
+**Human intervention is required first.**
+- Sync appears to target `Loveable/work/safely`. A Lovable code edit would therefore land there, not on `main`, but only if that setting is real. The owner must confirm it in Project Settings → Git.
+- That branch is 161 commits behind `main`. Lovable only receives commits pushed to its synced branch. Reviewed PRs merged into `main` do not reach this project until someone merges `main` into `Loveable/work/safely` on GitHub, through a PR.
+- Two risks if anyone edits here now:
+  - New work builds on stale code. Earlier versions of routes and sitemaps could be re-pushed, conflicting with main.
+  - If that later PR into main is force-pushed or rebased, Lovable may treat it as divergence and park its work on `lovable-sync`.
+- No branch protection exists for `Loveable/work/safely`; earlier evidence showed rulesets only on main.
 
-### #275: published work opportunities and Need prefill
-- No contact without the user submitting: verified in the diff. `RequestMatchLink` is a plain link to `/need` with search params. The Need form only calls `createNeed` on submit. No source is messaged, and the helper text says so.
-- Publication gate (cannot verify): both new surfaces rely on `hasPublicWorkOpportunity`, whose body is not available here.
-  - The locality page filters with it, but it does **not** separately exclude expired, cancelled or demonstration entries. The service page does, via `servicePageListings`.
-  - Test: an entry that passes `hasPublicWorkOpportunity` but is expired, cancelled or a demonstration does not appear on the locality page.
-- Category truth (Medium): the link passes the category **label** (e.g. "Cleaning"). The form lowercases it into `category` and `required_skills`, which feed `findSupply()` matching.
-  - If people's capabilities are stored as slugs or other words, the prefilled request could match nobody, or match the wrong people.
-  - Test: the prefilled value equals what the canonical taxonomy stores for that category.
-- Service page change (Medium): `servicePageListings` now includes work opportunities alongside services. That changes what the service page counts and possibly whether it is indexable, if indexability reads that count.
-  - Test: a service page whose only listing is a work opportunity keeps the same indexability decision as before, or the change is made deliberately.
-- Accessibility:
-  - Prefill only reaches the form when signed in. Signed-out users likely lose `from` and `category` through the sign-in redirect; not verified.
-  - The link reads "Request a match" with no context. Several on one page are ambiguous to screen readers. Add the opportunity title to its accessible name.
-  - Seeded values are editable (`useState(categorySeed)`), but they are read only on first render. Changing search params on the same page does not refresh them. Minor.
-  - Tests: the link's accessible name includes the title; the category field shows the prefill and stays editable; no request is sent before submit.
+## 5. Recommended read-only integration sequence (for the owner and reviewers)
+1. **Owner confirms the sync settings.** Project Settings → Git shows repo `mattleask373-rgb/life-lived-network` and branch `Loveable/work/safely`. Record a screenshot or note on issue #263, Step 1.
+2. **Freeze Lovable code edits** until step 4 is done. Plan or read-only turns only.
+3. **Classify the 14 Lovable-only commits** on GitHub (`main...Loveable/work/safely`): keep, port as a small PR, or drop. Plan notes can stay out of `main`.
+4. **Open a PR merging `main` into `Loveable/work/safely`.** Normal merge, no rebase or force-push. Resolve conflicts in favour of `main` for routes, the `seo-route-policy` registry, `findSupply()` and `src/lib/ingest/*`. Require `verify` on the exact head, then merge. Lovable then pulls the reviewed code.
+5. **Add a ruleset** for `Loveable/work/*`: PR required, `verify` required, no force-push or deletion. Confirm it applies to that branch.
+6. **Keep reviewed feature PRs targeting `main`.** They include #271, #272, #275 and #276, and the draft #278 (`agent/chatgpt/staging-load-smoke-2026-10-21`, head `80d33c4`). #278 adds only `docs/scale/STAGING-LOAD-TESTING.md` and `tests/load/staging-public-read.js`: no routes, matcher or discovery logic. It must run against a confirmed staging host only, never the published URL, which needs owner approval. After each merge to main, repeat step 4 so Lovable stays current.
+7. Only then allow a Lovable code-writing turn: small, against the up-to-date branch, ending in a PR to `main`.
 
-### #276: sitemap page scanning
-- The place read is now paginated in pages of 1000, ordered by `id`, with a 5,000 cap enforced by `readBoundedSitemapPages`.
-  - Stable ordering by a unique key is correct.
-  - The helper body was not seen, so these could not be verified: (a) going over the cap throws instead of truncating; (b) a short page ends the loop; (c) a read error stops the whole sitemap rather than returning partial URLs.
-  - Tests: exactly 5,000 rows passes or fails as documented, 5,001 throws, and an error on page 3 gives a failure response with no URLs.
-- Gap: the listing scan (`LOCALITY_SITEMAP_LISTING_SCAN_LIMIT`) was not visibly changed. Confirm it is paginated and fails closed the same way. Otherwise localities whose activity sits past the first page could be wrongly treated as empty or eligible.
-- Offset paging is not a consistent snapshot: rows inserted mid-scan can shift pages. That is acceptable for an hourly cache, but should be noted.
-
-## 3. Cross-cutting risks
-1. Four drafts all branch from `main` and overlap with #238, #242, #247, #249, #252, #253 and #261. Without one agreed merge order, the registry and the map files will conflict, or quietly undo each other's fixes.
-2. Locality scope (#272) and sitemap eligibility (#276) both decide whether a place counts. A place over 400 descendants could be in the sitemap yet show an error page. Test: no indexable locality path gives `SCOPE_TOO_WIDE`.
-3. Because the sync target is unverified, nothing here should be accepted into this project directly. Land these on GitHub through review first.
-
-## 4. Cannot verify from here
-- Git sync target and branch.
-- CI on any of the four heads.
-- The bodies of `hasPublicWorkOpportunity`, `readBoundedSitemapPages`, `assertQueryableGeoBounds` and `evaluateLocalityIndexability`.
-- How many places have more than 400 descendants.
-- Live production behaviour.
-- Whether the `saved_items` and `needs` row-level security rules behave as intended.
+## Blockers
+- Git sync settings are not visible from here. Confirming repo and branch needs the owner.
+- `Loveable/work/safely` is 161 commits behind main. It needs a GitHub-side merge PR.
+- No protection exists on the Lovable sync branch.
+- The commit behind the published site is unknown.
+- #278's staging host and approval are not confirmed. Its CI was not checked this turn.
