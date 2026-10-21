@@ -33,6 +33,7 @@ import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
 import { localityPath } from "@/lib/locality-path";
 import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
 import { KIND_LABEL } from "@/lib/places";
+import { evaluateLocalityIndexability } from "@/lib/locality-indexability";
 import { privatePage, publicPage } from "@/lib/seo";
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import { filterEntriesByText, parseQuerySearch } from "@/lib/search-context";
@@ -68,9 +69,10 @@ export const Route = createFileRoute("/$country/$place/")({
     const description = current.length
       ? `Real things happening in ${name}, the services and practices recorded there, and what people nearby have offered or asked for.`
       : `${name} in Real World Atlas. Nothing has been recorded here yet — add the first thing.`;
-    // Until a page has something genuinely useful on it, it is not offered to
-    // search engines. It still exists for anybody who arrives.
-    return current.length >= 3
+    // Share one fail-closed evidence policy with future sitemap generation.
+    // The page remains reachable to people even when its content is not ready for search.
+    const indexability = evaluateLocalityIndexability({ place: geography.place, entries });
+    return indexability.status === "INDEXABLE"
       ? publicPage({ path, title, description })
       : privatePage({ path, title, description });
   },
