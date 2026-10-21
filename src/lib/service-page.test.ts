@@ -71,7 +71,7 @@ describe("servicePageListings", () => {
         engagementKind: "paid_work",
         compensation: {
           status: "stated_paid",
-          amountCents: 2500,
+          amountMinorUnits: 2500,
           currency: "AUD",
           basis: "hour",
         },
