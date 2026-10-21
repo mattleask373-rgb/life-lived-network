@@ -11,7 +11,7 @@
 
 The repository already contains Grok-inspired redesign work. The canonical app and its existing domain logic remain the integration target. Do not create a second product or replace the app with a standalone prototype.
 
-This handoff does **not** claim that the original Grok workspace export, complete source project, or all design assets have been copied into this repository. Only files that are actually available in the shared workspace/repository can be checked in. If an agent has the original Grok export, screenshots, Figma/design links, or ZIP, add the original files under `design/grok-redesign/source/` (when licensing and file size permit) and update this page with a manifest, origin, date, and checksums. Until then, treat the existing app implementation and PRs linked below as the inspectable reference—not as proof that every original source asset is present.
+**Source package inventory — checked read-only in the connected Lovable workspace on 21 October 2026:** the two uploaded archives `/mnt/user-uploads/grok-workspace.zip` and `/mnt/user-uploads/grok-workspace-2.zip` were reported byte-identical with SHA-256 `6eae21ffddcb1cd1b62025c416cd979ae2fa500321fce83b158b870c838c72a6`. The archive's `.github_repo` points to `mattleask373-rgb/world-s-finder`, not this canonical repository. Its routes/screenshots have been inventoried by filename and metadata, but the screenshots were not visually opened in that inspection and rights for fonts/photos have not been established. The ZIP and binary assets are **not checked into this canonical repository**. Treat the export as a design reference only: do not port its mock data, duplicate state/matching/auth/database layer, build output or development tooling. Add only selected assets after an explicit licensing/provenance review and a human visual check.
 
 ## Where to look first
 
@@ -50,13 +50,14 @@ This section is an evidence snapshot, not a deployment or merge statement. Reche
 - **#211 — accessible redesign foundation:** [PR #211](https://github.com/mattleask373-rgb/life-lived-network/pull/211), branch `integration/grok-redesign-ui-current-main-2026-10-21`, latest head `e7b732d25cd951f3ab3c1007257442563e361336`, originally based on `006a98c...`. Latest commit adds a source-package/current-main checkpoint to the reference README only; exact-head Verify passed in [run #39520719116](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39520719116). Still draft, based on older main ancestry; human visual/accessibility QA and reconciliation against current main (`8d792479...`) are outstanding. Changes since its old base include PlacePicker/PlaceSearch and the disabled place-assistant/locality page slice; those paths are not in #211's recorded diff, but merge checks must still be rerun after reconciliation.
 - **#216 — first map/list candidate, superseded and closed:** [PR #216](https://github.com/mattleask373-rgb/life-lived-network/pull/216), branch `integration/grok-map-list-sync-2026-10-21`, had an earlier head `83434f54...` with Verify success in [run #39520456514](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39520456514). After a further invalid-coordinate test commit `ed749bc...`, the moving #211 parent made the PR non-mergeable and that final head did not receive a fresh Verify before closure. It was closed unmerged after #220 passed; use #220 as the only active map/list review target.
 - **#220 — current-main map/list synchronization:** [PR #220](https://github.com/mattleask373-rgb/life-lived-network/pull/220), branch `integration/grok-map-list-sync-main-2026-10-21`, original base `30c2877f93ee0218e7fee5e365ee55101f8b3afd`, head `e8fd148fa0223707fd317b80b19a47944c0bf1a2`. Exact-head Verify passed in [run #39520945717](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39520945717): frozen install, lint, 45 test files / 342 tests and production build. Seven lint warnings, zero errors. Current main has since advanced three commits, but the observed delta only changes `src/components/ask-this-place.tsx`, `src/lib/ask-place.ts`, its test, and `src/routes/$country.$place.index.tsx`, not #220's `src/routes/index.tsx`/map helper/test. GitHub reports mergeable=true; nevertheless, rebase/retarget or refresh the current-main merge result and rerun exact-head Verify before any merge.
+- **#225 — manual locality “Check for updates”:** [PR #225](https://github.com/mattleask373-rgb/life-lived-network/pull/225), branch `feat/locality-refresh-check-2026-10-21`, base `8d79247991187bf64813cf72e3ec75aeb508e2e9`, head `6fee42b41bc9844f6370f7deb46a94c349ce842d`, open draft. Uses the existing locality route loader only and warns source timestamps may differ; no new feed, matcher, schema, auth/RLS or persistent writes. Exact-head Verify passed in [run #39521481713](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39521481713) (frozen-lockfile install, lint, tests and build). Manual responsive/assistive-technology review remains outstanding.
 - **#212 — previous Journey/Road Trip branch:** its recorded Verify [run #39519498330](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39519498330) failed at lint/Prettier in `src/lib/map-view.test.ts`; tests/build were skipped. Treat it as historical/superseded rather than the active candidate.
 - **#213 — Journey/Road Trip candidate:** [PR #213](https://github.com/mattleask373-rgb/life-lived-network/pull/213), branch `integration/grok-traveller-current-main-2026-10-21-v2`, head `ed04b8c3778b87b60739625043033f5fd1e84d0f`, still draft. Exact-head Verify passed in [run #39519664036](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39519664036) before the #211 base branch advanced from `023eac1...` to `e7b732d...`. Its route files are distinct from #220, but it must reconcile to the current parent and rerun Verify before review.
 - **Branch protection:** a prior repository audit reported main unprotected. This connector has not produced a fresh ruleset/branch-protection result in this cycle; a repository administrator must verify current enforcement and fix it through the approved human process.
 
 ## Redesign parity matrix
 
-The original Grok ZIP/screenshots are not currently checked into this repository or directly retrievable by this handoff process. The empty `Grok-new-design` reference file is not the source app. Therefore this is a parity inventory of observable canonical routes and current integration work, **not a claim of complete parity against every original screen**.
+The original ZIP has now been inventoried read-only through the originating Lovable workspace; its bytes/screenshots are still not checked into this repository and the screenshots were not visually reviewed. This is a source-informed route/component parity inventory, **not a visual sign-off or a claim of complete parity**. Route mappings marked provisional below must be confirmed against the actual screenshot/content, not inferred from names alone.
 
 | Redesign area | Canonical location | Current status | Next evidence / dependency |
 |---|---|---|---|
@@ -71,6 +72,38 @@ The original Grok ZIP/screenshots are not currently checked into this repository
 | Give / Need / Help / Earn / profile and other existing routes | Existing canonical route files and data helpers | **Existing functionality; parity status unverified.** Do not infer designs or copy prototype logic from route names alone. | Inventory the actual screens from the original export, then nominate non-overlapping PRs. |
 | Prototype-only routes/data/auth/store | Prototype `/moments`, hardcoded sample cities, mock store/auth | **Explicitly excluded from canonical runtime.** | Port only a future approved interaction concept through canonical app contracts; never use prototype fixture records as supply. |
 | Empty/error/loading/accessibility states | Existing route/component state handling and regression tests | **Partially covered by code/CI; manual QA not complete.** | Test quiet and busy localities, keyboard, screen reader, contrast, reduced motion and mobile sheet behavior. |
+
+### Original prototype route mapping — provisional until visual review
+
+| Grok prototype route | Canonical app destination | Current status | Safe porting boundary / question |
+|---|---|---|---|
+| `/` | `/` — `src/routes/index.tsx` | Existing canonical home; #220 proposes a synchronized map/list layout. | Match visual composition to a reviewed screenshot; keep canonical `WorldEntry` and locality data. |
+| `/map` | Existing home map surface; no separate canonical `/map` route verified | Partial / route mismatch. | Use the current map and #220 behavior rather than adding a duplicate prototype route. |
+| `/journey` | `/journey` — `src/routes/journey.tsx` | Existing canonical route; #213 is the draft visual follow-up. | Preserve existing canonical trip/journey models; no prototype store or match helpers. |
+| `/place/$id` | Likely `/$country/$place` — `src/routes/$country.$place.index.tsx` | Provisional mapping. | Confirm prototype IDs can be resolved to canonical place slugs; never carry prototype IDs or coordinates into production. |
+| `/need` | `/need` | Existing canonical route. | Keep current persistence, ownership and matching flow; do not copy prototype form/store. |
+| `/give` | `/give` | Existing canonical route. | Preserve canonical offer/availability semantics; do not infer a user is available. |
+| `/moments` | Unresolved; `/memories` is a possible concept match only | Deferred pending product review. | Do not map automatically; compare the prototype interaction to the actual canonical memory/privacy model. |
+| `/you` | Unresolved; `/profile` is a possible concept match only | Deferred pending product/auth review. | Confirm route purpose, authentication and private/public fields before mapping. |
+
+### Screenshot manifest (filenames and metadata only)
+
+The read-only archive listing reported these design references; **their contents have not been visually inspected in the canonical review**:
+
+| Artifact | Reported dimensions | Intended use / caution |
+|---|---:|---|
+| `screenshots/app-builder-built.png` | 1280×800 | Desktop home capture; inspect before using as an acceptance reference. |
+| `screenshots/app-builder-built-mobile.png` | 390×844 | Mobile home capture. |
+| `screenshots/app-builder-preview.png` | 1280×800 | Desktop preview capture. |
+| `screenshots/app-builder-preview-mobile.png` | 390×844 | Mobile preview capture. |
+| `screenshots/home-mobile-check.png` | 390×844 | Additional mobile home capture. |
+| `screenshots/journey-desktop.png` | 1280×720 | Journey desktop capture. |
+| `screenshots/map-desktop.png` | 1280×720 | Map desktop capture. |
+| `screenshots/map-mobile.png` | 390×844 | Map mobile capture. |
+| `.grok/card-raw.png`, `public/og.jpg` | 1200×630 | Sharing/social card; do not assume production asset rights. |
+| `.grok/font-test.png` | 1100×360 | Typography reference only. |
+
+
 
 ## Ownership and handoff queue
 
@@ -93,18 +126,36 @@ These are role proposals, not confirmed individual assignments.
 4. Obtain the actual Grok export/screenshots and record a verified manifest before claiming complete screen parity.
 5. Only after these gates, plan dedicated locality/service and Give/Need/Help/Earn/profile visual slices. Keep AI, ingestion, SEO hosting changes, backend contracts and production settings outside this UI integration unless explicitly scoped and separately approved.
 
-## Original design package manifest
+## Original design package manifest and exclusion list
 
-Status: **original ZIP bytes are not checked into the canonical repository and are not directly retrievable through the connected tool in this run**. Lovable project history reports an uploaded `grok-workspace.zip` with SHA-256 `6eae21ffddcb1cd1b62025c416cd979ae2fa500321fce83b158b870c838c72a6`. That hash is reported provenance only; it has not been independently recalculated because the archive bytes are unavailable. The empty `Grok-new-design` branch file is not the source application.
+**Archive evidence:** read-only commands in the connected Lovable project environment reported both uploads byte-identical with SHA-256 `6eae21ffddcb1cd1b62025c416cd979ae2fa500321fce83b158b870c838c72a6`. This hash was obtained by the Lovable agent with `sha256sum` during this inspection; the ZIP bytes themselves have not been committed to this repository. Last source inventory: 21 October 2026.
 
-When the source package is available, record each item here:
+**Prototype identity / structure**
+- The archive's `.github_repo` points to `mattleask373-rgb/world-s-finder` (not `life-lived-network`).
+- TanStack Start/Router + Vite + Tailwind 4; prototype-specific Zustand store, Better Auth/Kysely/PGlite path, `src/router.tsx`, `src/routes/__root.tsx`, `src/routeTree.gen.ts`, `src/styles.css`.
+- Shared visual implementation references: `src/components/shell.tsx` and `src/components/bits.tsx` (`CompassMark`, `PageHead`, `EmptyState`, `PlaceCard`, `FeaturedPlace`, `AtlasBoard`, `ChoiceRow`, `SearchField`, among others).
+- Prototype routes found: `/`, `/map`, `/journey`, `/moments`, `/need`, `/give`, `/you`, `/place/$id`. Their canonical mapping and screenshot parity must be checked before any route changes.
+- Screenshots listed by filename/metadata: built/preview home (desktop/mobile), `home-mobile-check.png`, `journey-desktop.png`, `map-desktop.png`, `map-mobile.png`. The agent did not visually open them; dimensions and page semantics are filename/metadata-based until human review.
 
-| Item | Path or URL | Origin / date | Notes |
-|---|---|---|---|
-| Original Grok export / project ZIP | Reported `grok-workspace.zip`; no canonical file yet | Reported in Lovable project history; SHA-256 above is not independently verified here | Obtain actual bytes or a durable accessible share; add only if licensing and size permit |
-| Design screenshots / reference links | Pending | Pending | Include mobile and desktop states |
-| Design tokens / component inventory | Pending | Pending | Map to existing components before adding duplicates |
-| Prototype-only dependencies/data | Pending | Pending | Document and exclude unless explicitly approved |
+**Explicitly exclude from canonical runtime**
+- `src/data/atlas.ts` sample listings, moments, needs, named people and hard-coded sample cities (Lisbon, Kyoto, Oaxaca, Cape Town).
+- Prototype photos in `public/media/*.jpg`; rights and provenance are unknown.
+- `src/lib/store.ts` / `useAtlas`, `src/lib/match.ts` (`suggestHours`, `planTrip`), fixed map positions, and mock matching/inventory paths. They would create a second data store/matcher and violate the canonical `findSupply()` contract.
+- Prototype auth/data/multiplayer paths (`src/lib/auth/*`, `src/lib/app-data/*`, `src/lib/multiplayer/*`), `migrations/auth/0001_auth.sql`, PGlite/better-auth schema, generated `.vercel/*` output, `.tanstack/*`, preview bridge, `.grok/*`, scripts, startup/deployment settings and other development machinery.
+- Fonts under `.grok/fonts/*.ttf` until their licence is reviewed. Existing Fraunces + Manrope reference notes are already in `docs/design/grok-reference/`; do not create a second token system.
+
+**Safe reference treatment**
+- Current canonical reference notes: `docs/design/grok-reference/README.md`, `prototype-styles.css`, `prototype-ui-patterns.md` on the #211 candidate branch. They preserve palette/typography/pattern descriptions, not a complete prototype app.
+- Screenshots could be copied to `docs/design/grok-reference/screenshots/` only after human visual inspection and rights/provenance approval. They were not imported by this update.
+- Reuse the idea, not the prototype runtime: map every screen to canonical routes/components, use canonical data/server functions, and preserve source/freshness/trust and honest empty states.
+
+| Source item | Location / origin | Status |
+|---|---|---|
+| `grok-workspace.zip` | Lovable workspace upload; SHA-256 above | Inventoried read-only; not copied into repository |
+| `grok-workspace-2.zip` | Lovable workspace upload; same SHA-256 | Byte-identical duplicate according to read-only hash check |
+| Desktop/mobile screenshots | Listed in source ZIP | Dimensions reported; visual review and rights check pending |
+| Fonts and public/media photos | Source ZIP | Do not port until licences and provenance are checked |
+| Canonical visual reference | `docs/design/grok-reference/` on PR #211 branch | Notes only; not a deployed source application |
 
 ## Agent start prompt
 
