@@ -95,6 +95,20 @@ describe("map viewport", () => {
     expect(clusterPlaced(placed, 8)).toEqual(clusters);
   });
 
+  it("clusters close pins across grid boundaries when touch areas overlap", () => {
+    const placed = [
+      { entry: entry("a", 52.43, -1.89), left: 9.5, top: 20 },
+      { entry: entry("b", 52.4302, -1.8902), left: 10.5, top: 20 },
+      { entry: entry("c", 52.46, -1.86), left: 16, top: 20 },
+    ];
+    const clusters = clusterPlaced(placed, 2, 2);
+    expect(clusters).toHaveLength(2);
+    expect(
+      clusters.find((cluster) => cluster.entries.length === 2)?.entries.map((e) => e.id),
+    ).toEqual(["a", "b"]);
+    expect(clusterPlaced(placed, 2, 2)).toEqual(clusters);
+  });
+
   it("fits a locality with no activity at all", () => {
     const fitted = fitView([], { lat: 52.43, lng: -1.89 });
     expect(fitted.lat).toBeCloseTo(52.43);

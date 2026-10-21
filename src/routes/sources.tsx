@@ -17,6 +17,7 @@ import { useWorldContext } from "@/lib/world-context";
 import { amISafetyReviewer } from "@/lib/moderation.functions";
 import { listSources, refreshSource, type SourcePanelRow } from "@/lib/ingest.functions";
 import type { IngestOutcome } from "@/lib/ingest/contract";
+import { sourceHealth } from "@/lib/source-health";
 
 const title = "Sources — internal";
 const description = "Internal panel for refreshing outside sources of activity. Not a public page.";
@@ -107,67 +108,83 @@ function Sources() {
       {sources.isLoading ? <p className="mt-6 text-muted-foreground">Loading.</p> : null}
 
       <ul className="mt-6 space-y-3">
-        {(sources.data ?? []).map((source: SourcePanelRow) => (
-          <li key={source.id} className="card-paper p-4">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <div>
-                <h2 className="text-base">{source.name}</h2>
-                <p className="text-xs text-muted-foreground">
-                  {source.kind} · {source.accessMethod} · every {source.refreshMinutes} minutes ·{" "}
-                  {source.storeImages ? "images permitted" : "images linked only"}
-                </p>
+        {(sources.data ?? []).map((source: SourcePanelRow) => {
+          const health = sourceHealth({
+            enabled: source.enabled,
+            status: source.status,
+            credentialRequired: source.credentialRequired,
+            credentialPresent: source.credentialPresent,
+            refreshMinutes: source.refreshMinutes,
+            lastRunAt: source.lastRunAt,
+            lastSuccessAt: source.lastSuccessAt,
+            consecutiveFailures: source.consecutiveFailures,
+          });
+          return (
+            <li key={source.id} className="card-paper p-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div>
+                  <h2 className="text-base">{source.name}</h2>
+                  <p className="text-xs text-muted-foreground">
+                    {source.kind} · {source.accessMethod} · every {source.refreshMinutes} minutes ·{" "}
+                    {source.storeImages ? "images permitted" : "images linked only"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={refresh.isPending || !place}
+                  onClick={() => refresh.mutate(source.id)}
+                  className="focus-ink rounded-lg border border-border px-3 py-1.5 text-sm disabled:opacity-50"
+                >
+                  {refresh.isPending ? "Asking…" : "Refresh this locality"}
+                </button>
               </div>
-              <button
-                type="button"
-                disabled={refresh.isPending || !place}
-                onClick={() => refresh.mutate(source.id)}
-                className="focus-ink rounded-lg border border-border px-3 py-1.5 text-sm disabled:opacity-50"
-              >
-                {refresh.isPending ? "Asking…" : "Refresh this locality"}
-              </button>
-            </div>
-            <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-3">
-              <div>
-                <dt>State</dt>
-                <dd className="text-foreground">
-                  {source.enabled ? source.status : `off (${source.status})`}
-                </dd>
-              </div>
-              <div>
-                <dt>Credential</dt>
-                <dd className="text-foreground">
-                  {!source.credentialRequired
-                    ? "not needed"
-                    : source.credentialPresent
-                      ? "configured"
-                      : "Live source not configured"}
-                </dd>
-              </div>
-              <div>
-                <dt>Last run</dt>
-                <dd className="text-foreground">{when(source.lastRunAt)}</dd>
-              </div>
-              <div>
-                <dt>Last worked</dt>
-                <dd className="text-foreground">{when(source.lastSuccessAt)}</dd>
-              </div>
-              <div>
-                <dt>Last failed</dt>
-                <dd className="text-foreground">{when(source.lastFailureAt)}</dd>
-              </div>
-              <div>
-                <dt>Failures in a row</dt>
-                <dd className="text-foreground">
-                  {source.consecutiveFailures}
-                  {source.lastErrorCategory ? ` · ${source.lastErrorCategory}` : ""}
-                </dd>
-              </div>
-            </dl>
-            {source.lastOutcome ? (
-              <p className="mt-2 text-xs text-muted-foreground">{source.lastOutcome}</p>
-            ) : null}
-          </li>
-        ))}
+              <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+                <div>
+                  <dt>State</dt>
+                  <dd className="text-foreground">
+                    {source.enabled ? source.status : `off (${source.status})`}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Credential</dt>
+                  <dd className="text-foreground">
+                    {!source.credentialRequired
+                      ? "not needed"
+                      : source.credentialPresent
+                        ? "configured"
+                        : "Live source not configured"}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Last run</dt>
+                  <dd className="text-foreground">{when(source.lastRunAt)}</dd>
+                </div>
+                <div>
+                  <dt>Last worked</dt>
+                  <dd className="text-foreground">{when(source.lastSuccessAt)}</dd>
+                </div>
+                <div>
+                  <dt>Last failed</dt>
+                  <dd className="text-foreground">{when(source.lastFailureAt)}</dd>
+                </div>
+                <div>
+                  <dt>Failures in a row</dt>
+                  <dd className="text-foreground">
+                    {source.consecutiveFailures}
+                    {source.lastErrorCategory ? ` · ${source.lastErrorCategory}` : ""}
+                  </dd>
+                </div>
+              </dl>
+              <p className="mt-3 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">Refresh health: {health.label}.</span>{" "}
+                {health.explanation}
+              </p>
+              {source.lastOutcome ? (
+                <p className="mt-2 text-xs text-muted-foreground">{source.lastOutcome}</p>
+              ) : null}
+            </li>
+          );
+        })}
       </ul>
 
       {failure ? <p className="mt-4 text-sm text-destructive">{failure}</p> : null}

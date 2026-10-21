@@ -9,6 +9,7 @@ import {
   inCategory,
 } from "./service-taxonomy";
 import type { WorldEntry } from "./world-data";
+import { parseWorkOpportunity } from "./work-opportunities";
 
 function entry(overrides: Partial<WorldEntry> = {}): WorldEntry {
   return {
@@ -94,6 +95,79 @@ describe("service taxonomy", () => {
     // Not offered as a service by anybody, so not a service category.
     expect(slugs).not.toContain("gardening");
     expect(present[0]?.entries).toHaveLength(2);
+  });
+
+  it("classifies explicitly reviewed work opportunities through the shared taxonomy", () => {
+    const work = notAService({
+      id: "hospitality-1",
+      title: "Casual hospitality shift",
+      layer: "work",
+      workOpportunity: parseWorkOpportunity({
+        arrangement: "short_term",
+        engagementKind: "paid_work",
+        compensation: {
+          status: "stated_paid",
+          amountMinorUnits: 3200,
+          currency: "AUD",
+          basis: "hour",
+        },
+        accommodation: "not_stated",
+        skillRequirements: ["As stated by the host"],
+        hostExpectations: ["Confirm the shift"],
+        conditions: [],
+        jurisdictionCountryCode: "AU",
+        policyReviewStatus: "approved_by_human",
+        publicationStatus: "published",
+        provenance: { kind: "owner_declared", sourceName: "Opportunity owner" },
+        rightsStatus: "cleared",
+      }),
+    });
+    expect(categoryOf(work)?.category.slug).toBe("hospitality-shifts");
+    expect(categoriesPresent([work]).map((item) => item.category.slug)).toContain(
+      "hospitality-shifts",
+    );
+  });
+
+  it("does not classify draft, unreviewed, or demonstration work as real opportunity taxonomy", () => {
+    const base = {
+      arrangement: "short_term",
+      engagementKind: "paid_work",
+      compensation: { status: "not_stated" },
+      accommodation: "not_stated",
+      skillRequirements: [],
+      hostExpectations: [],
+      conditions: [],
+      jurisdictionCountryCode: "AU",
+      policyReviewStatus: "review_required",
+      publicationStatus: "draft",
+      provenance: { kind: "owner_declared", sourceName: "Opportunity owner" },
+      rightsStatus: "unreviewed",
+    };
+    const draft = notAService({
+      title: "Casual hospitality shift",
+      layer: "work",
+      workOpportunity: parseWorkOpportunity(base),
+    });
+    const demonstration = notAService({
+      title: "Casual hospitality shift",
+      layer: "work",
+      demonstration: true,
+      workOpportunity: parseWorkOpportunity({
+        ...base,
+        policyReviewStatus: "approved_by_human",
+        publicationStatus: "published",
+        rightsStatus: "cleared",
+      }),
+    });
+    expect(categoryOf(draft)).toBeNull();
+    expect(categoryOf(demonstration)).toBeNull();
+    expect(categoriesPresent([draft, demonstration])).toEqual([]);
+  });
+
+  it("does not invent opportunity categories for a work item with no evidence", () => {
+    const work = notAService({ title: "A quiet afternoon", layer: "work" });
+    expect(categoryOf(work)).toBeNull();
+    expect(categoriesPresent([work])).toEqual([]);
   });
 
   it("marks a category made only of trial records", () => {
