@@ -12,10 +12,7 @@ export const Route = createFileRoute("/api/public/sitemap.xml")({
     handlers: {
       GET: () =>
         new Response(
-          sitemapIndexXml([
-            "/api/public/sitemap-pages.xml",
-            "/api/public/sitemap-localities.xml",
-          ]),
+          sitemapIndexXml(["/api/public/sitemap-pages.xml", "/api/public/sitemap-localities.xml"]),
           { headers: XML_HEADERS },
         ),
     },
