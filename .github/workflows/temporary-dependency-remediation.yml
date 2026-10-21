@@ -21,6 +21,9 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Resolve the explicit package override and update the lockfile
+        run: bun install
+
       - name: Apply fixes within existing dependency ranges
         run: bun audit fix || true
 
