@@ -82,9 +82,7 @@ describe("service sitemap indexability", () => {
       ...row,
       sourceLifecycleEligible: false,
     }));
-    expect(
-      indexableServicePaths(index, rows, new Map([[imported.id, imported]])),
-    ).toEqual([]);
+    expect(indexableServicePaths(index, rows, new Map([[imported.id, imported]]))).toEqual([]);
   });
 
   it("excludes demonstration-only services", () => {
