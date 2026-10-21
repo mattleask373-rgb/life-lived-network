@@ -30,6 +30,7 @@ import {
   setServiceAreas,
 } from "@/lib/capability.functions";
 import { fetchPlaces } from "@/lib/places";
+import { buildServiceAreaSelections } from "@/lib/service-area-selections";
 
 export function CapabilityPanel() {
   const qc = useQueryClient();
@@ -69,7 +70,24 @@ export function CapabilityPanel() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
-  const chosenAreas = data?.serviceAreas.map((a) => a.placeId) ?? [];
+  const currentServiceAreas = data?.serviceAreas ?? [];
+  const chosenAreas = currentServiceAreas
+    .filter((area) => area.relation !== "travelling_through")
+    .map((area) => area.placeId);
+  const chosenTravelThrough = currentServiceAreas
+    .filter((area) => area.relation === "travelling_through")
+    .map((area) => area.placeId);
+  const saveServiceAreas = (servicePlaceIds: string[], travellingThroughPlaceIds: string[]) => {
+    areas.mutate({
+      data: {
+        serviceAreas: buildServiceAreaSelections(
+          currentServiceAreas,
+          servicePlaceIds,
+          travellingThroughPlaceIds,
+        ),
+      },
+    });
+  };
   const chosenPrefs = data?.preferences ?? [];
   const chosenGives = data?.contributions.map((c) => c.contribution) ?? [];
   const earning = data?.earningPreference ?? "unstated";
@@ -283,9 +301,10 @@ export function CapabilityPanel() {
       </section>
 
       <section className="card-paper p-5">
-        <h2 className="text-xl">Where you'd actually go</h2>
+        <h2 className="text-xl">Where you work or can serve</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Places, not addresses. Leave it empty and nobody will be shown you for work nearby.
+          Places, not addresses. These are areas you explicitly say you serve or can work in;
+          they do not imply you're currently available.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {(places ?? []).map((p) => {
@@ -295,13 +314,10 @@ export function CapabilityPanel() {
                 key={p.id}
                 type="button"
                 onClick={() =>
-                  areas.mutate({
-                    data: {
-                      placeIds: on
-                        ? chosenAreas.filter((id) => id !== p.id)
-                        : [...chosenAreas, p.id],
-                    },
-                  })
+                  saveServiceAreas(
+                    on ? chosenAreas.filter((id) => id !== p.id) : [...chosenAreas, p.id],
+                    chosenTravelThrough.filter((id) => id !== p.id),
+                  )
                 }
                 aria-pressed={on}
                 className={`focus-ink rounded-full border px-3 py-1.5 text-sm ${
@@ -316,6 +332,46 @@ export function CapabilityPanel() {
           })}
         </div>
       </section>
+
+      <section className="card-paper p-5">
+        <h2 className="text-xl">Places you're only passing through</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          A journey window is not live location and never means you serve that place. Keep it
+          separate from your work areas.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(places ?? []).map((p) => {
+            const on = chosenTravelThrough.includes(p.id);
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() =>
+                  saveServiceAreas(
+                    chosenAreas.filter((id) => id !== p.id),
+                    on
+                      ? chosenTravelThrough.filter((id) => id !== p.id)
+                      : [...chosenTravelThrough, p.id],
+                  )
+                }
+                aria-pressed={on}
+                className={`focus-ink rounded-full border px-3 py-1.5 text-sm ${
+                  on
+                    ? "border-transparent bg-secondary text-secondary-foreground"
+                    : "border-border bg-card text-muted-foreground"
+                }`}
+              >
+                {p.name}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+      {areas.isError ? (
+        <p role="alert" className="text-sm text-destructive">
+          We couldn't update those places. Your previous selections should remain in place; please try again.
+        </p>
+      ) : null}
 
       <section className="card-paper p-5">
         <h2 className="text-xl">What you're open to</h2>
