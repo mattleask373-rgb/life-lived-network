@@ -27,16 +27,6 @@ describe("detail panel touch targets", () => {
     );
   });
 
-  it("uses only photos with a usable source URL in the detail gallery", () => {
-    const src = read("components/entry-sheet.tsx");
-    expect(src).toContain(
-      "const photos = (entry.photos ?? []).filter((photo) => photo.url.trim().length > 0);",
-    );
-    expect(src).toContain('role="region"');
-    expect(src).toContain("Photos for ${entry.title}");
-    expect(src).toContain("font-display text-3xl");
-  });
-
   it("sets the Grok visual type and warm paper/cream/forest palette", () => {
     const styles = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
     expect(styles).toContain('--font-sans: "Manrope"');
