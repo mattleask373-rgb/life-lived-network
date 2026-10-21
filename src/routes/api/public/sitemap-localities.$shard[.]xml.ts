@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { getGatedPlaceSitemapPaths } from "@/lib/gated-place-sitemap.server";
-import { SITEMAP_URLS_PER_SHARD, sitemapShard } from "@/lib/sitemap-shards";
+import { sitemapShard } from "@/lib/sitemap-shards";
 import { sitemapXml, XML_HEADERS } from "@/lib/seo";
 
 /** A numbered shard contains at most 40,000 canonical, indexable locality URLs. */
