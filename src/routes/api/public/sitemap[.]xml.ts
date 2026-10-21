@@ -4,15 +4,15 @@ import { sitemapIndexXml, XML_HEADERS } from "@/lib/seo";
 
 /**
  * The sitemap index. It names the public page and eligible-locality child
- * sitemaps; service, provider and event sitemaps join it as those pages become
- * genuinely useful. Nothing empty is ever listed.
+ * and service-in-place pages that pass their shared evidence gates. Provider and
+ * event sitemaps can join as those pages become genuinely useful.
  */
 export const Route = createFileRoute("/api/public/sitemap.xml")({
   server: {
     handlers: {
       GET: () =>
         new Response(
-          sitemapIndexXml(["/api/public/sitemap-pages.xml", "/api/public/sitemap-localities.xml"]),
+          sitemapIndexXml(["/api/public/sitemap-pages.xml", "/api/public/sitemap-localities.xml", "/api/public/sitemap-services.xml"]),
           { headers: XML_HEADERS },
         ),
     },
