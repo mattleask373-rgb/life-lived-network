@@ -21,3 +21,9 @@ The complete original archive remains available in the originating conversation 
 ## Porting checklist
 
 Before a visual change is accepted, it must use current `WorldEntry` / canonical place data, retain source provenance and demonstration labelling, preserve route/auth/privacy boundaries, pass `bun install --frozen-lockfile`, lint, tests and build, and be checked at 375px and 1280px with keyboard and screen-reader basics. No prototype host, city, photograph or event should appear unless the current product data provides it.
+
+## Canonical integration checkpoint — 21 October 2026
+
+At the time this note was added, canonical `main` is `30c2877f93ee0218e7fee5e365ee55101f8b3afd`. The three commits after the earlier `006a98c64a52d5bd6028ac5f9457acd31a72746a` baseline only update `src/components/place-picker.tsx` and `src/components/place-search.tsx`. This UI integration PR does not modify those files; keep both sets of work together by review against current `main`, not by restoring an older baseline.
+
+The SHA-256 above records the original workspace archive as reported by the source handoff. The ZIP bytes/screenshots are **not** present in this repository at this checkpoint, and the full archive has not been independently re-opened in this session. Do not interpret this portable reference as a complete original prototype export or a verified screen-by-screen parity package.
