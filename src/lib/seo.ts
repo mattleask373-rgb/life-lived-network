@@ -94,7 +94,6 @@ export const PUBLIC_PATHS: readonly string[] = [
   "/",
   "/journey",
   "/road-trip",
-  "/life-list",
   "/give",
   "/make",
 ];
@@ -103,6 +102,7 @@ export const PUBLIC_PATHS: readonly string[] = [
 export const PRIVATE_PATHS: readonly string[] = [
   "/auth",
   "/profile",
+  "/life-list",
   "/conversations",
   "/need",
   "/help",
