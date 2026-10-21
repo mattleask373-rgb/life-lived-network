@@ -175,9 +175,9 @@ export function clusterPlaced(placed: Placed[], cellX = 8, cellY = cellX): Clust
 
   const find = (index: number): number => {
     let root = index;
-    while (parents[root] !== root) root = parents[root];
+    while (parents[root] !== root) root = parents[root] ?? root;
     while (parents[index] !== index) {
-      const next = parents[index];
+      const next = parents[index] ?? index;
       parents[index] = root;
       index = next;
     }
