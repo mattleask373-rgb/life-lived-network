@@ -9,6 +9,7 @@ function input(overrides: Record<string, unknown> = {}) {
     providerNote: "Self-described local cleaning offer.",
     bookingState: "not_bookable",
     bookingUrl: "",
+    cost: "25",
     ...overrides,
   };
 }
@@ -21,6 +22,7 @@ describe("first-party service-offer contract", () => {
       provider_note: "Self-described local cleaning offer.",
       booking_state: "not_bookable",
       booking_url: "",
+      cost: 25,
     });
   });
 
@@ -77,6 +79,13 @@ describe("first-party service-offer contract", () => {
       /1000 characters or fewer/i,
     );
   });
+
+  it.each(["", "-1", "NaN", "Infinity"])(
+    "requires a non-negative explicit price or free declaration (%s)",
+    (cost) => {
+      expect(() => parseServiceOfferDraft(input({ cost }))).toThrow(/typical price/i);
+    },
+  );
 
   it("rejects unknown booking states rather than implying a pathway", () => {
     expect(() => parseServiceOfferDraft(input({ bookingState: "auto_booked" }))).toThrow(
