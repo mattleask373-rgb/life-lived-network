@@ -129,12 +129,34 @@ export function panView(view: MapView, dxFraction: number, dyFraction: number): 
   return { ...view, lat, lng };
 }
 
+function normaliseLongitude(longitude: number): number {
+  const shifted = longitude + 180;
+  const wrapped = ((shifted % 360) + 360) % 360;
+  return wrapped - 180;
+}
+
+/** Shortest signed longitude offset from the viewport centre, in [-180, 180). */
+function longitudeOffset(longitude: number, centre: number): number {
+  return normaliseLongitude(longitude - centre);
+}
+
+/** True when a longitude falls inside a viewport, including a date-line crossing. */
+export function longitudeInView(longitude: number, view: MapView): boolean {
+  if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) return false;
+  if (!Number.isFinite(view.lng) || view.spanLng <= 0 || view.spanLng >= 360) return false;
+  return Math.abs(longitudeOffset(longitude, view.lng)) <= view.spanLng / 2;
+}
+
+/**
+ * Visible bounds use normalised longitudes. If minLng > maxLng the viewport
+ * crosses +180°/-180°, matching the server's GeoBounds contract.
+ */
 export function boundsOf(view: MapView): Bounds {
   return {
     minLat: view.lat - view.spanLat / 2,
     maxLat: view.lat + view.spanLat / 2,
-    minLng: view.lng - view.spanLng / 2,
-    maxLng: view.lng + view.spanLng / 2,
+    minLng: normaliseLongitude(view.lng - view.spanLng / 2),
+    maxLng: normaliseLongitude(view.lng + view.spanLng / 2),
   };
 }
 
@@ -151,8 +173,11 @@ export function toScreen(
   view: MapView,
 ): { left: number; top: number } {
   const b = boundsOf(view);
+  // Use the shortest signed longitude offset so points either side of the
+  // international date line stay adjacent in the rendered map.
+  const offset = longitudeOffset(point.lng, view.lng);
   return {
-    left: ((point.lng - b.minLng) / (b.maxLng - b.minLng)) * 100,
+    left: ((offset + view.spanLng / 2) / view.spanLng) * 100,
     // Latitude increases northwards; the screen increases downwards.
     top: ((b.maxLat - point.lat) / (b.maxLat - b.minLat)) * 100,
   };
@@ -271,7 +296,7 @@ export function placeInView(
     if (place.id === exclude) continue;
     if (typeof place.lat !== "number" || typeof place.lng !== "number") continue;
     if (place.lat < b.minLat || place.lat > b.maxLat) continue;
-    if (place.lng < b.minLng || place.lng > b.maxLng) continue;
+    if (!longitudeInView(place.lng, view)) continue;
     const distance =
       distanceKm({ lat: view.lat, lng: view.lng }, { lat: place.lat, lng: place.lng }) ?? Infinity;
     // A place whose own size suits the current span reads best: a county when
