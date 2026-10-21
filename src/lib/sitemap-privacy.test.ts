@@ -105,11 +105,10 @@ describe("public sitemap privacy", () => {
     const listed = locs(xml);
     expect(listed[0]).toBe(`${SITE_ORIGIN}/api/public/sitemap-pages.xml`);
     for (const url of listed.slice(1)) {
-      expect(url).toMatch(
-        new RegExp(
-          `^${SITE_ORIGIN.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}/api/public/sitemap-(localities|services)/[1-9][0-9]*\\.xml$`,
-        ),
-      );
+      const isLocalityShard = url.startsWith(`${SITE_ORIGIN}/api/public/sitemap-localities/`);
+      const isServiceShard = url.startsWith(`${SITE_ORIGIN}/api/public/sitemap-services/`);
+      expect(isLocalityShard || isServiceShard).toBe(true);
+      expect(url.slice(url.lastIndexOf("/") + 1)).toMatch(/^[1-9][0-9]*\\.xml$/);
     }
     expect(new Set(listed).size).toBe(listed.length);
     for (const path of PRIVATE_PATHS) {
