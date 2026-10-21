@@ -4,23 +4,17 @@ import { describe, expect, it } from "vitest";
 const entryCard = readFileSync("src/components/entry-card.tsx", "utf8");
 
 describe("EntryCard accessibility contract", () => {
-  it("keeps block content outside the native action button", () => {
+  it("keeps semantic card content and a separately named native action", () => {
     expect(entryCard).toContain("<article");
-    expect(entryCard).not.toMatch(/<button[\s\S]*?<\/button>/);
-  });
-
-  it("uses a named native button only when the card is interactive", () => {
-    expect(entryCard).toContain("{interactive ? (");
-    expect(entryCard).toContain("<button");
-    expect(entryCard).toContain("aria-label={`Open listing: ${entry.title}`}");
+    expect(entryCard).toContain("<h3 id={titleId}");
+    expect(entryCard).toContain("aria-labelledby={titleId}");
+    expect(entryCard).toContain("aria-describedby={descriptionId}");
     expect(entryCard).toContain("onClick={handleActivate}");
-    expect(entryCard).not.toContain('role={interactive ? "button" : undefined}');
-    expect(entryCard).not.toContain("onKeyDown=");
   });
 
-  it("retains a visible keyboard focus indicator on the full-card action", () => {
+  it("has an inset visible focus treatment for the stretched action", () => {
     expect(entryCard).toContain(
-      'className="focus-ink absolute inset-0 z-10 appearance-none rounded-2xl border-0 bg-transparent p-0"',
+      "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
     );
   });
 });
