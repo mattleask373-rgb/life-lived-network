@@ -20,10 +20,16 @@ export const Route = createFileRoute("/api/public/sitemap-services/$shard.xml")(
         try {
           const paths = await fetchPublicServiceSitemapPaths();
           if (sitemapShardCount(paths) > MAX_SERVICE_SITEMAP_SHARDS) {
-            return new Response("Service sitemap capacity exceeded; increase fixed shard capacity", {
-              status: 503,
-              headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
-            });
+            return new Response(
+              "Service sitemap capacity exceeded; increase fixed shard capacity",
+              {
+                status: 503,
+                headers: {
+                  "Content-Type": "text/plain; charset=utf-8",
+                  "Cache-Control": "no-store",
+                },
+              },
+            );
           }
 
           const shardPaths = sitemapShard(paths, Number(params.shard));
