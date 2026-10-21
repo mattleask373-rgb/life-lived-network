@@ -32,6 +32,7 @@ export function EntrySheet({
 }) {
   const layer = LAYERS.find((l) => l.id === entry.layer);
   const related = relatedEntries(world, entry);
+  const photos = (entry.photos ?? []).filter((photo) => photo.url.trim().length > 0);
   const service = isService(entry);
   const step = nextStepFor(entry);
   // Remember what had focus when the sheet first opened, so closing it puts
@@ -62,17 +63,18 @@ export function EntrySheet({
             target.focus();
           }
         }}
-        className="paper-grain bottom-0 top-auto max-h-[88vh] w-full max-w-none translate-y-0 gap-0 overflow-y-auto rounded-t-2xl p-0 sm:bottom-auto sm:top-1/2 sm:max-w-lg sm:-translate-y-1/2 sm:rounded-lg"
+        className="paper-grain bottom-0 top-auto max-h-[88vh] w-full max-w-none translate-y-0 gap-0 overflow-y-auto rounded-t-2xl p-0 sm:bottom-auto sm:top-1/2 sm:max-w-lg sm:-translate-y-1/2 sm:rounded-2xl"
       >
         <div
-          className={`relative border-b border-border ${entry.photos?.length ? "bg-muted" : "photo-placeholder h-32"}`}
+          className={`relative border-b border-border ${photos.length ? "bg-muted" : "photo-placeholder h-32"}`}
         >
-          {entry.photos?.length ? (
+          {photos.length ? (
             <div
               className="flex snap-x snap-mandatory gap-1 overflow-x-auto"
-              aria-label="Real photos from this listing"
+              role="region"
+              aria-label={`Photos for ${entry.title}`}
             >
-              {entry.photos.slice(0, 6).map((photo, index) => (
+              {photos.slice(0, 6).map((photo, index) => (
                 <figure
                   key={`${photo.url}-${index}`}
                   className="relative h-44 min-w-[82%] snap-start sm:h-52"
@@ -111,7 +113,9 @@ export function EntrySheet({
             {layer ? <LayerIcon icon={layer.icon} size={15} strokeWidth={1.7} /> : null}{" "}
             {layer?.label}
           </p>
-          <DialogTitle className="mt-1 text-2xl leading-tight">{entry.title}</DialogTitle>
+          <DialogTitle className="mt-1 font-display text-3xl leading-tight tracking-tight">
+            {entry.title}
+          </DialogTitle>
           {entry.demonstration ? (
             <p className="mt-2 rounded-lg border border-border bg-background p-3 text-xs text-muted-foreground">
               <span className="uppercase tracking-widest">Demonstration record</span> — this is
@@ -129,18 +133,18 @@ export function EntrySheet({
             </p>
           ) : null}
 
-          <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
-            <div className="card-paper p-3">
+          <dl className="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
+            <div className="card-paper rounded-2xl p-3">
               <dt className="text-xs text-muted-foreground">When</dt>
               <dd className="mt-0.5">
                 {entry.startsAt ? eventDate(entry.startsAt, entry.timezone) : entry.when}
               </dd>
             </div>
-            <div className="card-paper p-3">
+            <div className="card-paper rounded-2xl p-3">
               <dt className="text-xs text-muted-foreground">Takes</dt>
               <dd className="mt-0.5">{duration(entry.minutes)}</dd>
             </div>
-            <div className="card-paper p-3">
+            <div className="card-paper rounded-2xl p-3">
               <dt className="text-xs text-muted-foreground">Money</dt>
               <dd className="mt-0.5">{money(entry.cost, entry.currency)}</dd>
             </div>
@@ -151,7 +155,7 @@ export function EntrySheet({
           {/* A service: what it is, who provides it, where, when, what it costs,
               and the one next step that is actually true. */}
           {service ? (
-            <div className="mt-4 rounded-lg border border-border bg-background p-3 text-sm">
+            <div className="mt-4 rounded-2xl border border-border bg-card p-4 text-sm">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
                 Who provides this
               </p>
@@ -174,7 +178,7 @@ export function EntrySheet({
                     href={step.href}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="focus-ink inline-flex rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground"
+                    className="focus-ink inline-flex min-h-11 items-center rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground"
                   >
                     {step.label}
                   </a>
@@ -198,7 +202,7 @@ export function EntrySheet({
 
           {/* Where this came from, said plainly, with the way back to them. */}
           {entry.origin === "source" || entry.origin === "confirmed" ? (
-            <div className="mt-4 rounded-lg border border-border bg-background p-3 text-sm">
+            <div className="mt-4 rounded-2xl border border-border bg-card p-4 text-sm">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">
                 Where this came from
               </p>
@@ -289,14 +293,14 @@ export function EntrySheet({
 
           {related.length ? (
             <div className="mt-6 border-t border-border pt-4">
-              <h3 className="text-sm uppercase tracking-widest text-muted-foreground">Close by</h3>
+              <h3 className="font-display text-lg text-foreground">Close by</h3>
               <ul className="mt-2 space-y-2">
                 {related.map((r) => (
                   <li key={r.id}>
                     <button
                       type="button"
                       onClick={() => onOpenEntry(r)}
-                      className="focus-ink w-full rounded-lg border border-border bg-card p-3 text-left text-sm hover:shadow-paper"
+                      className="focus-ink min-h-11 w-full rounded-2xl border border-border bg-card p-3 text-left text-sm hover:shadow-paper"
                     >
                       {(() => {
                         const relatedLayer = LAYERS.find((l) => l.id === r.layer);
