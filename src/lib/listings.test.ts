@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { rowToEntry, type ListingRow } from "./listings";
+import type { WorkOpportunity } from "./work-opportunities";
 
 const row: ListingRow = {
   id: "abc",
@@ -31,6 +32,30 @@ const row: ListingRow = {
   accessibility: null,
   status: "published",
   data_quality: "unchecked",
+};
+
+const approvedOpportunity: WorkOpportunity = {
+  arrangement: "short_term",
+  engagementKind: "paid_work",
+  compensation: {
+    status: "stated_paid",
+    amountMinorUnits: 3250,
+    currency: "AUD",
+    basis: "hour",
+  },
+  duration: { amount: 4, unit: "hours" },
+  startDate: "2026-11-03",
+  endDate: "2026-11-03",
+  accommodation: "not_stated",
+  transportNotes: "Transport details have not been confirmed.",
+  skillRequirements: ["Prior kitchen experience, as stated by the host"],
+  hostExpectations: ["Confirm the shift before travelling"],
+  conditions: ["Conditions are subject to written agreement"],
+  jurisdictionCountryCode: "AU",
+  policyReviewStatus: "approved_by_human",
+  publicationStatus: "published",
+  provenance: { kind: "owner_declared", sourceName: "Opportunity owner" },
+  rightsStatus: "cleared",
 };
 
 describe("rowToEntry is the single normalisation seam", () => {
@@ -68,5 +93,54 @@ describe("rowToEntry is the single normalisation seam", () => {
     const entry = rowToEntry(row, undefined, photos);
     expect(entry.photos).toHaveLength(6);
     expect(entry.photos?.[0]?.sourceUrl).toBe("https://events.example/real-event");
+  });
+
+  it("preserves real source-check time only for sourced, non-demo records", () => {
+    const sourced = rowToEntry({
+      ...row,
+      origin: "source",
+      last_checked_at: "2026-10-21T09:30:00.000Z",
+    });
+    expect(sourced.lastCheckedAt).toBe("2026-10-21T09:30:00.000Z");
+
+    expect(rowToEntry({ ...row, last_checked_at: "2026-10-21T09:30:00.000Z" }).lastCheckedAt)
+      .toBeUndefined();
+    expect(
+      rowToEntry({
+        ...row,
+        origin: "source",
+        demonstration: true,
+        last_checked_at: "2026-10-21T09:30:00.000Z",
+      }).lastCheckedAt,
+    ).toBeUndefined();
+    expect(rowToEntry({ ...row, origin: "source", last_checked_at: null }).lastCheckedAt)
+      .toBeUndefined();
+  });
+
+  it("preserves only a valid, human-approved, published and rights-cleared work contract", () => {
+    const entry = rowToEntry({
+      ...row,
+      layer: "work",
+      work_opportunity: approvedOpportunity,
+    });
+    expect(entry.workOpportunity).toEqual(approvedOpportunity);
+
+    const unpublished = rowToEntry({
+      ...row,
+      layer: "work",
+      work_opportunity: { ...approvedOpportunity, publicationStatus: "draft" },
+    });
+    expect(unpublished.workOpportunity).toBeUndefined();
+
+    const rightsRestricted = rowToEntry({
+      ...row,
+      layer: "work",
+      work_opportunity: { ...approvedOpportunity, rightsStatus: "restricted" },
+    });
+    expect(rightsRestricted.workOpportunity).toBeUndefined();
+    expect(
+      rowToEntry({ ...row, layer: "work", work_opportunity: { ...approvedOpportunity, compensation: null } })
+        .workOpportunity,
+    ).toBeUndefined();
   });
 });
