@@ -24,7 +24,11 @@ export function LocalityRefresh({ placeId }: { placeId: string }) {
           aria-busy={state === "checking"}
           className="focus-ink min-h-11 rounded-full border border-border bg-card px-4 py-2 text-sm hover:bg-secondary disabled:cursor-wait disabled:opacity-60"
         >
-          {state === "checking" ? "Checking…" : state === "checked" ? "Check again" : "Check for updates"}
+          {state === "checking"
+            ? "Checking…"
+            : state === "checked"
+              ? "Check again"
+              : "Check for updates"}
         </button>
         <p className="text-xs text-muted-foreground">
           Reloads the records available for this place. Source update times may vary.
