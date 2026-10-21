@@ -13,13 +13,13 @@ import { getRequest } from "@tanstack/react-start/server";
 import { decodeCursor, pageLimit, toPage, type DiscoveryContext, type Page } from "./data/contract";
 import { asDataError } from "./data/errors";
 import { rowToEntry, type ListingRow } from "./listings";
-import { assertGeoBounds } from "./geo-bounds";
+import { assertQueryableGeoBounds } from "./geo-bounds";
 import type { SourcePhoto, WorldEntry } from "./world-data";
 
 export const getWorld = createServerFn({ method: "GET" })
   .inputValidator((input: DiscoveryContext | undefined) => {
     const context = input ?? {};
-    if (context.bounds !== undefined && context.bounds !== null) assertGeoBounds(context.bounds);
+    if (context.bounds !== undefined && context.bounds !== null) assertQueryableGeoBounds(context.bounds);
     return context;
   })
   .handler(async ({ data }): Promise<Page<WorldEntry>> => {
