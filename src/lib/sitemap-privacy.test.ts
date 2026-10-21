@@ -1,17 +1,23 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { PRIVATE_PATHS, PUBLIC_PATHS, SITE_ORIGIN, robotsTxt } from "./seo";
+import {
+  PRIVATE_PATHS,
+  PUBLIC_PATHS,
+  PUBLIC_SITEMAP_CHILD_PATHS,
+  SITE_ORIGIN,
+  robotsTxt,
+} from "./seo";
 import { Route as IndexRoute } from "@/routes/api/public/sitemap[.]xml";
 import { Route as PagesRoute } from "@/routes/api/public/sitemap-pages[.]xml";
 import { Route as RobotsRoute } from "@/routes/robots[.]txt";
 import { Route as SitemapRoute } from "@/routes/sitemap[.]xml";
 
 /**
- * Regression guard: the public sitemaps list fixed public screens only.
- * They never read records, so private, blocked, reported, demonstration or
- * otherwise ineligible entries cannot appear. If record-level sitemaps are
- * added later, they must come with their own eligibility tests.
+ * Regression guard: the fixed-pages sitemap lists only known public screens;
+ * locality and service sitemaps have separate eligibility gates and regression suites.
+ * Private screens never enter any sitemap, and uncertain source data
+ * fails closed rather than becoming an invented or thin search landing page.
  */
 type Handler = () => Response | Promise<Response>;
 const handler = (route: unknown): Handler =>
@@ -49,9 +55,12 @@ describe("public sitemap privacy", () => {
     expect(robots).toContain(`Sitemap: ${SITE_ORIGIN}/sitemap.xml`);
   });
 
-  it("static public/sitemap.xml lists exactly the public screens", () => {
+  it("static public/sitemap.xml indexes the public child sitemaps", () => {
     const sitemap = readFileSync(new URL("../../public/sitemap.xml", import.meta.url), "utf8");
-    expect(locs(sitemap).sort()).toEqual(PUBLIC_PATHS.map((p) => `${SITE_ORIGIN}${p}`).sort());
+    expect(sitemap).toContain("<sitemapindex");
+    expect(locs(sitemap)).toEqual(
+      PUBLIC_SITEMAP_CHILD_PATHS.map((path) => `${SITE_ORIGIN}${path}`),
+    );
     for (const path of PRIVATE_PATHS) {
       expect(locs(sitemap)).not.toContain(`${SITE_ORIGIN}${path}`);
     }
@@ -89,17 +98,18 @@ describe("public sitemap privacy", () => {
     expect(PRIVATE_PATHS).toContain("/conversations");
   });
 
-  it("dynamic /sitemap.xml route lists exactly the public screens", async () => {
+  it("dynamic /sitemap.xml route indexes all public child sitemaps", async () => {
     const { xml, res } = await body(SitemapRoute);
     expect(res.headers.get("content-type")).toContain("xml");
-    expect(locs(xml).sort()).toEqual(PUBLIC_PATHS.map((p) => `${SITE_ORIGIN}${p}`).sort());
+    expect(xml).toContain("<sitemapindex");
+    expect(locs(xml)).toEqual(PUBLIC_SITEMAP_CHILD_PATHS.map((path) => `${SITE_ORIGIN}${path}`));
     for (const path of PRIVATE_PATHS) {
       expect(locs(xml)).not.toContain(`${SITE_ORIGIN}${path}`);
     }
   });
 
-  it("index names only the pages sitemap", async () => {
+  it("API sitemap index names all public child sitemaps", async () => {
     const { xml } = await body(IndexRoute);
-    expect(locs(xml)).toEqual([`${SITE_ORIGIN}/api/public/sitemap-pages.xml`]);
+    expect(locs(xml)).toEqual(PUBLIC_SITEMAP_CHILD_PATHS.map((path) => `${SITE_ORIGIN}${path}`));
   });
 });

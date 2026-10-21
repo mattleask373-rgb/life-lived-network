@@ -89,7 +89,13 @@ export function privatePage(meta: Omit<PageMeta, "image">): {
   };
 }
 
-/** Public app screens that exist today. Locality and service pages arrive later. */
+/** Fixed public app screens. Eligible locality and service URLs live in bounded child sitemaps. */
+export const PUBLIC_SITEMAP_CHILD_PATHS: readonly string[] = [
+  "/api/public/sitemap-pages.xml",
+  "/api/public/sitemap-localities.xml",
+  "/api/public/sitemap-services.xml",
+];
+
 export const PUBLIC_PATHS: readonly string[] = [
   "/",
   "/journey",
@@ -144,7 +150,7 @@ export function sitemapXml(urls: SitemapUrl[]): string {
 }
 
 /** A sitemap index, so locality, service, provider and event sitemaps can be added without churn. */
-export function sitemapIndexXml(paths: string[]): string {
+export function sitemapIndexXml(paths: readonly string[]): string {
   const entries = paths
     .map((path) => `  <sitemap>\n    <loc>${escapeXml(absoluteUrl(path))}</loc>\n  </sitemap>`)
     .join("\n");
@@ -171,9 +177,8 @@ export function robotsTxt(): string {
     "# PRIVATE_PATHS in src/lib/seo.ts. robots.txt is crawler policy, not access control.",
     ...PRIVATE_PATHS.map((path) => `Disallow: ${path}`),
     "",
-    "# Static and dynamic /sitemap.xml for deploy reliability. Dynamic /api/public/sitemap.xml remains",
-    "# for environments that serve TanStack Start server routes; all list only",
-    "# PUBLIC_PATHS.",
+    "# /sitemap.xml is a sitemap index. Its child sitemaps list public screens",
+    "# locality/service pages that pass their current public-content indexability gates.",
     `Sitemap: ${SITE_ORIGIN}/sitemap.xml`,
     "",
   ];

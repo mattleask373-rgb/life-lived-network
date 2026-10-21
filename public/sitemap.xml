@@ -1,21 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://life-lived-network.lovable.app/</loc>
-  </url>
-  <url>
-    <loc>https://life-lived-network.lovable.app/journey</loc>
-  </url>
-  <url>
-    <loc>https://life-lived-network.lovable.app/road-trip</loc>
-  </url>
-  <url>
-    <loc>https://life-lived-network.lovable.app/life-list</loc>
-  </url>
-  <url>
-    <loc>https://life-lived-network.lovable.app/give</loc>
-  </url>
-  <url>
-    <loc>https://life-lived-network.lovable.app/make</loc>
-  </url>
-</urlset>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://life-lived-network.lovable.app/api/public/sitemap-pages.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://life-lived-network.lovable.app/api/public/sitemap-localities.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://life-lived-network.lovable.app/api/public/sitemap-services.xml</loc>
+  </sitemap>
+</sitemapindex>
