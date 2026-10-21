@@ -103,10 +103,9 @@ describe("map viewport", () => {
     ];
     const clusters = clusterPlaced(placed, 2, 2);
     expect(clusters).toHaveLength(2);
-    expect(clusters.find((cluster) => cluster.entries.length === 2)?.entries.map((e) => e.id)).toEqual([
-      "a",
-      "b",
-    ]);
+    expect(
+      clusters.find((cluster) => cluster.entries.length === 2)?.entries.map((e) => e.id),
+    ).toEqual(["a", "b"]);
     expect(clusterPlaced(placed, 2, 2)).toEqual(clusters);
   });
 
