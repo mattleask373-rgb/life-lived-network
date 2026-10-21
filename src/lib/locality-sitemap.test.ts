@@ -33,6 +33,7 @@ function rowsFor(placeId: string, count: number, demonstration = false): PublicL
     id: `${placeId}-${demonstration ? "demo" : "real"}-${index}`,
     place_id: placeId,
     demonstration,
+    sourceLifecycleEligible: true,
     // Input ordering is significant; production passes the listing query's
     // stable order, so the earliest 60 entries are the page that gets rendered.
   }));
@@ -56,6 +57,15 @@ describe("locality sitemap indexability", () => {
   it("uses only the first 60 records the locality page renders", () => {
     const rows = [...rowsFor("city", 60, true), ...rowsFor("city", 3, false)];
     expect(indexableLocalityPaths(geography, rows)).not.toContain("/gb/birmingham");
+  });
+
+  it("does not count imported rows without lifecycle proof as real SEO evidence", () => {
+    const rows = [
+      ...rowsFor("city", 2),
+      { ...rowsFor("city", 1)[0]!, sourceLifecycleEligible: false },
+    ];
+    expect(indexableLocalityPaths(geography, rows)).not.toContain("/gb/birmingham");
+    expect(indexableLocalityPaths(geography, rows)).not.toContain("/gb/west-midlands");
   });
 
   it("fails closed when a bounded source scan may be incomplete", () => {
