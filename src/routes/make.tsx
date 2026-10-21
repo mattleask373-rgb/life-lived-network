@@ -163,6 +163,7 @@ function MakePage() {
           band: kind === "service" ? "by_arrangement" : form.band,
           minutes: kind === "service" ? 0 : Math.round((Number(form.hours) || 1) * 60),
           cost: serviceFields?.cost ?? (form.pays ? -amount : amount),
+          currency: chosen?.currency ?? place?.currency ?? "EUR",
           give: kind === "service" ? null : form.give.trim() || null,
           social: kind === "service" ? "friendly" : form.social,
           outdoors: kind === "service" ? false : form.outdoors,
