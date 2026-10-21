@@ -52,9 +52,9 @@ describe("first-party service-offer contract", () => {
     "https://user:pass@provider.example/book",
     "not a URL",
   ])("rejects unsafe booking link %s", (bookingUrl) => {
-    expect(() =>
-      parseServiceOfferDraft(input({ bookingState: "external", bookingUrl })),
-    ).toThrow(/valid public http or https/i);
+    expect(() => parseServiceOfferDraft(input({ bookingState: "external", bookingUrl }))).toThrow(
+      /valid public http or https/i,
+    );
   });
 
   it("requires a link only for explicit bookable or external-booking states", () => {
