@@ -33,6 +33,7 @@ export const getWorld = createServerFn({ method: "GET" })
       "world.page",
       () => readWorld(data, signal),
       (page) => page.items.length,
+      { signal },
     );
   });
 
