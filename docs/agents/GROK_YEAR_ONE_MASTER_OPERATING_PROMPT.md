@@ -809,3 +809,34 @@ Preserve the work that already exists. Improve the product one verifiable step a
 **Protect the past. Understand the present. Build the next capability. Measure the outcome. Earn the next level of autonomy.**
 
 Do not stop at producing a plan if a safe, useful implementation step is available. Do not take a risky step merely to prove that you can act independently.
+
+---
+
+# 20. OFFICIAL GROK / XAI DOCUMENTATION TO REVALIDATE
+
+These references were checked while preparing this prompt on 21 October 2026. They are a starting research index, not permanent guarantees of feature availability, plan entitlement, terms, pricing or regional eligibility. Re-open the relevant official page before a material implementation or purchase.
+
+- Grok overview and product capabilities: https://docs.x.ai/grok/overview
+- Current public plan comparison: https://x.ai/pricing
+- The X Subscription announcement and plan structure: https://x.ai/news/x-subscription
+- Current X Subscription prices and included usage: https://docs.x.ai/x-subscription/pricing
+- Grok Bot availability by X Subscription tier: https://docs.x.ai/x-subscription/grok-bot
+- Subscription usage, weekly pool, extra usage and top-ups: https://docs.x.ai/grok/faq
+- Connectors and custom MCP connections in Grok: https://docs.x.ai/grok/connectors
+- xAI API tools overview: https://docs.x.ai/developers/tools/overview
+- Web Search: https://docs.x.ai/developers/tools/web-search
+- X Search: https://docs.x.ai/developers/tools/x-search
+- Code execution: https://docs.x.ai/developers/tools/code-execution
+- Function calling and tool orchestration: https://docs.x.ai/developers/tools/advanced-usage
+- Remote MCP tools: https://docs.x.ai/developers/tools/remote-mcp
+- Structured outputs: https://docs.x.ai/developers/model-capabilities/text/structured-outputs
+- Files and Collections: https://docs.x.ai/developers/files/collections
+- Collections Search tool: https://docs.x.ai/developers/tools/collections-search
+- Current Grok model documentation: https://docs.x.ai/developers/grok-4-7
+- Grok multi-agent model documentation, subject to current availability: https://docs.x.ai/developers/models/grok-4.20-multi-agent-0309
+- Imagine image/video capabilities: https://docs.x.ai/developers/model-capabilities/imagine
+- API pricing and tool usage costs: https://docs.x.ai/developers/pricing
+
+**Billing distinction:** the current documentation describes a shared weekly included-usage pool across eligible consumer product surfaces. API requests and some external tools may incur separate usage-based charges. Verify the actual account’s billing dashboard, plan, regional access, spending caps and enabled auto-top-up settings before assigning work. Never assume that a paid chat subscription includes unlimited production API calls.
+
+**Important distinction:** Grok Bot, coding-agent access, connectors, API access, image/video generation, voice and multi-agent model access are separate capabilities with their own eligibility and operational limits. Use only features the actual account can access, and do not claim continuous execution unless a persistent runner and its heartbeat have been verified.
