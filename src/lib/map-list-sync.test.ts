@@ -81,6 +81,27 @@ describe("map/list synchronization", () => {
     expect(entriesForMapList(entries, partition, true)).toEqual(entries);
   });
 
+  it("keeps non-finite and out-of-range coordinates unpinned", () => {
+    const entries = [
+      entry("not-a-number", Number.NaN, -1.89),
+      entry("infinite-latitude", Number.POSITIVE_INFINITY, -1.89),
+      entry("out-of-range-latitude", 91, -1.89),
+      entry("out-of-range-longitude", 52.43, 181),
+      entry("valid", 52.43, -1.89),
+    ];
+
+    const partition = partitionMapList(entries, view);
+
+    expect(partition.inView.map((item) => item.id)).toEqual(["valid"]);
+    expect(partition.unpinned.map((item) => item.id)).toEqual([
+      "not-a-number",
+      "infinite-latitude",
+      "out-of-range-latitude",
+      "out-of-range-longitude",
+    ]);
+    expect(partition.outsideView).toEqual([]);
+  });
+
   it("returns no viewport matches for an empty input", () => {
     const partition = partitionMapList([], view);
 
