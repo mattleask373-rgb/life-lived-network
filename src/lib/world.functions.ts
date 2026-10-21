@@ -19,7 +19,9 @@ import type { SourcePhoto, WorldEntry } from "./world-data";
 export const getWorld = createServerFn({ method: "GET" })
   .inputValidator((input: DiscoveryContext | undefined) => {
     const context = input ?? {};
-    if (context.bounds !== undefined && context.bounds !== null) assertQueryableGeoBounds(context.bounds);
+    if (context.bounds !== undefined && context.bounds !== null) {
+      assertQueryableGeoBounds(context.bounds);
+    }
     return context;
   })
   .handler(async ({ data }): Promise<Page<WorldEntry>> => {
