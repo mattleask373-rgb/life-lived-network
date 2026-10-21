@@ -4,6 +4,7 @@ import {
   assertGeoBounds,
   geoBoundsForViewport,
   isGeoBounds,
+  isViewportQueryable,
   longitudeInBounds,
 } from "./geo-bounds";
 
@@ -38,6 +39,23 @@ describe("geographic viewport bounds", () => {
       minLng: -5,
       maxLng: 5,
     });
+  });
+
+  it("allows bounded viewport queries at the exact configured limits", () => {
+    expect(isViewportQueryable({ lat: 51.5, lng: -1.9, spanLat: 1.5, spanLng: 2.1 })).toBe(
+      true,
+    );
+  });
+
+  it.each([
+    { lat: 51.5, lng: -1.9, spanLat: 1.5001, spanLng: 2.1 },
+    { lat: 51.5, lng: -1.9, spanLat: 1.5, spanLng: 2.1001 },
+    { lat: 51.5, lng: -1.9, spanLat: 12, spanLng: 16.8 },
+    { lat: Number.NaN, lng: -1.9, spanLat: 1, spanLng: 1.4 },
+    { lat: 51.5, lng: 181, spanLat: 1, spanLng: 1.4 },
+    { lat: 51.5, lng: -1.9, spanLat: 0, spanLng: 1.4 },
+  ])("rejects broad or invalid viewport queries: %s", (view) => {
+    expect(isViewportQueryable(view)).toBe(false);
   });
 
   it.each([
