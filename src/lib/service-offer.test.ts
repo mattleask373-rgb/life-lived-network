@@ -38,12 +38,12 @@ describe("first-party service-offer contract", () => {
   });
 
   it("requires the category to be selected from the shared taxonomy", () => {
-    expect(() =>
-      parseServiceOfferDraft(input({ serviceCategory: "invented-category" })),
-    ).toThrow(ServiceOfferValidationError);
-    expect(() =>
-      parseServiceOfferDraft(input({ serviceCategory: "short-term-work" })),
-    ).toThrow(/not a job category/i);
+    expect(() => parseServiceOfferDraft(input({ serviceCategory: "invented-category" }))).toThrow(
+      ServiceOfferValidationError,
+    );
+    expect(() => parseServiceOfferDraft(input({ serviceCategory: "short-term-work" }))).toThrow(
+      /not a job category/i,
+    );
   });
 
   it.each([
@@ -72,18 +72,18 @@ describe("first-party service-offer contract", () => {
   });
 
   it("keeps optional provider details bounded and trims them", () => {
-    expect(
-      parseServiceOfferDraft(input({ organisation: "  ", providerNote: "  " })),
-    ).toMatchObject({
-      organisation: "",
-      provider_note: "",
-    });
-    expect(() =>
-      parseServiceOfferDraft(input({ organisation: "x".repeat(121) })),
-    ).toThrow(/120 characters or fewer/i);
-    expect(() =>
-      parseServiceOfferDraft(input({ providerNote: "x".repeat(1001) })),
-    ).toThrow(/1000 characters or fewer/i);
+    expect(parseServiceOfferDraft(input({ organisation: "  ", providerNote: "  " }))).toMatchObject(
+      {
+        organisation: "",
+        provider_note: "",
+      },
+    );
+    expect(() => parseServiceOfferDraft(input({ organisation: "x".repeat(121) }))).toThrow(
+      /120 characters or fewer/i,
+    );
+    expect(() => parseServiceOfferDraft(input({ providerNote: "x".repeat(1001) }))).toThrow(
+      /1000 characters or fewer/i,
+    );
   });
 
   it.each(["", "-1", "NaN", "Infinity"])(
