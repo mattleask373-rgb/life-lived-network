@@ -141,11 +141,12 @@ export function evaluateSeoSmoke(
   const failures: string[] = [];
   const origin = new URL(expectedOrigin).origin;
 
-  for (const [label, document] of Object.entries({
-    "robots.txt": documents.robots,
-    "sitemap.xml": documents.sitemap,
-    homepage: documents.homepage,
-  })) {
+  const endpointDocuments: Array<[string, string, SmokeDocument]> = [
+    ["robots.txt", "/robots.txt", documents.robots],
+    ["sitemap.xml", "/sitemap.xml", documents.sitemap],
+    ["homepage", "/", documents.homepage],
+  ];
+  for (const [label, expectedPath, document] of endpointDocuments) {
     if (document.networkError) {
       failures.push(label + ": request failed (" + document.networkError + ")");
     }
@@ -153,8 +154,12 @@ export function evaluateSeoSmoke(
       failures.push(label + ": expected HTTP 200, received " + document.status);
     }
     try {
-      if (new URL(document.finalUrl).origin !== origin) {
+      const finalUrl = new URL(document.finalUrl);
+      if (finalUrl.origin !== origin) {
         failures.push(label + ": final response left the expected origin");
+      }
+      if (finalUrl.pathname !== expectedPath) {
+        failures.push(label + ": redirected to unexpected path " + finalUrl.pathname);
       }
     } catch {
       failures.push(label + ": response did not provide a valid final URL");
@@ -224,8 +229,12 @@ export function evaluateSeoSmoke(
         failures.push(label + ": expected an XML content type");
       }
       try {
-        if (new URL(document.finalUrl).origin !== origin) {
+        const finalUrl = new URL(document.finalUrl);
+        if (finalUrl.origin !== origin) {
           failures.push(label + ": final response left the expected origin");
+        }
+        if (finalUrl.pathname !== path) {
+          failures.push(label + ": redirected to unexpected path " + finalUrl.pathname);
         }
       } catch {
         failures.push(label + ": response did not provide a valid final URL");
