@@ -174,12 +174,6 @@ function Home() {
 
   const mapListContents = (
     <>
-      {viewportTooWide ? (
-        <p role="status" className="text-sm text-muted-foreground">
-          Zoom in to search a smaller map area. Showing records already loaded for this locality; no
-          broad-area query was sent.
-        </p>
-      ) : null}
       {mapLoading || loading ? (
         <p role="status" className="text-sm text-muted-foreground">
           {viewportRequestActive
@@ -383,6 +377,12 @@ function Home() {
           <div className="mt-3">
             <LayerFilter active={layers} onChange={setLayers} />
           </div>
+          {viewportTooWide ? (
+            <p role="status" className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
+              Zoom in to search a smaller map area. Showing records already loaded for this locality; no
+              broad-area query was sent.
+            </p>
+          ) : null}
           {mapRefreshError ? (
             <p
               role="status"
