@@ -59,7 +59,9 @@ export function evaluateServiceLocalityPage(input: {
     categoryValid: Boolean(listings),
     publishedRecordCount: real.length,
     demonstrationOnly: real.length === 0 && demonstrations.length > 0,
-    informationComplete: Boolean(place.name.trim() && place.blurb.trim() && listings?.category.label.trim()),
+    informationComplete: Boolean(
+      place.name.trim() && place.blurb.trim() && listings?.category.label.trim(),
+    ),
     recordsFresh: real.every((entry) => recordIsFresh(entry, now)),
     provenancePresent: real.every(recordHasProvenance),
     internalLinksPresent: true,
