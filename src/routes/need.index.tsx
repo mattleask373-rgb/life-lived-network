@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { parseQuerySearch } from "@/lib/search-context";
+import { parseNeedSearch } from "@/lib/need-prefill";
 
 import { useSession } from "@/hooks/use-session";
 import { createNeed, getMyNeeds, getOpenNeeds } from "@/lib/needs.functions";
@@ -18,13 +18,13 @@ const description =
 
 export const Route = createFileRoute("/need/")({
   head: () => privatePage({ path: "", title, description }),
-  validateSearch: parseQuerySearch,
+  validateSearch: parseNeedSearch,
   component: NeedPage,
 });
 
 function NeedPage() {
   const { user, ready } = useSession();
-  const { from } = Route.useSearch();
+  const { from, category } = Route.useSearch();
   const typed = from ?? "";
   const qc = useQueryClient();
   const openNeeds = useServerFn(getOpenNeeds);
@@ -58,6 +58,7 @@ function NeedPage() {
 
         {ready && user ? (
           <NeedForm
+            categorySeed={category ?? ""}
             placeId={place?.place.id ?? null}
             placeName={place?.place.name ?? ""}
             timezone={place?.place.timezone ?? "UTC"}
@@ -135,6 +136,7 @@ function NeedList({ heading, needs, empty }: { heading: string; needs: Need[]; e
 }
 
 function NeedForm({
+  categorySeed,
   placeId,
   placeName,
   timezone,
@@ -144,6 +146,7 @@ function NeedForm({
   typed,
   onDone,
 }: {
+  categorySeed: string;
   placeId: string | null;
   placeName: string;
   timezone: string;
@@ -154,7 +157,7 @@ function NeedForm({
   onDone: () => void;
 }) {
   const submit = useServerFn(createNeed);
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(categorySeed);
   const [needTitle, setNeedTitle] = useState(typed);
   const [description, setDescription] = useState("");
   const [intent, setIntent] = useState("paid_work");
