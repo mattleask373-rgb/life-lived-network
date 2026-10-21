@@ -64,6 +64,8 @@ export interface WorldEntry {
   community?: boolean;
   /** How trustworthy the information is right now. */
   quality?: DataQuality;
+  /** When an outside source was last checked by ingestion; not a freshness guarantee. */
+  lastCheckedAt?: string;
   /** What kind of thing this is, for community-posted entries. */
   kind?: string;
   /** What the person could give, in their own words. */
