@@ -536,17 +536,19 @@ function MakePage() {
             </div>
 
             <div className="card-paper space-y-4 p-5">
-              <label className="block text-sm">
-                <span className="text-muted-foreground">
-                  Something a person could give here, if there is one
-                </span>
+              {kind === "service" ? null : (
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">
+                    Something a person could give here, if there is one
+                  </span>
                 <input
                   value={form.give}
                   onChange={(e) => setForm({ ...form, give: e.target.value })}
                   placeholder="Play something. Or photograph whoever does."
                   className={input}
                 />
-              </label>
+                </label>
+              )}
               <label className="block text-sm">
                 <span className="text-muted-foreground">
                   Access — steps, seating, noise, anything useful to know
@@ -558,14 +560,23 @@ function MakePage() {
                 />
               </label>
               <label className="block text-sm">
-                <span className="text-muted-foreground">How someone gets in touch</span>
+                <span className="text-muted-foreground">
+                  {kind === "service"
+                    ? "Next-step note (do not include personal contact details)"
+                    : "How someone gets in touch"}
+                </span>
                 <input
                   value={form.contact_note}
                   onChange={(e) => setForm({ ...form, contact_note: e.target.value })}
-                  placeholder="Say hello here first and we'll share the address"
+                  placeholder={
+                    kind === "service"
+                      ? "What someone should ask or confirm before booking"
+                      : "Say hello here first and we'll share the address"
+                  }
                   className={input}
                 />
               </label>
+              {kind === "service" ? null : (
               <div className="flex flex-wrap items-center gap-4 text-sm">
                 <label className="flex items-center gap-2">
                   <span className="text-muted-foreground">Feels</span>
@@ -598,6 +609,7 @@ function MakePage() {
                   This pays the person
                 </label>
               </div>
+              )}
             </div>
 
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
