@@ -100,12 +100,7 @@ function MakePage() {
         ...f,
         layer: k.layer,
         pays: id === "work",
-        band:
-          id === "service"
-            ? "by_arrangement"
-            : f.band === "by_arrangement"
-              ? "today"
-              : f.band,
+        band: id === "service" ? "by_arrangement" : f.band === "by_arrangement" ? "today" : f.band,
         when_text:
           id === "service"
             ? f.when_text || "By arrangement — timing not confirmed"
@@ -144,38 +139,38 @@ function MakePage() {
             })
           : undefined;
       const listing: NewListing = {
-          kind,
-          layer: form.layer,
-          title: form.title,
-          summary: form.summary,
-          details: form.details
-            .split("\n")
-            .map((d) => d.trim())
-            .filter(Boolean),
-          place: form.place || (chosen?.name ?? ""),
-          neighbourhood: chosen?.name ?? "",
-          x: drawn.x,
-          y: drawn.y,
-          when_text:
-            kind === "service"
-              ? form.when_text.trim() || "By arrangement — timing not confirmed"
-              : form.when_text,
-          band: kind === "service" ? "by_arrangement" : form.band,
-          minutes: kind === "service" ? 0 : Math.round((Number(form.hours) || 1) * 60),
-          cost: serviceFields?.cost ?? (form.pays ? -amount : amount),
-          currency: chosen?.currency ?? place?.currency ?? "EUR",
-          give: kind === "service" ? null : form.give.trim() || null,
-          social: kind === "service" ? "friendly" : form.social,
-          outdoors: kind === "service" ? false : form.outdoors,
-          people_needed: form.people_needed ? Number(form.people_needed) : null,
-          accessibility: form.accessibility.trim() || null,
-          contact_note: form.contact_note.trim() || null,
-          place_id: chosen?.id ?? null,
-          // Place-level coordinates only. Never an address, never a home.
-          lat: chosen?.lat ?? null,
-          lng: chosen?.lng ?? null,
-          ...(serviceFields ?? {}),
-        };
+        kind,
+        layer: form.layer,
+        title: form.title,
+        summary: form.summary,
+        details: form.details
+          .split("\\n")
+          .map((d) => d.trim())
+          .filter(Boolean),
+        place: form.place || (chosen?.name ?? ""),
+        neighbourhood: chosen?.name ?? "",
+        x: drawn.x,
+        y: drawn.y,
+        when_text:
+          kind === "service"
+            ? form.when_text.trim() || "By arrangement — timing not confirmed"
+            : form.when_text,
+        band: kind === "service" ? "by_arrangement" : form.band,
+        minutes: kind === "service" ? 0 : Math.round((Number(form.hours) || 1) * 60),
+        cost: serviceFields?.cost ?? (form.pays ? -amount : amount),
+        currency: chosen?.currency ?? place?.currency ?? "EUR",
+        give: kind === "service" ? null : form.give.trim() || null,
+        social: kind === "service" ? "friendly" : form.social,
+        outdoors: kind === "service" ? false : form.outdoors,
+        people_needed: form.people_needed ? Number(form.people_needed) : null,
+        accessibility: form.accessibility.trim() || null,
+        contact_note: form.contact_note.trim() || null,
+        place_id: chosen?.id ?? null,
+        // Place-level coordinates only. Never an address, never a home.
+        lat: chosen?.lat ?? null,
+        lng: chosen?.lng ?? null,
+        ...(serviceFields ?? {}),
+      };
       await createListing(listing, user.id);
       setDoneKind(kind);
       setDone(true);
@@ -331,13 +326,15 @@ function MakePage() {
                 <div>
                   <h2 className="text-lg">Describe the service you offer</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    This is a self-declared offer for the selected locality. It does not confirm
-                    a time slot, platform verification, professional qualification, or service in
+                    This is a self-declared offer for the selected locality. It does not confirm a
+                    time slot, platform verification, professional qualification, or service in
                     other localities.
                   </p>
                 </div>
                 <label className="block text-sm">
-                  <span className="text-muted-foreground">Service category (choose explicitly)</span>
+                  <span className="text-muted-foreground">
+                    Service category (choose explicitly)
+                  </span>
                   <select
                     required
                     value={form.serviceCategory}
@@ -397,7 +394,9 @@ function MakePage() {
                 </label>
                 {form.bookingState === "external" ? (
                   <label className="block text-sm">
-                    <span className="text-muted-foreground">Public booking URL (http or https)</span>
+                    <span className="text-muted-foreground">
+                      Public booking URL (http or https)
+                    </span>
                     <input
                       required
                       type="url"
@@ -510,24 +509,25 @@ function MakePage() {
                 />
                 {kind === "service" ? (
                   <span className="mt-1 block text-xs text-muted-foreground">
-                    Describe what the price covers in the service details. The platform does not set or verify prices.
+                    Describe what the price covers in the service details. The platform does not set
+                    or verify prices.
                   </span>
                 ) : null}
               </label>
               {kind === "service" ? null : (
                 <label className="block text-sm">
                   <span className="text-muted-foreground">Which layer of the map</span>
-                <select
-                  value={form.layer}
-                  onChange={(e) => setForm({ ...form, layer: e.target.value as LayerId })}
-                  className={input}
-                >
-                  {LAYERS.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.label}
-                    </option>
-                  ))}
-                </select>
+                  <select
+                    value={form.layer}
+                    onChange={(e) => setForm({ ...form, layer: e.target.value as LayerId })}
+                    className={input}
+                  >
+                    {LAYERS.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.label}
+                      </option>
+                    ))}
+                  </select>
                 </label>
               )}
               <label className="block text-sm">
@@ -548,12 +548,12 @@ function MakePage() {
                   <span className="text-muted-foreground">
                     Something a person could give here, if there is one
                   </span>
-                <input
-                  value={form.give}
-                  onChange={(e) => setForm({ ...form, give: e.target.value })}
-                  placeholder="Play something. Or photograph whoever does."
-                  className={input}
-                />
+                  <input
+                    value={form.give}
+                    onChange={(e) => setForm({ ...form, give: e.target.value })}
+                    placeholder="Play something. Or photograph whoever does."
+                    className={input}
+                  />
                 </label>
               )}
               <label className="block text-sm">
@@ -584,7 +584,7 @@ function MakePage() {
                 />
               </label>
               {kind === "service" ? null : (
-              <div className="flex flex-wrap items-center gap-4 text-sm">
+                <div className="flex flex-wrap items-center gap-4 text-sm">
                 <label className="flex items-center gap-2">
                   <span className="text-muted-foreground">Feels</span>
                   <select
@@ -615,7 +615,7 @@ function MakePage() {
                   />
                   This pays the person
                 </label>
-              </div>
+                </div>
               )}
             </div>
 
