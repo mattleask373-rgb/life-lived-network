@@ -6,7 +6,7 @@
 
 ## Purpose
 
-The repository's standard verification workflow runs dependency installation, lint, unit tests and a build. Those are valuable correctness gates, but they do not create representative concurrent traffic or measure a deployed runtime's response under load.
+The repository's standard verification workflow runs dependency installation, lint, unit tests and a build. A separate validation workflow pins k6 and inspects the script with a non-routable .invalid target; it parses the test definition without making HTTP requests. Neither workflow creates representative concurrent traffic or measures a deployed runtime's response under load.
 
 This deliberately small first step provides a reproducible staging smoke test for the app document and crawler-facing routes. It helps identify deployment/routing failures and obvious latency/error regressions before a more representative test is designed.
 
