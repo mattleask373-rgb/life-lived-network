@@ -9,9 +9,7 @@ import {
 
 describe("geographic viewport bounds", () => {
   it("accepts a normal rectangular viewport", () => {
-    expect(
-      isGeoBounds({ minLat: 51, maxLat: 52, minLng: -2, maxLng: -1 }),
-    ).toBe(true);
+    expect(isGeoBounds({ minLat: 51, maxLat: 52, minLng: -2, maxLng: -1 })).toBe(true);
   });
 
   it("represents antimeridian-crossing viewports without out-of-range longitudes", () => {
@@ -34,9 +32,7 @@ describe("geographic viewport bounds", () => {
   });
 
   it("clips latitude bounds to the physical poles", () => {
-    expect(
-      geoBoundsForViewport({ lat: 88, lng: 0, spanLat: 10, spanLng: 10 }),
-    ).toEqual({
+    expect(geoBoundsForViewport({ lat: 88, lng: 0, spanLat: 10, spanLng: 10 })).toEqual({
       minLat: 83,
       maxLat: 90,
       minLng: -5,
@@ -55,9 +51,7 @@ describe("geographic viewport bounds", () => {
     { minLat: 51, maxLat: 52, minLng: -2, maxLng: -2 },
   ])("rejects invalid bounds: %s", (candidate) => {
     expect(isGeoBounds(candidate)).toBe(false);
-    expect(() => assertGeoBounds(candidate)).toThrow(
-      "Invalid geographic viewport bounds.",
-    );
+    expect(() => assertGeoBounds(candidate)).toThrow("Invalid geographic viewport bounds.");
   });
 
   it("rejects non-finite or impossible map viewport values", () => {
