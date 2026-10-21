@@ -33,6 +33,7 @@ import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
 import { localityPath } from "@/lib/locality-path";
 import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
 import { KIND_LABEL } from "@/lib/places";
+import { evaluateLocalityPage } from "@/lib/locality-indexability";
 import { privatePage, publicPage } from "@/lib/seo";
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import { filterEntriesByText, parseQuerySearch } from "@/lib/search-context";
@@ -70,7 +71,8 @@ export const Route = createFileRoute("/$country/$place/")({
       : `${name} in Real World Atlas. Nothing has been recorded here yet — add the first thing.`;
     // Until a page has something genuinely useful on it, it is not offered to
     // search engines. It still exists for anybody who arrives.
-    return current.length >= 3
+    const indexability = evaluateLocalityPage({ place: geography.place, entries });
+    return indexability.status === "INDEXABLE"
       ? publicPage({ path, title, description })
       : privatePage({ path, title, description });
   },
