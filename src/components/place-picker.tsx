@@ -108,6 +108,12 @@ export function PlacePicker() {
             />
           </label>
 
+          {query.trim() && results.length ? (
+            <p role="status" className="sr-only">
+              {results.length} matching place{results.length === 1 ? "" : "s"}
+            </p>
+          ) : null}
+
           {query.trim() ? (
             results.length ? (
               <ul aria-label="Matching places" className="space-y-2">
