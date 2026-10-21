@@ -15,6 +15,7 @@ import {
   zoomView,
   type MapView,
 } from "./map-view";
+import { buildPlaceIndex } from "./places";
 import type { WorldEntry } from "./world-data";
 
 function entry(id: string, lat: number | null, lng: number | null): WorldEntry {
@@ -144,13 +145,7 @@ describe("map viewport", () => {
     };
     const west = { ...east, id: "west", name: "West", slug: "west", lng: -175 };
     const outside = { ...east, id: "outside", name: "Outside", slug: "outside", lng: 0 };
-    const index = {
-      places: [east, west, outside],
-      byId: new Map([[east.id, east], [west.id, west], [outside.id, outside]]),
-      bySlug: new Map([[east.slug, east], [west.slug, west], [outside.slug, outside]]),
-      children: new Map(),
-      roots: [east, west, outside],
-    };
+    const index = buildPlaceIndex([east, west, outside]);
     expect(placeInView(index, { lat: 0, lng: 179, spanLat: 10, spanLng: 20 })?.id).toBe("east");
     expect(placeInView(index, { lat: 0, lng: -179, spanLat: 10, spanLng: 20 })?.id).toBe("west");
   });
@@ -185,6 +180,16 @@ describe("map viewport", () => {
     expect(fitted.lat).toBeCloseTo(52.43);
     const bounds = boundsOf(fitted);
     expect(bounds.maxLat).toBeGreaterThan(bounds.minLat);
+  });
+
+  it("fits activity either side of the date line into a local viewport", () => {
+    const fitted = fitView([entry("east", 0, 175), entry("west", 0, -175)], {
+      lat: 0,
+      lng: 179,
+    });
+    expect(Math.abs(fitted.lng)).toBeCloseTo(180);
+    expect(fitted.spanLng).toBeLessThan(20);
+    expect(placeEntries([entry("east", 0, 175), entry("west", 0, -175)], fitted)).toHaveLength(2);
   });
 
   it("describes the scale it is showing", () => {
