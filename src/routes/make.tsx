@@ -107,14 +107,7 @@ function MakePage() {
             : f.when_text === "By arrangement — timing not confirmed"
               ? ""
               : f.when_text,
-        cost:
-          id === "service"
-            ? kind === "service"
-              ? f.cost
-              : ""
-            : f.cost.trim()
-              ? f.cost
-              : "0",
+        cost: id === "service" ? (kind === "service" ? f.cost : "") : f.cost.trim() ? f.cost : "0",
       }));
     }
   };
@@ -585,38 +578,38 @@ function MakePage() {
               </label>
               {kind === "service" ? null : (
                 <div className="flex flex-wrap items-center gap-4 text-sm">
-                <label className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Feels</span>
-                  <select
-                    value={form.social}
-                    onChange={(e) =>
-                      setForm({ ...form, social: e.target.value as NewListing["social"] })
-                    }
-                    className="focus-ink rounded-lg border border-border bg-background px-3 py-2"
-                  >
-                    <option value="quiet">quiet</option>
-                    <option value="friendly">friendly</option>
-                    <option value="lively">lively</option>
-                  </select>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={form.outdoors}
-                    onChange={(e) => setForm({ ...form, outdoors: e.target.checked })}
-                  />
-                  Outdoors
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={form.pays}
-                    onChange={(e) => setForm({ ...form, pays: e.target.checked })}
-                  />
-                  This pays the person
-                </label>
+                  <label className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Feels</span>
+                    <select
+                      value={form.social}
+                      onChange={(e) =>
+                        setForm({ ...form, social: e.target.value as NewListing["social"] })
+                      }
+                      className="focus-ink rounded-lg border border-border bg-background px-3 py-2"
+                    >
+                      <option value="quiet">quiet</option>
+                      <option value="friendly">friendly</option>
+                      <option value="lively">lively</option>
+                    </select>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={form.outdoors}
+                      onChange={(e) => setForm({ ...form, outdoors: e.target.checked })}
+                    />
+                    Outdoors
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={form.pays}
+                      onChange={(e) => setForm({ ...form, pays: e.target.checked })}
+                    />
+                    This pays the person
+                  </label>
                 </div>
-              )}
+              )}}
             </div>
 
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
