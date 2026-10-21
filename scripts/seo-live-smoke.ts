@@ -49,16 +49,13 @@ function escapedRegExp(value: string): string {
 }
 
 function extractLocations(xml: string): string[] {
-  return Array.from(
-    xml.matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/gi),
-    (match) => (match[1] ?? "").replace(/&amp;/g, "&").trim(),
+  return Array.from(xml.matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/gi), (match) =>
+    (match[1] ?? "").replace(/&amp;/g, "&").trim(),
   );
 }
 
 function isPrivatePath(pathname: string): boolean {
-  return PRIVATE_PATHS.some(
-    (path) => pathname === path || pathname.startsWith(path + "/"),
-  );
+  return PRIVATE_PATHS.some((path) => pathname === path || pathname.startsWith(path + "/"));
 }
 
 /** Every URL must be canonical, same-origin HTTPS, non-private and unique. */
@@ -83,7 +80,9 @@ function validateSitemapLocations(
         failures.push(label + ": private route must not be listed: " + url.pathname);
       }
       if (url.search || url.hash) {
-        failures.push(label + ": canonical sitemap URL must not contain query or fragment: " + location);
+        failures.push(
+          label + ": canonical sitemap URL must not contain query or fragment: " + location,
+        );
       }
 
       const canonical = url.origin + url.pathname;
@@ -123,8 +122,13 @@ function validateUrlset(
   if (exactRequiredPaths) {
     const actual = parsed.map((url) => url.pathname).sort();
     const expected = [...requiredPaths].sort();
-    if (actual.length !== expected.length || actual.some((path, index) => path !== expected[index])) {
-      failures.push(label + ": fixed-pages sitemap must contain exactly the configured public paths");
+    if (
+      actual.length !== expected.length ||
+      actual.some((path, index) => path !== expected[index])
+    ) {
+      failures.push(
+        label + ": fixed-pages sitemap must contain exactly the configured public paths",
+      );
     }
   }
 }
@@ -142,7 +146,9 @@ export function evaluateSeoSmoke(
     "sitemap.xml": documents.sitemap,
     homepage: documents.homepage,
   })) {
-    if (document.networkError) failures.push(label + ": request failed (" + document.networkError + ")");
+    if (document.networkError) {
+      failures.push(label + ": request failed (" + document.networkError + ")");
+    }
     if (document.status !== 200) {
       failures.push(label + ": expected HTTP 200, received " + document.status);
     }
@@ -191,7 +197,9 @@ export function evaluateSeoSmoke(
     }
     for (const path of indexedPaths) {
       if (!(SITEMAP_CHILD_PATHS as readonly string[]).includes(path)) {
-        failures.push("sitemap.xml: unmonitored child sitemap " + path + "; add an explicit smoke contract");
+        failures.push(
+          "sitemap.xml: unmonitored child sitemap " + path + "; add an explicit smoke contract",
+        );
       }
     }
 
@@ -206,7 +214,9 @@ export function evaluateSeoSmoke(
 
       const label = "sitemap child " + path;
       const document = child.document;
-      if (document.networkError) failures.push(label + ": request failed (" + document.networkError + ")");
+      if (document.networkError) {
+        failures.push(label + ": request failed (" + document.networkError + ")");
+      }
       if (document.status !== 200) {
         failures.push(label + ": expected HTTP 200, received " + document.status);
       }
@@ -335,12 +345,22 @@ export async function runSeoSmoke(): Promise<number> {
   console.log("Origin: " + origin);
   for (const [label, document] of Object.entries({ robots, sitemap, homepage })) {
     console.log(
-      "- " + label + ": HTTP " + document.status + "; content-type " + (document.contentType ?? "(none)"),
+      "- " +
+        label +
+        ": HTTP " +
+        document.status +
+        "; content-type " +
+        (document.contentType ?? "(none)"),
     );
   }
   for (const child of sitemapChildren) {
     console.log(
-      "- " + child.path + ": HTTP " + child.document.status + "; content-type " + (child.document.contentType ?? "(none)"),
+      "- " +
+        child.path +
+        ": HTTP " +
+        child.document.status +
+        "; content-type " +
+        (child.document.contentType ?? "(none)"),
     );
   }
   if (failures.length) {
