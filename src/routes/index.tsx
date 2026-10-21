@@ -49,6 +49,17 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
+function sameBounds(a: GeoBounds | null, b: GeoBounds | null): boolean {
+  return Boolean(
+    a &&
+      b &&
+      a.minLat === b.minLat &&
+      a.maxLat === b.maxLat &&
+      a.minLng === b.minLng &&
+      a.maxLng === b.maxLng,
+  );
+}
+
 function Home() {
   const [layers, setLayers] = useState<LayerId[]>([]);
   const [mobileListOpen, setMobileListOpen] = useState(false);
@@ -61,6 +72,10 @@ function Home() {
   const [view, setView] = useState<MapView | null>(null);
   const [viewportBounds, setViewportBounds] = useState<GeoBounds | null>(null);
   const [exploredSlug, setExploredSlug] = useState<string | null>(null);
+  const expectedViewportBounds = useMemo(
+    () => (view && isViewportQueryable(view) ? geoBoundsForViewport(view) : null),
+    [view],
+  );
 
   // Debounce the transient view; a pointer move should not trigger a request.
   // This changes the records shown, never the selected discovery locality.
@@ -68,17 +83,15 @@ function Home() {
     // Cancel the previous rectangle as soon as a new pan/zoom begins, instead
     // of letting obsolete requests compete during the debounce interval.
     void queryClient.cancelQueries({ queryKey: ["world-viewport"] });
-    if (!view) {
+    if (!expectedViewportBounds) {
       setViewportBounds(null);
       return;
     }
     const timer = window.setTimeout(() => {
-      setViewportBounds(
-        isViewportQueryable(view) ? geoBoundsForViewport(view) : null,
-      );
+      setViewportBounds(expectedViewportBounds);
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [view, queryClient]);
+  }, [expectedViewportBounds, queryClient]);
   const exploredPlace = exploredSlug && index ? index.bySlug.get(exploredSlug) : null;
   const discoveryPlace = exploredPlace ?? place;
 
@@ -120,7 +133,8 @@ function Home() {
   const regionName = ancestors[0]?.name ?? "";
   const placeBlurb = place?.blurb || PLACE_FALLBACK.blurb;
 
-  const viewportLoaded = Boolean(viewportBounds && viewportPage);
+  const viewportMatchesView = sameBounds(viewportBounds, expectedViewportBounds);
+  const viewportLoaded = Boolean(viewportMatchesView && viewportPage);
   const mapSourceEntries = useMemo(
     () => (viewportLoaded && viewportPage ? mergeViewportEntries(viewportPage.items, all) : all),
     [all, viewportLoaded, viewportPage],
@@ -169,11 +183,17 @@ function Home() {
         " unpinned" +
         (viewportLoaded && viewportPage?.hasMore ? " · page full; more may exist" : "")
       : mapPartition.unpinned.length + " unpinned · map view preparing";
-  const mapLoading = viewportBounds ? !viewportPage && viewportFetching : worldLoading;
-  const mapError = viewportBounds ? viewportError && !viewportPage : worldError;
-  const mapRefreshError = Boolean(viewportBounds && viewportPage && viewportRefreshError);
+  const viewportPending = Boolean(expectedViewportBounds && !viewportMatchesView);
+  const viewportRequestIsCurrent = Boolean(viewportBounds && viewportMatchesView);
+  const mapLoading =
+    viewportPending ||
+    (viewportRequestIsCurrent ? !viewportPage && viewportFetching : worldLoading);
+  const mapError = viewportRequestIsCurrent ? viewportError && !viewportPage : worldError;
+  const mapRefreshError = Boolean(
+    viewportRequestIsCurrent && viewportPage && viewportRefreshError,
+  );
   const viewportTooBroad = Boolean(view && !isViewportQueryable(view));
-  const refetchMap = viewportBounds ? refetchViewport : refetchWorld;
+  const refetchMap = viewportRequestIsCurrent ? refetchViewport : refetchWorld;
   const canChangeListScope =
     showAllLoaded ||
     !view ||
