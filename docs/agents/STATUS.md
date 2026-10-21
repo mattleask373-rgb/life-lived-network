@@ -25,21 +25,24 @@
 - The Grok-inspired visual direction is being implemented in the canonical application; do not rebuild a second frontend or restore old branches wholesale.
 - Current main includes the Grok-inspired home redesign. Extend the current component system surface-by-surface.
 - Lovable remains an editing/sync path, not authority for domain contracts. GitHub main, reviewed changes and tests are the integration source of truth.
-- The current integration candidate is draft PR #211 (`integration/grok-redesign-ui-current-main-2026-10-21`, head `023eac1cc6789db783836443c3bb9041a780a8e0`, originally based on `006a98c...`). Exact-head Verify passed in [run #39519544983](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39519544983). It is three commits behind current main and still needs manual visual, keyboard, screen-reader and photo QA.
-- Draft PR #216 (`integration/grok-map-list-sync-2026-10-21`, head `83434f54c2bdbc0c4830803740d12750271479c1`) stacks on #211. Exact-head Verify passed in [run #39520456514](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39520456514): 46 test files / 347 tests, lint 0 errors / 7 warnings, production build succeeded. It pairs in-view listings with the existing `LivingMap`, keeps unpinned items in the list, and clearly labels the broader mode “Show all loaded records.” Manual QA remains.
-- Draft PR #213 (`integration/grok-traveller-current-main-2026-10-21-v2`, head `ed04b8c3778b87b60739625043033f5fd1e84d0f`) also stacks on #211; exact-head Verify passed in [run #39519664036](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39519664036). It changes Journey and Road Trip surfaces only; manual QA remains.
-- PR #212 is the earlier Journey/Road Trip branch with a recorded Prettier/lint failure [run #39519498330](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39519498330); tests/build were skipped. Treat it as superseded by #213 unless a human chooses otherwise.
-- PR #210 is the open documentation-only handoff draft. It now contains a parity matrix, branch/CI status and source-provenance caveats; it is based on `006a98c...` and needs to be reconciled before any human merge.
+- Draft PR #211 (`integration/grok-redesign-ui-current-main-2026-10-21`, latest head `e7b732d25cd951f3ab3c1007257442563e361336`) is the design/accessibility foundation. Its newest commit adds a source-checkpoint note only; exact-head Verify passed in [run #39520719116](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39520719116). It remains based on the older `006a98c...` ancestry and needs main-base reconciliation plus manual visual, keyboard, screen-reader and photo QA.
+- Draft PR #220 (`integration/grok-map-list-sync-main-2026-10-21`, head `e8fd148fa0223707fd317b80b19a47944c0bf1a2`) is the current-main map/list synchronization candidate. It is based directly on `30c2877f93ee0218e7fee5e365ee55101f8b3afd` and exact-head Verify passed in [run #39520945717](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39520945717): 45 test files / 342 tests, lint 0 errors / 7 warnings, production build succeeded. It has three changed files; manual visual/keyboard/screen-reader QA remains.
+- PR #216 is closed unmerged as superseded. Its prior Verify passed, but it was stacked on a moving parent; use #220 only as the map/list review target.
+- Draft PR #213 (`integration/grok-traveller-current-main-2026-10-21-v2`, head `ed04b8c3778b87b60739625043033f5fd1e84d0f`) covers Journey/Road Trip only. Its exact-head Verify passed in [run #39519664036](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39519664036) on the previous parent head; retarget/reconcile and rerun Verify after #211's current parent state is settled. Manual QA remains.
+- PR #212 is the historical Journey/Road Trip branch with a Prettier/lint failure in [run #39519498330](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39519498330); tests/build were skipped. Treat it as superseded by #213.
+- PR #210 is the open documentation-only handoff draft. It now includes the parity matrix, current PR/CI status, source provenance caveat and this status snapshot. This docs PR is based on the older `006a98c...` main ancestor and requires review/base reconciliation before any human merge.
 
 ## Active integration queue (snapshot; verify each head before acting)
 
 ### Design / accessibility
-- #211 — current-main Grok design foundation candidate (parent PR; draft, exact-head Verify passed, manual QA pending).
-- #216 — map/list synchronization dependent on #211 (draft, exact-head Verify passed; manual QA pending).
-- #213 — Journey/Road Trip styling dependent on #211 (draft, exact-head Verify passed; manual QA pending).
-- #212 — previous Journey/Road Trip candidate with lint failure; superseded by #213 for current planning.
+- #211 — Grok design/accessibility foundation, draft; latest head Verify passed, old base ancestry, manual QA pending.
+- #220 — map/list synchronization directly based on current main; draft, exact-head Verify passed, manual QA pending.
+- #216 — closed unmerged as superseded by #220.
+- #213 — Journey/Road Trip styling; draft, Verify passed before the latest #211 parent commit; reconcile and rerun Verify.
+- #212 — previous Journey/Road Trip candidate with lint failure; superseded by #213.
+- #210 — shared redesign handoff and status snapshot; documentation-only draft.
 - #210 — shared redesign handoff / parity matrix (documentation-only draft).
-- The PR branches are based on `006a98c...` / #211's head and current main advanced to `30c2877...`; current files do not overlap the three main-side PlacePicker/PlaceSearch commits, but each PR must be rechecked/rebased/retargeted and exact-head Verify rerun as the parent merges.
+- The old #211/#213 stack and documentation PR #210 still descend from `006a98c...` while current main is `30c2877...`; the three main-side commits touch PlacePicker/PlaceSearch only. #220 is based directly on current main and has no #211 dependency. Do not retarget stacked PRs blindly; reconcile their base and rerun exact-head Verify.
 
 ### WorkOpportunity / ingestion
 - #203 — reviewed WorkOpportunity contract ported onto current main; current-main base, draft. Candidate contract branch.
@@ -67,7 +70,8 @@
 ## Next actions
 
 1. Confirm the actual Lovable Project Settings → Git sync destination is a non-main branch, and have an administrator confirm enforced main protection / required checks. Do not infer either setting from matching SHAs.
-2. Review #211 and complete manual visual, keyboard, screen-reader and photo QA. Human approves/merges it only through the repository's controls; then reconcile #216 and #213 one at a time onto current main and rerun exact-head Verify.
+2. Review #211 and complete manual visual, keyboard, screen-reader and photo QA. Human approves/merges it only through repository controls; reconcile the #213 base after the parent settles.
+3. Review #220 with manual responsive/keyboard/screen-reader QA. Its CI passes on current main; it has no #211 dependency. Do not treat CI as approval to merge.
 3. Obtain the reported original `grok-workspace.zip` (reported SHA-256 `6eae21ffddcb1cd1b62025c416cd979ae2fa500321fce83b158b870c838c72a6`, not independently verified in this environment) or durable screens/source. Record a manifest before claiming full redesign parity.
 4. Choose one WorkOpportunity contract branch (#203 is the current-main candidate), then one downstream staging/surface chain; mark duplicate alternatives superseded.
 5. Reconcile the indexability gate so locality/service metadata and sitemap enumeration use one explainable policy. Verify empty/demo-only pages remain noindex and absent from sitemaps.
