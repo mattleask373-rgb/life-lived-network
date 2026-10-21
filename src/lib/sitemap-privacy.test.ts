@@ -8,10 +8,9 @@ import { Route as RobotsRoute } from "@/routes/robots[.]txt";
 import { Route as SitemapRoute } from "@/routes/sitemap[.]xml";
 
 /**
- * Regression guard: the public sitemaps list fixed public screens only.
- * They never read records, so private, blocked, reported, demonstration or
- * otherwise ineligible entries cannot appear. If record-level sitemaps are
- * added later, they must come with their own eligibility tests.
+ * Regression guard: public screen and dynamic sitemaps must list only canonical
+ * paths. Dynamic locality/service paths are permitted only through the shared
+ * fail-closed evidence gate and are tested separately at the candidate layer.
  */
 type Handler = () => Response | Promise<Response>;
 const handler = (route: unknown): Handler =>
@@ -47,6 +46,7 @@ describe("public sitemap privacy", () => {
   it("robots.txt names the static sitemap for deploy reliability", () => {
     const robots = readFileSync(new URL("../../public/robots.txt", import.meta.url), "utf8");
     expect(robots).toContain(`Sitemap: ${SITE_ORIGIN}/sitemap.xml`);
+    expect(robots).toContain(`Sitemap: ${SITE_ORIGIN}/api/public/sitemap.xml`);
   });
 
   it("static public/sitemap.xml lists exactly the public screens", () => {
@@ -68,6 +68,7 @@ describe("public sitemap privacy", () => {
     expect(text).toBe(robotsTxt());
     for (const path of PRIVATE_PATHS) expect(text).toContain(`Disallow: ${path}`);
     expect(text).toContain(`Sitemap: ${SITE_ORIGIN}/sitemap.xml`);
+    expect(text).toContain(`Sitemap: ${SITE_ORIGIN}/api/public/sitemap.xml`);
   });
 
   it("contains no record-level addresses, ids or query strings", async () => {
@@ -89,7 +90,7 @@ describe("public sitemap privacy", () => {
     expect(PRIVATE_PATHS).toContain("/conversations");
   });
 
-  it("dynamic /sitemap.xml route lists exactly the public screens", async () => {
+  it("dynamic /sitemap.xml route lists the fixed public screens", async () => {
     const { xml, res } = await body(SitemapRoute);
     expect(res.headers.get("content-type")).toContain("xml");
     expect(locs(xml).sort()).toEqual(PUBLIC_PATHS.map((p) => `${SITE_ORIGIN}${p}`).sort());
@@ -98,8 +99,21 @@ describe("public sitemap privacy", () => {
     }
   });
 
-  it("index names only the pages sitemap", async () => {
-    const { xml } = await body(IndexRoute);
-    expect(locs(xml)).toEqual([`${SITE_ORIGIN}/api/public/sitemap-pages.xml`]);
+  it("sitemap index lists fixed pages and only numbered dynamic sitemap shards", async () => {
+    const { xml, res } = await body(IndexRoute);
+    expect(res.headers.get("content-type")).toContain("xml");
+    const listed = locs(xml);
+    expect(listed[0]).toBe(`${SITE_ORIGIN}/api/public/sitemap-pages.xml`);
+    for (const url of listed.slice(1)) {
+      expect(url).toMatch(
+        new RegExp(
+          `^${SITE_ORIGIN.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}/api/public/sitemap-(localities|services)/[1-9][0-9]*\\.xml$`,
+        ),
+      );
+    }
+    expect(new Set(listed).size).toBe(listed.length);
+    for (const path of PRIVATE_PATHS) {
+      expect(listed).not.toContain(`${SITE_ORIGIN}${path}`);
+    }
   });
 });
