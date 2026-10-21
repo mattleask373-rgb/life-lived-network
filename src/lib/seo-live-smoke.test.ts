@@ -133,6 +133,16 @@ describe("public SEO live smoke contract", () => {
     );
   });
 
+  it("rejects a child endpoint that rewrites to another same-origin sitemap", () => {
+    const docs = healthyIndexDocuments();
+    const localities = docs.sitemapChildren?.find((child) => child.path === childPaths[1]);
+    if (!localities) throw new Error("Test fixture is missing the locality child sitemap");
+    localities.document.finalUrl = new URL(childPaths[0]!, origin).toString();
+    expect(evaluateSeoSmoke(docs)).toContain(
+      "sitemap child " + childPaths[1] + ": redirected to unexpected path " + childPaths[0],
+    );
+  });
+
   it("rejects a child sitemap failure and private or cross-origin listed URLs", () => {
     const docs = healthyIndexDocuments();
     const services = docs.sitemapChildren?.find((child) => child.path === childPaths[2]);
