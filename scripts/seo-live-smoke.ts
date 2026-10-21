@@ -64,7 +64,7 @@ export function evaluateSeoSmoke(
     failures.push("robots.txt: expected a text/plain content type");
   }
   const sitemapDirective = new RegExp(
-    `^Sitemap:\s*${escapedRegExp(origin)}\\/sitemap\\.xml\\s*$`,
+    `^Sitemap:\\s*${escapedRegExp(origin)}\\/sitemap\\.xml\\s*$`,
     "im",
   );
   if (!sitemapDirective.test(documents.robots.body)) {
@@ -131,7 +131,7 @@ export function evaluateSeoSmoke(
   if (!/<title>\s*[^<]+<\/title>/i.test(documents.homepage.body)) {
     failures.push("homepage: missing a non-empty title element");
   }
-  if (!/<meta\\b(?=[^>]*\\bname=["']description["'])(?=[^>]*\bcontent=["'][^"']+["'])[^>]*>/i.test(documents.homepage.body)) {
+  if (!/<meta\b(?=[^>]*\bname=["']description["'])(?=[^>]*\bcontent=["'][^"']+["'])[^>]*>/i.test(documents.homepage.body)) {
     failures.push("homepage: missing a non-empty meta description");
   }
 
