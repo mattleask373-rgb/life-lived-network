@@ -24,13 +24,10 @@ import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
 import { KIND_LABEL } from "@/lib/places";
+import { evaluateServiceLocalityPage } from "@/lib/service-locality";
 import { privatePage, publicPage } from "@/lib/seo";
-import {
-  servicePageCopy,
-  servicePageIndexable,
-  servicePageListings,
-  servicePagePath,
-} from "@/lib/service-page";
+import { breadcrumbListSchema, safeJsonLd } from "@/lib/structured-data";
+import { servicePageCopy, servicePageListings, servicePagePath } from "@/lib/service-page";
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import type { WorldEntry } from "@/lib/world-data";
 import { localityPath } from "@/lib/locality-path";
@@ -52,12 +49,16 @@ export const Route = createFileRoute("/$country/$place/$service")({
   },
   head: ({ loaderData }) => {
     if (!loaderData) return privatePage({ path: "", title: "A service", description: "" });
-    const { geography, listings } = loaderData;
-    const path = servicePagePath(geography.place, listings.category);
-    const copy = servicePageCopy(geography.place.name, listings);
-    // Until a page has something genuinely useful on it, it is not offered to
-    // search engines. It still exists for anybody who arrives.
-    return servicePageIndexable(listings)
+    const { geography, entries, listings } = loaderData;
+    const { place } = geography;
+    const path = servicePagePath(place, listings.category);
+    const gate = evaluateServiceLocalityPage({
+      place,
+      serviceSlug: listings.category.slug,
+      entries,
+    });
+    const copy = servicePageCopy(place.name, listings);
+    return gate.status === "INDEXABLE"
       ? publicPage({ path, ...copy })
       : privatePage({ path, ...copy });
   },
@@ -132,9 +133,19 @@ function ServicePage() {
   );
   const chain = [...ancestors].reverse();
   const placePath = localityPath(place);
+  const breadcrumbItems = [
+    { name: "Real World Atlas", path: "/" },
+    ...chain.map((step) => ({ name: step.name, path: localityPath(step) })),
+    { name: place.name, path: placePath },
+    { name: category.label, path: servicePagePath(place, category) },
+  ];
 
   return (
     <main className="mx-auto w-full max-w-5xl px-5 pb-24 pt-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbListSchema(breadcrumbItems)) }}
+      />
       <nav aria-label="Where this is" className="text-sm text-muted-foreground">
         <Link className="underline-offset-4 hover:underline" to="/">
           Real World Atlas

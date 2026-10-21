@@ -14,4 +14,11 @@ describe("askPlaceState", () => {
   it("lists the findSupply grounding gate", () => {
     expect(ASK_PLACE_GATES.some((g) => g.includes("findSupply()"))).toBe(true);
   });
+
+  it("keeps the assistant unavailable while publication and cost gates remain open", () => {
+    expect(askPlaceState().reason).toContain("checks that aren't finished");
+    expect(askPlaceState().gates).toContain(
+      "Signed-in access, per-person rate limit and cost cap approved (issue #209)",
+    );
+  });
 });
