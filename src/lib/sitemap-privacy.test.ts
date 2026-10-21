@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { PRIVATE_PATHS, PUBLIC_PATHS, SITE_ORIGIN, robotsTxt } from "./seo";
+import { PRIVATE_PATHS, PUBLIC_PATHS, PUBLIC_SITEMAP_CHILD_PATHS, SITE_ORIGIN, robotsTxt } from "./seo";
 import { Route as IndexRoute } from "@/routes/api/public/sitemap[.]xml";
 import { Route as PagesRoute } from "@/routes/api/public/sitemap-pages[.]xml";
 import { Route as RobotsRoute } from "@/routes/robots[.]txt";
@@ -52,11 +52,7 @@ describe("public sitemap privacy", () => {
   it("static public/sitemap.xml indexes the public child sitemaps", () => {
     const sitemap = readFileSync(new URL("../../public/sitemap.xml", import.meta.url), "utf8");
     expect(sitemap).toContain("<sitemapindex");
-    expect(locs(sitemap)).toEqual([
-      `${SITE_ORIGIN}/api/public/sitemap-pages.xml`,
-      `${SITE_ORIGIN}/api/public/sitemap-localities.xml`,
-      `${SITE_ORIGIN}/api/public/sitemap-services.xml`,
-    ]);
+    expect(locs(sitemap)).toEqual(PUBLIC_SITEMAP_CHILD_PATHS.map((path) => `${SITE_ORIGIN}${path}`));
     for (const path of PRIVATE_PATHS) {
       expect(locs(sitemap)).not.toContain(`${SITE_ORIGIN}${path}`);
     }
@@ -98,10 +94,7 @@ describe("public sitemap privacy", () => {
     const { xml, res } = await body(SitemapRoute);
     expect(res.headers.get("content-type")).toContain("xml");
     expect(xml).toContain("<sitemapindex");
-    expect(locs(xml)).toEqual([
-      `${SITE_ORIGIN}/api/public/sitemap-pages.xml`,
-      `${SITE_ORIGIN}/api/public/sitemap-localities.xml`,
-    ]);
+    expect(locs(xml)).toEqual(PUBLIC_SITEMAP_CHILD_PATHS.map((path) => `${SITE_ORIGIN}${path}`));
     for (const path of PRIVATE_PATHS) {
       expect(locs(xml)).not.toContain(`${SITE_ORIGIN}${path}`);
     }
@@ -109,9 +102,6 @@ describe("public sitemap privacy", () => {
 
   it("API sitemap index names the public pages and locality sitemaps", async () => {
     const { xml } = await body(IndexRoute);
-    expect(locs(xml)).toEqual([
-      `${SITE_ORIGIN}/api/public/sitemap-pages.xml`,
-      `${SITE_ORIGIN}/api/public/sitemap-localities.xml`,
-    ]);
+    expect(locs(xml)).toEqual(PUBLIC_SITEMAP_CHILD_PATHS.map((path) => `${SITE_ORIGIN}${path}`));
   });
 });
