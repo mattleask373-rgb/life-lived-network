@@ -187,6 +187,7 @@ export function rowToEntry(
     // Only a real person's posting counts as community activity.
     community: !fromSource,
     quality,
+    ...(fromSource && row.last_checked_at ? { lastCheckedAt: row.last_checked_at } : {}),
     kind: row.kind,
     skills: row.skills,
     ...(photos.length ? { photos: photos.slice(0, 6) } : {}),
