@@ -191,9 +191,7 @@ describe("map viewport", () => {
     });
     expect(Math.abs(fitted.lng)).toBeCloseTo(180);
     expect(fitted.spanLng).toBeLessThan(20);
-    expect(
-      placeEntries([entry("east", 0, 175), entry("west", 0, -175)], fitted),
-    ).toHaveLength(2);
+    expect(placeEntries([entry("east", 0, 175), entry("west", 0, -175)], fitted)).toHaveLength(2);
   });
 
   it("describes the scale it is showing", () => {
