@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_SEO_SMOKE_ORIGIN,
   evaluateSeoSmoke,
+  SITEMAP_CHILD_PATHS as childPaths,
   type SeoSmokeDocuments,
   type SitemapChildSmokeDocument,
   type SmokeDocument,
@@ -23,12 +24,6 @@ const privatePaths = [
   "/partner-tracker",
   "/earn",
 ];
-const childPaths = [
-  "/api/public/sitemap-pages.xml",
-  "/api/public/sitemap-localities.xml",
-  "/api/public/sitemap-services.xml",
-];
-
 function document(path: string, contentType: string, body: string): SmokeDocument {
   return { status: 200, contentType, body, finalUrl: new URL(path, origin).toString() };
 }
@@ -42,7 +37,7 @@ function urlset(paths: string[]): string {
   );
 }
 
-function sitemapIndex(paths: string[]): string {
+function sitemapIndex(paths: readonly string[]): string {
   return (
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
@@ -76,28 +71,20 @@ function healthyDocuments(): SeoSmokeDocuments {
 }
 
 function healthyIndexDocuments(): SeoSmokeDocuments {
-  const children: SitemapChildSmokeDocument[] = [
-    {
-      path: childPaths[0]!,
-      document: document(childPaths[0]!, "application/xml; charset=utf-8", urlset(publicPaths)),
-    },
-    {
-      path: childPaths[1]!,
-      document: document(
-        childPaths[1]!,
-        "application/xml; charset=utf-8",
-        urlset(["/gb/birmingham", "/gb/lisbon"]),
-      ),
-    },
-    {
-      path: childPaths[2]!,
-      document: document(
-        childPaths[2]!,
-        "application/xml; charset=utf-8",
-        urlset(["/gb/birmingham/gardening"]),
-      ),
-    },
-  ];
+  const children: SitemapChildSmokeDocument[] = childPaths.map((path, index) => {
+    const childUrls =
+      index === 0
+        ? publicPaths
+        : index === 1
+          ? ["/gb/birmingham", "/gb/lisbon"]
+          : index === 2
+            ? ["/gb/birmingham/gardening"]
+            : [];
+    return {
+      path,
+      document: document(path, "application/xml; charset=utf-8", urlset(childUrls)),
+    };
+  });
   const docs = healthyDocuments();
   docs.sitemap = document(
     "/sitemap.xml",
