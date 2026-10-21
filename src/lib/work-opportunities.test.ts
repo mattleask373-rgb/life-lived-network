@@ -82,6 +82,50 @@ describe("work opportunity contract", () => {
     });
   });
 
+  it("rejects explicitly unpaid work published as paid work", () => {
+    const contradictory = opportunity({
+      engagementKind: "paid_work",
+      compensation: {
+        status: "explicitly_unpaid",
+        classification: "volunteering",
+      },
+    });
+
+    expect(() => parseWorkOpportunity(contradictory)).toThrow();
+    expect(isPublishableWorkOpportunity(contradictory)).toBe(false);
+  });
+
+  it("keeps explicit unpaid classifications consistent with their engagement kind", () => {
+    const mismatchedVolunteering = opportunity({
+      engagementKind: "skills_exchange",
+      compensation: {
+        status: "explicitly_unpaid",
+        classification: "volunteering",
+      },
+    });
+    expect(() => parseWorkOpportunity(mismatchedVolunteering)).toThrow();
+    expect(isPublishableWorkOpportunity(mismatchedVolunteering)).toBe(false);
+
+    const mismatchedTraining = opportunity({
+      engagementKind: "volunteering",
+      compensation: {
+        status: "explicitly_unpaid",
+        classification: "training",
+      },
+    });
+    expect(() => parseWorkOpportunity(mismatchedTraining)).toThrow();
+    expect(isPublishableWorkOpportunity(mismatchedTraining)).toBe(false);
+
+    expect(
+      parseWorkOpportunity(
+        opportunity({
+          engagementKind: "unpaid_training",
+          compensation: { status: "explicitly_unpaid", classification: "training" },
+        }),
+      ).engagementKind,
+    ).toBe("unpaid_training");
+  });
+
   it("does not infer volunteering from missing pay", () => {
     const unstated = opportunity({
       engagementKind: "not_stated",
