@@ -9,6 +9,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { asBookingState } from "./services";
+import { isPublishableWorkOpportunity } from "./work-opportunities";
 import type { DiscoveryContext, Page } from "./data/contract";
 import {
   type DataQuality,
@@ -58,6 +59,8 @@ export interface ListingRow {
   cancellation?: string;
   imported_at?: string | null;
   last_checked_at?: string | null;
+  /** Optional contract payload; absent until a reviewed source supplies it. */
+  work_opportunity?: unknown;
   origin?: string;
   /** True only for clearly-labelled trial records. */
   demonstration?: boolean;
@@ -152,6 +155,10 @@ export function rowToEntry(
     row.origin === "source" || row.origin === "confirmed" ? row.origin : "resident"
   ) as "resident" | "source" | "confirmed";
   const fromSource = origin !== "resident";
+  // Invalid, draft, unreviewed, or rights-restricted payloads never enter public entries.
+  const workOpportunity = isPublishableWorkOpportunity(row.work_opportunity)
+    ? row.work_opportunity
+    : undefined;
   return {
     id: row.id,
     placeId: row.place_id,
@@ -193,6 +200,10 @@ export function rowToEntry(
     origin,
     ...(provenance?.sourceName ? { sourceName: provenance.sourceName } : {}),
     ...(provenance?.sourceUrl ? { sourceUrl: provenance.sourceUrl } : {}),
+    ...(fromSource && !row.demonstration && row.last_checked_at
+      ? { lastCheckedAt: row.last_checked_at }
+      : {}),
+    ...(workOpportunity ? { workOpportunity } : {}),
     ...(row.ticket_url ? { ticketUrl: row.ticket_url } : {}),
     ...(row.organiser ? { organiser: row.organiser } : {}),
     ...(row.starts_at ? { startsAt: row.starts_at } : {}),
