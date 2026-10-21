@@ -60,7 +60,7 @@ describe("shared public SEO indexability policy", () => {
 
   it("uses an explicit route-specific threshold when supplied", () => {
     expect(
-      evaluateIndexability(eligible({ publishedRecordCount: 1, minimumPublishedRecords: 1 })).status,
+      evaluateIndexability({ publishedRecordCount: 1, minimumPublishedRecords: 1 }).status,
     ).toBe("INDEXABLE");
     expect(evaluateIndexability(eligible({ publishedRecordCount: 1 })).status).toBe("NOINDEX");
   });
