@@ -103,8 +103,9 @@ describe("rowToEntry is the single normalisation seam", () => {
     });
     expect(sourced.lastCheckedAt).toBe("2026-10-21T09:30:00.000Z");
 
-    expect(rowToEntry({ ...row, last_checked_at: "2026-10-21T09:30:00.000Z" }).lastCheckedAt)
-      .toBeUndefined();
+    expect(
+      rowToEntry({ ...row, last_checked_at: "2026-10-21T09:30:00.000Z" }).lastCheckedAt,
+    ).toBeUndefined();
     expect(
       rowToEntry({
         ...row,
@@ -113,8 +114,9 @@ describe("rowToEntry is the single normalisation seam", () => {
         last_checked_at: "2026-10-21T09:30:00.000Z",
       }).lastCheckedAt,
     ).toBeUndefined();
-    expect(rowToEntry({ ...row, origin: "source", last_checked_at: null }).lastCheckedAt)
-      .toBeUndefined();
+    expect(
+      rowToEntry({ ...row, origin: "source", last_checked_at: null }).lastCheckedAt,
+    ).toBeUndefined();
   });
 
   it("preserves only a valid, human-approved, published and rights-cleared work contract", () => {
@@ -139,8 +141,11 @@ describe("rowToEntry is the single normalisation seam", () => {
     });
     expect(rightsRestricted.workOpportunity).toBeUndefined();
     expect(
-      rowToEntry({ ...row, layer: "work", work_opportunity: { ...approvedOpportunity, compensation: null } })
-        .workOpportunity,
+      rowToEntry({
+        ...row,
+        layer: "work",
+        work_opportunity: { ...approvedOpportunity, compensation: null },
+      }).workOpportunity,
     ).toBeUndefined();
   });
 });
