@@ -49,9 +49,13 @@ describe("public sitemap privacy", () => {
     expect(robots).toContain(`Sitemap: ${SITE_ORIGIN}/sitemap.xml`);
   });
 
-  it("static public/sitemap.xml lists exactly the public screens", () => {
+  it("static public/sitemap.xml indexes the public child sitemaps", () => {
     const sitemap = readFileSync(new URL("../../public/sitemap.xml", import.meta.url), "utf8");
-    expect(locs(sitemap).sort()).toEqual(PUBLIC_PATHS.map((p) => `${SITE_ORIGIN}${p}`).sort());
+    expect(sitemap).toContain("<sitemapindex");
+    expect(locs(sitemap)).toEqual([
+      `${SITE_ORIGIN}/api/public/sitemap-pages.xml`,
+      `${SITE_ORIGIN}/api/public/sitemap-localities.xml`,
+    ]);
     for (const path of PRIVATE_PATHS) {
       expect(locs(sitemap)).not.toContain(`${SITE_ORIGIN}${path}`);
     }
@@ -89,17 +93,24 @@ describe("public sitemap privacy", () => {
     expect(PRIVATE_PATHS).toContain("/conversations");
   });
 
-  it("dynamic /sitemap.xml route lists exactly the public screens", async () => {
+  it("dynamic /sitemap.xml route indexes both public child sitemaps", async () => {
     const { xml, res } = await body(SitemapRoute);
     expect(res.headers.get("content-type")).toContain("xml");
-    expect(locs(xml).sort()).toEqual(PUBLIC_PATHS.map((p) => `${SITE_ORIGIN}${p}`).sort());
+    expect(xml).toContain("<sitemapindex");
+    expect(locs(xml)).toEqual([
+      `${SITE_ORIGIN}/api/public/sitemap-pages.xml`,
+      `${SITE_ORIGIN}/api/public/sitemap-localities.xml`,
+    ]);
     for (const path of PRIVATE_PATHS) {
       expect(locs(xml)).not.toContain(`${SITE_ORIGIN}${path}`);
     }
   });
 
-  it("index names only the pages sitemap", async () => {
+  it("API sitemap index names the public pages and locality sitemaps", async () => {
     const { xml } = await body(IndexRoute);
-    expect(locs(xml)).toEqual([`${SITE_ORIGIN}/api/public/sitemap-pages.xml`]);
+    expect(locs(xml)).toEqual([
+      `${SITE_ORIGIN}/api/public/sitemap-pages.xml`,
+      `${SITE_ORIGIN}/api/public/sitemap-localities.xml`,
+    ]);
   });
 });
