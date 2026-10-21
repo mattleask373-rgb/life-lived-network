@@ -1,7 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { PRIVATE_PATHS, PUBLIC_PATHS, PUBLIC_SITEMAP_CHILD_PATHS, SITE_ORIGIN, robotsTxt } from "./seo";
+import {
+  PRIVATE_PATHS,
+  PUBLIC_PATHS,
+  PUBLIC_SITEMAP_CHILD_PATHS,
+  SITE_ORIGIN,
+  robotsTxt,
+} from "./seo";
 import { Route as IndexRoute } from "@/routes/api/public/sitemap[.]xml";
 import { Route as PagesRoute } from "@/routes/api/public/sitemap-pages[.]xml";
 import { Route as RobotsRoute } from "@/routes/robots[.]txt";
@@ -52,7 +58,9 @@ describe("public sitemap privacy", () => {
   it("static public/sitemap.xml indexes the public child sitemaps", () => {
     const sitemap = readFileSync(new URL("../../public/sitemap.xml", import.meta.url), "utf8");
     expect(sitemap).toContain("<sitemapindex");
-    expect(locs(sitemap)).toEqual(PUBLIC_SITEMAP_CHILD_PATHS.map((path) => `${SITE_ORIGIN}${path}`));
+    expect(locs(sitemap)).toEqual(
+      PUBLIC_SITEMAP_CHILD_PATHS.map((path) => `${SITE_ORIGIN}${path}`),
+    );
     for (const path of PRIVATE_PATHS) {
       expect(locs(sitemap)).not.toContain(`${SITE_ORIGIN}${path}`);
     }
