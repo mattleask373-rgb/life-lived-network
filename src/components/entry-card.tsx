@@ -1,5 +1,6 @@
-import { ImageOff } from "lucide-react";
+import { useId } from "react";
 
+import { ImageOff } from "lucide-react";
 import { LAYERS, type WorldEntry } from "@/lib/world-data";
 import { asBookingState, BOOKING_LABEL, isService, providerLine } from "@/lib/services";
 import { cardPhoto, NO_PHOTO_LABEL } from "@/lib/entry-card-view";
@@ -11,9 +12,8 @@ const CHIP =
   "inline-flex items-center rounded-full border border-border bg-background px-2 py-0.5 text-[0.7rem] text-muted-foreground";
 
 /**
- * A photo-led card. The body contains no interactive descendants, so when
- * clickable it is a single native <button> (Enter/Space for free, no nested
- * controls). Photos come only from the entry's own source-backed records.
+ * A photo-led card with a native, stretched action button separate from its
+ * semantic content. Photos come only from the entry's source-backed records.
  */
 export function EntryCard({
   entry,
@@ -27,6 +27,13 @@ export function EntryCard({
   const layer = LAYERS.find((l) => l.id === entry.layer);
   const service = isService(entry);
   const photo = cardPhoto(entry);
+  const interactive = Boolean(onOpen);
+  const titleId = useId();
+  const descriptionId = useId();
+
+  const handleActivate = () => {
+    onOpen?.(entry);
+  };
 
   const body = (
     <>
@@ -67,41 +74,50 @@ export function EntryCard({
             {eventDate(entry.startsAt, entry.timezone)}
           </p>
         ) : null}
-        <h3 className="mt-1 font-display text-lg leading-snug">{entry.title}</h3>
-        {/* A service leads with who provides it; everything else leads with where. */}
-        {service ? <p className="mt-1 text-sm text-foreground/80">{providerLine(entry)}</p> : null}
-        <p className="mt-1 text-sm text-muted-foreground">
-          {entry.place} · {entry.neighbourhood}
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {entry.startsAt ? "" : `${entry.when} · `}
-          {duration(entry.minutes)} · {money(entry.cost, entry.currency)}
-        </p>
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        <h3 id={titleId} className="mt-1 font-display text-lg leading-snug">
+          {entry.title}
+        </h3>
+        <div id={descriptionId}>
+          {/* A service leads with who provides it; everything else leads with where. */}
           {service ? (
-            <span className={CHIP}>{BOOKING_LABEL[asBookingState(entry.bookingState)]}</span>
+            <p className="mt-1 text-sm text-foreground/80">{providerLine(entry)}</p>
           ) : null}
-          <TrustChip entry={entry} />
-          {entry.origin === "source" && entry.sourceName ? (
-            <span className={CHIP}>Listed by {entry.sourceName}</span>
-          ) : null}
+          <p className="mt-1 text-sm text-muted-foreground">
+            {entry.place} · {entry.neighbourhood}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {entry.startsAt ? "" : `${entry.when} · `}
+            {duration(entry.minutes)} · {money(entry.cost, entry.currency)}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {service ? (
+              <span className={CHIP}>{BOOKING_LABEL[asBookingState(entry.bookingState)]}</span>
+            ) : null}
+            <TrustChip entry={entry} />
+            {entry.origin === "source" && entry.sourceName ? (
+              <span className={CHIP}>Listed by {entry.sourceName}</span>
+            ) : null}
+          </div>
+          {note ? <p className="mt-2 text-sm italic text-foreground/80">{note}</p> : null}
         </div>
-        {note ? <p className="mt-2 text-sm italic text-foreground/80">{note}</p> : null}
       </div>
     </>
   );
 
-  const shell = "card-paper block w-full overflow-hidden rounded-2xl text-left";
-
-  if (!onOpen) return <article className={shell}>{body}</article>;
+  const shell = "card-paper relative block w-full overflow-hidden rounded-2xl text-left";
 
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(entry)}
-      className={`${shell} focus-ink transition-shadow hover:shadow-lift`}
-    >
+    <article className={interactive ? `${shell} transition-shadow hover:shadow-lift` : shell}>
+      {interactive ? (
+        <button
+          type="button"
+          aria-labelledby={titleId}
+          aria-describedby={descriptionId}
+          onClick={handleActivate}
+          className="focus-ink focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring absolute inset-0 z-10 appearance-none rounded-2xl border-0 bg-transparent p-0"
+        />
+      ) : null}
       {body}
-    </button>
+    </article>
   );
 }

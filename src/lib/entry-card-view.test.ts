@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { cardPhoto } from "./entry-card-view";
+import { cardPhoto, usableSourcePhotos } from "./entry-card-view";
+import type { SourcePhoto } from "./world-data";
 
 const p = (o: Partial<{ url: string; alt: string; credit: string }> = {}) => ({
   url: "https://example.org/a.jpg",
@@ -15,8 +16,20 @@ describe("cardPhoto", () => {
     expect(cardPhoto({ title: "T", photos: [] })).toBeNull();
   });
 
-  it("skips photos without a URL rather than inventing one", () => {
+  it("skips photos without a usable URL rather than inventing one", () => {
     expect(cardPhoto({ title: "T", photos: [p({ url: " " })] })).toBeNull();
+  });
+
+  it("ignores malformed runtime URLs and null photo records", () => {
+    const malformed = [
+      null,
+      p({ url: "  " }),
+      { ...p(), url: null },
+      { ...p(), url: 123 },
+    ] as unknown as SourcePhoto[];
+
+    expect(usableSourcePhotos(malformed)).toEqual([]);
+    expect(cardPhoto({ title: "T", photos: malformed })).toBeNull();
   });
 
   it("uses the source alt text and credit", () => {

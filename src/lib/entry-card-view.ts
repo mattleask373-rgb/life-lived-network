@@ -4,6 +4,17 @@
  */
 import type { SourcePhoto, WorldEntry } from "./world-data";
 
+/** Filter source photo records to entries with a usable URL. Be defensive at
+ * this presentation boundary because imported/provider data may be malformed. */
+export function usableSourcePhotos(
+  photos: readonly SourcePhoto[] | null | undefined,
+): SourcePhoto[] {
+  return (photos ?? []).filter((photo): photo is SourcePhoto => {
+    const url: unknown = (photo as { url?: unknown } | null | undefined)?.url;
+    return typeof url === "string" && url.trim().length > 0;
+  });
+}
+
 export interface CardPhoto {
   url: string;
   alt: string;
@@ -12,7 +23,7 @@ export interface CardPhoto {
 
 /** First source-backed photo with a usable URL, or null for the neutral fallback. */
 export function cardPhoto(entry: Pick<WorldEntry, "photos" | "title">): CardPhoto | null {
-  const photo = (entry.photos ?? []).find((p: SourcePhoto) => p.url.trim().length > 0);
+  const photo = usableSourcePhotos(entry.photos)[0];
   if (!photo) return null;
   return {
     url: photo.url,

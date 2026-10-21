@@ -68,6 +68,22 @@ export function LivingMap({
   const frame = useRef<HTMLDivElement | null>(null);
   const drag = useRef<{ x: number; y: number } | null>(null);
   const [moved, setMoved] = useState(false);
+  const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
+
+  // Measure the actual viewport so marker clustering respects the 44px controls.
+  useEffect(() => {
+    const node = frame.current;
+    if (!node) return;
+    const measure = () => setFrameSize({ width: node.clientWidth, height: node.clientHeight });
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   // A new locality (or its first activity) resets the view to fit it.
   useEffect(() => {
@@ -86,10 +102,15 @@ export function LivingMap({
 
   const placed = useMemo(() => placeEntries(entries, view), [entries, view]);
   const scale = scaleOf(view);
-  // Wide views cluster; close up, every pin is its own.
+  // Each threshold matches the 48px space needed by a 44px target plus a small gap.
+  const fallbackCell = scale === "neighbourhood" ? 12 : 8;
+  const clusterCellX =
+    frameSize.width > 0 ? Math.min(50, (48 / frameSize.width) * 100) : fallbackCell;
+  const clusterCellY =
+    frameSize.height > 0 ? Math.min(50, (48 / frameSize.height) * 100) : fallbackCell;
   const clusters = useMemo(
-    () => clusterPlaced(placed, scale === "neighbourhood" ? 3 : 8),
-    [placed, scale],
+    () => clusterPlaced(placed, clusterCellX, clusterCellY),
+    [placed, clusterCellX, clusterCellY],
   );
 
   const onPointerDown = (e: React.PointerEvent) => {
@@ -119,7 +140,9 @@ export function LivingMap({
   return (
     <div
       ref={frame}
-      className="relative h-full w-full touch-none select-none overflow-hidden rounded-xl border border-border bg-land"
+      className="relative h-full w-full touch-none select-none overflow-hidden rounded-2xl border border-border bg-land shadow-paper"
+      role="region"
+      aria-label={centreName ? `Map around ${centreName}` : "Map of recorded places"}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -173,7 +196,7 @@ export function LivingMap({
               onClick={() => onSelect(first)}
               aria-label={`${first.title} — ${first.place}`}
               aria-pressed={active}
-              className="focus-ink absolute -translate-x-1/2 -translate-y-full"
+              className="focus-ink absolute flex h-11 w-11 -translate-x-1/2 -translate-y-full items-end justify-center"
               style={{ left: `${cluster.left}%`, top: `${cluster.top}%` }}
             >
               <span className="flex flex-col items-center">
@@ -197,7 +220,7 @@ export function LivingMap({
             type="button"
             onClick={() => change(zoomView({ ...view, lat: view.lat, lng: view.lng }, 0.45))}
             aria-label={`${cluster.entries.length} things here — zoom in to see them`}
-            className="focus-ink absolute -translate-x-1/2 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-full border border-card bg-card/90 text-sm shadow-lift hover:scale-110"
+            className="focus-ink absolute -translate-x-1/2 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full border border-card bg-card/95 text-sm font-semibold shadow-lift hover:scale-110"
             style={{ left: `${cluster.left}%`, top: `${cluster.top}%` }}
           >
             {cluster.entries.length}
@@ -211,7 +234,7 @@ export function LivingMap({
           type="button"
           onClick={() => change(zoomView(view, 1 / 1.5))}
           aria-label="Zoom in"
-          className="focus-ink grid h-9 w-9 place-items-center rounded-full border border-border bg-card shadow-lift"
+          className="focus-ink grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-lift"
         >
           <Plus size={16} />
         </button>
@@ -219,7 +242,7 @@ export function LivingMap({
           type="button"
           onClick={() => change(zoomView(view, 1.5))}
           aria-label="Zoom out"
-          className="focus-ink grid h-9 w-9 place-items-center rounded-full border border-border bg-card shadow-lift"
+          className="focus-ink grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-lift"
         >
           <Minus size={16} />
         </button>
@@ -231,7 +254,7 @@ export function LivingMap({
               setMoved(false);
             }}
             aria-label={centreName ? `Back to ${centreName}` : "Back to where you are"}
-            className="focus-ink grid h-9 w-9 place-items-center rounded-full border border-border bg-card shadow-lift"
+            className="focus-ink grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-lift"
           >
             <Crosshair size={16} />
           </button>
@@ -256,13 +279,17 @@ export function LivingMap({
         >
           <p>We couldn't load this area.</p>
           {onRetry ? (
-            <button type="button" className="focus-ink mt-2 underline" onClick={onRetry}>
+            <button
+              type="button"
+              className="focus-ink mt-2 inline-flex min-h-11 items-center underline underline-offset-4"
+              onClick={onRetry}
+            >
               Try again
             </button>
           ) : null}
         </div>
       ) : entries.length === 0 ? (
-        <p className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-card/95 p-3 text-center text-sm text-muted-foreground shadow-paper">
+        <p className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card/95 p-4 text-center text-sm text-muted-foreground shadow-paper">
           Nothing has been recorded in this view yet.
         </p>
       ) : null}
