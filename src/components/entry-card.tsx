@@ -74,27 +74,31 @@ export function EntryCard({
             {eventDate(entry.startsAt, entry.timezone)}
           </p>
         ) : null}
-        <h3 id={titleId} className="mt-1 font-display text-lg leading-snug">{entry.title}</h3>
+        <h3 id={titleId} className="mt-1 font-display text-lg leading-snug">
+          {entry.title}
+        </h3>
         <div id={descriptionId}>
-        {/* A service leads with who provides it; everything else leads with where. */}
-        {service ? <p className="mt-1 text-sm text-foreground/80">{providerLine(entry)}</p> : null}
-        <p className="mt-1 text-sm text-muted-foreground">
-          {entry.place} · {entry.neighbourhood}
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {entry.startsAt ? "" : `${entry.when} · `}
-          {duration(entry.minutes)} · {money(entry.cost, entry.currency)}
-        </p>
-        <div className="mt-3 flex flex-wrap gap-1.5">
+          {/* A service leads with who provides it; everything else leads with where. */}
           {service ? (
-            <span className={CHIP}>{BOOKING_LABEL[asBookingState(entry.bookingState)]}</span>
+            <p className="mt-1 text-sm text-foreground/80">{providerLine(entry)}</p>
           ) : null}
-          <TrustChip entry={entry} />
-          {entry.origin === "source" && entry.sourceName ? (
-            <span className={CHIP}>Listed by {entry.sourceName}</span>
-          ) : null}
-        </div>
-        {note ? <p className="mt-2 text-sm italic text-foreground/80">{note}</p> : null}
+          <p className="mt-1 text-sm text-muted-foreground">
+            {entry.place} · {entry.neighbourhood}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {entry.startsAt ? "" : `${entry.when} · `}
+            {duration(entry.minutes)} · {money(entry.cost, entry.currency)}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {service ? (
+              <span className={CHIP}>{BOOKING_LABEL[asBookingState(entry.bookingState)]}</span>
+            ) : null}
+            <TrustChip entry={entry} />
+            {entry.origin === "source" && entry.sourceName ? (
+              <span className={CHIP}>Listed by {entry.sourceName}</span>
+            ) : null}
+          </div>
+          {note ? <p className="mt-2 text-sm italic text-foreground/80">{note}</p> : null}
         </div>
       </div>
     </>
