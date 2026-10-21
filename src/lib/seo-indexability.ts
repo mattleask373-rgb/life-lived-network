@@ -108,9 +108,7 @@ export function isFreshIndexableRecord(entry: WorldEntry, now: number): boolean 
     // missing source-check evidence as unknown, never as current. The narrow
     // structural type lets the reviewed freshness PR add this field without
     // creating a competing WorldEntry model in this policy change.
-    const lastCheckedAt = (
-      entry as WorldEntry & { lastCheckedAt?: string | null }
-    ).lastCheckedAt;
+    const lastCheckedAt = (entry as WorldEntry & { lastCheckedAt?: string | null }).lastCheckedAt;
     if (!lastCheckedAt) return false;
     const checkedAt = Date.parse(lastCheckedAt);
     if (!Number.isFinite(checkedAt) || checkedAt > now) return false;
