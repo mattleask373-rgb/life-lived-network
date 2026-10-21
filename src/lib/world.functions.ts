@@ -11,10 +11,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 
 import { decodeCursor, pageLimit, toPage, type DiscoveryContext, type Page } from "./data/contract";
-import { asDataError } from "./data/errors";
+import { asDataError, DataError } from "./data/errors";
 import { rowToEntry, type ListingRow } from "./listings";
 import { assertQueryableGeoBounds } from "./geo-bounds";
-import { assertLocalityFilterBounded, LOCALITY_FILTER_CAP } from "./data/locality-scope";
+import { isLocalityScopeFilterable, MAX_LOCALITY_FILTER_IDS } from "./data/locality-scope";
 import type { SourcePhoto, WorldEntry } from "./world-data";
 
 export const getWorld = createServerFn({ method: "GET" })
@@ -66,7 +66,12 @@ async function readWorld(
     if (!context.bounds) {
       // Check after canonical hierarchy expansion: large parents may exceed the
       // cap even when the client did not supply descendant IDs.
-      assertLocalityFilterBounded(insideIds);
+      if (!isLocalityScopeFilterable(insideIds)) {
+        throw new DataError(
+          "SCOPE_TOO_WIDE",
+          `Selected locality has ${insideIds.length} descendants; one filter supports at most ${MAX_LOCALITY_FILTER_IDS}.`,
+        );
+      }
     }
 
     let query = supabase
@@ -226,7 +231,7 @@ async function readWorld(
     return page;
   } catch (error) {
     // Preserve cancellation as cancellation; it is not a user-facing data failure.
-    if (signal.aborted) throw error;
+    if (signal.aborted || (error instanceof Error && error.name === "AbortError")) throw error;
     throw asDataError(error);
   }
 }

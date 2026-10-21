@@ -1,31 +1,25 @@
 import { describe, expect, it } from "vitest";
 
-import { DataError } from "./errors";
-import { assertLocalityFilterBounded, LOCALITY_FILTER_CAP } from "./locality-scope";
+import { isLocalityScopeFilterable, MAX_LOCALITY_FILTER_IDS } from "./locality-scope";
 
-describe("locality discovery filter scope", () => {
-  it("allows a locality scope at the configured cap", () => {
-    expect(() =>
-      assertLocalityFilterBounded(Array.from({ length: LOCALITY_FILTER_CAP }, (_, i) => String(i))),
-    ).not.toThrow();
+describe("bounded locality filter scope", () => {
+  it("accepts a locality scope at the configured filter limit", () => {
+    expect(
+      isLocalityScopeFilterable(
+        Array.from({ length: MAX_LOCALITY_FILTER_IDS }, (_, i) => String(i)),
+      ),
+    ).toBe(true);
   });
 
-  it("rejects an oversized locality scope instead of widening the read", () => {
-    let caught: unknown;
-    try {
-      assertLocalityFilterBounded(
-        Array.from({ length: LOCALITY_FILTER_CAP + 1 }, (_, i) => String(i)),
-      );
-    } catch (error) {
-      caught = error;
-    }
-
-    expect(caught).toBeInstanceOf(DataError);
-    expect((caught as DataError).code).toBe("INVALID_CONTEXT");
-    expect((caught as Error).message).not.toContain("401");
+  it("rejects a locality scope that would otherwise drop the selected place filter", () => {
+    expect(
+      isLocalityScopeFilterable(
+        Array.from({ length: MAX_LOCALITY_FILTER_IDS + 1 }, (_, i) => String(i)),
+      ),
+    ).toBe(false);
   });
 
-  it("allows an explicitly unfiltered top-level discovery scope", () => {
-    expect(() => assertLocalityFilterBounded([])).not.toThrow();
+  it("allows an empty filter so the caller can use an explicit single-place predicate", () => {
+    expect(isLocalityScopeFilterable([])).toBe(true);
   });
 });

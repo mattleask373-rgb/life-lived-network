@@ -1,18 +1,10 @@
-import { DataError } from "./errors";
-
-/** Keep locality IDs under the safe filter budget enforced by the server query. */
-export const LOCALITY_FILTER_CAP = 400;
-
 /**
- * Reject an oversized scope instead of omitting the place_id predicate.
- * An unfiltered query can return records from elsewhere and falsely label them
- * as belonging to the selected locality.
+ * A single PostgREST IN filter should not be built from an unbounded list of
+ * descendant locality IDs. Callers must fail closed rather than silently omit
+ * the locality predicate when a hierarchy grows beyond this bound.
  */
-export function assertLocalityFilterBounded(placeIds: readonly string[]): void {
-  if (placeIds.length > LOCALITY_FILTER_CAP) {
-    throw new DataError(
-      "INVALID_CONTEXT",
-      `Locality filter exceeded the ${LOCALITY_FILTER_CAP}-place limit.`,
-    );
-  }
+export const MAX_LOCALITY_FILTER_IDS = 400;
+
+export function isLocalityScopeFilterable(placeIds: readonly string[]): boolean {
+  return placeIds.length <= MAX_LOCALITY_FILTER_IDS;
 }
