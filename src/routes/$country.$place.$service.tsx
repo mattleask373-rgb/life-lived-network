@@ -33,6 +33,7 @@ import {
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import type { WorldEntry } from "@/lib/world-data";
 import { localityPath } from "@/lib/locality-path";
+import { breadcrumbListJsonLd, jsonLdScript } from "@/lib/structured-data";
 
 export const Route = createFileRoute("/$country/$place/$service")({
   loader: async ({ params }) => {
@@ -56,9 +57,24 @@ export const Route = createFileRoute("/$country/$place/$service")({
     const copy = servicePageCopy(geography.place.name, listings);
     // Until a page has something genuinely useful on it, it is not offered to
     // search engines. It still exists for anybody who arrives.
-    return servicePageIndexable(listings)
-      ? publicPage({ path, ...copy })
-      : privatePage({ path, ...copy });
+    if (!servicePageIndexable(listings)) return privatePage({ path, ...copy });
+
+    return {
+      ...publicPage({ path, ...copy }),
+      scripts: [
+        jsonLdScript(
+          breadcrumbListJsonLd([
+            { name: "Real World Atlas", path: "/" },
+            ...[...geography.ancestors].reverse().map((step) => ({
+              name: step.name,
+              path: localityPath(step),
+            })),
+            { name: geography.place.name, path: localityPath(geography.place) },
+            { name: listings.category.label, path },
+          ]),
+        ),
+      ],
+    };
   },
   component: ServicePage,
   errorComponent: ServiceError,
