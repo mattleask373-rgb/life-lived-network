@@ -27,7 +27,8 @@ const geography = buildPlaceIndex([
 ]);
 
 function rowsFor(placeId: string, count: number, demonstration = false): PublicListingSitemapRow[] {
-  return Array.from({ length: count }, () => ({
+  return Array.from({ length: count }, (_, index) => ({
+    id: `${placeId}-${demonstration ? "demo" : "real"}-${index}`,
     place_id: placeId,
     demonstration,
     // Input ordering is significant; production passes the listing query's
