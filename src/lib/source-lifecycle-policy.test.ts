@@ -135,9 +135,7 @@ describe("public source lifecycle policy", () => {
     expect(decide([record({ sourceUrl: "javascript:alert(1)" })])).toMatchObject({
       eligible: false,
     });
-    expect(
-      decide([record({ sourceUrl: "https://user:pass@source.example/event" })]),
-    ).toMatchObject({
+    expect(decide([record({ sourceUrl: "https://user:pass@source.example/event" })])).toMatchObject({
       eligible: false,
     });
     expect(decide([record({ sourceState: "unknown" })])).toMatchObject({ eligible: false });
