@@ -4,6 +4,8 @@ import { buildPlaceIndex, type Place } from "./places";
 import {
   indexableLocalityPaths,
   LOCALITY_SITEMAP_LISTING_SCAN_LIMIT,
+  readBoundedSitemapPages,
+  SitemapSourceLimitError,
   type PublicListingSitemapRow,
 } from "./locality-sitemap";
 
