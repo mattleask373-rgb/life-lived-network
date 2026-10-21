@@ -175,6 +175,7 @@ export function robotsTxt(): string {
     "# for environments that serve TanStack Start server routes; all list only",
     "# PUBLIC_PATHS.",
     `Sitemap: ${SITE_ORIGIN}/sitemap.xml`,
+    `Sitemap: ${SITE_ORIGIN}/api/public/sitemap.xml`,
     "",
   ];
   return lines.join("\n");
