@@ -117,9 +117,9 @@ describe("public source lifecycle policy", () => {
   });
 
   it("does not describe paused or credential-blocked sources as freshly checked", () => {
-    expect(
-      decide([record()], [source({ enabled: false })]).dataQualityOverride,
-    ).toBe("may have changed");
+    expect(decide([record()], [source({ enabled: false })]).dataQualityOverride).toBe(
+      "may have changed",
+    );
     expect(
       decide([record()], [source({ status: "requires_credentials" })]).dataQualityOverride,
     ).toBe("may have changed");
@@ -137,7 +137,9 @@ describe("public source lifecycle policy", () => {
     });
     expect(
       decide([record({ sourceUrl: "https://user:pass@source.example/event" })]),
-    ).toMatchObject({ eligible: false });
+    ).toMatchObject({
+      eligible: false,
+    });
     expect(decide([record({ sourceState: "unknown" })])).toMatchObject({ eligible: false });
   });
 
