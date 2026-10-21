@@ -75,24 +75,33 @@ export function CapabilityPanel() {
 
   const currentServiceAreas = data?.serviceAreas ?? [];
   const chosenAreas = currentServiceAreas
-    .filter((area) => area.relation !== "travelling_through")
+    .filter((area) => area.relation === "serves")
+    .map((area) => area.placeId);
+  const chosenAvailableIn = currentServiceAreas
+    .filter((area) => area.relation === "available_in")
     .map((area) => area.placeId);
   const chosenTravelThrough = currentServiceAreas
     .filter((area) => area.relation === "travelling_through")
     .map((area) => area.placeId);
-  const saveServiceAreas = (servicePlaceIds: string[], travellingThroughPlaceIds: string[]) => {
+  const saveServiceAreas = (
+    servicePlaceIds: string[],
+    availableInPlaceIds: string[],
+    travellingThroughPlaceIds: string[],
+  ) => {
     areas.mutate({
       data: {
         serviceAreas: buildServiceAreaSelections(
           currentServiceAreas,
           servicePlaceIds,
+          availableInPlaceIds,
           travellingThroughPlaceIds,
         ),
       },
     });
   };
   const atServiceAreaLimit =
-    chosenAreas.length + chosenTravelThrough.length >= MAX_SERVICE_AREA_SELECTIONS;
+    chosenAreas.length + chosenAvailableIn.length + chosenTravelThrough.length >=
+    MAX_SERVICE_AREA_SELECTIONS;
   const chosenPrefs = data?.preferences ?? [];
   const chosenGives = data?.contributions.map((c) => c.contribution) ?? [];
   const earning = data?.earningPreference ?? "unstated";
@@ -323,6 +332,44 @@ export function CapabilityPanel() {
                 onClick={() =>
                   saveServiceAreas(
                     on ? chosenAreas.filter((id) => id !== p.id) : [...chosenAreas, p.id],
+                    chosenAvailableIn.filter((id) => id !== p.id),
+                    chosenTravelThrough.filter((id) => id !== p.id),
+                  )
+                }
+                aria-pressed={on}
+                className={`focus-ink rounded-full border px-3 py-1.5 text-sm ${
+                  on
+                    ? "border-transparent bg-secondary text-secondary-foreground"
+                    : "border-border bg-card text-muted-foreground"
+                }`}
+              >
+                {p.name}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="card-paper p-5">
+        <h2 className="text-xl">Places you're around</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          This means you say you're around here; it is not the same as offering a service, and it
+          does not mean you're currently available.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(places ?? []).map((p) => {
+            const on = chosenAvailableIn.includes(p.id);
+            return (
+              <button
+                key={p.id}
+                type="button"
+                disabled={areas.isPending || (!on && atServiceAreaLimit)}
+                onClick={() =>
+                  saveServiceAreas(
+                    chosenAreas.filter((id) => id !== p.id),
+                    on
+                      ? chosenAvailableIn.filter((id) => id !== p.id)
+                      : [...chosenAvailableIn, p.id],
                     chosenTravelThrough.filter((id) => id !== p.id),
                   )
                 }
@@ -357,6 +404,7 @@ export function CapabilityPanel() {
                 onClick={() =>
                   saveServiceAreas(
                     chosenAreas.filter((id) => id !== p.id),
+                    chosenAvailableIn.filter((id) => id !== p.id),
                     on
                       ? chosenTravelThrough.filter((id) => id !== p.id)
                       : [...chosenTravelThrough, p.id],
