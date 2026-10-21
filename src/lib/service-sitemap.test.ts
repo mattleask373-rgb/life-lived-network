@@ -51,13 +51,21 @@ function entry(overrides: Partial<WorldEntry> = {}): WorldEntry {
 }
 
 function rowsFor(entries: WorldEntry[]): PublicListingSitemapRow[] {
-  return entries.map((value) => ({ id: value.id, place_id: "city", demonstration: value.demonstration ?? false }));
+  return entries.map((value) => ({
+    id: value.id,
+    place_id: "city",
+    demonstration: value.demonstration ?? false,
+  }));
 }
 
 describe("service sitemap indexability", () => {
   it("includes canonical service-in-place paths when a genuine service exists", () => {
     const cleaner = entry();
-    const paths = indexableServicePaths(index, rowsFor([cleaner]), new Map([[cleaner.id, cleaner]]));
+    const paths = indexableServicePaths(
+      index,
+      rowsFor([cleaner]),
+      new Map([[cleaner.id, cleaner]]),
+    );
     expect(paths).toContain("/gb/birmingham/cleaning");
     expect(paths).toContain("/gb/west-midlands/cleaning");
   });
@@ -68,12 +76,22 @@ describe("service sitemap indexability", () => {
   });
 
   it("does not infer a service category from an unrelated record", () => {
-    const unrelated = entry({ id: "x", kind: "event", title: "An evening together", summary: "Music and chat", skills: [] });
-    expect(indexableServicePaths(index, rowsFor([unrelated]), new Map([[unrelated.id, unrelated]]))).toEqual([]);
+    const unrelated = entry({
+      id: "x",
+      kind: "event",
+      title: "An evening together",
+      summary: "Music and chat",
+      skills: [],
+    });
+    expect(
+      indexableServicePaths(index, rowsFor([unrelated]), new Map([[unrelated.id, unrelated]])),
+    ).toEqual([]);
   });
 
   it("uses only the first 60 records the service page renders", () => {
-    const demos = Array.from({ length: 60 }, (_, i) => entry({ id: `demo-${i}`, demonstration: true }));
+    const demos = Array.from({ length: 60 }, (_, i) =>
+      entry({ id: `demo-${i}`, demonstration: true }),
+    );
     const cleaner = entry({ id: "after-first-page" });
     const rows = [...rowsFor(demos), ...rowsFor([cleaner])];
     const entries = new Map([...demos, cleaner].map((value) => [value.id, value]));
@@ -83,7 +101,9 @@ describe("service sitemap indexability", () => {
   it("fails closed when the bounded source scan is incomplete", () => {
     const cleaner = entry();
     expect(
-      indexableServicePaths(index, rowsFor([cleaner]), new Map([[cleaner.id, cleaner]]), { complete: false }),
+      indexableServicePaths(index, rowsFor([cleaner]), new Map([[cleaner.id, cleaner]]), {
+        complete: false,
+      }),
     ).toEqual([]);
   });
 });
