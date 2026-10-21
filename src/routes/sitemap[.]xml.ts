@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { PUBLIC_PATHS, sitemapXml, XML_HEADERS } from "@/lib/seo";
+import { sitemapIndexXml, XML_HEADERS } from "@/lib/seo";
 
 /**
  * Dynamic sitemap.xml. Prefer this over platform defaults or missing static
@@ -11,7 +11,7 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: () =>
-        new Response(sitemapXml(PUBLIC_PATHS.map((path) => ({ path }))), {
+        new Response(\n          sitemapIndexXml(["/api/public/sitemap-pages.xml", "/api/public/sitemap-localities.xml"]),\n          {
           headers: XML_HEADERS,
         }),
     },
