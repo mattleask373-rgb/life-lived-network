@@ -17,7 +17,8 @@ import { publicServerClient } from "./supabase-public.server";
 
 const PLACE_SELECT =
   "id, parent_id, kind, name, slug, country_code, timezone, currency, lat, lng, blurb";
-const LISTING_SELECT = "place_id, starts_at, created_at, data_quality, status, cancellation, demonstration";
+const LISTING_SELECT =
+  "place_id, starts_at, created_at, data_quality, status, cancellation, demonstration";
 const QUERY_PAGE_SIZE = 1000;
 
 export async function fetchPublicLocalitySitemapPaths(): Promise<string[]> {
@@ -38,11 +39,7 @@ export async function fetchPublicLocalitySitemapPaths(): Promise<string[]> {
   // Fetch one bounded, globally ordered stream and propagate records through
   // the canonical hierarchy in memory. This avoids one query per locality.
   // One sentinel row beyond the cap detects truncation.
-  for (
-    let offset = 0;
-    offset <= LOCALITY_SITEMAP_LISTING_SCAN_LIMIT;
-    offset += QUERY_PAGE_SIZE
-  ) {
+  for (let offset = 0; offset <= LOCALITY_SITEMAP_LISTING_SCAN_LIMIT; offset += QUERY_PAGE_SIZE) {
     const end = Math.min(offset + QUERY_PAGE_SIZE - 1, LOCALITY_SITEMAP_LISTING_SCAN_LIMIT);
     const { data, error } = await supabase
       .from("listings")
