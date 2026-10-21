@@ -35,3 +35,15 @@ Status may be maintained in:
 - `docs/agents/STATUS.md` (lightweight, human-readable)
 - GitHub Issues with labels
 - Future automation under explicit policy
+
+## Scheduled repository-contract probe (not an agent executor)
+
+`.github/workflows/agent-control-plane-probe.yml` defines a read-only GitHub Actions probe on an hourly schedule (minute 17) plus manual dispatch. Once merged to the default branch and observed running, each successful run records a UTC heartbeat, revision, ref and workflow-run URL in the Actions job summary. It checks only that the canonical control-plane docs exist and that three mandatory guardrails remain present.
+
+**Permissions and side effects:** `contents: read`; checkout disables persisted credentials; no Supabase/API credentials are supplied; no database or external provider is contacted; no model is called; no repository, production, user or task state is mutated by the probe.
+
+**Interpretation:** a green probe means the repository probe ran and its documentation checks passed at the reported revision. It does *not* mean an agent is alive, a queue is being processed, leases/heartbeats are persisted, the control-plane migrations are installed, or production is healthy. Do not label it “24/7 AI agent active.”
+
+GitHub scheduled workflows run only from the default branch and can be delayed or dropped under load. Use this as low-cost observability, not a minute-critical scheduler. A real executor remains blocked on control-plane reconciliation (#116), hosted non-production adversarial proof (#117), an approved provider adapter (#118), truthful operator telemetry (#119), and the authenticated-scope boundary (#115). See [GitHub's schedule event documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows).
+
+The scheduled job does not satisfy issue #121's acceptance criterion for an end-to-end provider-neutral agent task; it is a safe first reliability probe only.
