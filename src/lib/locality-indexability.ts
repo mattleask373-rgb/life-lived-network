@@ -36,7 +36,8 @@ export function evaluateLocalityIndexability(input: {
     demonstrationOnly: input.entries.length > 0 && genuine.length === 0,
     informationComplete: Boolean(
       input.place.name.trim() &&
-      (input.place.blurb.trim() || genuine.some((entry) => entry.title.trim() && entry.summary.trim())),
+      (input.place.blurb.trim() ||
+        genuine.some((entry) => entry.title.trim() && entry.summary.trim())),
     ),
     recordsFresh: genuine.every((entry) => isFreshIndexableRecord(entry, now)),
     provenancePresent: genuine.every(hasIndexableProvenance),
