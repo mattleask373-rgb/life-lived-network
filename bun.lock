@@ -1,5 +1,5 @@
 {
-  "lockfileVersion": 3,
+  "lockfileVersion": 2,
   "configVersion": 1,
   "workspaces": {
     "": {
@@ -89,9 +89,7 @@
     },
   },
   "overrides": {
-    "drizzle-kit": {
-      "@esbuild-kit/esm-loader": "npm:tsx@^4.21.0",
-    },
+    "@esbuild-kit/esm-loader": "npm:tsx@^4.21.0",
     "js-yaml": "4.3.2",
     "rolldown": "1.2.1",
   },
