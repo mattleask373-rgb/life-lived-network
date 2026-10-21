@@ -14,6 +14,7 @@ import { decodeCursor, pageLimit, toPage, type DiscoveryContext, type Page } fro
 import { asDataError } from "./data/errors";
 import { rowToEntry, type ListingRow } from "./listings";
 import { assertQueryableGeoBounds } from "./geo-bounds";
+import { assertLocalityFilterBounded, LOCALITY_FILTER_CAP } from "./data/locality-scope";
 import type { SourcePhoto, WorldEntry } from "./world-data";
 
 export const getWorld = createServerFn({ method: "GET" })
@@ -52,6 +53,11 @@ async function readWorld(
     // the request itself the bottleneck; the browser only says where it is.
     let insideIds = context.placeIds ?? [];
     let insideSlugs = context.placeSlugs ?? [];
+    if (!context.bounds) {
+      // A selected locality must never silently become a global listing query
+      // when its descendant set exceeds PostgREST's practical filter budget.
+      assertLocalityFilterBounded(insideIds);
+    }
     if (!context.bounds && context.placeId && !insideIds.length) {
       const { loadPlaceIndex } = await import("./place-index.server");
       const { descendantIdsOf } = await import("./places");
@@ -90,13 +96,12 @@ async function readWorld(
         query = query.or(`lng.gte.${bounds.minLng},lng.lte.${bounds.maxLng}`);
       }
     } else {
-      // A very wide locality selection can name more IDs than a sensible filter.
-      // Drop the filter instead of hiding activity from an arbitrary ID slice;
-      // the bounded page limit still applies.
-      const LOCALITY_FILTER_CAP = 400;
-      if (insideIds.length && insideIds.length <= LOCALITY_FILTER_CAP) {
+      // The scope cap was checked before constructing the query. Empty
+      // descendant lists remain scoped to the canonical selected place rather
+      // than widening into an unfiltered read.
+      if (insideIds.length) {
         query = query.in("place_id", insideIds);
-      } else if (!insideIds.length && context.placeId) {
+      } else if (context.placeId) {
         query = query.eq("place_id", context.placeId);
       }
     }
