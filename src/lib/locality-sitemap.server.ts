@@ -105,6 +105,10 @@ async function loadPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot> {
       id: row.id,
       place_id: row.place_id,
       demonstration: row.demonstration ?? false,
+      // This snapshot deliberately uses anonymous RLS, not service-role reads.
+      // Until it consumes the canonical source-lifecycle decision, imported
+      // rows remain in the ordered window but cannot qualify a sitemap URL.
+      sourceLifecycleEligible: row.origin !== "source" && row.origin !== "confirmed",
     })),
   };
 }
