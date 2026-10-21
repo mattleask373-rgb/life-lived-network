@@ -20,3 +20,4 @@ Disallow: /earn
 # for environments that serve TanStack Start server routes; all list only
 # PUBLIC_PATHS.
 Sitemap: https://life-lived-network.lovable.app/sitemap.xml
+Sitemap: https://life-lived-network.lovable.app/api/public/sitemap.xml
