@@ -1,44 +1,72 @@
-# PR #238 review — "cap and cancel viewport discovery requests" (read-only)
+# Read-only audit: repository linkage, Life List privacy, and the safest next task
 
-Evidence: live diff read from GitHub at head `6276097`, base `integration/phase-2-current-main-2026-10-21`, draft. 5 files (+118/-15). Check runs on exact head: `verify` success (x2), `Supabase Preview` skipped. Installed libs checked locally: `@tanstack/react-start` 1.168.60, `@supabase/supabase-js` ^2.116. No files, branches, GitHub state or settings were changed. This document is the review only; approving it authorises nothing.
+Done as a read-only check on 21 Oct 2026. No files besides this note changed. Nothing was committed, synced, deployed or queried in production. The task list was not updated because the request said not to edit files.
 
-## Verdict
-Directionally correct and safe to keep as draft. Not yet approvable: one High finding carried over from #237 is unaddressed, and boundary/cancellation tests are thin.
+## 1. What can and cannot be verified from this project
 
-## Findings (prioritised)
+| Item | Status | Evidence |
+|---|---|---|
+| The project's own git remotes | Verified | Only Lovable's internal storage and an internal backup. Neither is a GitHub address. |
+| The current editing branch | Verified | An internal edit branch (`edit/edt-2039…`), latest commit `93d9b75`. |
+| GitHub repo `mattleask373-rgb/life-lived-network` | Verified via the public API | Default branch is `main`, and the repo is public. |
+| PR #262 (the 12-month plan) | Verified | Merged, merge commit `520a622`. |
+| Issue #263 (task board) | Verified | Open. Its Step 1 asks the owner to confirm the Lovable target repo and a non-main sync branch. |
+| Which repo Lovable Git sync points at | Not verifiable | Sync settings are not readable from here. |
+| Which branch Lovable syncs to | Not verifiable | Same reason. |
+| Whether the main ruleset is actually enforced | Not verifiable | Issue #263 itself flags conflicting records. |
+| Live production robots.txt, meta tags and sitemap | Not checked | No production fetch was made this turn. |
 
-### High
-1. Refresh failures still hidden. `mapError = viewportBounds ? viewportError && !viewportPage : worldError` (index.tsx:163). A failed refresh with cached data shows no warning or retry. This was review comment 2 on #237 and is not addressed here.
-2. Silent truncation at 200. Viewport read uses `limit: MAX_LIMIT` and never follows `nextCursor`; `hasMore` is ignored. A busy 1.5-degree window can drop records with no "more exist" signal, ordered by `starts_at`, so undated items are cut first. Pre-existing, but the cap makes it the main remaining honesty gap. Needs at least a "showing first 200 — zoom in" state.
+## 2. Life List privacy and search-engine indexing
 
-### Medium
-3. Server cap is correct, including antimeridian. `assertViewportQueryBounds` runs in the `inputValidator`, measures wrapped longitude as `360 - minLng + maxLng`, rejects >1.5 on either axis. Client `isViewportQueryAllowed` checks raw spans and normalised bounds. Note: the map aspect (~1.4) means the longitude limit binds first, so the effective latitude window is about 1.07 degrees. Fine, but should be stated as intended.
-4. Broad zoom sends no query, with honest copy. Too-wide view sets `viewportBounds` to null, which disables the query and falls back to locality records, with the "Zoom in… no broad-area query was sent" status. Gaps: (a) `viewportTooWide` updates instantly while bounds update after 300ms, so for that window the previous viewport page can still be merged under a "too wide" message; (b) the notice sits only in the list content; verify it is perceivable on the map surface on mobile.
-5. Abort errors may be logged as failures. When the client cancels, `.abortSignal(signal)` rejects; `asDataError` maps it to DATA_UNAVAILABLE and `observe("world.page")` likely records it as an error. Treat `AbortError` as cancelled, not failed, to keep the observability numbers honest.
-6. Server-side signal reliability on Workers is unverified. `getRequest().signal` is the right API in this version, but whether workerd aborts it on client disconnect has not been shown. Client-side cancellation stops the wasted browser work either way; server savings are best-effort until proven.
+The promise on the page (`src/routes/life-list.tsx`) is "Only you see this."
 
-### Low / confirmed OK
-7. Signal plumbing is valid. TanStack Query `queryFn({ signal })` goes to `fetchWorld(ctx, { signal })` goes to `getWorld({ data, signal })`. 1.168.60 types accept `signal?: AbortSignal`, and the client fetcher honours it. All five Supabase reads on the path take `.abortSignal(signal)`. The locality path (`loadPlaceIndex`) is not signalled, but the bounds path skips it.
-8. Repeated `.or()` is correct. The installed postgrest-js uses `searchParams.append`, so the antimeridian `or`, the time `or` and the optional `endTime` `or` are all sent and ANDed. This resolves the open concern from the #237 review, where my earlier overwrite reading was wrong for this version.
-9. Null coordinates. Viewport `gte/lte` on lat/lng excludes nulls server-side. Unpinned locality records survive through `mergeViewportEntries(..., all)` and `partitionMapList`. OK.
-10. Locality vs viewport stay separate. Bounds take precedence over place filters in the query only. `setPlaceSlug` and the selected locality are untouched. `findSupply()` is not touched.
-11. `getRequest` is imported from `@tanstack/react-start/server` in a `.functions.ts` module. The build passes on CI. Confirm the client bundle does not include it (the import is handler-only, so it should be stripped).
+What the code actually does:
+- The page uses `publicPage(...)`, so it is indexable and carries a canonical URL.
+- `/life-list` appears in `PUBLIC_PATHS` (`src/lib/seo.ts:97`), so it is listed in the sitemaps.
+- `public/sitemap.xml` contains `/life-list`.
+- `robots.txt` does not disallow it.
 
-## Additional tests needed
-- Exact boundary: span 1.5 allowed, 1.5000001 rejected, on both axes, client and server.
-- Wrapped boundary at exactly 1.5 (e.g. 179.25 to -179.25), and a ±180 normalisation case.
-- Validator-level test that `getWorld` input with broad bounds throws before any query (call the validator, or mock the client and assert it is never called).
-- `fetchWorld` forwards `signal` (mock `getWorld`).
-- Builder test that a wrapped viewport plus `startTime` plus `endTime` produces three `or` params.
-- Abort is classified as cancelled, not DATA_UNAVAILABLE (after the fix in 5).
-- Refresh-failure-with-cache warning plus retry (after the fix in 1).
+Actual data exposure appears low:
+- The list is read from the device's local storage, or from the account's `saved_items` once signed in.
+- A crawler would only see the empty "Nothing saved yet" state with sample suggestions.
+- `saved_items` row-level security was not re-checked this turn.
 
-## Manual checks
-- Mobile (~470px): zoom out past the cap; the notice is visible, the network panel shows no `getWorld` bounds request, and locality records remain.
-- Rapid pan/zoom: earlier requests show as cancelled, and the final list matches the final map.
-- Pan across the Pacific antimeridian at a small span: records from both sides appear.
-- Throttle offline after the first load, then pan: currently no warning (confirms 1).
-- A dense area: confirm whether 200 rows are returned and nothing tells the user (confirms 2).
+Conclusion: no personal data leak was found, but the page's search-engine signals contradict its privacy promise. That is a P1 honesty mismatch, which is what issue #263 Step 3 targets.
 
-## Recommended author actions before review approval
-Fix 1 and 2. Treat aborts as cancelled (5). Close the 300ms stale-merge gap (4a). Add the tests above. Re-confirm `verify` on the final head SHA. Keep #236 and #235 sequencing unchanged.
+An existing fix is open: PR #253, "fix(seo): keep private life list out of indexing and sitemaps".
+- Head `aa2a865`, open, not a draft.
+- It touches `robots.txt`, `sitemap.xml`, `seo.ts`, `seo.test.ts`, `sitemap-privacy.test.ts` and `life-list.tsx`.
+- Its CI and review state, and whether it overlaps #247, #249 and #252, were not checked this turn.
+
+## 3. Risk: project edits syncing to main
+
+- GitHub's default branch is `main`. Lovable Git sync normally targets the default branch unless someone switched it.
+- The synced branch cannot be seen from here, so any accepted Lovable edit may land directly on `main`. That would violate the "never commit to main" rule.
+- Until the owner confirms a non-main sync branch (issue #263, Step 1), treat every Lovable edit as possibly going straight to `main`.
+- Safe default: make code changes only through GitHub PRs, or through a Lovable draft that opens a PR. Do not make direct edits in this project.
+
+## 4. Recommended single next task
+
+Review and converge PR #253. Do not write a new Life List fix, because that would duplicate #253.
+
+Scope:
+- Re-fetch the exact head of #253, its checks and its changed lines.
+- Compare it with the SEO PRs #247, #249 and #252 so only one place decides which pages are public or private.
+- Record the result as an independent review on GitHub. The owner or reviewer posts it; Lovable does not.
+
+Acceptance criteria:
+1. `/life-list` uses `privatePage(...)` and outputs `robots: noindex, nofollow`, with no canonical link.
+2. `/life-list` is in `PRIVATE_PATHS`, not `PUBLIC_PATHS`. A test fails if it ever appears in both lists or in any sitemap: static, `/sitemap.xml` route, or `/api/public/sitemap*.xml`.
+3. `robots.txt` has `Disallow: /life-list`, and a test keeps `robots.txt` in step with `PRIVATE_PATHS`.
+4. The copy still says "Only you see this", and the signed-out (this device only) and signed-in (your account) behaviour is described accurately.
+5. The `verify` check passes on #253's final head SHA. No other SEO PR changes the same lists in a conflicting way.
+6. No database, row-level security, or sync-settings changes are bundled into this task.
+
+Manual checks once the owner approves a publish:
+- Fetch the live `/life-list`, `/robots.txt`, `/sitemap.xml` and the API sitemaps with plain GET requests.
+- Confirm `noindex` is present and `/life-list` is absent from every sitemap.
+
+## 5. Blockers needing a human
+- Confirm Lovable's sync repo and a non-main branch. This blocks any direct edits here.
+- Verify that the main branch ruleset is actually enforced.
+- Run a separate read-only check of `saved_items` row-level security, under the issue #164 access matrix.
