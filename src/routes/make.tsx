@@ -439,40 +439,52 @@ function MakePage() {
                 </span>
               </label>
               <label className="block text-sm">
-                <span className="text-muted-foreground">When, in words</span>
+                <span className="text-muted-foreground">
+                  {kind === "service"
+                    ? "Timing / lead time, if known — not live availability"
+                    : "When, in words"}
+                </span>
                 <input
-                  required
+                  required={kind !== "service"}
                   value={form.when_text}
                   onChange={(e) => setForm({ ...form, when_text: e.target.value })}
-                  placeholder="Tuesday evening, from 21:00"
+                  placeholder={
+                    kind === "service"
+                      ? "By arrangement — exact timing is not confirmed"
+                      : "Tuesday evening, from 21:00"
+                  }
                   className={input}
                 />
               </label>
-              <label className="block text-sm">
-                <span className="text-muted-foreground">Roughly when</span>
-                <select
-                  value={form.band}
-                  onChange={(e) => setForm({ ...form, band: e.target.value as TimeBand })}
-                  className={input}
-                >
-                  {BANDS.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-sm">
-                <span className="text-muted-foreground">How many hours it takes</span>
-                <input
-                  type="number"
-                  min="0.5"
-                  step="0.5"
-                  value={form.hours}
-                  onChange={(e) => setForm({ ...form, hours: e.target.value })}
-                  className={input}
-                />
-              </label>
+              {kind === "service" ? null : (
+                <>
+                  <label className="block text-sm">
+                    <span className="text-muted-foreground">Roughly when</span>
+                    <select
+                      value={form.band}
+                      onChange={(e) => setForm({ ...form, band: e.target.value as TimeBand })}
+                      className={input}
+                    >
+                      {BANDS.filter((band) => band.id !== "by_arrangement").map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block text-sm">
+                    <span className="text-muted-foreground">How many hours it takes</span>
+                    <input
+                      type="number"
+                      min="0.5"
+                      step="0.5"
+                      value={form.hours}
+                      onChange={(e) => setForm({ ...form, hours: e.target.value })}
+                      className={input}
+                    />
+                  </label>
+                </>
+              )}
               <label className="block text-sm">
                 <span className="text-muted-foreground">
                   {form.pays
