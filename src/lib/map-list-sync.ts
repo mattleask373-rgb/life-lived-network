@@ -49,13 +49,13 @@ export function partitionMapList(entries: WorldEntry[], view: MapView | null): M
   };
 }
 
-/** Keep in-view and unpinned entries in their original canonical ordering. */
+/** Keep in-view and unpinned entries ordered, or show every entry already loaded. */
 export function entriesForMapList(
   entries: WorldEntry[],
   partition: MapListPartition,
-  showWholeLocality: boolean,
+  showAllLoaded: boolean,
 ): WorldEntry[] {
-  if (showWholeLocality) return entries;
+  if (showAllLoaded) return entries;
 
   const inView = new Set(partition.inView);
   const unpinned = new Set(partition.unpinned);
