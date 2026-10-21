@@ -11,7 +11,9 @@ const place = {
   blurb: "A factual description of this locality.",
 };
 
-function entry(overrides: Partial<WorldEntry> = {}): WorldEntry {
+function entry(
+  overrides: Partial<WorldEntry> & { lastCheckedAt?: string | null } = {},
+): WorldEntry & { lastCheckedAt?: string | null } {
   return {
     id: "entry-1",
     placeId: place.id,
@@ -98,6 +100,37 @@ describe("locality indexability", () => {
     });
     expect(ungroundedSource.sitemapEligible).toBe(false);
     expect(ungroundedSource.reasons).toContain("missing_provenance");
+  });
+
+  it("requires explicit last-checked and verified freshness evidence for imported records", () => {
+    const base = [entry({ id: "one" }), entry({ id: "two" })];
+    const source = entry({
+      id: "external",
+      origin: "source",
+      sourceName: "Public source",
+      sourceUrl: "https://example.org/listing",
+      quality: "verified",
+    });
+
+    const missingTimestamp = evaluateLocalityIndexability({
+      place,
+      entries: [...base, source],
+      now,
+    });
+    expect(missingTimestamp.sitemapEligible).toBe(false);
+    expect(missingTimestamp.reasons).toContain("stale_or_expired");
+
+    const checkedSource = entry({
+      ...source,
+      lastCheckedAt: new Date(now - 60_000).toISOString(),
+      quality: "recently updated",
+    });
+    const proven = evaluateLocalityIndexability({
+      place,
+      entries: [...base, checkedSource],
+      now,
+    });
+    expect(proven.sitemapEligible).toBe(true);
   });
 
   it("rejects an invalid canonical slug or country segment", () => {
