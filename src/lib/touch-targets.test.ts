@@ -44,5 +44,8 @@ describe("detail panel touch targets", () => {
     expect(styles).toContain("--card: #fffcf7");
     expect(styles).toContain("--primary: #0c6b56");
     expect(styles).toContain("--sage: #e3f2eb");
+    // Keep the shared shadcn accent semantic as a readable action colour.
+    expect(styles).toContain("--accent: oklch(0.652 0.132 46)");
+    expect(styles).toContain("--accent-foreground: oklch(0.985 0.012 92)");
   });
 });
