@@ -70,7 +70,7 @@ describe("map/list synchronization", () => {
     ]);
   });
 
-  it("can show the whole locality without changing or reordering records", () => {
+  it("can show all loaded entries without changing or reordering records", () => {
     const entries = [
       entry("outside", 52.7, -1.89),
       entry("unpinned", null, null),
