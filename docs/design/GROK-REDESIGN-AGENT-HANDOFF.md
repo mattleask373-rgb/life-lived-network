@@ -41,13 +41,55 @@ This handoff does **not** claim that the original Grok workspace export, complet
 8. **Security/data boundaries are separate gates.** No production deploy, schema/RLS/grant/auth changes, data publication, secrets, or live partner activation without explicit owner approval.
 9. **Leave an agent handoff.** Each PR description should state goal, non-goals, base SHA, touched surfaces, tests/evidence, conflicts, rollout/rollback, and human decisions needed. Update `docs/agents/STATUS.md` when the state changes.
 
-## Recommended order
+## Verified integration state — 21 October 2026
 
-1. Reconcile the current `main` and the Grok-inspired home already on it.
-2. Review and integrate the entry-card accessibility work.
-3. Resolve the detail-sheet/map branch and any overlapping formatting-only changes.
-4. Continue surface-by-surface: tokens/shell → cards → place picker → locality/service pages → map/detail sheet → needs/work.
-5. Only after visual integration is stable, continue separately gated grounded-assistant/global-market work.
+This section is an evidence snapshot, not a deployment or merge statement. Recheck head SHAs and checks before acting.
+
+- **Canonical GitHub main:** `006a98c64a52d5bd6028ac5f9457acd31a72746a` (latest checked in this handoff cycle).
+- **#210:** this handoff PR; open draft, documentation-only. It is not part of main.
+- **#211 — accessible redesign foundation:** [PR #211](https://github.com/mattleask373-rgb/life-lived-network/pull/211), branch `integration/grok-redesign-ui-current-main-2026-10-21`, head `023eac1cc6789db783836443c3bb9041a780a8e0`. Exact-head Verify succeeded in run [#39519544983](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39519544983). Still draft; manual visual/accessibility review is outstanding.
+- **#216 — responsive map/list synchronization:** [PR #216](https://github.com/mattleask373-rgb/life-lived-network/pull/216), branch `integration/grok-map-list-sync-2026-10-21`, head `4d514ee968dcc4d08007510dc5252aae981ba92c`, based on the #211 branch. Exact-head Verify succeeded in run [#39520069914](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39520069914): frozen install, lint, 46 test files / 347 tests, and build passed. Seven lint warnings remain; zero lint errors. Still draft and dependent on #211.
+- **#212 — Journey/Road Trip:** [PR #212](https://github.com/mattleask373-rgb/life-lived-network/pull/212), branch `integration/grok-traveller-current-main-2026-10-21`, head `2eebd01b5bb90ad3b073d3b75e97fe7e8d9a5c2a`. Its recorded Verify run [#39519498330](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39519498330) failed at lint/Prettier in `src/lib/map-view.test.ts`; tests/build were skipped. The run checked out an older parent snapshot while #211 was advancing. Do not mark fixed without re-basing/retargeting against the approved parent and passing exact-head Verify.
+- **Branch protection:** a prior repository audit reported main unprotected. This connector has not produced a fresh ruleset/branch-protection result in this cycle; a repository administrator must verify current enforcement and fix it through the approved human process.
+
+## Redesign parity matrix
+
+The original Grok ZIP/screenshots are not currently checked into this repository or directly retrievable by this handoff process. The empty `Grok-new-design` reference file is not the source app. Therefore this is a parity inventory of observable canonical routes and current integration work, **not a claim of complete parity against every original screen**.
+
+| Redesign area | Canonical location | Current status | Next evidence / dependency |
+|---|---|---|---|
+| Global visual foundation | `src/styles.css`, `src/routes/__root.tsx`, shared shell components | **Partial / reused.** Warm tokens and typography are in the current implementation; #211 has reviewed code and reference notes for further alignment. | Compare against the actual source export once supplied; manual contrast and responsive checks. |
+| Home/front door | `src/routes/index.tsx`, `possibility-front-door.tsx`, `place-picker.tsx` | **Existing + partial.** A Grok-inspired home is already in main. #216 proposes the next responsive map/list behavior. | Review #211, then #216; validate the rendered journey. |
+| Map and listing panel | `src/components/living-map.tsx`, `src/lib/map-view.ts`, `src/lib/map-list-sync.ts` | **Partial.** Existing map projection/pan/zoom/clustering remain canonical; #211 adjusts map controls; #216 adds in-view/out-of-view/unpinned partitioning and mobile/desktop layout. No server viewport query is added. | #211 approval and merge first; then retarget/test #216; manual edge-of-viewport checks. |
+| Entry/listing card | `src/components/entry-card.tsx`, `src/lib/entry-card-view.ts` | **Partial / implementation candidate.** Source-backed photos, credits, neutral no-photo state and trust/provenance are kept. #211 separates semantic article content from a named full-card action and adds tests. | Human keyboard/screen-reader review; inspect real source-backed photo and no-photo cases. |
+| Detail sheet/gallery | `src/components/entry-sheet.tsx` | **Partial.** #211 filters unusable image URLs and aligns layout/control styling without inventing media. | Review close/keyboard behavior, photo provenance, 375px/1280px presentation. |
+| Place picker | `src/components/place-picker.tsx`, `src/components/place-search.tsx`, `src/lib/places.ts` | **Existing / needs source-parity review.** Canonical place hierarchy and search stay authoritative; an older visual branch #177 is closed unmerged and must not be imported wholesale. | Compare actual current component against original design material, then make a dedicated bounded slice if needed. |
+| Journey and road trip | `src/routes/journey.tsx`, `src/routes/road-trip.tsx` | **Partial, draft #212.** Styling and touch-target changes are proposed; last recorded Verify failed at lint. | Reconcile parent to #211 and rerun exact-head Verify, then manual journey/form/accessibility QA. |
+| Locality and service pages | `src/routes/$country.$place.index.tsx`, `src/routes/$country.$place.$service.tsx`, locality/service helpers | **Existing functionality; visual parity not yet audited against original screens.** | Later surface-by-surface PR; preserve routing, indexability, provenance and honest quiet states. |
+| Give / Need / Help / Earn / profile and other existing routes | Existing canonical route files and data helpers | **Existing functionality; parity status unverified.** Do not infer designs or copy prototype logic from route names alone. | Inventory the actual screens from the original export, then nominate non-overlapping PRs. |
+| Prototype-only routes/data/auth/store | Prototype `/moments`, hardcoded sample cities, mock store/auth | **Explicitly excluded from canonical runtime.** | Port only a future approved interaction concept through canonical app contracts; never use prototype fixture records as supply. |
+| Empty/error/loading/accessibility states | Existing route/component state handling and regression tests | **Partially covered by code/CI; manual QA not complete.** | Test quiet and busy localities, keyboard, screen reader, contrast, reduced motion and mobile sheet behavior. |
+
+## Ownership and handoff queue
+
+These are role proposals, not confirmed individual assignments.
+
+| Task | Proposed owner role | File / contract scope | Depends on | Completion evidence |
+|---|---|---|---|---|
+| Review #211 design foundation | Human integration reviewer | Files listed in #211; avoid parallel edits to those files | Current-main base `006a98c…` | Review decisions, exact-head Verify and manual accessibility QA |
+| Review #216 map/list behavior | Frontend reviewer + product owner | `src/routes/index.tsx`, `src/lib/map-list-sync.ts`, its tests | #211 approved/merged first | Exact-head Verify, viewport edge tests, mobile/desktop visual and keyboard review |
+| Reconcile #212 Journey/Road Trip | Frontend owner | `src/routes/journey.tsx`, `src/routes/road-trip.tsx`, focused test | #211 parent updated and approved | Current-base diff, passing exact-head Verify and manual journey/form QA |
+| Recover source provenance | Design-source owner | Original ZIP/screenshots/manifest only | Actual archive or accessible share supplied | File exists, origin/date/checksum verified, screen manifest populated |
+| Confirm repository controls | Repository administrator | Main branch/ruleset and Lovable Git settings | Human permission | Current screenshots/API evidence of non-main sync, enforced PR + required checks |
+| Continue source/SEO verification | SEO/release owner | Existing SEO code and hosted response path only | Access to fresh live HTTP evidence | Timestamped robots/sitemap responses; do not change publish settings without approval |
+
+## Current recommended order
+
+1. Keep #211 and #216 as drafts until the parent/child chain is reviewed. The checks passing on #211/#216 are necessary, not sufficient; manual QA remains.
+2. After #211 is approved and merged by a human, retarget/rebase #216 onto current main and rerun Verify; confirm exact base/head and resolve any conflicts before review.
+3. Reconcile #212 against the accepted #211 state, fix/re-run Verify on its exact head, and keep it separate from the map/list scope.
+4. Obtain the actual Grok export/screenshots and record a verified manifest before claiming complete screen parity.
+5. Only after these gates, plan dedicated locality/service and Give/Need/Help/Earn/profile visual slices. Keep AI, ingestion, SEO hosting changes, backend contracts and production settings outside this UI integration unless explicitly scoped and separately approved.
 
 ## Original design package manifest
 
