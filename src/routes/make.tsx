@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { createListing, KINDS, type NewListing } from "@/lib/listings";
+import { SERVICE_CATEGORIES } from "@/lib/service-taxonomy";
+import { parseServiceOfferDraft, ServiceOfferValidationError } from "@/lib/service-offer";
 import { currencySymbol } from "@/components/layer-colour";
 import { useWorldContext } from "@/lib/world-context";
 import { PlacePicker } from "@/components/place-picker";
@@ -36,6 +38,7 @@ const BANDS: { id: TimeBand; label: string }[] = [
   { id: "tonight", label: "Tonight" },
   { id: "tomorrow", label: "Tomorrow" },
   { id: "weekend", label: "At the weekend" },
+  { id: "by_arrangement", label: "By arrangement / no time confirmed" },
 ];
 
 function MakePage() {
@@ -52,6 +55,7 @@ function MakePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [doneKind, setDoneKind] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -70,6 +74,11 @@ function MakePage() {
     people_needed: "",
     accessibility: "",
     contact_note: "",
+    serviceCategory: "",
+    organisation: "",
+    providerNote: "",
+    bookingState: "not_bookable",
+    bookingUrl: "",
   });
 
   useEffect(() => {
