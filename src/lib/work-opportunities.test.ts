@@ -8,7 +8,7 @@ function opportunity(overrides: Record<string, unknown> = {}) {
     engagementKind: "paid_work",
     compensation: {
       status: "stated_paid",
-      amountCents: 3250,
+      amountMinorUnits: 3250,
       currency: "AUD",
       basis: "hour",
     },
@@ -34,20 +34,20 @@ describe("work opportunity contract", () => {
     const parsed = parseWorkOpportunity(opportunity());
     expect(parsed.compensation).toEqual({
       status: "stated_paid",
-      amountCents: 3250,
+      amountMinorUnits: 3250,
       currency: "AUD",
       basis: "hour",
     });
   });
 
   it("rejects fractional, zero, and negative stated pay", () => {
-    for (const amountCents of [12.5, 0, -100]) {
+    for (const amountMinorUnits of [12.5, 0, -100]) {
       expect(() =>
         parseWorkOpportunity(
           opportunity({
             compensation: {
               status: "stated_paid",
-              amountCents,
+              amountMinorUnits,
               currency: "AUD",
               basis: "hour",
             },
@@ -129,7 +129,7 @@ describe("work opportunity contract", () => {
         opportunity({
           compensation: {
             status: "stated_paid",
-            amountCents: 100,
+            amountMinorUnits: 100,
             currency: "AU",
             basis: "hour",
           },
