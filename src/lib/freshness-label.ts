@@ -33,5 +33,5 @@ export function sourceLastCheckedLabel(
     return `${days} ${days === 1 ? "day" : "days"} ago`;
   }
 
-  return `on ${checkedAt.toLocaleString()}`;
+  return `on ${checkedAt.toISOString().slice(0, 10)} UTC`;
 }
