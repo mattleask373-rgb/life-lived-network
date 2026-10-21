@@ -609,7 +609,7 @@ function MakePage() {
                     This pays the person
                   </label>
                 </div>
-              )}}
+              )}
             </div>
 
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
