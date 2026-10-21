@@ -63,7 +63,9 @@ function healthyDocuments(): SeoSmokeDocuments {
     "<title>Real World Atlas</title>\n" +
     '<meta name="description" content="Discover useful things in the real world.">\n' +
     '<meta name="robots" content="index, follow">\n' +
-    '<link rel="canonical" href="' + origin + '/">\n' +
+    '<link rel="canonical" href="' +
+    origin +
+    '/">\n' +
     "</head><body></body></html>";
 
   return {
