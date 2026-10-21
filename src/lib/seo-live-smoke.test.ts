@@ -59,7 +59,7 @@ function healthyDocuments(): SeoSmokeDocuments {
     "Sitemap: " + origin + "/sitemap.xml",
   ].join("\n");
   const homepage =
-    '<!doctype html><html><head>\n' +
+    "<!doctype html><html><head>\n" +
     "<title>Real World Atlas</title>\n" +
     '<meta name="description" content="Discover useful things in the real world.">\n' +
     '<meta name="robots" content="index, follow">\n' +
@@ -148,7 +148,8 @@ describe("public SEO live smoke contract", () => {
       "sitemap child " + childPaths[2] + ": private route must not be listed: /auth",
     );
     expect(failures).toContain(
-      "sitemap child " + childPaths[2] +
+      "sitemap child " +
+        childPaths[2] +
         ": URL is outside the canonical HTTPS origin: https://attacker.example/private",
     );
   });
@@ -159,10 +160,10 @@ describe("public SEO live smoke contract", () => {
     documents.sitemap = {
       status: 404,
       contentType: "text/html; charset=utf-8",
-      body: '<!doctype html><title>Not found</title>',
+      body: "<!doctype html><title>Not found</title>",
       finalUrl: origin + "/sitemap.xml",
     };
-    documents.homepage.body = '<!doctype html><title>Real World Atlas</title>';
+    documents.homepage.body = "<!doctype html><title>Real World Atlas</title>";
     const failures = evaluateSeoSmoke(documents);
     expect(failures).toContain("robots.txt: missing the canonical Sitemap directive");
     expect(failures).toContain("sitemap.xml: expected HTTP 200, received 404");
@@ -174,7 +175,9 @@ describe("public SEO live smoke contract", () => {
     const documents = healthyDocuments();
     documents.sitemap.body = documents.sitemap.body.replace(
       "</urlset>",
-      "<url><loc>" + origin + "/auth</loc></url>" +
+      "<url><loc>" +
+        origin +
+        "/auth</loc></url>" +
         "<url><loc>https://attacker.example/private</loc></url></urlset>",
     );
     const failures = evaluateSeoSmoke(documents);
