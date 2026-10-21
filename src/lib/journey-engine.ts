@@ -74,9 +74,7 @@ function pick(
   used: Set<string>,
   world: WorldEntry[],
 ): WorldEntry | undefined {
-  const pool = world.filter(
-    (e) => e.band === band && !used.has(e.id) && e.kind !== "service",
-  );
+  const pool = world.filter((e) => e.band === band && !used.has(e.id) && e.kind !== "service");
   const scored = pool
     .map((e) => {
       let score = 0;
@@ -157,22 +155,24 @@ export interface HoursBrief {
 
 /** "I have three hours." Returns a small handful from the supplied world. */
 export function whatIsPossible(brief: HoursBrief, world: WorldEntry[]): WorldEntry[] {
-  return world
-    // A service listing is an offer to a potential customer, not an activity
-    // to insert into the person's own three-hour plan.
-    .filter((e) => e.kind !== "service")
-    .filter((e) => e.minutes > 0)
-    .filter((e) => e.minutes <= brief.minutes + 30)
-    .filter((e) => Math.max(0, e.cost) <= brief.spend)
-    .filter((e) => (brief.outdoors ? e.outdoors : true))
-    .map((e) => {
-      let score = 0;
-      if (brief.interests.length && !brief.interests.includes(e.layer)) score += 10;
-      if (e.social !== brief.social) score += 3;
-      score += Math.abs(brief.minutes - e.minutes) / 60;
-      return { e, score };
-    })
-    .sort((a, b) => a.score - b.score)
-    .slice(0, 3)
-    .map((r) => r.e);
+  return (
+    world
+      // A service listing is an offer to a potential customer, not an activity
+      // to insert into the person's own three-hour plan.
+      .filter((e) => e.kind !== "service")
+      .filter((e) => e.minutes > 0)
+      .filter((e) => e.minutes <= brief.minutes + 30)
+      .filter((e) => Math.max(0, e.cost) <= brief.spend)
+      .filter((e) => (brief.outdoors ? e.outdoors : true))
+      .map((e) => {
+        let score = 0;
+        if (brief.interests.length && !brief.interests.includes(e.layer)) score += 10;
+        if (e.social !== brief.social) score += 3;
+        score += Math.abs(brief.minutes - e.minutes) / 60;
+        return { e, score };
+      })
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 3)
+      .map((r) => r.e)
+  );
 }
