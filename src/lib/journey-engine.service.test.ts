@@ -51,14 +51,14 @@ describe("service offers stay out of personal activity planning", () => {
     expect(results.map((result) => result.id)).toEqual(["community-music"]);
   });
 
-  it("does not schedule a service offer into a journey window", () => {
+  it("does not schedule a service offer into a journey window even if it has a time band", () => {
     const service = entry({
       id: "service-cleaning",
       kind: "service",
       title: "Cleaning service",
-      band: "by_arrangement",
-      when: "By arrangement — timing not confirmed",
-      minutes: 0,
+      band: "today",
+      when: "Today",
+      minutes: 60,
     });
     const plan = planJourney(
       {
