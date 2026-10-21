@@ -487,20 +487,29 @@ function MakePage() {
               )}
               <label className="block text-sm">
                 <span className="text-muted-foreground">
-                  {form.pays
-                    ? `What it pays (${currencySymbol(place?.currency)})`
-                    : `What it costs (${currencySymbol(place?.currency)}, 0 for free)`}
+                  {kind === "service"
+                    ? `Typical service price (${currencySymbol(chosen?.currency)}; enter 0 only if free)`
+                    : form.pays
+                      ? `What it pays (${currencySymbol(chosen?.currency)})`
+                      : `What it costs (${currencySymbol(chosen?.currency)}, 0 for free)`}
                 </span>
                 <input
                   type="number"
                   min="0"
+                  required={kind === "service"}
                   value={form.cost}
                   onChange={(e) => setForm({ ...form, cost: e.target.value })}
                   className={input}
                 />
+                {kind === "service" ? (
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    Describe what the price covers in the service details. The platform does not set or verify prices.
+                  </span>
+                ) : null}
               </label>
-              <label className="block text-sm">
-                <span className="text-muted-foreground">Which layer of the map</span>
+              {kind === "service" ? null : (
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">Which layer of the map</span>
                 <select
                   value={form.layer}
                   onChange={(e) => setForm({ ...form, layer: e.target.value as LayerId })}
@@ -512,7 +521,8 @@ function MakePage() {
                     </option>
                   ))}
                 </select>
-              </label>
+                </label>
+              )}
               <label className="block text-sm">
                 <span className="text-muted-foreground">How many people, if it matters</span>
                 <input
