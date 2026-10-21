@@ -44,7 +44,12 @@ export function WorkOpportunityFacts({ entry }: { entry: WorldEntry }) {
         {sourceUrl ? (
           <>
             {" · "}
-            <a href={sourceUrl} target="_blank" rel="noreferrer noopener" className="focus-ink underline">
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="focus-ink underline"
+            >
               Check source
             </a>
           </>
