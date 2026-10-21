@@ -99,8 +99,8 @@
   --secondary-foreground: var(--ink);
   --muted: #f0ede5;
   --muted-foreground: var(--ink-soft);
-  --accent: var(--sage);
-  --accent-foreground: var(--ink);
+  --accent: oklch(0.652 0.132 46);
+  --accent-foreground: oklch(0.985 0.012 92);
   --destructive: oklch(0.512 0.152 28);
   --destructive-foreground: oklch(0.98 0.01 90);
   --border: #e4ded3;
