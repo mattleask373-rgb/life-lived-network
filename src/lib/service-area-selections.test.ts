@@ -26,8 +26,8 @@ describe("service area selection conversion", () => {
         area(BIRMINGHAM, "available_in", "will_travel"),
         area(BRIGHTON, "travelling_through", "anywhere"),
       ],
-      [BIRMINGHAM],
       [],
+      [BIRMINGHAM],
       [BRIGHTON],
     );
 
