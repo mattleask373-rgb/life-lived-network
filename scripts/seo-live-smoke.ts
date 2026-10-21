@@ -60,11 +60,11 @@ export function evaluateSeoSmoke(
     }
   }
 
-  if (!/text\\/plain/i.test(documents.robots.contentType ?? "")) {
+  if (!/text\/plain/i.test(documents.robots.contentType ?? "")) {
     failures.push("robots.txt: expected a text/plain content type");
   }
   const sitemapDirective = new RegExp(
-    `^Sitemap:\\s*${escapedRegExp(origin)}\\/sitemap\\.xml\\s*$`,
+    `^Sitemap:\s*${escapedRegExp(origin)}\\/sitemap\\.xml\\s*$`,
     "im",
   );
   if (!sitemapDirective.test(documents.robots.body)) {
@@ -77,14 +77,14 @@ export function evaluateSeoSmoke(
     }
   }
 
-  if (!/\\b(?:application|text)\\/xml\\b/i.test(documents.sitemap.contentType ?? "")) {
+  if (!/\b(?:application|text)\/xml\b/i.test(documents.sitemap.contentType ?? "")) {
     failures.push("sitemap.xml: expected an XML content type");
   }
-  if (!/<urlset\\b/i.test(documents.sitemap.body)) {
+  if (!/<urlset\b/i.test(documents.sitemap.body)) {
     failures.push("sitemap.xml: response is not a urlset XML document");
   }
   const locations = Array.from(
-    documents.sitemap.body.matchAll(/<loc>\\s*([^<]+?)\\s*<\\/loc>/gi),
+    documents.sitemap.body.matchAll(/<loc>\s*([^<]+?)\s*<\/loc>/gi),
     (match) => (match[1] ?? "").replace(/&amp;/g, "&").trim(),
   );
   if (locations.length < PUBLIC_PATHS.length) {
@@ -113,25 +113,25 @@ export function evaluateSeoSmoke(
     }
   }
 
-  if (!/text\\/html/i.test(documents.homepage.contentType ?? "")) {
+  if (!/text\/html/i.test(documents.homepage.contentType ?? "")) {
     failures.push("homepage: expected an HTML content type");
   }
-  const canonicalTag = documents.homepage.body.match(/<link\\b[^>]*rel=["']canonical["'][^>]*>/i)?.[0];
-  const canonicalHref = canonicalTag?.match(/\\bhref=["']([^"']+)["']/i)?.[1];
+  const canonicalTag = documents.homepage.body.match(/<link\b[^>]*rel=["']canonical["'][^>]*>/i)?.[0];
+  const canonicalHref = canonicalTag?.match(/\bhref=["']([^"']+)["']/i)?.[1];
   if (canonicalHref !== `${origin}/`) {
     failures.push("homepage: missing or incorrect canonical link");
   }
   const robotsTag = documents.homepage.body.match(
-    /<meta\\b(?=[^>]*\\bname=["']robots["'])[^>]*>/i,
+    /<meta\b(?=[^>]*\bname=["']robots["'])[^>]*>/i,
   )?.[0];
-  const robotsContent = robotsTag?.match(/\\bcontent=["']([^"']+)["']/i)?.[1]?.toLowerCase() ?? "";
+  const robotsContent = robotsTag?.match(/\bcontent=["']([^"']+)["']/i)?.[1]?.toLowerCase() ?? "";
   if (!robotsContent.includes("index") || robotsContent.includes("noindex")) {
     failures.push("homepage: robots metadata must permit indexing");
   }
-  if (!/<title>\\s*[^<]+<\\/title>/i.test(documents.homepage.body)) {
+  if (!/<title>\s*[^<]+<\/title>/i.test(documents.homepage.body)) {
     failures.push("homepage: missing a non-empty title element");
   }
-  if (!/<meta\\b(?=[^>]*\\bname=["']description["'])(?=[^>]*\\bcontent=["'][^"']+["'])[^>]*>/i.test(documents.homepage.body)) {
+  if (!/<meta\\b(?=[^>]*\\bname=["']description["'])(?=[^>]*\bcontent=["'][^"']+["'])[^>]*>/i.test(documents.homepage.body)) {
     failures.push("homepage: missing a non-empty meta description");
   }
 
