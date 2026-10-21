@@ -47,7 +47,13 @@ export function CapabilityPanel() {
   const refresh = () => qc.invalidateQueries({ queryKey: ["capability", "mine"] });
   const add = useMutation({ mutationFn: useServerFn(addCapability), onSuccess: refresh });
   const drop = useMutation({ mutationFn: useServerFn(removeCapability), onSuccess: refresh });
-  const areas = useMutation({ mutationFn: useServerFn(setServiceAreas), onSuccess: refresh });
+  const areas = useMutation({
+    mutationFn: useServerFn(setServiceAreas),
+    onSuccess: refresh,
+    // A multi-step replacement can partially succeed without a DB transaction.
+    // Re-fetch after failure so the UI does not retain a stale selection snapshot.
+    onError: refresh,
+  });
   const prefs = useMutation({ mutationFn: useServerFn(setPreferences), onSuccess: refresh });
   const addWindow = useMutation({ mutationFn: useServerFn(addAvailability), onSuccess: refresh });
   const dropWindow = useMutation({
