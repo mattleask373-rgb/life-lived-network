@@ -29,13 +29,12 @@ const geography = buildPlaceIndex([
 ]);
 
 function rowsFor(placeId: string, count: number, demonstration = false): PublicListingSitemapRow[] {
-  return Array.from({ length: count }, (_, index) => ({
+  return Array.from({ length: count }, () => ({
     place_id: placeId,
     demonstration,
     // Input ordering is significant; production passes the listing query's
     // stable order, so the earliest 60 entries are the page that gets rendered.
-    id: `${placeId}-${index}`,
-  })) as PublicListingSitemapRow[];
+  }));
 }
 
 describe("locality sitemap indexability", () => {
