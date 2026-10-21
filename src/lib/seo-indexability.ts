@@ -8,9 +8,7 @@ import type { WorldEntry } from "./world-data";
 
 export type PublicPageKind = "locality" | "service";
 export type IndexabilityStatus =
-  | "INDEXABLE"
-  | "INDEXABLE_WITH_LIMITATIONS"
-  | "NOINDEX"
+  | "INDEXABLE" | "INDEXABLE_WITH_LIMITATIONS" | "NOINDEX"
   | "NOT_PUBLISHED";
 
 export type IndexabilityReason =
@@ -51,7 +49,10 @@ export interface IndexabilityDecision {
   sitemapEligible: boolean;
 }
 
-function makeDecision(status: IndexabilityStatus, reasons: IndexabilityReason[]): IndexabilityDecision {
+function makeDecision(
+  status: IndexabilityStatus,
+  reasons: IndexabilityReason[],
+): IndexabilityDecision {
   return { status, reasons, sitemapEligible: status === "INDEXABLE" };
 }
 
@@ -78,9 +79,7 @@ export function evaluateIndexability(input: IndexabilityInput): IndexabilityDeci
   } else {
     const requested = input.minimumPublishedRecords;
     const minimum =
-      Number.isSafeInteger(requested) && (requested ?? 0) > 0
-        ? (requested as number)
-        : 3;
+      Number.isSafeInteger(requested) && (requested ?? 0) > 0 ? (requested as number) : 3;
     if (count < minimum) reasons.push("below_record_threshold");
   }
 
