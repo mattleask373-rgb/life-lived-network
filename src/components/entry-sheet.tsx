@@ -11,6 +11,7 @@ import {
   providerLine,
   qualificationLine,
 } from "@/lib/services";
+import { usableSourcePhotos } from "@/lib/entry-card-view";
 import { duration, eventDate, layerText, money } from "./layer-colour";
 import { LayerIcon } from "./layer-icon";
 
@@ -32,7 +33,7 @@ export function EntrySheet({
 }) {
   const layer = LAYERS.find((l) => l.id === entry.layer);
   const related = relatedEntries(world, entry);
-  const photos = (entry.photos ?? []).filter((photo) => photo.url.trim().length > 0);
+  const photos = usableSourcePhotos(entry.photos);
   const service = isService(entry);
   const step = nextStepFor(entry);
   // Remember what had focus when the sheet first opened, so closing it puts
