@@ -15,15 +15,7 @@ export const MEASUREMENT_SCHEMA_VERSION = 1 as const;
 
 export type EntryPoint = "home" | "header" | "locality" | "direct";
 export type QueryLengthBucket = "empty" | "1_3" | "4_7" | "8_15" | "16_plus";
-export type LocalityKind =
-  | "country"
-  | "region"
-  | "county"
-  | "city"
-  | "town"
-  | "village"
-  | "neighbourhood"
-  | "unknown";
+export type LocalityKind = "country" | "region" | "county" | "city" | "town" | "village" | "neighbourhood" | "unknown";
 export type ConfidenceBucket = "high" | "medium" | "low" | "unknown";
 export type IntentFamily =
   | "whats_on"
@@ -36,7 +28,13 @@ export type IntentFamily =
   | "help"
   | "unknown";
 export type IntentCertainty = "clear" | "likely" | "unclear";
-export type ResultCountBucket = "zero" | "one" | "two" | "three_to_five" | "six_to_ten" | "eleven_plus";
+export type ResultCountBucket =
+  | "zero"
+  | "one"
+  | "two"
+  | "three_to_five"
+  | "six_to_ten"
+  | "eleven_plus";
 export type FreshnessState = "current" | "aging" | "unknown" | "mixed";
 export type QuietReason =
   | "no_verified_results"
@@ -78,8 +76,20 @@ export type UsefulOutcome =
   | "community_joined"
   | "contribution_received"
   | "other";
-export type ReportedContentKind = "profile" | "listing" | "need" | "message" | "external_link" | "other";
-export type ReportCategory = "spam" | "impersonation" | "unsafe" | "incorrect" | "harassment" | "other";
+export type ReportedContentKind =
+  | "profile"
+  | "listing"
+  | "need"
+  | "message"
+  | "external_link"
+  | "other";
+export type ReportCategory =
+  | "spam"
+  | "impersonation"
+  | "unsafe"
+  | "incorrect"
+  | "harassment"
+  | "other";
 export type ProviderResponse = "responded" | "declined" | "no_response" | "unknown";
 
 interface MeasurementBase {
@@ -180,18 +190,75 @@ export type MeasurementEvent =
 const VALUES = {
   entryPoint: ["home", "header", "locality", "direct"],
   queryLength: ["empty", "1_3", "4_7", "8_15", "16_plus"],
-  localityKind: ["country", "region", "county", "city", "town", "village", "neighbourhood", "unknown"],
+  localityKind: [
+    "country",
+    "region",
+    "county",
+    "city",
+    "town",
+    "village",
+    "neighbourhood",
+    "unknown",
+  ],
   confidence: ["high", "medium", "low", "unknown"],
-  intentFamily: ["whats_on", "local_service", "work", "class_experience", "community", "journey", "time_specific", "help", "unknown"],
+  intentFamily: [
+    "whats_on",
+    "local_service",
+    "work",
+    "class_experience",
+    "community",
+    "journey",
+    "time_specific",
+    "help",
+    "unknown",
+  ],
   certainty: ["clear", "likely", "unclear"],
   resultCount: ["zero", "one", "two", "three_to_five", "six_to_ten", "eleven_plus"],
   freshness: ["current", "aging", "unknown", "mixed"],
-  quietReason: ["no_verified_results", "unknown_locality", "stale_evidence", "scope_too_wide", "source_unavailable", "request_failed", "other"],
-  action: ["view_details", "start_connection", "create_need", "save", "external_action", "contribute", "report"],
+  quietReason: [
+    "no_verified_results",
+    "unknown_locality",
+    "stale_evidence",
+    "scope_too_wide",
+    "source_unavailable",
+    "request_failed",
+    "other",
+  ],
+  action: [
+    "view_details",
+    "start_connection",
+    "create_need",
+    "save",
+    "external_action",
+    "contribute",
+    "report",
+  ],
   targetKind: ["person", "listing", "need", "place", "event", "journey", "service"],
   connectionOutcome: ["accepted", "declined", "withdrawn", "expired", "unknown"],
-  contributionKind: ["time", "skills", "labour", "knowledge", "tools", "vehicle", "transport", "music", "creativity", "translation", "food", "accommodation", "mentoring", "other"],
-  usefulOutcome: ["connection_accepted", "service_completed", "event_attended", "community_joined", "contribution_received", "other"],
+  contributionKind: [
+    "time",
+    "skills",
+    "labour",
+    "knowledge",
+    "tools",
+    "vehicle",
+    "transport",
+    "music",
+    "creativity",
+    "translation",
+    "food",
+    "accommodation",
+    "mentoring",
+    "other",
+  ],
+  usefulOutcome: [
+    "connection_accepted",
+    "service_completed",
+    "event_attended",
+    "community_joined",
+    "contribution_received",
+    "other",
+  ],
   contentKind: ["profile", "listing", "need", "message", "external_link", "other"],
   reportCategory: ["spam", "impersonation", "unsafe", "incorrect", "harassment", "other"],
   providerResponse: ["responded", "declined", "no_response", "unknown"],
@@ -255,65 +322,140 @@ export function parseMeasurementEvent(input: unknown): MeasurementEvent {
       assertExactKeys(input, [...base, "entryPoint", "queryLength"]);
       assertEnum(input.entryPoint, VALUES.entryPoint, "entryPoint");
       assertEnum(input.queryLength, VALUES.queryLength, "queryLength");
-      return { schemaVersion: 1, dayUTC: input.dayUTC, type: input.type, entryPoint: input.entryPoint, queryLength: input.queryLength };
+      return {
+        schemaVersion: 1,
+        dayUTC: input.dayUTC,
+        type: input.type,
+        entryPoint: input.entryPoint,
+        queryLength: input.queryLength,
+      };
     case "locality_resolved":
       assertExactKeys(input, [...base, "countryCode", "localityKind", "confidence"]);
       assertCountryCode(input.countryCode);
       assertEnum(input.localityKind, VALUES.localityKind, "localityKind");
       assertEnum(input.confidence, VALUES.confidence, "confidence");
-      return { schemaVersion: 1, dayUTC: input.dayUTC, type: input.type, countryCode: input.countryCode, localityKind: input.localityKind, confidence: input.confidence };
+      return {
+        schemaVersion: 1,
+        dayUTC: input.dayUTC,
+        type: input.type,
+        countryCode: input.countryCode,
+        localityKind: input.localityKind,
+        confidence: input.confidence,
+      };
     case "intent_resolved":
       assertExactKeys(input, [...base, "intentFamily", "certainty"]);
       assertEnum(input.intentFamily, VALUES.intentFamily, "intentFamily");
       assertEnum(input.certainty, VALUES.certainty, "certainty");
-      return { schemaVersion: 1, dayUTC: input.dayUTC, type: input.type, intentFamily: input.intentFamily, certainty: input.certainty };
+      return {
+        schemaVersion: 1,
+        dayUTC: input.dayUTC,
+        type: input.type,
+        intentFamily: input.intentFamily,
+        certainty: input.certainty,
+      };
     case "results_viewed":
       assertExactKeys(input, [...base, "countryCode", "intentFamily", "resultCount", "freshness"]);
       assertCountryCode(input.countryCode);
       assertEnum(input.intentFamily, VALUES.intentFamily, "intentFamily");
       assertEnum(input.resultCount, VALUES.resultCount, "resultCount");
       assertEnum(input.freshness, VALUES.freshness, "freshness");
-      return { schemaVersion: 1, dayUTC: input.dayUTC, type: input.type, countryCode: input.countryCode, intentFamily: input.intentFamily, resultCount: input.resultCount, freshness: input.freshness };
+      return {
+        schemaVersion: 1,
+        dayUTC: input.dayUTC,
+        type: input.type,
+        countryCode: input.countryCode,
+        intentFamily: input.intentFamily,
+        resultCount: input.resultCount,
+        freshness: input.freshness,
+      };
     case "quiet_result":
       assertExactKeys(input, [...base, "countryCode", "intentFamily", "reason"]);
       assertCountryCode(input.countryCode);
       assertEnum(input.intentFamily, VALUES.intentFamily, "intentFamily");
       assertEnum(input.reason, VALUES.quietReason, "reason");
-      return { schemaVersion: 1, dayUTC: input.dayUTC, type: input.type, countryCode: input.countryCode, intentFamily: input.intentFamily, reason: input.reason };
+      return {
+        schemaVersion: 1,
+        dayUTC: input.dayUTC,
+        type: input.type,
+        countryCode: input.countryCode,
+        intentFamily: input.intentFamily,
+        reason: input.reason,
+      };
     case "action_selected":
       assertExactKeys(input, [...base, "action", "targetKind"]);
       assertEnum(input.action, VALUES.action, "action");
       assertEnum(input.targetKind, VALUES.targetKind, "targetKind");
-      return { schemaVersion: 1, dayUTC: input.dayUTC, type: input.type, action: input.action, targetKind: input.targetKind };
+      return {
+        schemaVersion: 1,
+        dayUTC: input.dayUTC,
+        type: input.type,
+        action: input.action,
+        targetKind: input.targetKind,
+      };
     case "connection_outcome":
       assertExactKeys(input, [...base, "outcome"]);
       assertEnum(input.outcome, VALUES.connectionOutcome, "outcome");
-      return { schemaVersion: 1, dayUTC: input.dayUTC, type: input.type, outcome: input.outcome };
+      return {
+        schemaVersion: 1,
+        dayUTC: input.dayUTC,
+        type: input.type,
+        outcome: input.outcome,
+      };
     case "contribution_created":
       assertExactKeys(input, [...base, "countryCode", "contributionKind"]);
       assertCountryCode(input.countryCode);
       assertEnum(input.contributionKind, VALUES.contributionKind, "contributionKind");
-      return { schemaVersion: 1, dayUTC: input.dayUTC, type: input.type, countryCode: input.countryCode, contributionKind: input.contributionKind };
+      return {
+        schemaVersion: 1,
+        dayUTC: input.dayUTC,
+        type: input.type,
+        countryCode: input.countryCode,
+        contributionKind: input.contributionKind,
+      };
     case "provider_response":
       assertExactKeys(input, [...base, "countryCode", "response"]);
       assertCountryCode(input.countryCode);
       assertEnum(input.response, VALUES.providerResponse, "response");
-      return { schemaVersion: 1, dayUTC: input.dayUTC, type: input.type, countryCode: input.countryCode, response: input.response };
+      return {
+        schemaVersion: 1,
+        dayUTC: input.dayUTC,
+        type: input.type,
+        countryCode: input.countryCode,
+        response: input.response,
+      };
     case "useful_outcome_completed":
       assertExactKeys(input, [...base, "countryCode", "outcome"]);
       assertCountryCode(input.countryCode);
       assertEnum(input.outcome, VALUES.usefulOutcome, "outcome");
-      return { schemaVersion: 1, dayUTC: input.dayUTC, type: input.type, countryCode: input.countryCode, outcome: input.outcome };
+      return {
+        schemaVersion: 1,
+        dayUTC: input.dayUTC,
+        type: input.type,
+        countryCode: input.countryCode,
+        outcome: input.outcome,
+      };
     case "report_submitted":
       assertExactKeys(input, [...base, "contentKind", "category"]);
       assertEnum(input.contentKind, VALUES.contentKind, "contentKind");
       assertEnum(input.category, VALUES.reportCategory, "category");
-      return { schemaVersion: 1, dayUTC: input.dayUTC, type: input.type, contentKind: input.contentKind, category: input.category };
+      return {
+        schemaVersion: 1,
+        dayUTC: input.dayUTC,
+        type: input.type,
+        contentKind: input.contentKind,
+        category: input.category,
+      };
     case "return_discovery":
       assertExactKeys(input, [...base, "countryCode", "entryPoint"]);
       assertCountryCode(input.countryCode);
       assertEnum(input.entryPoint, VALUES.entryPoint, "entryPoint");
-      return { schemaVersion: 1, dayUTC: input.dayUTC, type: input.type, countryCode: input.countryCode, entryPoint: input.entryPoint };
+      return {
+        schemaVersion: 1,
+        dayUTC: input.dayUTC,
+        type: input.type,
+        countryCode: input.countryCode,
+        entryPoint: input.entryPoint,
+      };
     default:
       throw new Error("Measurement event type is unsupported.");
   }
