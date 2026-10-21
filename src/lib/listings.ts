@@ -9,6 +9,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { asBookingState } from "./services";
+import { isPublishableWorkOpportunity } from "./work-opportunities";
 import type { DiscoveryContext, Page } from "./data/contract";
 import {
   type DataQuality,
@@ -69,6 +70,8 @@ export interface ListingRow {
   qualification_note?: string;
   booking_state?: string;
   booking_url?: string;
+  /** Optional contract payload; absent until a reviewed source supplies it. */
+  work_opportunity?: unknown;
 }
 
 /** What someone can make happen. Each maps onto one map layer by default. */
@@ -152,6 +155,10 @@ export function rowToEntry(
     row.origin === "source" || row.origin === "confirmed" ? row.origin : "resident"
   ) as "resident" | "source" | "confirmed";
   const fromSource = origin !== "resident";
+  // Invalid, draft, unreviewed or rights-restricted payloads never enter public entries.
+  const workOpportunity = isPublishableWorkOpportunity(row.work_opportunity)
+    ? row.work_opportunity
+    : undefined;
   return {
     id: row.id,
     placeId: row.place_id,
@@ -208,6 +215,7 @@ export function rowToEntry(
     ...(row.qualification_note ? { qualificationNote: row.qualification_note } : {}),
     ...(row.booking_state ? { bookingState: asBookingState(row.booking_state) } : {}),
     ...(row.booking_url ? { bookingUrl: row.booking_url } : {}),
+    ...(workOpportunity ? { workOpportunity } : {}),
   };
 }
 
