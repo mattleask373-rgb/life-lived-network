@@ -101,4 +101,18 @@ Each candidate is still draft pending independent review and relevant manual evi
 6. **Robots/sitemap:** current source files and tests include private-path disallows and static/dynamic sitemap routes, but this pass could not independently reach the live Lovable endpoints with the available web verifier. Live host behavior therefore remains **unverified**; require a fresh owner-authorized GET check after any approved republish/hosting diagnosis.
 7. **Visual QA:** #241/#242/#243 require real browser checks at mobile/desktop breakpoints, keyboard-only operation, visible focus, screen-reader names, zoom/reduced-motion, map/list interactions, sourced-photo/no-photo states and honest quiet/error/freshness states.
 
+## Connected-repository inventory — live GitHub read, 2026-10-21
+
+The authenticated GitHub listing exposed multiple similarly named repositories. This is a source-of-truth risk; names alone do not prove which code is deployed or connected to Lovable.
+
+- **`mattleask373-rgb/life-lived-network`** — active primary candidate; public; default branch `main`; observed main SHA `ccbcc6acdbc3dcdf6895c0f624b301418257a6e3`; has the app source, tests, migrations and active PR queue. This is the repository used for the current audit, but the Lovable project/sync target still requires owner verification.
+- **`mattleask373-rgb/life-lived-network2`** — non-empty second application-shaped repository (README, package manifest, source, docs, Supabase, lockfile), but its `main` points to initial commit `8c02f1714a88` dated 2026-10-09. Its README contains a lengthy product master prompt. Do not merge, overwrite, or treat as deployed/canonical until compared and confirmed by the owner.
+- **`mattleask373-rgb/mattleask373-rgb-life-lived-network`** — empty repository; no source files returned.
+- **`mattleask373-rgb/real-world-atlas-agent-orchestration`** — README-only repository (one file, 168 bytes; initial commit 2026-10-09). It is not evidence of a separately deployed scheduler or running agent fleet.
+- **`mattleask373-rgb/real-world-atlas-marketing`**, **`real-world-atlas-monetization`**, and **`real-world-atlas-compliance`** — each README-only (one small file; initial commits 2026-10-09). Treat them as placeholders, not completed strategy, revenue or compliance implementations.
+- **`mattleask373-rgb/Grok-redesign-app`** and **`World-Finder`** — empty repositories; no source files returned.
+- **`mattleask373-rgb/world-s-finder`** — README-only repository (one 16-byte file); not a usable app implementation based on the current listing.
+
+**Required owner action:** confirm the production/Lovable GitHub repository, deployed commit and sync branch in project settings. Until then, continue PR-only in the active app repository, do not sync or migrate between similarly named repositories, and do not claim the sidecar agent/marketing/monetisation/compliance repositories implement working systems.
+
 The canonical invariants remain unchanged: `findSupply()` is the sole possibility/need-discovery authority; no fabricated supply, no publication from unknown rights/review evidence, no public assistant activation, and no merge/deployment/production mutation without the relevant human approval.
