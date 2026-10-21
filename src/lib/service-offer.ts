@@ -9,6 +9,7 @@ export interface ServiceOfferFields {
   provider_note: string;
   booking_state: BookingState;
   booking_url: string;
+  cost: number;
 }
 
 export class ServiceOfferValidationError extends Error {
@@ -78,6 +79,20 @@ export function parseServiceOfferDraft(input: unknown): ServiceOfferFields {
     throw new ServiceOfferValidationError("Choose a valid service category, not a job category.");
   }
 
+  const rawCost = typeof record.cost === "number" ? record.cost : Number(record.cost);
+  if (
+    record.cost === undefined ||
+    record.cost === null ||
+    (typeof record.cost === "string" && !record.cost.trim()) ||
+    !Number.isFinite(rawCost) ||
+    rawCost < 0 ||
+    rawCost > 1_000_000_000
+  ) {
+    throw new ServiceOfferValidationError(
+      "Enter a typical price; use 0 only if the service is genuinely free. Describe the price basis in the details.",
+    );
+  }
+
   const bookingState = record.bookingState;
   if (typeof bookingState !== "string" || !BOOKING_STATES.has(bookingState as BookingState)) {
     throw new ServiceOfferValidationError("Choose a supported booking or enquiry state.");
@@ -100,5 +115,6 @@ export function parseServiceOfferDraft(input: unknown): ServiceOfferFields {
     provider_note: optionalText(record.providerNote, "Provider details", 1000),
     booking_state: bookingState as BookingState,
     booking_url: rawUrl ? safeBookingUrl(rawUrl) : "",
+    cost: rawCost,
   };
 }
