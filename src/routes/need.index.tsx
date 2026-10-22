@@ -11,6 +11,7 @@ import { FLEXIBILITIES, NEED_INTENTS, URGENCIES, type Need } from "@/lib/needs";
 import { fetchDefaultPlace } from "@/lib/places";
 import { money } from "@/components/layer-colour";
 import { DraftHelper } from "@/components/draft-helper";
+import { DataErrorState, DataLoadingState } from "@/components/data-state";
 
 const title = "What do you need? — Real World Atlas";
 const description =
@@ -31,7 +32,12 @@ function NeedPage() {
   const myNeeds = useServerFn(getMyNeeds);
 
   const { data: place } = useQuery({ queryKey: ["place", "default"], queryFn: fetchDefaultPlace });
-  const { data: needs } = useQuery({
+  const {
+    data: needs,
+    isPending: needsPending,
+    isError: needsError,
+    refetch: refetchNeeds,
+  } = useQuery({
     queryKey: ["needs", "open"],
     queryFn: () => openNeeds({ data: {} }),
   });
@@ -84,11 +90,19 @@ function NeedPage() {
         )}
 
         {mine?.length ? <NeedList heading="Yours" needs={mine} /> : null}
-        <NeedList
-          heading="What people nearby need"
-          needs={needs ?? []}
-          empty="Nobody has asked for anything yet. Yours could be the first."
-        />
+        {needsPending && needs === undefined ? (
+          <DataLoadingState className="mt-10" label="Checking open needs…" />
+        ) : null}
+        {needsError && needs === undefined ? (
+          <DataErrorState className="mt-10" retry={() => void refetchNeeds()} />
+        ) : null}
+        {needs !== undefined ? (
+          <NeedList
+            heading="What people nearby need"
+            needs={needs}
+            empty="Nobody has asked for anything yet. Yours could be the first."
+          />
+        ) : null}
       </div>
     </main>
   );
