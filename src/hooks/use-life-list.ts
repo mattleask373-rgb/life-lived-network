@@ -10,29 +10,69 @@ import { useSession } from "./use-session";
 
 type LifeListMutation = (current: LifeListItem[]) => Promise<LifeListItem[]>;
 
+interface LifeListIdentity {
+  userId: string | null;
+  ready: boolean;
+  failed: boolean;
+}
+
+function sameLifeListIdentity(left: LifeListIdentity, right: LifeListIdentity): boolean {
+  return left.userId === right.userId && left.ready === right.ready && left.failed === right.failed;
+}
+
 export function useLifeList() {
   const { user, ready: sessionReady, error: sessionError, retry: retrySession } = useSession();
   const [items, setItems] = useState<LifeListItem[]>([]);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [writeError, setWriteError] = useState(false);
+  const [itemsOwner, setItemsOwner] = useState<string | null | undefined>(undefined);
   const itemsRef = useRef<LifeListItem[]>([]);
+  const itemsOwnerRef = useRef<string | null | undefined>(undefined);
+  const activeIdentityRef = useRef<LifeListIdentity>({
+    userId: user?.id ?? null,
+    ready: sessionReady,
+    failed: Boolean(sessionError),
+  });
+  activeIdentityRef.current = {
+    userId: user?.id ?? null,
+    ready: sessionReady,
+    failed: Boolean(sessionError),
+  };
   const generation = useRef(0);
+  const loadGeneration = useRef(0);
   const mounted = useRef(false);
-  // Serialize mutations so quick consecutive clicks cannot calculate from the same
-  // stale snapshot or let a slower request overwrite a newer choice.
+  // Serialize mutations so quick repeated clicks cannot use stale snapshots.
   const mutationQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   const load = useCallback(async () => {
-    // A retry/read must not race a pending write and restore an older server view.
-    await mutationQueueRef.current;
-    if (!mounted.current) return;
-    const request = ++generation.current;
-    const isCurrent = () => mounted.current && generation.current === request;
-
+    const loadRequest = ++loadGeneration.current;
+    const identity: LifeListIdentity = {
+      userId: user?.id ?? null,
+      ready: sessionReady,
+      failed: Boolean(sessionError),
+    };
     setReady(false);
     setLoadError(false);
     setWriteError(false);
+
+    // Wait for writes queued before this read, then verify that neither the
+    // account nor the load attempt changed while we were waiting.
+    await mutationQueueRef.current;
+    if (
+      !mounted.current ||
+      loadGeneration.current !== loadRequest ||
+      !sameLifeListIdentity(activeIdentityRef.current, identity)
+    ) {
+      return;
+    }
+    const request = ++generation.current;
+    const isCurrent = () =>
+      mounted.current &&
+      generation.current === request &&
+      loadGeneration.current === loadRequest &&
+      sameLifeListIdentity(activeIdentityRef.current, identity);
+
     if (!sessionReady) return;
 
     // A failed session read is not proof that the visitor is signed out.
@@ -49,6 +89,8 @@ export function useLifeList() {
       if (isCurrent()) {
         const local = readLifeList();
         itemsRef.current = local;
+        itemsOwnerRef.current = null;
+        setItemsOwner(null);
         setItems(local);
         setReady(true);
       }
@@ -70,7 +112,6 @@ export function useLifeList() {
         // Keep the local copy until the account confirms the merge. A transient
         // backend failure must never look like a successful migration.
         if (syncError) throw syncError;
-        writeLifeList([]);
       }
 
       // Defence in depth: RLS remains the authorization boundary, but the UI
@@ -88,7 +129,12 @@ export function useLifeList() {
         category: row.category as LifeListCategory,
       }));
       itemsRef.current = loaded;
+      itemsOwnerRef.current = userId;
+      setItemsOwner(userId);
       setItems(loaded);
+      // Only clear the local source after both the merge and the account read
+      // have succeeded, so a follow-up read failure cannot lose the local copy.
+      if (local.length) writeLifeList([]);
       setReady(true);
     } catch {
       if (!isCurrent()) return;
@@ -104,26 +150,52 @@ export function useLifeList() {
     void load();
     return () => {
       mounted.current = false;
-      // Ignore responses from a previous account or an obsolete retry.
+      // Invalidate queued work and reads across unmount/account changes.
       generation.current += 1;
+      loadGeneration.current += 1;
     };
   }, [load]);
 
-  const enqueueMutation = useCallback((mutate: LifeListMutation): Promise<boolean> => {
-    let request = 0;
-    const operation = mutationQueueRef.current.then(async () => {
-      // Invalidate any read already in flight before applying a confirmed write.
-      request = ++generation.current;
-      const current = itemsRef.current;
-      const next = await mutate(current);
-      // An in-flight write may finish after this hook unmounts.
-      if (!mounted.current || generation.current !== request) return true;
-      itemsRef.current = next;
-      setItems(next);
-      setWriteError(false);
-      setReady(true);
-      return true;
-    });
+  const enqueueMutation = useCallback(
+    (expectedUserId: string | null, mutate: LifeListMutation): Promise<boolean> => {
+      let request = 0;
+      const operation = mutationQueueRef.current.then(async () => {
+        const identity = activeIdentityRef.current;
+        // A queued click may outlive the account that created its callback. Do
+        // not let it write using that old identity or the previous account's list.
+        if (
+          !mounted.current ||
+          !identity.ready ||
+          identity.failed ||
+          identity.userId !== expectedUserId ||
+          itemsOwnerRef.current !== expectedUserId
+        ) {
+          return false;
+        }
+
+        // Invalidate any read already in flight before applying a confirmed write.
+        request = ++generation.current;
+        const current = itemsRef.current;
+        const next = await mutate(current);
+        const currentIdentity = activeIdentityRef.current;
+        // A write may complete after unmount or an account switch. Never publish
+        // its snapshot into the new account's UI.
+        if (
+          !mounted.current ||
+          generation.current !== request ||
+          !currentIdentity.ready ||
+          currentIdentity.failed ||
+          currentIdentity.userId !== expectedUserId ||
+          itemsOwnerRef.current !== expectedUserId
+        ) {
+          return false;
+        }
+        itemsRef.current = next;
+        setItems(next);
+        setWriteError(false);
+        setReady(true);
+        return true;
+      });
 
     // Keep read errors and write errors separate, and never call state setters
     // after unmount. A failed write leaves the last confirmed state unchanged.
@@ -134,30 +206,33 @@ export function useLifeList() {
       }
       return false;
     });
-    mutationQueueRef.current = handled.then(() => undefined);
-    return handled;
-  }, []);
+      mutationQueueRef.current = handled.then(() => undefined);
+      return handled;
+    },
+    [],
+  );
 
   const toggle = useCallback(
-    (ref: string, category: LifeListCategory = "want to do"): Promise<boolean> =>
-      enqueueMutation(async (current) => {
+    (ref: string, category: LifeListCategory = "want to do"): Promise<boolean> => {
+      const expectedUserId = user?.id ?? null;
+      return enqueueMutation(expectedUserId, async (current) => {
         const saved = current.some((item) => item.ref === ref);
         const next = saved
           ? current.filter((item) => item.ref !== ref)
           : [...current, { ref, category }];
 
-        if (user) {
+        if (expectedUserId) {
           if (saved) {
             const { error } = await supabase
               .from("saved_items")
               .delete()
               .eq("ref", ref)
-              .eq("user_id", user.id);
+              .eq("user_id", expectedUserId);
             if (error) throw error;
           } else {
             const { error } = await supabase
               .from("saved_items")
-              .upsert({ user_id: user.id, ref, category }, { onConflict: "user_id,ref" });
+              .upsert({ user_id: expectedUserId, ref, category }, { onConflict: "user_id,ref" });
             if (error) throw error;
           }
         } else {
@@ -165,29 +240,32 @@ export function useLifeList() {
         }
 
         return next;
-      }),
-    [enqueueMutation, user],
+      });
+    },
+    [enqueueMutation, user?.id],
   );
 
   const setCategory = useCallback(
-    (ref: string, category: LifeListCategory): Promise<boolean> =>
-      enqueueMutation(async (current) => {
+    (ref: string, category: LifeListCategory): Promise<boolean> => {
+      const expectedUserId = user?.id ?? null;
+      return enqueueMutation(expectedUserId, async (current) => {
         const existing = current.find((item) => item.ref === ref);
         if (!existing) return current;
         const next = current.map((item) => (item.ref === ref ? { ...item, category } : item));
 
-        if (user) {
+        if (expectedUserId) {
           const { error } = await supabase
             .from("saved_items")
-            .upsert({ user_id: user.id, ref, category }, { onConflict: "user_id,ref" });
+            .upsert({ user_id: expectedUserId, ref, category }, { onConflict: "user_id,ref" });
           if (error) throw error;
         } else {
           writeLifeList(next);
         }
 
         return next;
-      }),
-    [enqueueMutation, user],
+      });
+    },
+    [enqueueMutation, user?.id],
   );
 
   const retryLoad = () => {
@@ -198,16 +276,21 @@ export function useLifeList() {
     }
   };
 
+  const activeUserId = user?.id ?? null;
+  const visibleItems = itemsOwner === activeUserId ? items : [];
+  const visibleReady = ready && itemsOwner === activeUserId;
+  const visibleWriteError = writeError && itemsOwner === activeUserId;
+
   return {
-    items,
-    ids: items.map((item) => item.ref),
-    ready,
+    items: visibleItems,
+    ids: visibleItems.map((item) => item.ref),
+    ready: visibleReady,
     loadError,
-    writeError,
+    writeError: visibleWriteError,
     retryLoad,
     toggle,
     setCategory,
-    has: (ref: string) => items.some((item) => item.ref === ref),
+    has: (ref: string) => visibleItems.some((item) => item.ref === ref),
     signedIn: Boolean(user),
   };
 }
