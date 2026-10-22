@@ -197,15 +197,15 @@ export function useLifeList() {
         return true;
       });
 
-    // Keep read errors and write errors separate, and never call state setters
-    // after unmount. A failed write leaves the last confirmed state unchanged.
-    const handled = operation.catch(() => {
-      if (mounted.current && generation.current === request) {
-        setWriteError(true);
-        setReady(true);
-      }
-      return false;
-    });
+      // Keep read errors and write errors separate, and never call state setters
+      // after unmount. A failed write leaves the last confirmed state unchanged.
+      const handled = operation.catch(() => {
+        if (mounted.current && generation.current === request) {
+          setWriteError(true);
+          setReady(true);
+        }
+        return false;
+      });
       mutationQueueRef.current = handled.then(() => undefined);
       return handled;
     },
