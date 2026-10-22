@@ -114,7 +114,7 @@ function clampSpan(span: number): number {
 
 /** Normalise a longitude or longitude delta to the shortest signed arc. */
 function normaliseLongitude(longitude: number): number {
-  return ((longitude + 180) % 360 + 360) % 360 - 180;
+  return (((longitude + 180) % 360) + 360) % 360 - 180;
 }
 
 /** Find the smallest circular longitude arc covering the supplied points. */
@@ -200,7 +200,8 @@ export function placeEntries(entries: WorldEntry[], view: MapView, limit = 300):
       !Number.isFinite(entry.lng) ||
       entry.lng < -180 ||
       entry.lng > 180
-    ) continue;
+    )
+      continue;
     const { left, top } = toScreen({ lat: entry.lat, lng: entry.lng }, view);
     if (left < -4 || left > 104 || top < -4 || top > 104) continue;
     placed.push({ entry, left, top });
@@ -316,11 +317,13 @@ export function placeInView(
       !Number.isFinite(place.lng) ||
       place.lng < -180 ||
       place.lng > 180
-    ) continue;
+    )
+      continue;
     if (place.lat < b.minLat || place.lat > b.maxLat) continue;
-    const longitudeInside = b.minLng <= b.maxLng
-      ? place.lng >= b.minLng && place.lng <= b.maxLng
-      : place.lng >= b.minLng || place.lng <= b.maxLng;
+    const longitudeInside =
+      b.minLng <= b.maxLng
+        ? place.lng >= b.minLng && place.lng <= b.maxLng
+        : place.lng >= b.minLng || place.lng <= b.maxLng;
     if (!longitudeInside) continue;
     const distance =
       distanceKm({ lat: view.lat, lng: view.lng }, { lat: place.lat, lng: place.lng }) ?? Infinity;

@@ -98,13 +98,7 @@ export const PUBLIC_SITEMAP_CHILD_PATHS: readonly string[] = [
   ...SERVICE_SITEMAP_SHARD_PATHS,
 ];
 
-export const PUBLIC_PATHS: readonly string[] = [
-  "/",
-  "/journey",
-  "/road-trip",
-  "/give",
-  "/make",
-];
+export const PUBLIC_PATHS: readonly string[] = ["/", "/journey", "/road-trip", "/give", "/make"];
 
 /** Screens that must never be crawled: personal, private or internal. */
 export const PRIVATE_PATHS: readonly string[] = [

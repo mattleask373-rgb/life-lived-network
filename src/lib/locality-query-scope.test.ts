@@ -26,7 +26,10 @@ describe("fail-closed locality query scope", () => {
   });
 
   it("falls back only to the exact selected place when there are no descendant IDs", () => {
-    expect(localityQueryScope("  place-1 ", [])).toEqual({ kind: "exact-place", placeId: "place-1" });
+    expect(localityQueryScope("  place-1 ", [])).toEqual({
+      kind: "exact-place",
+      placeId: "place-1",
+    });
     expect(localityQueryScope(null, [])).toEqual({ kind: "all" });
   });
 });

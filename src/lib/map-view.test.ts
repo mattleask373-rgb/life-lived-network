@@ -98,10 +98,7 @@ describe("map viewport", () => {
   });
 
   it("fits date-line points on their short arc instead of centring the map away from them", () => {
-    const fitted = fitView(
-      [entry("east", 0, 175), entry("west", 0, -175)],
-      { lat: 0, lng: 179 },
-    );
+    const fitted = fitView([entry("east", 0, 175), entry("west", 0, -175)], { lat: 0, lng: 179 });
     expect(Math.abs(Math.abs(fitted.lng) - 180)).toBeCloseTo(0);
     expect(fitted.spanLng).toBeLessThan(20);
   });
