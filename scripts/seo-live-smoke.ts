@@ -98,7 +98,8 @@ function groupDisallowsPath(group: ParsedRobotsGroup, path: string): boolean {
   return group.directives.some(({ name, value }) => {
     if (name !== "disallow" || !value) return false;
     const rule = value.replace(/\/+$/, "");
-    return path === rule || path.startsWith(rule + "/");
+    // robots.txt path patterns match by prefix, not only path-segment boundaries.
+    return path.startsWith(rule);
   });
 }
 
