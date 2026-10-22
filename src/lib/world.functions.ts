@@ -82,6 +82,7 @@ async function readWorld(
       // else keeps its existing most-recent-first order.
       .order("starts_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
       .range(offset, offset + limit - 1)
       .abortSignal(signal);
     // The selected locality and visible map rectangle are different scopes.

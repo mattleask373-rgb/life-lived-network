@@ -14,10 +14,15 @@ import { ThreeHours } from "@/components/three-hours";
 import { DoSomethingToday } from "@/components/do-something-today";
 import { LayerIcon } from "@/components/layer-icon";
 import { useLifeList } from "@/hooks/use-life-list";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { fetchWorld, fetchWorldEntries } from "@/lib/listings";
 import { MAX_LIMIT } from "@/lib/data/contract";
+import {
+  canLoadMoreViewportPages,
+  combineViewportPages,
+  MAX_VIEWPORT_PAGES,
+} from "@/lib/viewport-pagination";
 import { geoBoundsForViewport, isViewportQueryable, type GeoBounds } from "@/lib/geo-bounds";
 import { densityOf } from "@/lib/trust";
 import { getOpenNeeds } from "@/lib/needs.functions";
@@ -91,20 +96,36 @@ function Home() {
     queryFn: () => fetchWorldEntries({ placeId: discoveryPlace?.id ?? null }),
   });
   const {
-    data: viewportPage,
+    data: viewportPageData,
     isFetching: viewportFetching,
     isError: viewportError,
     isRefetchError: viewportRefreshError,
+    isFetchNextPageError: viewportNextPageError,
+    isFetchingNextPage: viewportFetchingNextPage,
+    fetchNextPage: fetchNextViewportPage,
     refetch: refetchViewport,
-  } = useQuery({
+  } = useInfiniteQuery({
     queryKey: ["world-viewport", viewportBounds],
     enabled: Boolean(place && viewportBounds),
     staleTime: 15_000,
-    queryFn: ({ signal }) => {
+    initialPageParam: null as string | null,
+    queryFn: ({ signal, pageParam }) => {
       if (!viewportBounds) throw new Error("Map viewport bounds are required.");
-      return fetchWorld({ bounds: viewportBounds, limit: MAX_LIMIT }, signal);
+      return fetchWorld({ bounds: viewportBounds, limit: MAX_LIMIT, cursor: pageParam }, signal);
     },
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });
+  const viewportPage = useMemo(
+    () => (viewportPageData ? combineViewportPages(viewportPageData.pages) : undefined),
+    [viewportPageData],
+  );
+  const canLoadMoreViewport = Boolean(
+    viewportPage &&
+      canLoadMoreViewportPages(viewportPageData?.pages.length ?? 0, viewportPage.hasMore),
+  );
+  const viewportPageLimitReached = Boolean(
+    viewportPage && viewportPage.hasMore && !canLoadMoreViewport,
+  );
 
   const openNeedsFn = useServerFn(getOpenNeeds);
   const { data: openNeeds } = useQuery({
@@ -166,7 +187,7 @@ function Home() {
         " located records in view · " +
         mapPartition.unpinned.length +
         " unpinned" +
-        (viewportLoaded && viewportPage?.hasMore ? " · page full; more may exist" : "")
+        (viewportLoaded && viewportPage?.hasMore ? " · more records available" : "")
       : mapPartition.unpinned.length + " unpinned · map view preparing";
   const viewportPending = Boolean(expectedViewportBounds && !viewportMatchesView);
   const viewportRequestIsCurrent = Boolean(viewportBounds && viewportMatchesView);
@@ -264,6 +285,35 @@ function Home() {
           })}
         </ul>
       )}
+      {viewportLoaded && viewportPage?.hasMore ? (
+        <div className="mt-3 space-y-2">
+          {viewportNextPageError ? (
+            <p role="alert" className="text-sm text-muted-foreground">
+              We couldn't load the next page. The records already loaded are still available.
+            </p>
+          ) : null}
+          {canLoadMoreViewport ? (
+            <button
+              type="button"
+              disabled={viewportFetchingNextPage}
+              aria-busy={viewportFetchingNextPage}
+              onClick={() => void fetchNextViewportPage()}
+              className="focus-ink min-h-11 w-full rounded-full border border-border px-4 text-sm disabled:opacity-60"
+            >
+              {viewportFetchingNextPage
+                ? "Loading more records…"
+                : viewportNextPageError
+                  ? "Retry loading more records"
+                  : "Load more records in this view"}
+            </button>
+          ) : (
+            <p role="status" className="text-sm text-muted-foreground">
+              This view has more records than the safe page limit. Zoom in to narrow the area and
+              discover more.
+            </p>
+          )}
+        </div>
+      ) : null}
     </>
   );
 
@@ -379,7 +429,7 @@ function Home() {
                   : mapError
                     ? "Unavailable"
                     : viewportLoaded
-                      ? `${viewportPage?.items.length ?? 0} located records in this view${viewportPage?.hasMore ? " · page full" : ""}`
+                      ? `${viewportPage?.items.length ?? 0} located records in this view${viewportPage?.hasMore ? " · more available" : ""}`
                       : `${mapEntries.length} things`}
             </p>
           </div>
