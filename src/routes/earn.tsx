@@ -7,6 +7,7 @@ import { getMyOpportunities } from "@/lib/needs.functions";
 import { getMyCapabilityProfile } from "@/lib/capability.functions";
 import { describePay, isPaidNeed, skillGaps } from "@/lib/earning";
 import { DataErrorState } from "@/components/data-state";
+import { isDataErrorCode } from "@/lib/data/errors";
 import { eventDate } from "@/components/layer-colour";
 
 const title = "Ways to earn — Real World Atlas";
@@ -59,7 +60,21 @@ function EarnPage() {
       {user && opps.isLoading ? (
         <p className="mt-6 text-sm text-muted-foreground">Looking…</p>
       ) : null}
-      {user && opps.isError ? <DataErrorState retry={() => void opps.refetch()} /> : null}
+      {user && opps.isError
+        ? isDataErrorCode(opps.error, "SCOPE_TOO_WIDE")
+          ? (
+            <div className="card-paper mt-6 p-4 text-sm" role="alert">
+              <p>This search covers more places than can be checked in one request.</p>
+              <p className="mt-1 text-muted-foreground">
+                Narrow the places on your profile, then try again.
+              </p>
+              <Link to="/profile" className="focus-ink mt-2 inline-block underline">
+                Review your places
+              </Link>
+            </div>
+          )
+          : <DataErrorState retry={() => void opps.refetch()} />
+        : null}
 
       {user && opps.data ? (
         <section className="mt-8">
