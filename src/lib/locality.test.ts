@@ -75,6 +75,13 @@ describe("a locality read as one thing", () => {
     expect(questions.map((q) => q.id)).toEqual(["happening", "here", "who", "needed", "possible"]);
   });
 
+  it("does not convert an unverified open-needs count to zero", () => {
+    const questions = localityQuestions([], null, NOW);
+    const needed = questions.find((question) => question.id === "needed");
+    expect(needed?.count).toBeNull();
+    expect(needed?.unit).toBe("count not confirmed yet");
+  });
+
   it("reports what people asked for from the number given, not from guesses", () => {
     const questions = localityQuestions([entry({})], 3, NOW);
     expect(questions.find((q) => q.id === "needed")?.count).toBe(3);
