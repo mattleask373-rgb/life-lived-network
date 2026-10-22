@@ -74,6 +74,17 @@ describe("the provider adapter", () => {
     expect(ticketmasterAdapter.parse(payload({ ...GOOD, dates: {} })).events).toHaveLength(0);
   });
 
+  it("preserves valid multi-segment IANA timezones through normalization", () => {
+    const timezone = "America/Argentina/Buenos_Aires";
+    const { events } = ticketmasterAdapter.parse(
+      payload({
+        ...GOOD,
+        dates: { ...GOOD.dates, timezone },
+      }),
+    );
+    expect(normaliseEvent(events[0]!)?.timezone).toBe(timezone);
+  });
+
   it("keeps an event whose venue or coordinates are missing", () => {
     const { events } = ticketmasterAdapter.parse(payload({ ...GOOD, _embedded: {} }));
     expect(events).toHaveLength(1);
