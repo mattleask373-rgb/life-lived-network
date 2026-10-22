@@ -47,7 +47,7 @@ export interface SourceLifecycleDecision {
   sourceUrl?: string;
   lastCheckedAt?: string;
   /** When set, this value overrides listing data_quality before normalization. */
-  dataQualityOverride?: "recently updated" | "may have changed";
+  dataQualityOverride?: "recently updated" | "unverified" | "may have changed";
   sourceId?: string;
 }
 
@@ -183,6 +183,10 @@ export function decideSourceLifecycle(input: {
     ageMs <= refreshMs
   ) {
     dataQualityOverride = "recently updated";
+  } else {
+    // A successful check confirms that the source is still live, not that its
+    // contents changed recently. Never inherit an old "recently updated" label.
+    dataQualityOverride = "unverified";
   }
 
   return {
