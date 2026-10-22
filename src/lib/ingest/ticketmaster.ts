@@ -146,20 +146,147 @@ function imagesFor(payload: Record<string, unknown>, attribution: string): Sourc
   });
 }
 
-/** The start of an event, whether the source gave a time or only a date. */
+interface LocalWallTime {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+}
+
+/**
+ * Resolve a source's wall-clock date/time using its IANA timezone.
+ *
+ * Date-only Ticketmaster records are local dates, not UTC dates. Converting
+ * them by appending "Z" shifts events for every non-UTC locality. We also
+ * reject gaps and repeated wall times around daylight-saving transitions:
+ * without an offset from the source there is no safe instant to invent.
+ */
+function localWallTimeToInstant(localDate: string, localTime: string, timezone: string): string | null {
+  const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(localDate);
+  const timeMatch = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(localTime);
+  if (!dateMatch || !timeMatch || !timezone) return null;
+
+  const desired: LocalWallTime = {
+    year: Number(dateMatch[1]),
+    month: Number(dateMatch[2]),
+    day: Number(dateMatch[3]),
+    hour: Number(timeMatch[1]),
+    minute: Number(timeMatch[2]),
+    second: Number(timeMatch[3] ?? "0"),
+  };
+  if (
+    desired.year < 2000 ||
+    desired.year > 2100 ||
+    desired.month < 1 ||
+    desired.month > 12 ||
+    desired.day < 1 ||
+    desired.hour > 23 ||
+    desired.minute > 59 ||
+    desired.second > 59
+  ) {
+    return null;
+  }
+
+  const wallAsUtc = Date.UTC(
+    desired.year,
+    desired.month - 1,
+    desired.day,
+    desired.hour,
+    desired.minute,
+    desired.second,
+  );
+  const normalisedDate = new Date(wallAsUtc);
+  if (
+    normalisedDate.getUTCFullYear() !== desired.year ||
+    normalisedDate.getUTCMonth() + 1 !== desired.month ||
+    normalisedDate.getUTCDate() !== desired.day
+  ) {
+    return null;
+  }
+
+  let formatter: Intl.DateTimeFormat;
+  try {
+    formatter = new Intl.DateTimeFormat("en-GB", {
+      timeZone: timezone,
+      calendar: "iso8601",
+      numberingSystem: "latn",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    });
+  } catch {
+    return null;
+  }
+
+  const partsAt = (timestamp: number): LocalWallTime | null => {
+    const parts: Record<string, string> = {};
+    for (const part of formatter.formatToParts(new Date(timestamp))) {
+      if (part.type !== "literal") parts[part.type] = part.value;
+    }
+    const fields = ["year", "month", "day", "hour", "minute", "second"] as const;
+    if (fields.some((field) => !parts[field])) return null;
+    return {
+      year: Number(parts["year"]),
+      month: Number(parts["month"]),
+      day: Number(parts["day"]),
+      hour: Number(parts["hour"]),
+      minute: Number(parts["minute"]),
+      second: Number(parts["second"]),
+    };
+  };
+
+  const toWallAsUtc = (parts: LocalWallTime): number =>
+    Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
+  const matchesDesired = (parts: LocalWallTime | null): boolean =>
+    parts !== null &&
+    parts.year === desired.year &&
+    parts.month === desired.month &&
+    parts.day === desired.day &&
+    parts.hour === desired.hour &&
+    parts.minute === desired.minute &&
+    parts.second === desired.second;
+
+  // Iteratively estimate the UTC instant from the timezone's observed offset.
+  let candidate = wallAsUtc;
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const actual = partsAt(candidate);
+    if (!actual) return null;
+    const correction = wallAsUtc - toWallAsUtc(actual);
+    candidate += correction;
+    if (correction === 0) break;
+  }
+
+  // Verify uniqueness. A DST gap has no matching instant; a fall-back wall
+  // time has two. Refuse both rather than quietly selecting the wrong hour.
+  const candidates: number[] = [];
+  const THREE_HOURS = 3 * 60 * 60 * 1000;
+  const FIFTEEN_MINUTES = 15 * 60 * 1000;
+  for (let offset = -THREE_HOURS; offset <= THREE_HOURS; offset += FIFTEEN_MINUTES) {
+    const timestamp = candidate + offset;
+    if (matchesDesired(partsAt(timestamp))) candidates.push(timestamp);
+  }
+  if (candidates.length !== 1) return null;
+  return new Date(candidates[0]!).toISOString();
+}
+
+/** The start of an event, whether the source gave an instant or a local date. */
 function startFor(dates: Record<string, unknown>, timezone: string): string | null {
   const start = asRecord(dates["start"]);
   const exact = instant(start["dateTime"]);
   if (exact) return exact;
+
   const localDate = plainText(start["localDate"], 12);
-  const localTime = plainText(start["localTime"], 8);
   if (!localDate) return null;
-  // No time given: treat it as the start of that day where the event is, not
-  // where the reader happens to be. An all-day record stays an all-day record.
-  const guess = instant(`${localDate}T${localTime || "00:00:00"}Z`);
-  if (!guess) return null;
-  void timezone;
-  return guess;
+  // A date without a time is represented by local midnight, converted through
+  // the source timezone. This remains a date-only event, not an invented time.
+  const localTime = plainText(start["localTime"], 8) || "00:00:00";
+  return localWallTimeToInstant(localDate, localTime, timezone);
 }
 
 export const ticketmasterAdapter: SourceAdapter = {
