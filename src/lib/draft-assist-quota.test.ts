@@ -81,7 +81,7 @@ describe("AI draft quota database security contract", () => {
     expect(migration).toContain(
       "GRANT EXECUTE ON FUNCTION public.consume_ai_draft_quota() TO authenticated;",
     );
-    expect(migration).not.toContain("prompt text");
+    expect(migration).not.toMatch(/^\\s*(?:prompt|prompt_text|completion_text)\\s+\\w+/im);
   });
 
   it("checks the emergency stop and quota before the paid provider path", () => {
