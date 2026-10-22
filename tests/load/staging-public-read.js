@@ -2,65 +2,71 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
 
-const rawBaseUrl = (__ENV.LOAD_TEST_BASE_URL || "").trim();
-const targetEnvironment = (__ENV.LOAD_TEST_ENV || "").trim().toLowerCase();
-const explicitlyApproved = (__ENV.LOAD_TEST_APPROVED || "") === "YES_I_APPROVE_STAGING_LOAD";
-
 function stop(message) {
-  throw new Error(`[load-test safety stop] ${message}`);
+  throw new Error("[load-test safety stop] " + message);
 }
 
-if (!explicitlyApproved) {
-  stop("set LOAD_TEST_APPROVED=YES_I_APPROVE_STAGING_LOAD only after approving the target.");
-}
-if (!rawBaseUrl) {
-  stop("LOAD_TEST_BASE_URL is required; no default target is provided.");
-}
-if (!["staging", "local"].includes(targetEnvironment)) {
-  stop("LOAD_TEST_ENV must be exactly 'staging' or 'local'.");
-}
+// k6 inspect imports this module to parse it but doesn't run the default function.
+// Keep runtime safety checks inside a function so inspection is traffic-free; k6 run
+// invokes this before any request is made.
+function validatedBaseUrl() {
+  const rawBaseUrl = (__ENV.LOAD_TEST_BASE_URL || "").trim();
+  const targetEnvironment = (__ENV.LOAD_TEST_ENV || "").trim().toLowerCase();
+  const explicitlyApproved = (__ENV.LOAD_TEST_APPROVED || "") === "YES_I_APPROVE_STAGING_LOAD";
 
-let parsedBaseUrl;
-try {
-  parsedBaseUrl = new URL(rawBaseUrl);
-} catch {
-  stop("LOAD_TEST_BASE_URL must be a valid absolute URL.");
-}
-
-if (parsedBaseUrl.username || parsedBaseUrl.password) {
-  stop("credentials in LOAD_TEST_BASE_URL are not permitted.");
-}
-if (parsedBaseUrl.search || parsedBaseUrl.hash) {
-  stop("use an origin only; query strings and fragments are not permitted.");
-}
-if (parsedBaseUrl.pathname !== "/" && parsedBaseUrl.pathname !== "") {
-  stop("use the origin only; the test owns its request paths.");
-}
-
-const hostname = parsedBaseUrl.hostname.toLowerCase().replace(/\.$/, "");
-const knownProductionHosts = new Set(["life-lived-network.lovable.app"]);
-
-if (knownProductionHosts.has(hostname)) {
-  stop("the known production hostname is blocked.");
-}
-
-const isLocalHost = ["localhost", "127.0.0.1"].includes(hostname);
-if (targetEnvironment === "local") {
-  if (!isLocalHost) {
-    stop("local mode only permits localhost or 127.0.0.1.");
+  if (!explicitlyApproved) {
+    stop("set LOAD_TEST_APPROVED=YES_I_APPROVE_STAGING_LOAD only after approving the target.");
   }
-} else {
-  if (isLocalHost || parsedBaseUrl.protocol !== "https:") {
-    stop("staging mode requires HTTPS on a non-local hostname.");
+  if (!rawBaseUrl) {
+    stop("LOAD_TEST_BASE_URL is required; no default target is provided.");
   }
-  if (
-    !/(^|[.-])(staging|stage|preview|test|testing|qa|perf|performance|load)([.-]|$)/i.test(hostname)
-  ) {
-    stop("staging hostname must contain a staging/preview/test/QA/performance label.");
+  if (!["staging", "local"].includes(targetEnvironment)) {
+    stop("LOAD_TEST_ENV must be exactly 'staging' or 'local'.");
   }
-}
 
-const BASE_URL = parsedBaseUrl.origin;
+  let parsedBaseUrl;
+  try {
+    parsedBaseUrl = new URL(rawBaseUrl);
+  } catch {
+    stop("LOAD_TEST_BASE_URL must be a valid absolute URL.");
+  }
+
+  if (parsedBaseUrl.username || parsedBaseUrl.password) {
+    stop("credentials in LOAD_TEST_BASE_URL are not permitted.");
+  }
+  if (parsedBaseUrl.search || parsedBaseUrl.hash) {
+    stop("use an origin only; query strings and fragments are not permitted.");
+  }
+  if (parsedBaseUrl.pathname !== "/" && parsedBaseUrl.pathname !== "") {
+    stop("use the origin only; the test owns its request paths.");
+  }
+
+  const hostname = parsedBaseUrl.hostname.toLowerCase().replace(/\.$/, "");
+  const knownProductionHosts = new Set(["life-lived-network.lovable.app"]);
+  if (knownProductionHosts.has(hostname)) {
+    stop("the known production hostname is blocked.");
+  }
+
+  const isLocalHost = ["localhost", "127.0.0.1"].includes(hostname);
+  if (targetEnvironment === "local") {
+    if (!isLocalHost) {
+      stop("local mode only permits localhost or 127.0.0.1.");
+    }
+  } else {
+    if (isLocalHost || parsedBaseUrl.protocol !== "https:") {
+      stop("staging mode requires HTTPS on a non-local hostname.");
+    }
+    if (
+      !/(^|[.-])(staging|stage|preview|test|testing|qa|perf|performance|load)([.-]|$)/i.test(
+        hostname,
+      )
+    ) {
+      stop("staging hostname must contain a staging/preview/test/QA/performance label.");
+    }
+  }
+
+  return parsedBaseUrl.origin;
+}
 
 export const options = {
   scenarios: {
@@ -91,8 +97,9 @@ const publicRoutes = [
 ];
 
 export default function () {
+  const baseUrl = validatedBaseUrl();
   const route = publicRoutes[(__VU + __ITER) % publicRoutes.length];
-  const response = http.get(`${BASE_URL}${route.path}`, {
+  const response = http.get(`${baseUrl}${route.path}`, {
     timeout: "10s",
     // Do not follow redirects: a staging alias must not relay load to another host.
     redirects: 0,

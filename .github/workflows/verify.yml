@@ -20,9 +20,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
           bun-version: latest
 
@@ -39,10 +39,4 @@ jobs:
 
       - name: Parse k6 script without sending traffic
         if: ${{ hashFiles('tests/load/staging-public-read.js') != '' }}
-        run: >-
-          k6 inspect
-          --execution-requirements
-          --env LOAD_TEST_ENV=staging
-          --env LOAD_TEST_BASE_URL=https://preview.staging.example.invalid
-          --env LOAD_TEST_APPROVED=YES_I_APPROVE_STAGING_LOAD
-          tests/load/staging-public-read.js
+        run: k6 inspect --execution-requirements tests/load/staging-public-read.js
