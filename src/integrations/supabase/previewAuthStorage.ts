@@ -65,7 +65,6 @@ export function readBrokerReply(data: unknown, requestId: string): BrokerReply |
   return { ok: reply.ok, value: reply.value };
 }
 
-const RESULT = "lovable-preview-auth:result";
 const TIMEOUT = 2000;
 const RETRY_DELAY = 250;
 const PREVIEW_ZONES = [
