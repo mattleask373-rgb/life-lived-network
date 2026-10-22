@@ -187,6 +187,23 @@ Score each candidate locality/category from evidence, with a written source and 
 
 Do not fill gaps with invented market-size numbers, search volumes or supplier estimates. Where evidence is unknown, record UNKNOWN and gather it.
 
+### Candidate evidence screen — no winner selected
+
+The three rows below are hypotheses to research, not market recommendations or evidence of live supply. Score each candidate only after its locality is chosen and its evidence ledger is dated.
+
+| Candidate locality/category hypothesis | Why test it | Evidence to collect before scoring | Known risk / disqualifier |
+|---|---|---|---|
+| One Australian short-stay destination × turnover cleaning | Repeatable, time-sensitive work could exercise offer → enquiry → response → completion more than a one-off guide listing. | Obtain the latest locality/state tourism accommodation and turnover proxies; interview property managers/hosts and willing cleaning providers; record actual request frequency, urgency, response expectations, pricing and cancellation patterns. TRA's Domestic Tourism Statistics are national/state visitor context—not direct proof of local cleaning demand or willingness to use this product: https://www.tra.gov.au/en/tourism-statistics/domestic-tourism-statistics-results. | Highest compliance/operational diligence of the three: worker classification/award, insurance, access/keys/codes, damage claims, background/trust, chemical/safety practices and visa/work-condition questions. Stop if lawful supply terms/support cannot be established. |
+| One selected locality × gardening or light home-help | Could have repeat seasonal/household need while being less dependent on accommodation-platform data. | Direct interviews with local residents, community organisations and legitimately reachable service providers; verify timing/availability and what the current product can support without adding regulated claims. | On-site safety, safeguarding, worker classification, insurance, property access and unclear scope can make a superficially simple category high risk. Exclude regulated, emergency or vulnerable-person services from the initial pilot. |
+| One multilingual urban locality × Spanish-learning exchange or low-risk local guide offer | Tests a community/experience loop without assuming a paid home-service marketplace is the best first use case. | Recruit genuine opted-in learner/teacher/guide partners; test repeat intent, useful-match rate, response and completion; check whether guide/tour activity triggers local registration/licensing or insurance duties. | Free community interest is not proof of willingness to pay; guides may face licensing/liability rules and language exchanges need participant-safety, moderation and abuse-reporting controls. |
+
+**Current evidence status:** none of these candidate pairs has a validated local demand score, confirmed opt-in supply count or measured unit economics in the evidence inspected for this audit. Do not rank them by intuition or national market size.
+
+For the Australian candidate, Fair Work Ombudsman guidance says employee/contractor classification is fact-specific and contract-cleaning award coverage must be assessed for the actual relationship and activity; do not treat a platform template or per-job price as a legal determination: https://www.fairwork.gov.au/find-help-for/independent-contractors and https://www.fairwork.gov.au/find-help-for/contract-cleaning. Home Affairs work conditions can also restrict working holiday makers' time with one employer: https://immi.homeaffairs.gov.au/what-we-do/whm-program/specified-work-conditions/6-month-work-limitation. These are screening questions for qualified local advice, not conclusions about any particular operator.
+
+A candidate only advances when the scorecard is supported by dated sources, a reachable consenting supply path, user-safety/support capacity, source/data rights, local compliance review and a measurable end-to-end outcome. Market selection, recruitment contact, and any commercial commitments remain human approvals.
+
+
 ### Supply-first, not empty global expansion
 
 For a two-sided or multi-sided product, expanding the demand side before enough eligible supply exists can create empty experiences in every new locality. Seed and verify a small amount of genuine supply in one market before driving meaningful demand into it. This is consistent with staged marketplace guidance, which warns against expanding geography before local liquidity is established ([reference](https://twosided.io/blog/marketplace-growth-strategy), 4 July 2026).
