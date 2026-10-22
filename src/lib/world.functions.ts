@@ -20,19 +20,9 @@ import {
 } from "./data/contract";
 import { asDataError, DataError } from "./data/errors";
 import { localityQueryScope } from "./locality-query-scope";
-import {
-  decideSourceLifecycle,
-  type SourceLifecycleMetadata,
-  type SourceRecordLifecycleInput,
-} from "./source-lifecycle-policy";
+import { resolvePublicListingLifecycles } from "./public-listing-lifecycle.server";
 import { rowToEntry, type ListingRow } from "./listings";
 import { assertQueryableGeoBounds } from "./geo-bounds";
-import {
-  assertCompleteSourceRecordScan,
-  readBoundedSourceRecordPages,
-  SOURCE_RECORD_SCAN_LIMIT,
-  SOURCE_RECORD_SCAN_PAGE_SIZE,
-} from "./source-record-pagination";
 import type { SourcePhoto, WorldEntry } from "./world-data";
 
 export const getWorld = createServerFn({ method: "GET" })
@@ -187,123 +177,26 @@ async function readWorld(
       }
     }
 
-    // Source records are authoritative for imported-record eligibility and attribution.
-    // A failed/incomplete provenance read never promotes an imported row to a resident post;
-    // resident records remain available, and transient source failures degrade freshness rather
-    // than erasing historical information.
-    const imported = listings.filter((r) => r.origin === "source" || r.origin === "confirmed");
-    const sourceRecordsByListing = new Map<string, SourceRecordLifecycleInput[]>();
-    const sourceMetadata = new Map<string, SourceLifecycleMetadata>();
-    let sourceLifecycleReadFailed = false;
+    // Use the shared bounded provenance resolver. A failed/incomplete lookup
+    // excludes imported rows while resident rows remain independently eligible.
+    const imported = listings.filter(
+      (row) => row.origin === "source" || row.origin === "confirmed",
+    );
+    const sourceLifecycle = await resolvePublicListingLifecycles(
+      imported.map((row) => row.id),
+      signal,
+    );
+    const sourceLifecycleReadFailed = sourceLifecycle.failed;
+    const sourceLifecycleDecisions = sourceLifecycle.decisions;
 
-    if (imported.length) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const listingIds = [...new Set(imported.map((r) => r.id))];
-      let sourceRecords: {
-        id: string;
-        listing_id: string | null;
-        source_id: string;
-        source_url: string | null;
-        source_state: string;
-        last_seen_at: string | null;
-        source_updated_at: string | null;
-      }[] = [];
-
-      try {
-        const { count: expectedCount, error: countError } = await supabaseAdmin
-          .from("source_records")
-          .select("id", { count: "exact", head: true })
-          .in("listing_id", listingIds)
-          .abortSignal(signal);
-        throwIfAborted(signal);
-        if (countError) throw countError;
-
-        const scannedRecords = await readBoundedSourceRecordPages(
-          SOURCE_RECORD_SCAN_LIMIT,
-          SOURCE_RECORD_SCAN_PAGE_SIZE,
-          async (afterId, limit) => {
-            let query = supabaseAdmin
-              .from("source_records")
-              .select(
-                "id, listing_id, source_id, source_url, source_state, last_seen_at, source_updated_at",
-              )
-              .in("listing_id", listingIds)
-              .order("id", { ascending: true })
-              .limit(limit);
-            if (afterId !== null) query = query.gt("id", afterId);
-            const { data, error } = await query.abortSignal(signal);
-            throwIfAborted(signal);
-            if (error) throw error;
-            return (data ?? []) as typeof sourceRecords;
-          },
-        );
-        sourceRecords = assertCompleteSourceRecordScan(scannedRecords, expectedCount);
-      } catch {
-        // A failed, capped, or incomplete lifecycle read must never leave an older
-        // live observation as the sole evidence for an imported public listing.
-        throwIfAborted(signal);
-        sourceLifecycleReadFailed = true;
-      }
-
-      if (!sourceLifecycleReadFailed) {
-        for (const record of sourceRecords) {
-          if (!record.listing_id) continue;
-          const lifecycleRecord: SourceRecordLifecycleInput = {
-            listingId: record.listing_id,
-            sourceId: record.source_id,
-            sourceUrl: record.source_url ?? "",
-            sourceState: record.source_state,
-            lastSeenAt: record.last_seen_at ?? null,
-            sourceUpdatedAt: record.source_updated_at ?? null,
-          };
-          const existing = sourceRecordsByListing.get(record.listing_id) ?? [];
-          existing.push(lifecycleRecord);
-          sourceRecordsByListing.set(record.listing_id, existing);
-        }
-
-        const sourceIds = [...new Set(sourceRecords.map((record) => record.source_id))];
-        if (sourceIds.length) {
-          const { data: sources, error: sourcesError } = await supabaseAdmin
-            .from("sources")
-            .select("id, name, attribution, status, enabled, refresh_minutes, consecutive_failures")
-            .in("id", sourceIds)
-            .abortSignal(signal);
-          throwIfAborted(signal);
-
-          if (sourcesError) {
-            sourceLifecycleReadFailed = true;
-          } else {
-            for (const source of sources ?? []) {
-              sourceMetadata.set(source.id, {
-                id: source.id,
-                name: source.name,
-                attribution: source.attribution ?? "",
-                status: source.status,
-                enabled: source.enabled,
-                refreshMinutes: source.refresh_minutes,
-                consecutiveFailures: source.consecutive_failures,
-              });
-            }
-          }
-        }
-      }
-    }
-
-    throwIfAborted(signal);
-    const lifecycleNow = Date.now();
     const worldItems: WorldEntry[] = [];
 
     for (const row of listings) {
       if (row.origin === "source" || row.origin === "confirmed") {
         if (sourceLifecycleReadFailed) continue;
 
-        const decision = decideSourceLifecycle({
-          listingId: row.id,
-          records: sourceRecordsByListing.get(row.id) ?? [],
-          sources: sourceMetadata,
-          now: lifecycleNow,
-        });
-        if (!decision.eligible || !decision.sourceName || !decision.sourceUrl) continue;
+        const decision = sourceLifecycleDecisions.get(row.id);
+        if (!decision?.eligible || !decision.sourceName || !decision.sourceUrl) continue;
 
         // The listing-level cancellation and last-checked values can reflect a
         // different linked source. Use the freshest eligible source observation.

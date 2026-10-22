@@ -19,6 +19,8 @@ export interface PublicListingSitemapRow {
   id: string;
   place_id: string | null;
   demonstration: boolean | null;
+  /** False when canonical public-discovery policy excludes this raw row. */
+  publiclyEligible?: boolean;
 }
 
 export interface LocalitySitemapBuildOptions {
@@ -31,10 +33,8 @@ export interface LocalitySitemapBuildOptions {
  * three-real-entry SEO gate. Input rows must be ordered like getWorld():
  * starts_at ascending with nulls last, then created_at descending.
  *
- * The route currently drops its locality filter for a subtree with more than
- * 400 places. To avoid claiming different indexability from the actual page,
- * this mirrors that behaviour by checking the same global first page for such
- * places. That upstream behaviour should be reviewed separately.
+ * The route fails closed for a subtree wider than LOCALITY_FILTER_CAP. The
+ * sitemap must not borrow unrelated global rows to index that non-indexable page.
  */
 export function indexableLocalityPaths(
   index: PlaceIndex,
@@ -76,7 +76,6 @@ export function indexableLocalityPaths(
     }
   }
 
-  const globalFirstPage = orderedRows.slice(0, LOCALITY_SITEMAP_PAGE_SIZE);
   const candidates: string[] = [];
   const validSlug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -89,11 +88,13 @@ export function indexableLocalityPaths(
     const code = (place.country_code ?? "").trim().toLowerCase();
     if (code && !/^[a-z]{2}$/.test(code)) continue;
 
-    const firstPage =
-      (placeCount.get(place.id) ?? 1) > LOCALITY_FILTER_CAP
-        ? globalFirstPage
-        : (rowsByPlace.get(place.id) ?? []);
-    const realCount = firstPage.filter((row) => row.demonstration !== true).length;
+    // Locality pages whose canonical query scope is over the cap fail closed.
+    // Do not substitute unrelated global rows, which could create a false SEO claim.
+    if ((placeCount.get(place.id) ?? 1) > LOCALITY_FILTER_CAP) continue;
+    const firstPage = rowsByPlace.get(place.id) ?? [];
+    const realCount = firstPage.filter(
+      (row) => row.publiclyEligible !== false && row.demonstration !== true,
+    ).length;
     if (realCount < 3) continue;
 
     candidates.push(localityPath({ slug: place.slug, countrySegment: code }));

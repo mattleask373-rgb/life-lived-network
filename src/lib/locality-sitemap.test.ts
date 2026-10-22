@@ -58,8 +58,44 @@ describe("locality sitemap indexability", () => {
     expect(indexableLocalityPaths(geography, rows)).not.toContain("/gb/birmingham");
   });
 
+  it("does not backfill an ineligible raw row from after the first 60 page slots", () => {
+    const hidden = rowsFor("city", 60).map((row) => ({ ...row, publiclyEligible: false }));
+    const laterEligible = rowsFor("city", 3);
+    expect(indexableLocalityPaths(geography, [...hidden, ...laterEligible])).not.toContain(
+      "/gb/birmingham",
+    );
+  });
+
   it("fails closed when a bounded source scan may be incomplete", () => {
     expect(indexableLocalityPaths(geography, rowsFor("city", 3), { complete: false })).toEqual([]);
+  });
+
+  it("fails closed for over-wide subtrees instead of using unrelated global rows", () => {
+    const wideIndex = buildPlaceIndex([
+      place({ id: "wide", name: "Wide area", slug: "wide-area", kind: "region" }),
+      ...Array.from({ length: 400 }, (_, index) =>
+        place({
+          id: `wide-child-${index}`,
+          name: `Wide child ${index}`,
+          slug: `wide-child-${index}`,
+          kind: "town",
+          parent_id: "wide",
+        }),
+      ),
+      place({ id: "other-root", name: "Other root", slug: "other-root", kind: "region" }),
+      place({
+        id: "other-city",
+        name: "Other city",
+        slug: "other-city",
+        kind: "city",
+        parent_id: "other-root",
+      }),
+    ]);
+    const paths = indexableLocalityPaths(wideIndex, rowsFor("other-city", 3));
+
+    expect(paths).toContain("/gb/other-city");
+    expect(paths).toContain("/gb/other-root");
+    expect(paths).not.toContain("/gb/wide-area");
   });
 
   it("never builds a path from an invalid slug", () => {
