@@ -1,5 +1,3 @@
-import { SERVICE_SITEMAP_SHARD_PATHS } from "./sitemap-shards";
-
 /**
  * The public face of Real World Atlas.
  *
@@ -14,6 +12,9 @@ import { SERVICE_SITEMAP_SHARD_PATHS } from "./sitemap-shards";
  * Nothing here writes marketing copy or invents local claims. It only carries
  * what a page already truthfully shows.
  */
+
+import { PRIVATE_PATHS, PUBLIC_PATHS, PUBLIC_SITEMAP_CHILD_PATHS } from "./seo-route-policy";
+export { PRIVATE_PATHS, PUBLIC_PATHS, PUBLIC_SITEMAP_CHILD_PATHS };
 
 /**
  * The origin the public site is served from. Set VITE_SITE_ORIGIN when the site
@@ -91,37 +92,6 @@ export function privatePage(meta: Omit<PageMeta, "image">): {
   };
 }
 
-/** Fixed public screens and bounded locality/service URL sets. */
-export const PUBLIC_SITEMAP_CHILD_PATHS: readonly string[] = [
-  "/api/public/sitemap-pages.xml",
-  "/api/public/sitemap-localities.xml",
-  ...SERVICE_SITEMAP_SHARD_PATHS,
-];
-
-export const PUBLIC_PATHS: readonly string[] = [
-  "/",
-  "/journey",
-  "/road-trip",
-  "/life-list",
-  "/give",
-  "/make",
-];
-
-/** Screens that must never be crawled: personal, private or internal. */
-export const PRIVATE_PATHS: readonly string[] = [
-  "/auth",
-  "/profile",
-  "/conversations",
-  "/need",
-  "/help",
-  "/moderation",
-  "/sources",
-  "/memories",
-  "/partners",
-  "/partner-tracker",
-  "/earn",
-];
-
 export interface SitemapUrl {
   path: string;
   /** ISO date, only when genuinely known. */
@@ -176,7 +146,7 @@ export function robotsTxt(): string {
     "",
     "# Personal, private and internal screens. Nothing useful for a search engine,",
     "# and nothing anyone else should be shown. These must stay in sync with",
-    "# PRIVATE_PATHS in src/lib/seo.ts. robots.txt is crawler policy, not access control.",
+    "# PRIVATE_PATHS in src/lib/seo-route-policy.ts. robots.txt is crawler policy, not access control.",
     ...PRIVATE_PATHS.map((path) => `Disallow: ${path}`),
     "",
     "# /sitemap.xml is a sitemap index. Its child sitemaps list public screens",

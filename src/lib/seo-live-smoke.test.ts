@@ -1,29 +1,21 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  PRIVATE_PATHS,
+  PUBLIC_PATHS,
+  PUBLIC_SITEMAP_CHILD_PATHS as childPaths,
+} from "./seo-route-policy";
+import {
   DEFAULT_SEO_SMOKE_ORIGIN,
   evaluateSeoSmoke,
-  SITEMAP_CHILD_PATHS as childPaths,
   type SeoSmokeDocuments,
   type SitemapChildSmokeDocument,
   type SmokeDocument,
 } from "../../scripts/seo-live-smoke";
 
 const origin = DEFAULT_SEO_SMOKE_ORIGIN;
-const publicPaths = ["/", "/journey", "/road-trip", "/life-list", "/give", "/make"];
-const privatePaths = [
-  "/auth",
-  "/profile",
-  "/conversations",
-  "/need",
-  "/help",
-  "/moderation",
-  "/sources",
-  "/memories",
-  "/partners",
-  "/partner-tracker",
-  "/earn",
-];
+const publicPaths = [...PUBLIC_PATHS];
+const privatePaths = [...PRIVATE_PATHS];
 function document(path: string, contentType: string, body: string): SmokeDocument {
   return { status: 200, contentType, body, finalUrl: new URL(path, origin).toString() };
 }

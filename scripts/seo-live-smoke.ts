@@ -1,29 +1,13 @@
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 
-import { SERVICE_SITEMAP_SHARD_PATHS } from "../src/lib/sitemap-shards";
+import {
+  PRIVATE_PATHS,
+  PUBLIC_PATHS,
+  PUBLIC_SITEMAP_CHILD_PATHS as SITEMAP_CHILD_PATHS,
+} from "../src/lib/seo-route-policy";
 
 export const DEFAULT_SEO_SMOKE_ORIGIN = "https://life-lived-network.lovable.app";
-
-const PUBLIC_PATHS = ["/", "/journey", "/road-trip", "/life-list", "/give", "/make"];
-const PRIVATE_PATHS = [
-  "/auth",
-  "/profile",
-  "/conversations",
-  "/need",
-  "/help",
-  "/moderation",
-  "/sources",
-  "/memories",
-  "/partners",
-  "/partner-tracker",
-  "/earn",
-];
-export const SITEMAP_CHILD_PATHS: readonly string[] = [
-  "/api/public/sitemap-pages.xml",
-  "/api/public/sitemap-localities.xml",
-  ...SERVICE_SITEMAP_SHARD_PATHS,
-];
 
 export interface SmokeDocument {
   status: number;
@@ -105,7 +89,7 @@ function validateUrlset(
   body: string,
   origin: string,
   failures: string[],
-  requiredPaths: string[] = [],
+  requiredPaths: readonly string[] = [],
   exactRequiredPaths = false,
 ): void {
   if (!/<urlset\b/i.test(body)) {
