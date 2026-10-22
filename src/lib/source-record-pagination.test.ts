@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  assertCompleteSourceRecordScan,
   readBoundedSourceRecordPages,
   SourceRecordScanLimitError,
 } from "./source-record-pagination";
@@ -45,6 +46,17 @@ describe("bounded source-record pagination", () => {
       ["0002", 2],
       ["0004", 2],
     ]);
+  });
+
+  it("requires an exact count to reject row-capped provenance reads", () => {
+    const complete = orderedRows(3);
+    expect(assertCompleteSourceRecordScan(complete, 3)).toEqual(complete);
+    expect(() => assertCompleteSourceRecordScan(complete, null)).toThrow(/exact source-record count/i);
+    expect(() => assertCompleteSourceRecordScan(complete.slice(0, 2), 3)).toThrow(/scan incomplete/i);
+  });
+
+  it("rejects an exact source-record count above the safety cap", () => {
+    expect(() => assertCompleteSourceRecordScan([], 6, 5)).toThrow(SourceRecordScanLimitError);
   });
 
   it("accepts exactly the cap when the sentinel query proves there are no more rows", async () => {
