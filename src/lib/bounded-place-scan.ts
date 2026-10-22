@@ -15,6 +15,29 @@ export class PlaceScanLimitError extends Error {
   }
 }
 
+/**
+ * Verify the scan matches an exact server-side count. A short HTTP page alone
+ * cannot prove completion because PostgREST/proxies may enforce a lower row cap.
+ */
+export function assertCompletePlaceScan<T>(
+  rows: readonly T[],
+  expectedCount: number | null,
+  maximumRows = PLACE_SCAN_LIMIT,
+): T[] {
+  if (
+    typeof expectedCount !== "number" ||
+    !Number.isSafeInteger(expectedCount) ||
+    expectedCount < 0
+  ) {
+    throw new Error("Exact place count is unavailable");
+  }
+  if (expectedCount > maximumRows) throw new PlaceScanLimitError(maximumRows);
+  if (rows.length !== expectedCount) {
+    throw new Error(`Place scan incomplete: expected ${expectedCount} rows, received ${rows.length}`);
+  }
+  return [...rows];
+}
+
 export async function readBoundedPlacePages<T extends { id: string }>(
   maximumRows: number,
   pageSize: number,
