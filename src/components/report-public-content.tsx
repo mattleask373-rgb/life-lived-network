@@ -51,7 +51,7 @@ export function ReportPublicContent({
     return (
       <p className="mt-3 text-sm text-muted-foreground" role="status">
         Thank you. Your private report has been sent for review. It doesn't automatically hide
-        this {label} or make a judgement about anyone.
+        this{" "}{label} or make a judgement about anyone.
       </p>
     );
   }
