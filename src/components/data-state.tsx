@@ -12,7 +12,7 @@ export function EmptyPlace({
   onStepOut,
 }: {
   placeName: string;
-  needCount: number;
+  needCount: number | null;
   ancestors: { id: string; slug: string; name: string }[];
   onStepOut: (slug: string) => void;
 }) {
@@ -31,9 +31,11 @@ export function EmptyPlace({
           <dt className="font-medium">What we know</dt>
           <dd className="text-muted-foreground">
             Nothing has been recorded here yet
-            {needCount
-              ? `, apart from ${needCount === 1 ? "1 open need" : `${needCount} open needs`}`
-              : ""}
+            {needCount === null
+              ? "; the number of open needs has not been confirmed yet"
+              : needCount > 0
+                ? `, apart from ${needCount === 1 ? "1 open need" : `${needCount} open needs`}`
+                : ""}
             . We'd rather say that than invent something.
           </dd>
         </div>

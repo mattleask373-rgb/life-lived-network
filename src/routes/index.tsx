@@ -20,7 +20,7 @@ import { fetchWorld, fetchWorldEntries } from "@/lib/listings";
 import { MAX_LIMIT } from "@/lib/data/contract";
 import { geoBoundsForViewport, isViewportQueryable, type GeoBounds } from "@/lib/geo-bounds";
 import { densityOf } from "@/lib/trust";
-import { getOpenNeeds } from "@/lib/needs.functions";
+import { getOpenNeedsCount } from "@/lib/needs.functions";
 import { PLACE_FALLBACK } from "@/lib/places";
 import { placeInView, type MapView } from "@/lib/map-view";
 import { entriesForMapList, mergeViewportEntries, partitionMapList } from "@/lib/map-list-sync";
@@ -28,7 +28,7 @@ import { useWorldContext } from "@/lib/world-context";
 import { LocalityQuestions } from "@/components/locality-questions";
 import { WhatsHappening } from "@/components/whats-happening";
 import { WhatsHere } from "@/components/whats-here";
-import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
+import { contributions, localityQuestions, providerGroups, upcomingEvents, type OpenNeedsAnswer } from "@/lib/locality";
 import {
   activitySnapshot,
   meaningfulVariety,
@@ -106,11 +106,15 @@ function Home() {
     },
   });
 
-  const openNeedsFn = useServerFn(getOpenNeeds);
-  const { data: openNeeds } = useQuery({
-    queryKey: ["open-needs", place?.id ?? null],
+  const openNeedsCountFn = useServerFn(getOpenNeedsCount);
+  const openNeedsCountQuery = useQuery({
+    queryKey: ["open-needs-count", place?.id ?? null],
     enabled: Boolean(place),
-    queryFn: () => openNeedsFn({ data: { placeId: place?.id ?? null } }),
+    queryFn: () => {
+      const placeId = place?.id;
+      if (!placeId) throw new Error("A place is required to count open needs.");
+      return openNeedsCountFn({ data: { placeId } });
+    },
   });
 
   const all = useMemo(() => world ?? [], [world]);
@@ -141,8 +145,21 @@ function Home() {
   const events = useMemo(() => upcomingEvents(all), [all]);
   const groups = useMemo(() => providerGroups(all), [all]);
   const given = useMemo(() => contributions(all), [all]);
-  const needCount = openNeeds?.length ?? 0;
-  const questions = useMemo(() => localityQuestions(all, needCount), [all, needCount]);
+  const needsAnswer = useMemo<OpenNeedsAnswer>(
+    () =>
+      openNeedsCountQuery.isError
+        ? { status: "unavailable" }
+        : openNeedsCountQuery.data === undefined
+          ? { status: "checking" }
+          : { status: "known", count: openNeedsCountQuery.data },
+    [openNeedsCountQuery.data, openNeedsCountQuery.isError],
+  );
+  const questions = useMemo(() => localityQuestions(all, needsAnswer), [all, needsAnswer]);
+  const needsSummary = openNeedsCountQuery.isError
+    ? "open needs couldn't be checked"
+    : openNeedsCountQuery.data === undefined
+      ? "still checking open needs"
+      : `${openNeedsCountQuery.data} ${openNeedsCountQuery.data === 1 ? "open need" : "open needs"}`;
   const quiet = Boolean(place) && !worldLoading && !loading && !worldError && all.length === 0;
   const mapPartition = useMemo(() => partitionMapList(mapEntries, view), [mapEntries, view]);
   const mapListEntries = useMemo(
@@ -290,7 +307,7 @@ function Home() {
                 ? "Choose a supported place to see what's recorded here."
                 : worldError
                   ? "We couldn't check what's recorded here."
-                  : `${all.length} ${all.length === 1 ? "thing" : "things"} recorded here · ${needCount} ${needCount === 1 ? "open need" : "open needs"}`}
+                  : `${all.length} ${all.length === 1 ? "thing" : "things"} recorded here · ${needsSummary}`}
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             {quiet ? (
