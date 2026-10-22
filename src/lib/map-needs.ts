@@ -45,12 +45,7 @@ export function placeNeedsForMap(
     }
 
     const position = toScreen({ lat: need.lat, lng: need.lng }, view);
-    if (
-      position.left < -4 ||
-      position.left > 104 ||
-      position.top < -4 ||
-      position.top > 104
-    ) {
+    if (position.left < -4 || position.left > 104 || position.top < -4 || position.top > 104) {
       continue;
     }
     placed.push({ need, ...position });
