@@ -63,8 +63,8 @@ describe("AI draft quota database security contract", () => {
     expect(migration).toContain("ON CONFLICT (user_id) DO NOTHING");
     expect(migration).toContain("FOR UPDATE");
     expect(migration).toContain("UPDATE public.ai_draft_rate_limits");
-    expect(migration).toContain("hour_count = CASE");
-    expect(migration).toContain("day_count = CASE");
+    expect(migration).toContain("v_hour_count := CASE");
+    expect(migration).toContain("v_day_count := CASE");
     expect(migration).toContain("5 per UTC hour and 20 per UTC day");
     expect(migration).toContain("date_trunc('hour', v_now AT TIME ZONE 'UTC')");
     expect(migration).toContain("date_trunc('day', v_now AT TIME ZONE 'UTC')");
