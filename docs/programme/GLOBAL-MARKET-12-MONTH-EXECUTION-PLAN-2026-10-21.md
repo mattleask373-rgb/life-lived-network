@@ -1011,10 +1011,10 @@ The old PR integration register drafted in PR #288 is not a canonical file on ma
 ### Current verified execution evidence
 
 - Main SHA: a99d09f1517523a7a388245ca6b3d5c1245816cb. Latest exact-main Verify and CodeQL links are above.
-- #291 head 3238f15d34b6d9c58097063ef2c030192ffeaccc: Verify [#39811100438](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39811100438) and CodeQL [#39811100488](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39811100488) passed. Draft; independent review not yet recorded.
+- #291 current head 77f82f4b45a9016a74720a38420cfd01c09598fd adds an explicit user-facing SCOPE_TOO_WIDE explanation and serialized-error recognition. The earlier head passed Verify/CodeQL, but the current head's Verify #39815016309 and CodeQL/dependency runs #39815016954 were queued at this snapshot; do not reuse the older passes as current-head proof.
 - #292 head 7b5444ca4b802174b2ee29717a94773500f0ad82: Verify [#39811129107](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39811129107) and CodeQL [#39811129063](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39811129063) passed. Draft; independent review not yet recorded.
 - #293 head ad076f3ce2efd526744a4d498512f80e2509efb0: Verify [#39812127296](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39812127296), CodeQL [#39812127240](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39812127240) and dependency audit passed. The earlier head's lint failure was corrected by a style-only fixup.
-- #295 viewport pagination is a new draft based on current main; its current head is 33b24ed715ff6156ab7e0db62423039cdd410ae2. Verify is pending/running; don't treat it as green until the exact head completes.
+- #295 viewport pagination is a new draft based on current main; current head is c58c3ad9b0affe4d7bd8482dac79da489786cebf, including a limit+1 sentinel row to distinguish exactly-full from more-data pages. Verify #39814554712 and CodeQL/dependency #39814554757 were queued at this snapshot; do not mark green until these exact-head runs complete.
 - Live published GETs returned robots.txt HTTP 200 with blanket Allow rules, /sitemap.xml HTTP 404 HTML, and /life-list HTTP 200 without extracted noindex metadata. No deployment was made from these draft PRs.
 - No PR in this list has been merged by this coordination pass. CI verifies source code, not hosted RLS, live source rights, a real market outcome, deployed route precedence or a durable 24/7 worker.
 
