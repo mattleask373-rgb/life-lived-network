@@ -239,13 +239,21 @@ export function evaluateSeoSmoke(
       failures.push("robots.txt: OAI-SearchBot group must explicitly allow public pages");
     }
     for (const path of PRIVATE_PATHS) {
-      if (!oaiSearchGroup.directives.some(({ name, value }) => name === "disallow" && value === path)) {
-        failures.push("robots.txt: OAI-SearchBot group missing private-route crawler rule for " + path);
+      if (
+        !oaiSearchGroup.directives.some(
+          ({ name, value }) => name === "disallow" && value === path,
+        )
+      ) {
+        failures.push(
+          "robots.txt: OAI-SearchBot group missing private-route crawler rule for " + path,
+        );
       }
     }
     for (const path of NOINDEX_PATHS) {
       if (groupDisallowsPath(oaiSearchGroup, path)) {
-        failures.push("robots.txt: OAI-SearchBot must be able to read noindex metadata for " + path);
+        failures.push(
+          "robots.txt: OAI-SearchBot must be able to read noindex metadata for " + path,
+        );
       }
     }
   }
