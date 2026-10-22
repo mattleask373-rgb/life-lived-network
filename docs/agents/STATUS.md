@@ -149,3 +149,250 @@ This update follows the 19:33 UTC integration snapshot above. It records new dra
 - No PR merge or deployment was performed in the work represented by this update. The one-year prompt requires the eventual persistent executor to be separately implemented and tested; this documentation is not proof that a 24/7 runner is alive.
 
 The core invariants remain: \`findSupply()\` is the single discovery authority; user/private memories never become public supply; demo and unreviewed/rights-uncleared content is not published or indexed; and protected release/production actions require the appropriate human authority.
+
+## Canonical integration checkpoint — 2026-10-22
+
+**This is the latest verified checkpoint and supersedes all earlier candidate-status, repository-SHA, queue-count and release-gate snapshots above.** Historical entries are retained for audit context only. Always re-read the live PR head and exact-head checks before acting. The repository default branch `main` was independently compared to `1cf9b21b6fae9fef2b504b2993d37d2f99766d6d` and is identical at this checkpoint. This status refresh is a documentation-only review candidate; it does not merge or publish any product code.
+
+### Connected Lovable project and canonical source of truth
+
+- Main code repository: `mattleask373-rgb/life-lived-network`, public, default branch `main`.
+- Connected Lovable project: `Real World Atlas`, ID `b3293d2a-3218-4206-ab04-af8e984023ac`, reports published; its exact production URL is not returned by the connector.
+- Latest Lovable working commit observed: `44ce3286112220273db1ead1add860893ea6eed6`. Comparison to main shows merge base `ccbcc6acdbc3dcdf6895c0f624b301418257a6e3`, 16 commits unique to Lovable and 161 commits behind main. This is a divergent working lineage, not a safe sync target.
+- A user prompt explicitly requested a read-only audit / plan-only turn; the subsequent Lovable change committed an update to `.lovable/plan.md`. Combined with the earlier generated-Supabase-types write recorded by #133, plan/read-only prompts are not a technical guarantee against project-file writes. The latest plan-file change is not on main and is not evidence of a production deployment.
+- **HUMAN GATE:** verify Git repository, non-main sync branch, connected Supabase project reference and production hostname in the Lovable owner dashboard. Until verified, do not use write-capable Lovable turns, sync branches, reset history or merge between similarly named repositories.
+
+### Fixture guard issue reconciliation
+
+Issue #130 was closed as completed on 22 October 2026 after verifying the production fixture guard and regression test on current `main`; the closure explicitly does not claim production deployment verification. See [issue #130 closure evidence](https://github.com/mattleask373-rgb/life-lived-network/issues/130#issuecomment-6328959614). The earlier historical line saying #130 remains open is retained only as an old snapshot and is superseded by this dated update.
+
+### Live database readiness — read-only aggregate/catalog queries
+
+The connected Lovable Supabase database reports:
+
+- `places`: 221; `listings`: 0; `profiles`: 0; `source_records`: 0; `sources`: 2.
+- Both configured sources have no recorded `last_run_at`; one is `ready` + enabled and one is `requires_credentials` + disabled.
+- Therefore the product currently has a canonical geographic foundation but no recorded real marketplace inventory, and no locality can yet be called a proven, active market. Do not imply source-backed opportunity coverage from fixtures or source configuration alone.
+- No user or private listing rows were queried; these are aggregate counts only. No database writes were performed.
+
+### Security P0 — effective grants remain unproven
+
+Fresh catalog-only reads against the linked Lovable database found:
+
+- 22/22 public tables have RLS enabled; 0/22 have FORCE RLS. All are owned by `postgres` in this snapshot.
+- Table grants include INSERT/UPDATE/DELETE/TRUNCATE/REFERENCES/TRIGGER for `anon` on 21/22 tables and `authenticated` on 22/22; SELECT was reported for 19 anon and 20 authenticated tables.
+- Default ACLs for `postgres` and `supabase_admin` include broad table privileges for client roles; default sequence and function privileges are broad too. RLS row policies may still deny ordinary row access, so these metadata results are not standalone proof of a reachable breach. RLS policies do not restrict TRUNCATE.
+- Public routine metadata showed `touch_updated_at()`, `update_updated_at_column()`, `has_role(uuid, app_role)`, and `is_safety_reviewer(uuid)`; none was marked SECURITY DEFINER in the current query.
+- The actual Supabase project identity has **not** been reconciled with repository `supabase/config.toml`. No hosted permissions or policies were changed.
+
+**Security disposition:** #164 remains P0. Draft PR #194 contains a refreshed docs-only least-privilege proposal, including the current metadata counts and routine inventory. Its exact head `cde99f26c87c7eb789b96fe57d6c532c58178c08` passed Verify [#39692978104](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39692978104) and CodeQL [#39692978246](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39692978246). These checks validate the proposal code/document, not the hosted permissions. Before any migration: confirm DB identity, complete table/column/routine/view access matrix, test anon/authenticated roles in a disposable DB/PostgREST environment, test future default ACLs and rollback, obtain independent review and explicit owner approval.
+
+### Current integration candidates — exact-head evidence observed
+
+These are review candidates, not deployed features. Check their latest metadata again before acting.
+
+- **#271 — canonical route policy and private Life List:** head `fc264cc1791884a90fd09951533b1fbdbd427e2d`; Verify and CodeQL passed. Draft; independent privacy/SEO review and live host checks remain.
+- **#272 — fail-closed selected-locality scope + antimeridian map behavior:** head `ff9ffac2e91a377cf8313d1698bbefcbfb1cb234`; Verify and CodeQL passed. Draft; manual mobile/desktop, keyboard and map/date-line QA remain.
+- **#274 — source lifecycle in canonical public discovery:** head `9b8aad5b0c400b2da67c681c64cd9575f785b647`; Verify and CodeQL passed. Draft; it does not by itself establish sitemap eligibility parity.
+- **#275 — reviewed WorkOpportunity to locality/Need flow:** head `e1de845fae91d46d01661dbb3f48e21ab034df21`; Verify and CodeQL passed. Draft; no external provider contact, autonomous save or real inventory is implied.
+- **#276 — complete locality sitemap source pagination:** head `abfdfc408fea82227fac453aa55ac077526b27ac`; Verify and CodeQL passed. Draft; depends on privacy/source eligibility being consistent with rendered pages.
+- **#277 — interim sitemap source-proof guard, stacked on #276:** head `6af0d59b1cf3831a7c4096ce662c4896069986f6`; Verify passed [#39688821918](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39688821918). CodeQL was not observed on this stacked head. Draft; it conservatively excludes imported rows from qualifying sitemap paths until source lifecycle proof is available, and may under-index some eligible imported pages. It does not close #255.
+- **#280 — profile relationship correctness:** head `7e78bc220bf98fba2a0255612761ef2cf92d1548`; Verify [#39692812605](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39692812605) and CodeQL [#39692812191](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39692812191) passed. Draft; UI separately preserves `serves`, `available_in`, and `travelling_through`; server input validates and avoids delete-first replacement. Live schema has no unique `(user_id, place_id)` key, so concurrent multi-tab replacements are not atomic and may duplicate rows; any unique-constraint/transaction fix requires a separate reviewed migration. No matcher, hosted schema/row, RLS or deployment changed.
+- **#281 — available_in vs service-area matching semantics:** open product/engineering decision. Current `needs.functions.ts` includes both `serves` and `available_in` in canonical `serviceAreaPlaceIds`, while UI defines `available_in` as “I'm around here.” Resolve with an approved relation × intent matrix and regression tests before starting the services pilot. Do not silently change `findSupply()` or introduce a second matcher.
+- **#282 — privacy-minimised outcome measurement contract:** head `cd9e556d3dc42af7e4db317052b0665078a2f40a`; Verify [#39693813175](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39693813175) and CodeQL [#39693813167](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39693813167) passed. Draft only. Defines day-bucketed coarse metrics and rejects raw queries, user/session/target/connection IDs, contact details, messages, URLs and coordinates. It does **not** instrument or persist production events; a lawful purpose, privacy notice, sink, access/retention policy and separate schema/RLS review are prerequisites.
+- **#194 — least-privilege proposal:** docs-only, both Verify and CodeQL passed, still draft pending human review and disposable DB proof.
+- **#263 — this execution board** remains the durable release gate register. The latest verified status and blocker comments are in the GitHub issue, but the live Lovable target and production host remain owner-gated.
+
+### Growth evidence and external-site research
+
+- Lovable analytics for 2026-09-22–2026-10-21 report 845 visitors / 852 pageviews, with 99% reported bounce, aggregate session duration 0, and page counts dominated by sitemap endpoints. Treat this as an unvalidated traffic baseline; it may include bots/technical requests, and this aggregate report cannot prove which visits were humans. North star is a verified useful outcome, not raw traffic.
+- Official ICO sources checked: data minimisation and privacy by design/default (https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/data-protection-principles/a-guide-to-the-data-protection-principles/ and https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/accountability-and-governance/guide-to-accountability-and-governance/data-protection-by-design-and-by-default). The measurement spine #30 now records the need for coarse events, retention/access controls and no invasive tracking. Official direct-marketing guidance was updated 28 April 2026 (https://ico.org.uk/for-organisations/direct-marketing-and-privacy-and-electronic-communications/direct-marketing-guidance/); no autonomous provider/customer outreach is authorized.
+- Ticketmaster’s official Discovery API and API terms were reviewed (https://developer.ticketmaster.com/products-and-docs/apis/discovery-api/v2/ and https://developer.ticketmaster.com/support/terms-of-use/). The provider remains disabled pending key/terms approval; respect quotas, attribution, event changes/removals and the 24-hour removal requirement on owner request. Event listings are not ticket availability.
+- Adzuna’s official API terms and search docs were reviewed (https://developer.adzuna.com/docs/terms_of_service and https://developer.adzuna.com/docs/search). Before live publication, confirm the appropriate licence/request limits, required “Jobs by Adzuna” attribution, and never present predicted salary as employer-stated pay.
+- GOV.UK’s current England short-term-let guide states the national registration scheme is not yet in force and is expected to begin in 2026; local planning authority rules can apply (https://www.gov.uk/guidance/letting-out-a-self-catering-holiday-home-in-england-rules-and-regulations). London has a separate 90-night framework (https://www.gov.uk/guidance/when-is-permission-required). This is a market-risk screen only, not legal advice or proof that a host is compliant.
+
+### Current release sequence
+
+1. Owner confirms Lovable sync repository/branch, actual backend identity, production hostname and GitHub ruleset state; do not enable Lovable write-mode before the sync target is verified.
+2. Independent reviewers compare the current SEO/map/source/work candidates as dependency families; do not merge competing implementations in parallel. Perform manual privacy/accessibility/browser checks separately from CI.
+3. Complete #164's disposable-DB security evidence and approve any future SQL separately.
+4. Decide #281 semantics; validate the service profile and one end-to-end real-data journey. No real listing/profile/source records exist in the linked product DB today.
+5. Implement a reviewed measurement sink only after the privacy contract is approved; #282 alone does not count real-world outcomes.
+6. Activate Ticketmaster/Adzuna only after credentials, current terms/licence, source lifecycle, attribution, rights removal, publication review and verified market demand are approved.
+7. Verify live `robots.txt`, sitemap index/children, canonical metadata and actual deployed SHA against the owner-confirmed host after a separately authorized release.
+
+### New first-party service-offer candidate — PR #284
+
+- **#284 — explicit first-party service-offer flow:** draft PR https://github.com/mattleask373-rgb/life-lived-network/pull/284, branch `agent/chatgpt/first-party-service-offer-flow-2026-10-22`. Adds explicit shared-taxonomy selection, self-declared provider details, typical price/free declaration, locality currency, an “by arrangement / timing not confirmed” state, safe external booking-link validation, and tests preventing commercial service offers from entering personal activity/journey planning.
+- It uses existing listing columns and RLS only; no schema/permission/provider/deployment changes. It does not verify provider credentials, booking availability, service areas outside the selected listing locality, or customer demand. `findSupply()` remains the single match authority.
+- The last queue snapshot before opening #284 showed 92 open PRs (53 drafts, 39 non-drafts, 29 reported non-mergeable); opening #284 implies 93 unless another PR changed state. Re-fetch the current list before any triage decisions.
+- **Validation gate:** PR #284 remains draft until Verify (lint/test/build) and CodeQL are observed green on the latest exact head. A failed test run was seen on a prior head while the service/profile/journey changes were being refined; do not rely on any earlier run after a subsequent commit. Manual signed-in mobile/desktop and accessibility QA remains required.
+- **Pilot gates remain:** #281 owner-approved semantics for `available_in` vs `serves`, #164 disposable-DB role testing and reviewed least-privilege plan, confirmed Lovable repository/non-main sync target + backend + production hostname, and real opt-in service supply. The linked database still has zero listings, profiles and source records.
+
+### Portfolio and limitations
+
+After closing proven duplicates #273, #197 and #199 unmerged, the latest PR list returned **92 open PRs** in the main repository: 53 drafts, 39 non-drafts, 29 reported non-mergeable. The orchestration repository has one extra open draft. This is a triage queue, not proof every stale PR is obsolete. PR #273 was closed unmerged after a file-by-file comparison with #271: its Life List privacy behavior is covered by the shared route-policy registry and live SEO smoke, and the Life List route itself was byte-identical. #197/#199 were closed unmerged after confirming #244's adapter is already merged, their model files were older than current-main semantics, and #275 is the newer main-based surface port; the only unconsumed date-coverage helper is retained as a follow-up question on #184. Compare unique diffs, preserve unique fixes, then close or supersede with links; do not bulk-close by age or mergeability.
+
+No production writes, hosted permissions changes, provider activations, source ingestion, autonomous merge, or deployment was performed. The available workspace did not expose a connected `@Sites`/Firecrawl connector; official public websites were researched via the available web interface, not through a connected site automation. Public production endpoints were not independently reachable through the available verifier, so live SEO/deployment behavior remains **unverified**.
+
+### Non-negotiable invariants
+
+- `findSupply()` is the sole possibility/Need matching authority.
+- Residence is not service area; capability is not willingness; capability is not availability; a journey is not live location.
+- Unknown remains unknown; no fabricated providers, events, jobs, inventory or outcomes.
+- Draft/CI-green does not mean independently reviewed, merged, published or deployed.
+- No hosted security changes, provider activation, AI assistant enablement, external outreach, or production deployment without the applicable human approvals.
+
+
+
+## Latest autonomous verification checkpoint — 2026-10-22
+
+**This is the newest checkpoint and supersedes older statements about current main, PR queue size, k6 state, and live-host verification above. Older snapshots remain history, not current truth.**
+
+### Canonical repository and queue
+- Current inspected repository: `mattleask373-rgb/life-lived-network`.
+- Current `main` observed at `d02459a384cb8ffcc6201839d45645e178ef0b2b`; latest merged change is PR #284, the explicit first-party service-offer flow. Its merge does not establish that any live supply or market demand exists.
+- Live GitHub pull request query returned **89 open PRs**. The queue remains well above the plan's maximum of ten; avoid opening more parallel branches and reconcile existing overlap families before broadening work.
+- Similar application-shaped/placeholder repositories still exist. The repo shown above is an active source candidate, but the exact Lovable sync target, production project identity and deployed build SHA are not independently established. Do not bulk-sync divergent `Loveable/work/safely` history.
+
+### CI blocker and focused repair
+- At `d02459a384cb8ffcc6201839d45645e178ef0b2b`, the Verify run [#39698450412](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39698450412) passed dependency installation, lint, tests, build and k6 setup; it failed at **Parse k6 script without sending traffic**.
+- Existing draft PR [#285](https://github.com/mattleask373-rgb/life-lived-network/pull/285) has been updated as a focused two-file fix on current `main`, new head `f7a7bcaa5012a78155a8f4bd5b41295335218ce1`. It moves load-test target validation inside the VU function and runs `k6 inspect` without synthetic target flags. The run cannot send traffic; actual test execution still validates the target before the first request.
+- Exact-head [Verify passes](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39711933886); [CodeQL and locked-dependency audit pass](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39711933943). Supabase Preview was **skipped**, not passed as a database-environment proof. PR #285 remains draft, unmerged and undeployed. The fix is not yet in `main`.
+- PR #286 also contains a k6 fix but bundles a Supabase migration and connection-state changes. Its own Verify/CodeQL passed, but Supabase Preview was skipped and the migration was not exercised against hosted Postgres. Keep the schema/connection component behind separate independent security review; the focused #285 fix intentionally excludes it.
+
+### Fresh live SEO endpoint evidence
+A fresh read-only scrape of the currently named Lovable origin, `https://life-lived-network.lovable.app`, returned:
+- `GET /robots.txt` → **HTTP 200**, `text/plain`. The actual response says `Allow: /` for Googlebot, Bingbot, Twitterbot, Facebook's crawler and `User-agent: *`; it contains **no private-path Disallow directives and no Sitemap directive**.
+- `GET /sitemap.xml` → **HTTP 404**, `text/html`, application 404 page rather than sitemap XML.
+- `/api/public/sitemap.xml` and child sitemap endpoints were not verified in this checkpoint.
+These are observations of that URL, not proof that this is the owner-confirmed production origin. They nevertheless show that the public origin currently checked is not serving the intended robots and sitemap behavior. Treat this as a launch blocker. A robots file is crawler guidance, not access control; private routes still require real authorization and noindex policy.
+
+### Current product and trust constraints
+- A recent read-only aggregate note recorded 221 places, zero listings, zero profiles and zero source records; two source configurations had no recorded runs. Reconfirm before reuse. Do not call any locality live or imply real inventory based on fixtures/source configuration.
+- RLS/default ACL finding #164 remains P0: table and default privilege metadata need an access matrix and disposable two-user/anonymous tests before any hosted change. No permission/schema/security change was applied by this checkpoint.
+- Keep public “Ask this place” disabled until server-side canonical retrieval via `findSupply()`, eligibility proof, citations/freshness, prompt-injection handling, isolation, rate/cost controls, observability and independent release review are demonstrated.
+- No capacity claim is evidenced by the k6 parser verification; no real staging load smoke ran, because no isolated approved staging host/backend was verified.
+- No human approval was bypassed: no merge, deployment, production write, provider activation, hosted database mutation or Lovable project-setting change occurred.
+
+### Next bounded actions
+1. Re-run exact-head checks whenever #285 changes; independent reviewer and required branch review remain necessary before merge.
+2. Confirm the true published host, Lovable repository/non-main sync branch and backend identity; only then authorize deployment or host-level diagnosis.
+3. After an approved publish/hosting fix, re-check robots, sitemap index and every child sitemap with a normal HTTP GET; compare page metadata/indexability to sitemap inclusion.
+4. Prioritise the dependency-aware PR triage and security/accessibility evidence; do not reduce 89 PRs by bulk closure or parallel merges.
+
+
+## Additional live-host probe — 2026-10-22
+
+A later read-only probe also checked the API sitemap index:
+- `https://life-lived-network.lovable.app/api/public/sitemap.xml` returned **HTTP 404** with `text/html` and the app's 404 page, not XML.
+- Together with the root sitemap 404 and allow-all robots response recorded above, the checked published origin is not exposing the intended current sitemap stack.
+- Current-main source contains `public/robots.txt` with disallows and a Sitemap directive, `public/sitemap.xml` indexing pages/locality/eight service shards, and dynamic/API sitemap handlers. The discrepancy is consistent with a stale or different published source/build, but the exact deployed commit cannot be inferred from the HTTP response alone.
+- Existing PR #271's latest focused head is `8b0e12643275917e8f5ba10b14f730054fec9b74`, based on the #285 k6-fix branch. It adds a shared route registry and makes the personal Life List noindex/private; exact-head Verify is running after a formatting-only repair. This does not resolve the deployed-origin mismatch.
+- The currently checked child sitemap routes have not yet been verified. Do not claim the route stack is live, correct or indexed until the owner-confirmed production deployment is checked.
+
+
+## Lovable lineage, analytics and final checks — 2026-10-22
+
+### Read-only Lovable project identity
+- Lovable project `Real World Atlas`, ID `b3293d2a-3218-4206-ab04-af8e984023ac`, reports `is_published=true`, `creation_status=completed`, latest working commit `44ce3286112220273db1ead1add860893ea6eed6`, last edited `2026-10-21T23:04:05Z`. The connector does not expose the deployed SHA or confirm its public origin.
+- Its project branch compared against GitHub main `d02459a384cb8ffcc6201839d45645e178ef0b2b` is **diverged**: 270 commits on the main side that are absent from the Lovable branch, and 16 commits on the Lovable branch absent from main; merge base `ccbcc6acdbc3dcdf6895c0f624b301418257a6e3`. This is not a safe direct sync/publish.
+- Read-only files at the Lovable commit show `public/sitemap.xml` is an old six-URL urlset containing `/life-list`, while current GitHub main has the newer sitemap index / locality / eight-shard architecture. Its tracked `public/robots.txt` has some private rules but no `/life-list` disallow. The public origin's actual responses are still worse/different: all-crawler allow-all, root sitemap 404, API index 404, and fixed-pages sitemap 404. No Lovable project writes or deployment were attempted.
+
+### Analytics quality caveat — aggregate only
+- Lovable's legacy analytics endpoint for 2026-09-22 through 2026-10-22 reports 897 visitors, 904 pageviews, 1.01 pageviews/visit, session duration 0, and bounce rate 99%.
+- Top paths are crawler/sitemap-heavy: `/sitemap.xml` 512, `/api/public/sitemap.xml` 273, homepage 73, `/api/public/sitemap-pages.xml` 19, `/life-list` 4. Source summary: Direct 841, Google 50, Bing 6.
+- These numbers are **not DAU, not verified human activity, and not outcomes**. The path mix and zero duration make bot/technical traffic contamination plausible. Do not use them to claim product-market fit. A consent-/privacy-reviewed outcome instrument and genuine attended/met/contributed confirmations are still absent/unproven.
+
+### Security metadata re-check
+- Catalog-only SQL against the Lovable-linked Supabase project (no application rows) again returned 22/22 public base tables with RLS enabled and 0/22 FORCE RLS; 68 policies on 22 tables. Direct table-grant counts include `anon` with INSERT/UPDATE/DELETE/TRUNCATE/REFERENCES/TRIGGER on 21/22 and `authenticated` on 22/22; SELECT is present on 19/22 and 20/22 respectively.
+- This supports the existing P0 least-privilege/default-ACL finding #164. It does not prove an exploitable endpoint because policies may restrict ordinary row operations. RLS does not constrain table-level TRUNCATE. No writes or private-row reads were made. The project ref in repository `supabase/config.toml` has not been reconciled to this Lovable project's actual database identity.
+
+### Exact-head checks now available
+- PR #285 `f7a7bcaa5012a78155a8f4bd5b41295335218ce1`: Verify pass [run 39711933886](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39711933886); CodeQL/dependency audit pass [run 39711933943](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39711933943). Draft and unmerged.
+- PR #271 `8b0e12643275917e8f5ba10b14f730054fec9b74`: Verify pass [run 39712621495](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39712621495). It remains draft and stacked on #285; CodeQL is not a complete human/privacy sign-off and should be rerun after it returns to `main`.
+- PR #283 `ae9a079a5c3d30beba9abed843808dc3cb866505`: Verify pass [run 39712703599](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39712703599). Draft, docs-only, stacked on #285.
+- These results prove branch verification only. Supabase Preview was skipped where reported; no capacity/load traffic, deployment, merge or hosted permission change was performed.
+
+### Order after human gates clear
+1. Confirm the Lovable sync target, intended repository/branch, actual backend/project reference and production hostname/build.
+2. Review/merge #285 after independent review; then retarget/rebase #271 and #283 to main and rerun exact-head Verify/CodeQL. Do not merge either stacked draft directly into main while its base is a feature branch.
+3. Only after owner-authorized publish/host work, rerun root robots, root sitemap, index and all children with real HTTP GETs and compare them to the published SHA.
+4. Resolve #164 using a confirmed database identity, complete policy/function/column/default ACL inventory, disposable anonymous/user-A/user-B/moderator tests and rollback rehearsal before any hosted migration.
+
+
+## Latest read-only security and SEO evidence — 2026-10-22
+
+This addendum supersedes any older count or live-endpoint status above where they differ. Detailed sanitized grant matrix and test plan are recorded in [Issue #164 comment](https://github.com/mattleask373-rgb/life-lived-network/issues/164#issuecomment-6331424442); the connection-specific review note is on [PR #286](https://github.com/mattleask373-rgb/life-lived-network/pull/286#issuecomment-6331435780).
+
+### Fresh connected-project catalog results
+
+- Read-only catalog SQL was executed through the Lovable connector against the project named Real World Atlas. It returned database `postgres`, execution role `postgres`, PostgreSQL `17.6`; no user rows, private messages, report content or credentials were read, and no data or schema was changed.
+- **22/22 public base tables have RLS enabled; 0/22 have FORCE RLS; 68 policies cover the 22 tables.** All are owned by `postgres`.
+- **19/22 tables have all table-level privileges granted to `anon`**, including TRUNCATE. The `sources` and `source_records` tables lack table-level SELECT but still carry client write/admin privileges; `place_memories` has no anon table grant. **20/22 tables grant authenticated the full table-level privilege set**; source tables again lack table-level SELECT but retain client write/admin privileges. Column grants are also broader than the desired role matrix.
+- Default ACLs for new public tables under both `postgres` and `supabase_admin` include broad rights for client roles; `postgres` defaults also grant broad sequence rights and function EXECUTE to client roles. These results confirm a critical least-privilege remediation need in the connected project. They do not by themselves prove that a corresponding PostgREST endpoint is reachable or exploitable.
+- **Project identity mismatch remains unresolved.** Repository `supabase/config.toml` names `csgngcnaqeoxyopvnzjo`; the Lovable project ID is not itself the Supabase project reference, and the matching backend reference has not been confirmed. Do not apply any SQL until that is reconciled.
+- `private.people_are_blocked(uuid,uuid)` currently appears SECURITY DEFINER with execute granted to owner and `service_role` only, while connection RLS policies call it. Test authenticated evaluation on a disposable database; do not widen EXECUTE without reviewing privacy and RPC exposure.
+- Detailed comments on #164 and #286 specify the target per-table access classes, explicit-default revocation proposal (marked NOT TO APPLY), and anonymous/two-user/reviewer/service-role regression suite.
+
+### Fresh read-only public-host confirmation
+
+- A fresh GET of `https://life-lived-network.lovable.app/robots.txt` returned HTTP 200 / `text/plain`, but its body permits all paths to major crawlers and `User-agent: *`; it has no intended private-route `Disallow` rules and no `Sitemap:` directive.
+- A fresh GET of `https://life-lived-network.lovable.app/sitemap.xml` returned HTTP 404 / `text/html` with the application 404 page, not sitemap XML.
+- Current GitHub main has a tracked private-route robots file and static sitemap-index file, but the checked public response does not match current source. Lovable's working branch is materially divergent and its deployed SHA/production origin have not been established. Do not sync or republish to “fix” this until the owner confirms the repository, branch, backend and hostname. After an approved host change, re-check the index and every known child sitemap.
+
+### Exact PR security disposition
+
+- #285 focused k6 CI repair passes Verify, CodeQL and locked-dependency audit on `f7a7bcaa5012a78155a8f4bd5b41295335218ce1`; it remains draft and unmerged pending independent review.
+- #271 shared crawler-route policy / Life List privacy fix passes Verify on stacked head `8b0e12643275917e8f5ba10b14f730054fec9b74`; it remains draft, stacked on #285, and needs CodeQL once rebased back to main after the CI fix has been human-approved/merged.
+- #283 remains a docs-only status candidate stacked on #285. Its exact head should be rechecked after every further update. None of these is deployed.
+
+
+## Governance enforcement and PR queue snapshot — 2026-10-22
+
+### Main-branch ruleset (read-only)
+GitHub reports active repository ruleset **`living World - protect main`** (ruleset ID `24946178`, updated 2026-10-22):
+- Target: default branch; non-fast-forward updates prohibited.
+- Required check: `verify`, with strict base-branch policy.
+- Pull requests required; review-thread resolution and last-push approval required.
+- **`required_approving_review_count: 0` and `require_code_owner_review: false`.** The ruleset therefore does not require a positive number of approving reviews or CODEOWNERS review. This setting alone does not enforce the plan's “different agent reviews each PR” + “human sign-off on gated areas” requirements. The `require_last_push_approval` flag is enabled.
+- Direct branch-protection API inspection returned 403 for the connected integration; no attempt was made to modify rulesets or bypass restrictions.
+- Human action: decide positive approval count and CODEOWNERS policy, then change rules through the repository's approved admin workflow. No change made here because branch-protection changes are a human gate.
+
+### Queue health
+Latest read-only open-PR query returned:
+- **89 open PRs**: 45 draft and 44 non-draft.
+- **57** not updated for more than seven days; **32** not updated for more than fourteen days.
+- **76** target `main`; **13** target another feature/phase branch. The non-main set includes #271 and #283 stacked on #285, and older dependent control-plane, visual-language and ingestion chains.
+- This exceeds the plan's limit of ten open PRs overall. Do not reduce the count by bulk closing or blind merges: the plan requires unique findings to be ported first.
+- Next autonomous triage should classify overlap families by changed-file overlap, merge base, unique behaviour/tests, exact-head CI and dependency edges, then produce ordered keep/rebase/merge-after-parent/close-with-findings-carried-forward recommendations. No closures or merges were performed.
+
+### Exact-head status for the current checkpoint
+- #285 `f7a7bcaa5012a78155a8f4bd5b41295335218ce1`: Verify, CodeQL, locked-dependency audit pass; draft and unmerged.
+- #271 `8b0e12643275917e8f5ba10b14f730054fec9b74`: Verify passes; draft and stacked on #285; CodeQL should be rerun after it is retargeted to main.
+- #283 had Verify pass on earlier head `ae9a079a5c3d30beba9abed843808dc3cb866505`; any subsequent append creates a new run. Check its newest exact head before calling the status candidate verified.
+
+
+### Expanded live sitemap GET verification — 2026-10-22
+
+Fresh read-only GET checks against the same public Lovable origin returned:
+
+| Endpoint | HTTP | Content type | Observed body |
+|---|---:|---|---|
+| `/robots.txt` | 200 | `text/plain` | Allow-all crawler rules; no private-path disallows or `Sitemap:` directive |
+| `/sitemap.xml` | 404 | `text/html` | Application 404 page, not XML |
+| `/api/public/sitemap.xml` | 404 | `text/html` | Application 404 page, not XML |
+| `/api/public/sitemap-pages.xml` | 404 | `text/html` | Application 404 page, not XML |
+| `/api/public/sitemap-localities.xml` | 404 | `text/html` | Application 404 page, not XML |
+| `/api/public/sitemap-services/1.xml` | 404 | `text/html` | Application 404 page, not XML |
+
+These are current observations for `life-lived-network.lovable.app`; they do not prove it is the owner-confirmed production origin. They establish a public crawler-route failure on the host inspected. A robots allow-all file is not authorization, but it is wrong for the intended crawler policy. Root sitemap/index/children cannot be considered released or operational until the owner confirms the actual published source and an approved release/host correction yields successful XML responses. Do not use a Lovable sync or deployment to fix this before repository, branch, backend and host are verified.
+
+
+## ADR-004 / ADR-005 added on this draft branch
+
+Two proposed ADRs have been added without overwriting the repository's existing accepted ADR-001 and ADR-002:
+- `docs/adr/004-canonical-backend-and-migration-authority.md`: backend identity, safe treatment of the divergent Lovable branch, one migration authority and owner-controlled portability.
+- `docs/adr/005-million-dau-capacity-model.md`: explicit request arithmetic, measured workload fields, staged staging-only tests and cost formulas.
+
+These are **proposed**, not accepted decisions. ADR-004 requires owner verification of repository/backend/host and migration authority; ADR-005 does not claim capacity has been measured. There are two existing files named ADR-003 in the repository; this addition intentionally avoids duplicating their numbering and records that numbering collision for future documentation hygiene.
