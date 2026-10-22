@@ -114,11 +114,24 @@ describe("need doorway keeps typed text", () => {
     expect(t.to).toBe("/need");
     expect(roundTrip({ ...t.search })).toEqual({ q: text, from: text });
   });
-  it("other doorways are unchanged and carry no search", async () => {
+  it("help, give, and journey preserve the typed text without interpreting it", async () => {
     const { intentTarget } = await import("./search-context");
-    expect(intentTarget("/help", "I can help")).toEqual({ to: "/help" });
-    expect(intentTarget("/give", "x")).toEqual({ to: "/give" });
-    expect(intentTarget("/journey", "x")).toEqual({ to: "/journey" });
+    for (const [href, text] of [
+      ["/help", "I can help with gardening"],
+      ["/give", "I want to give an hour"],
+      ["/journey", "I'm travelling next week"],
+    ] as const) {
+      const target = intentTarget(href, text);
+      expect(target.to).toBe(href);
+      expect(roundTrip({ ...target.search })).toEqual({ q: text, from: text });
+    }
+    expect(intentTarget("/", "Explore Birmingham")).toEqual({ to: "/" });
+  });
+  it("blank text adds no parameters to any destination", async () => {
+    const { intentTarget } = await import("./search-context");
+    expect(intentTarget("/help", "   ")).toEqual({ to: "/help" });
+    expect(intentTarget("/give", "")).toEqual({ to: "/give" });
+    expect(intentTarget("/journey", " ")).toEqual({ to: "/journey" });
   });
   it("blank text adds no params, so plain /need links are unchanged", async () => {
     const { intentTarget } = await import("./search-context");

@@ -1,4 +1,6 @@
 import { publicPage } from "@/lib/seo";
+import { FrontDoorContext } from "@/components/front-door-context";
+import { parseQuerySearch } from "@/lib/search-context";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,6 +14,7 @@ const description =
 
 export const Route = createFileRoute("/give")({
   head: () => publicPage({ path: "/give", title, description }),
+  validateSearch: parseQuerySearch,
   component: Give,
 });
 
@@ -28,6 +31,7 @@ const SUGGESTIONS = [
 
 function Give() {
   const { user, ready } = useSession();
+  const { from } = Route.useSearch();
   const qc = useQueryClient();
   const {
     data: hours,
@@ -52,6 +56,11 @@ function Give() {
             — it's just hours, in people's own words.
           </p>
         </header>
+
+        <FrontDoorContext
+          from={from}
+          guidance="Keeping these words has not posted an hour. Review and edit the form below; nothing is created until you submit it."
+        />
 
         {ready && user ? (
           <NewHour userId={user.id} onDone={() => qc.invalidateQueries({ queryKey: ["hours"] })} />
