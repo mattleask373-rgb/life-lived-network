@@ -17,7 +17,8 @@ import {
   type DiscoveryContext,
   type Page,
 } from "./data/contract";
-import { asDataError } from "./data/errors";
+import { asDataError, DataError } from "./data/errors";
+import { localityQueryScope } from "./locality-query-scope";
 import {
   decideSourceLifecycle,
   type SourceLifecycleMetadata,
@@ -73,6 +74,14 @@ async function readWorld(
         .filter((slug): slug is string => Boolean(slug));
     }
 
+    const localityScope = context.bounds ? null : localityQueryScope(context.placeId, insideIds);
+    if (localityScope?.kind === "too-wide") {
+      throw new DataError(
+        "SCOPE_TOO_WIDE",
+        `Selected locality has ${localityScope.count} descendant IDs; the safe filter cap is ${localityScope.cap}.`,
+      );
+    }
+
     let query = supabase
       .from("listings")
       .select("*")
@@ -97,16 +106,10 @@ async function readWorld(
         // validated before reaching this query, so only finite numbers enter OR.
         query = query.or(`lng.gte.${bounds.minLng},lng.lte.${bounds.maxLng}`);
       }
-    } else {
-      // A very wide locality selection can name more IDs than a sensible filter.
-      // Drop the filter instead of hiding activity from an arbitrary ID slice;
-      // the bounded page limit still applies.
-      const LOCALITY_FILTER_CAP = 400;
-      if (insideIds.length && insideIds.length <= LOCALITY_FILTER_CAP) {
-        query = query.in("place_id", insideIds);
-      } else if (!insideIds.length && context.placeId) {
-        query = query.eq("place_id", context.placeId);
-      }
+    } else if (localityScope?.kind === "place-ids") {
+      query = query.in("place_id", localityScope.placeIds);
+    } else if (localityScope?.kind === "exact-place") {
+      query = query.eq("place_id", localityScope.placeId);
     }
 
     // An event that has finished is never upcoming. Anything without a start

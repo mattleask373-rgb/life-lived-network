@@ -53,6 +53,15 @@ describe("what a page says about itself", () => {
   it("keeps public and private screens apart", () => {
     for (const path of PRIVATE_PATHS) expect(PUBLIC_PATHS).not.toContain(path);
   });
+
+  it("deindexes the private Life List without blocking crawlers from observing noindex", () => {
+    expect(PUBLIC_PATHS).not.toContain("/life-list");
+    expect(PRIVATE_PATHS).not.toContain("/life-list");
+    const head = privatePage({ path: "/life-list", title: "Your life list", description: "Private" });
+    expect(head.meta).toContainEqual({ name: "robots", content: "noindex, nofollow" });
+    expect(head.links).toEqual([]);
+    expect(robotsTxt()).not.toContain("Disallow: /life-list");
+  });
 });
 
 describe("sitemaps", () => {

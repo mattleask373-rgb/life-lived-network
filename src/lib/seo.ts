@@ -102,7 +102,6 @@ export const PUBLIC_PATHS: readonly string[] = [
   "/",
   "/journey",
   "/road-trip",
-  "/life-list",
   "/give",
   "/make",
 ];
