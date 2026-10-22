@@ -124,7 +124,11 @@ function Home() {
   );
 
   const openNeedsFn = useServerFn(getOpenNeeds);
-  const { data: openNeeds } = useQuery({
+  const {
+    data: openNeeds,
+    isError: openNeedsError,
+    isPending: openNeedsPending,
+  } = useQuery({
     queryKey: ["open-needs", place?.id ?? null],
     enabled: Boolean(place),
     queryFn: () => openNeedsFn({ data: { placeId: place?.id ?? null } }),
@@ -158,7 +162,12 @@ function Home() {
   const events = useMemo(() => upcomingEvents(all), [all]);
   const groups = useMemo(() => providerGroups(all), [all]);
   const given = useMemo(() => contributions(all), [all]);
-  const needCount = openNeeds?.length ?? 0;
+  // An unverified open-needs read is unknown, not a truthful zero.
+  const needCount = openNeedsError || openNeedsPending ? null : (openNeeds?.length ?? 0);
+  const openNeedsSummary =
+    needCount === null
+      ? "open-needs count unavailable"
+      : `${needCount} ${needCount === 1 ? "open need" : "open needs"}`;
   const questions = useMemo(() => localityQuestions(all, needCount), [all, needCount]);
   const quiet = Boolean(place) && !worldLoading && !loading && !worldError && all.length === 0;
   const mapPartition = useMemo(() => partitionMapList(mapEntries, view), [mapEntries, view]);
@@ -345,7 +354,7 @@ function Home() {
                   ? "This locality is too large to search at once. Choose a smaller locality to see verified records."
                   : worldError
                     ? "We couldn't check what's recorded here."
-                    : `${all.length} ${all.length === 1 ? "thing" : "things"} recorded here · ${needCount} ${needCount === 1 ? "open need" : "open needs"}`}
+                    : `${all.length} ${all.length === 1 ? "thing" : "things"} recorded here · ${openNeedsSummary}`}
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             {quiet ? (
