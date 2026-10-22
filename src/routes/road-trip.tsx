@@ -229,7 +229,7 @@ function RoadTrip() {
                 value={interests}
                 onChange={(e) => setInterests(e.target.value)}
                 placeholder="music, walking, repair"
-                className="focus-ink mt-1 w-full rounded-full border border-border bg-card px-3 py-2.5 text-sm text-foreground"
+                className="focus-ink mt-1 min-h-11 w-full rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-foreground"
               />
             </label>
           </div>
