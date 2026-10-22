@@ -72,7 +72,7 @@ describe("Life List persistence safety contracts", () => {
 
   it("keeps write failure separate from read failure and ignores writes after unmount", () => {
     expect(hookSource).toContain("const mounted = useRef(false);");
-    expect(hookSource).toContain("if (!mounted.current) return;");
+    expect(hookSource).toContain("!mounted.current ||");
     expect(hookSource).toContain("if (mounted.current && generation.current === request)");
   });
 });
