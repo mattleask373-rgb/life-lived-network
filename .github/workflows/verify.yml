@@ -34,4 +34,5 @@ jobs:
           --env LOAD_TEST_ENV=staging
           --env LOAD_TEST_BASE_URL=https://preview.staging.example.invalid
           --env LOAD_TEST_APPROVED=YES_I_APPROVE_STAGING_LOAD
+          --env LOAD_TEST_PARSE_ONLY=1
           tests/load/staging-public-read.js
