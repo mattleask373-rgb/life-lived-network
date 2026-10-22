@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { validatePublicContentReport, type PublicReportSubject } from "./public-content-report";
-import type { PublicContentReportInput } from "./public-content-report";
+import { validatePublicContentReport } from "./public-content-report";
 
 /**
  * File a private, reviewable report about a public listing, open public need,
