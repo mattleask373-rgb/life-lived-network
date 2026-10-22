@@ -131,9 +131,7 @@ describe("service sitemap indexability", () => {
   });
 
   it("does not backfill ineligible raw rows from after the first 60 page slots", () => {
-    const hidden = Array.from({ length: 60 }, (_, index) =>
-      entry({ id: `held-${index}` }),
-    );
+    const hidden = Array.from({ length: 60 }, (_, index) => entry({ id: `held-${index}` }));
     const laterEligible = entry({ id: "eligible-after-first-page" });
     const rows: PublicListingSitemapRow[] = [
       ...hidden.map((value) => ({
@@ -144,9 +142,7 @@ describe("service sitemap indexability", () => {
       })),
       { id: laterEligible.id, place_id: "city", demonstration: false, publiclyEligible: true },
     ];
-    const entries = new Map(
-      [...hidden, laterEligible].map((value) => [value.id, value]),
-    );
+    const entries = new Map([...hidden, laterEligible].map((value) => [value.id, value]));
 
     expect(indexableServicePaths(index, rows, entries)).not.toContain("/gb/birmingham/cleaning");
   });
