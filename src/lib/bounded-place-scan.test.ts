@@ -44,7 +44,7 @@ describe("bounded canonical-place scan", () => {
       return source.filter((item) => afterId === null || item.id > afterId).slice(0, limit);
     });
     expect(result).toHaveLength(5);
-    expect(calls.at(-1)).toEqual(["00005", 1]);
+    expect(calls.at(-1)).toEqual(["00004", 2]);
   });
 
   it("propagates a failed later page rather than returning earlier rows as complete", async () => {
