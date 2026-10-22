@@ -19,15 +19,15 @@ export function LocalityQuestions({
         {placeName}, as it actually is
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Five questions, answered from what is stored. A nought means nothing is here yet, not that
-        we are hiding it.
+        Five questions, answered from what is stored. A nought means nothing is recorded; a dash
+        means we couldn't verify the answer just now.
       </p>
       <ul className="mt-3 grid gap-2 sm:grid-cols-5">
         {questions.map((q) => {
           const body = (
             <>
               <p className="text-sm leading-snug">{q.question}</p>
-              <p className="mt-2 text-2xl leading-none">{q.count}</p>
+              <p className="mt-2 text-2xl leading-none">{q.count === null ? "—" : q.count}</p>
               <p className="mt-1 text-xs text-muted-foreground">{q.unit}</p>
             </>
           );
