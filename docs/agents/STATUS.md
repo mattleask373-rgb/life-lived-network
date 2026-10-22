@@ -396,3 +396,37 @@ Two proposed ADRs have been added without overwriting the repository's existing 
 - `docs/adr/005-million-dau-capacity-model.md`: explicit request arithmetic, measured workload fields, staged staging-only tests and cost formulas.
 
 These are **proposed**, not accepted decisions. ADR-004 requires owner verification of repository/backend/host and migration authority; ADR-005 does not claim capacity has been measured. There are two existing files named ADR-003 in the repository; this addition intentionally avoids duplicating their numbering and records that numbering collision for future documentation hygiene.
+
+
+## Latest canonical PR / coordination reconciliation — 2026-10-22 03:22 UTC
+
+This addendum supersedes earlier PR queue snapshots above. GitHub's canonical REST records, rather than stale connector snapshots, are used for the merged/closed status below.
+
+### Merged product/security foundations (already on current main)
+
+- **#274 — source lifecycle in public discovery:** merged at 00:11:23 UTC. All three changed-file blob SHAs (source-lifecycle-policy.ts, its tests, world.functions.ts) match current main. No new merge performed by this review.
+- **#275 — WorkOpportunity locality and editable Need flow:** merged at 00:13:40 UTC.
+- **#276 — locality sitemap pagination:** merged at 00:11:41 UTC.
+- **#277 — fail-closed imported sitemap evidence:** merged at 00:12:02 UTC, stacked on #276.
+- **#280 — profile service-area / journey relation separation:** merged at 00:13:19 UTC.
+- **#282 — privacy-minimised outcome event contract:** merged at 00:11:05 UTC. The contract is in main; this does not prove an analytics sink is configured or real-world outcomes are collected.
+- **#129 — private routes out of crawler paths** and **#157 — tracked .env hygiene** are merged; **#232 — reconciled private-route auth-guard tests** is merged. Their older superseded candidates must not be re-applied.
+- **#131 — demo fixture production guard** and **#155 — earlier service-area match proposal** are closed unmerged. #131's relevant fixture guard was separately verified on main via the later current-main fix; closure does not establish host deployment.
+
+### Remaining older candidates confirmed open
+
+- **#154 — exact open-needs / fail-closed-by-place** remains open, non-mergeable and based on old main (5f06fc…). Its head is ad5dce30…. Compare against merged #275 and current findSupply() behavior, preserve any unique “honest open needs” tests, then rebase/port or close only after proof.
+- **#156 — private route auth guard tests** remains open on old base (5f06fc…); **#214** remains open on older base (ccbcc6…) even though its later reconciliation **#232** merged. Compare unique test cases; do not merge two copies of the same route guard suite.
+- **#125** remains the open agent-coordination issue. Use it as the coordination index for the durable team programme, not as a substitute for docs/agents/STATUS.md.
+
+### Updated queue snapshot at 03:20 UTC
+
+Canonical GET /pulls?state=open returned **90 open PRs (46 drafts, 44 non-drafts)**. **14** target non-main branches: four deliberate stacked candidates on #285 (#194, #245, #271, #283) and ten older control-plane/dependency branches. These figures supersede earlier 89/45/44 and 13-non-main snapshots. Re-fetch counts before future closure work; activity is concurrent.
+
+### Overlapping status PR and single-writer disposition
+
+PR **#287** (agent/grok/status-seo-gap-2026-10-22) edits only docs/agents/STATUS.md and captures this cycle's live robots/sitemap mismatch, current-main SHA and several historic PR states. Its unique facts on #125, #129/#131/#155/#157, #154, #156/#214/#232 are consolidated above. This PR adds the same file but does not include the security/Storage cross-schema inventory or ADR-004/005 in this branch. Compare/cross-port completed; keep only one canonical STATUS change. No content from #287 is being integrated by a second concurrent write.
+
+### SEO caveat retained
+
+Current source has static/dynamic robots and sitemap routes, but the personal Life List is still included in PUBLIC_PATHS on main until #271 merges, so source parity is not fully correct yet. Fresh unauthenticated GETs on life-lived-network.lovable.app continue to show allow-all robots without Sitemap/Disallows and 404 HTML for root and child sitemap paths. The exact deployed build SHA and Lovable sync target are unconfirmed. These observations block launch; no sync, republish or deployment was performed.
