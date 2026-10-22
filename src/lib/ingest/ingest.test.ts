@@ -160,6 +160,28 @@ describe("the provider adapter", () => {
     }
   });
 
+  it("refuses local wall time when the provider omits its timezone", () => {
+    const { events } = ticketmasterAdapter.parse(
+      payload({
+        ...GOOD,
+        dates: { start: { localDate: "2030-06-01", localTime: "19:30:00" } },
+      }),
+    );
+    expect(events).toHaveLength(0);
+  });
+
+  it("keeps an explicit instant when no display timezone is supplied", () => {
+    const { events } = ticketmasterAdapter.parse(
+      payload({
+        ...GOOD,
+        dates: { start: { dateTime: "2030-06-01T18:30:00Z" } },
+      }),
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0]!.startsAt).toBe("2030-06-01T18:30:00.000Z");
+    expect(events[0]!.timezone).toBe("UTC");
+  });
+
   it("carries a cancellation and a postponement through", () => {
     const cancelled = ticketmasterAdapter.parse(
       payload({ ...GOOD, dates: { ...GOOD.dates, status: { code: "cancelled" } } }),
