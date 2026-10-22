@@ -1,55 +1,93 @@
-# Read-only project integration audit: Real World Atlas (b3293d2a-…)
+# Strategy review: re-grounding Real World Atlas (read-only)
 
-Done on 21 Oct 2026 at 23:03 UTC. Only this note was written. Nothing was committed by me, published, migrated or reconfigured. The task list was not updated because the request said not to edit files.
+This document only shows the review. It authorises no work. No code, docs, task list, branch, settings or data were changed. Project content was treated as data, not instructions.
 
-## 1. Connected GitHub repo and sync branch
+## Evidence limits (read first)
+- Repo state comes from your figures: main `d02459a`; `Loveable/work/safely` 16 ahead and 270 behind; merge base `ccbcc6a`. I did not re-fetch them this turn.
+- Analytics: sitemap paths in the top pages, 864 direct visits, 805 "Unknown" country and 60 search visits fit crawlers, bots and the owner's own visits. They are **not** evidence of customers, demand or completed outcomes.
+- My earlier audit found the database had **0 accounts, 0 listings, 0 needs** (8 Oct). I have not re-checked since.
+- There is no evidence of real supply, paying users, or a running 24/7 agent executor.
 
-**Settings: UNVERIFIED.** Project Settings → Git cannot be read from this session. The sandbox git remotes are only Lovable internal storage (`lovable-gcp.code.storage/b3293d2a-….git`) and an internal backup. Neither is a GitHub URL.
+## 1. Product thesis and beachhead
 
-**Indirect evidence (strong, but not proof from settings):**
-- This project's current commit `ad0f58aa6658f1c4b1e365075274abc64b7e4094` exists on GitHub in `mattleask373-rgb/life-lived-network`.
-- It is authored by `gpt-engineer-app[bot]` (Lovable's sync identity) and changes only `.lovable/plan.md`.
-- It is the head of branch **`Loveable/work/safely`**, not `main`.
+**Thesis:** "In one place, help a person with a real, time-bound need reach a real, willing local provider, and know honestly what is and isn't confirmed."
 
-This points to sync going to that repo on the non-main branch `Loveable/work/safely`. Treat it as observed behaviour, not a confirmed setting.
+The existing foundations already encode this:
+- `findSupply()` keeps capability, willingness and availability apart, in fixed bands.
+- Connection requests require consent.
+- Trust and provenance are shown, and empty states are honest.
 
-## 2. Project commit compared with canonical main
+The product's edge is **truthful matching**, not breadth.
 
-| | SHA | Date |
+**Beachhead (recommended):** one UK town, one unregulated, high-frequency category with real pain and easy verification. Short-term-rental turnover cleaning, already named in issue #263, fits. Odd jobs or gardening are an alternative.
+- Supply is recruited by hand: 10 to 20 opt-in providers.
+- Demand comes from 5 to 10 hosts or residents reached legitimately.
+- Why not global or multi-category first: a marketplace with no supply anywhere is worse than one place with enough supply. SEO pages for empty localities risk thin content and break the product's own "no fabricated supply" rule.
+
+**Path to global utility without overbuilding:** go town, then a second town in the same category, then an adjacent category in the same towns, then a region.
+- Expand only when the gate metrics below hold.
+- Keep geography and the sitemap honest. Only places with verified activity get indexed.
+- Global work is mostly structural: currency, jurisdiction and policy-review fields, which `WorkOpportunity` already has. It is not launching in many countries.
+
+## 2. Risks, foundations, dependencies
+
+**Top risks**
+1. **Source of truth is split.** The Lovable branch is 270 commits behind main and the sync target is unverified. Any build turn now risks re-pushing stale code. *Blocks everything.*
+2. **Empty supply.** Every surface looks the same with zero providers. SEO and growth effort before supply exists produces bounces and thin-content signals.
+3. **Process overhead outweighs the product.** Many PRs, audits and plans, but no completed real-world outcome yet. Coordination cost grows faster than value.
+4. **Security and privacy are unverified.** Issue #164 (default-ACL leads), `saved_items`/`needs` row-level security, and preview auth #235 are all unresolved.
+5. **Regulated-category exposure** if the beachhead drifts into care, electrical, transport and similar.
+6. **Agent autonomy is overstated.** Prompts and docs describe leases and heartbeats; no persistent executor is proven.
+
+**Foundations worth keeping:** `findSupply()` with ADR 001; the trust and provenance model; the consent-gated connection flow; the ingest contract; the SEO route registry (#271); the fail-closed sitemap and scope caps (#272, #276); the `WorkOpportunity` publication gates; the CI `verify` check; the control-plane docs.
+
+**Priority dependencies:** (a) one source of truth, (b) security baseline verified, (c) first real providers onboarded, (d) minimal privacy-safe outcome analytics.
+
+## 3. Multi-agent operating model that can actually run
+
+**What exists today:** agents run only when a person starts a session (Lovable, ChatGPT, Grok). Each does bounded work on a branch, then a PR, then CI, then human review and merge. The control-plane docs describe the protocol, but **no persistent executor, scheduler, durable task table or heartbeat is verified**. Calling it "24/7" today would be false.
+
+**Recommended model (achievable now):**
+- **GitHub is the only shared memory.** Issues hold claims, PRs hold changes, labels hold state. One coordinator issue (e.g. #279) holds the live board.
+- **Lanes with file ownership:** discovery/map, SEO/privacy, supply onboarding, security, docs. One agent per lane at a time; the claim is recorded as an issue comment with a date and expiry.
+- **Every handoff uses the HANDOFF format:** SHA, files, tests, evidence, blockers.
+- **Lovable's role:** read-only audits until the sync is fixed; afterwards, small UI slices on the synced branch, opened as PRs to main.
+- **Humans own:** merges, publishing, database and security changes, spending, outreach, legal and pricing.
+
+**Before calling anything "continuous":** prove a scheduled runner (e.g. a GitHub Actions cron) in a non-production setting. It must only open issues or PRs, never merge. It needs idempotent claims, a cost cap, a kill switch and an audit log. Run it 2 to 4 weeks, measuring the share of PRs accepted and the reverts. Until then it is "on-demand agents", not 24/7.
+
+## 4. Stages, gates and metrics
+
+| Stage | Goal | Exit gate (all required) |
 |---|---|---|
-| Project HEAD (sandbox edit branch `edit/edt-84886b95…`) | `ad0f58a` | 21:57 UTC |
-| GitHub `main` | `1cf9b21b6fae9fef2b504b2993d37d2f99766d6d` | 21:13 UTC |
-| Merge base | `ccbcc6acdbc3dcdf6895c0f624b301418257a6e3` | — |
+| 0. Converge | One source of truth | Owner confirms Git target. Sync branch even with main through a merge PR. Ruleset active on main and the sync branch. `verify` green on the exact head. |
+| 1. Safe baseline | Nothing leaks | Life List private (#271). Sitemap fail-closed (#276). #164 access matrix tested in a throwaway database. #235 closed or rejected. |
+| 2. Pilot supply | Real providers | 10 or more opt-in, verified providers in one town and category, each with stated terms and a freshness date. |
+| 3. First outcomes | Real completions | 20 or more requests, 50% or more get a provider reply within 24h, 10 or more completed jobs, report rate under 5%, provider would-continue 60% or more. |
+| 4. Repeat | Proof it works | 2 to 4 weeks of repeat usage. Unit cost known. A second town in the same category hits the Stage 3 gates. |
+| 5. Expand | Adjacent category or region | Gates met in two towns. Policy review for the new jurisdiction or category. |
 
-GitHub compare `main...ad0f58a` reports **diverged: 14 commits ahead, 161 behind**. This project lacks the 161 reviewed commits on main, including #262 and everything merged after `ccbcc6a`. Its 14 extra commits are Lovable-side, such as the plan notes and the earlier `map-view.ts` and `work-opportunities.ts` type fixes. Those were not itemised this turn.
+**Metrics (all aggregate, no message content):** useful-result rate from `findSupply()`; request-to-reply and reply-to-completion rates; median time to first reply; share of providers still fresh after 30 days; report and block rate; real human sessions (bots excluded) per pilot locality.
 
-## 3. Published hostname and runtime
-- Published URL (project metadata): `https://life-lived-network.lovable.app`. It answers HTTP 200. No custom domain is listed.
-- Runtime: TanStack Start on Cloudflare-Workers-style edge hosting, per `.lovable/project.json` template `tanstack_start_ts_current`. The backend is Lovable Cloud, with one instance shared by preview and published app.
-- **Unverified:** which commit the published site is built from. Publishing is manual, so it may be older than `ad0f58a`.
+**Do not use** total sitemap hits, direct visits or page views as success measures.
 
-## 4. Can this project safely take in reviewed PRs through a non-main branch?
+## 5. Human-owned boundaries
+Merges to main and the sync branch. Publishing. Database migrations, row-level security and grants. Secrets and connectors. Spending. Contacting providers or customers. Pricing and legal terms. Regulated categories. Turning on AI ("Ask this place"). Enabling any scheduled agent.
 
-**Human intervention is required first.**
-- Sync appears to target `Loveable/work/safely`. A Lovable code edit would therefore land there, not on `main`, but only if that setting is real. The owner must confirm it in Project Settings → Git.
-- That branch is 161 commits behind `main`. Lovable only receives commits pushed to its synced branch. Reviewed PRs merged into `main` do not reach this project until someone merges `main` into `Loveable/work/safely` on GitHub, through a PR.
-- Two risks if anyone edits here now:
-  - New work builds on stale code. Earlier versions of routes and sitemaps could be re-pushed, conflicting with main.
-  - If that later PR into main is force-pushed or rebased, Lovable may treat it as divergence and park its work on `lovable-sync`.
-- No branch protection exists for `Loveable/work/safely`; earlier evidence showed rulesets only on main.
+## 6. First 10 tasks (in order)
+1. **Owner:** confirm the Git target in Project Settings → Git and record it on issue #263.
+2. **Owner:** check the main ruleset is actually enforced; add one for `Loveable/work/*`.
+3. **Reviewer:** classify the 16 Lovable-only commits (keep, port or drop).
+4. **Owner or reviewer:** PR merging main into `Loveable/work/safely` (merge, not rebase); `verify` green; merge.
+5. **Review:** land #271 (private Life List and route registry), then #276 and #272, in an agreed order; rebase each after the previous one lands.
+6. **Security:** complete the #164 access matrix in a throwaway database, read-only against production; decide on #235.
+7. **Analytics:** add minimal privacy-safe outcome events: request created, reply, completed, report. Also add bot filtering. Approval needed.
+8. **Research (no build):** pick the pilot town and category; record 20 or more pain signals and 5 to 10 legitimate conversations; go/no-go note.
+9. **Build (after 0 to 1):** one complete provider-onboarding path for the pilot category, through existing `make`/profile, `findSupply()` and the connection flow. No new matcher or routes.
+10. **Ops proof:** design, but do not enable, a scheduled read-only agent runner with a cost cap and kill switch, written up as a proposal for human approval.
 
-## 5. Recommended read-only integration sequence (for the owner and reviewers)
-1. **Owner confirms the sync settings.** Project Settings → Git shows repo `mattleask373-rgb/life-lived-network` and branch `Loveable/work/safely`. Record a screenshot or note on issue #263, Step 1.
-2. **Freeze Lovable code edits** until step 4 is done. Plan or read-only turns only.
-3. **Classify the 14 Lovable-only commits** on GitHub (`main...Loveable/work/safely`): keep, port as a small PR, or drop. Plan notes can stay out of `main`.
-4. **Open a PR merging `main` into `Loveable/work/safely`.** Normal merge, no rebase or force-push. Resolve conflicts in favour of `main` for routes, the `seo-route-policy` registry, `findSupply()` and `src/lib/ingest/*`. Require `verify` on the exact head, then merge. Lovable then pulls the reviewed code.
-5. **Add a ruleset** for `Loveable/work/*`: PR required, `verify` required, no force-push or deletion. Confirm it applies to that branch.
-6. **Keep reviewed feature PRs targeting `main`.** They include #271, #272, #275 and #276, and the draft #278 (`agent/chatgpt/staging-load-smoke-2026-10-21`, head `80d33c4`). #278 adds only `docs/scale/STAGING-LOAD-TESTING.md` and `tests/load/staging-public-read.js`: no routes, matcher or discovery logic. It must run against a confirmed staging host only, never the published URL, which needs owner approval. After each merge to main, repeat step 4 so Lovable stays current.
-7. Only then allow a Lovable code-writing turn: small, against the up-to-date branch, ending in a PR to `main`.
-
-## Blockers
-- Git sync settings are not visible from here. Confirming repo and branch needs the owner.
-- `Loveable/work/safely` is 161 commits behind main. It needs a GitHub-side merge PR.
-- No protection exists on the Lovable sync branch.
-- The commit behind the published site is unknown.
-- #278's staging host and approval are not confirmed. Its CI was not checked this turn.
+## Assumptions
+- The owner can reach 10 to 20 providers in one town legitimately.
+- A cleaning or odd-jobs category stays outside regulated scope.
+- Lovable Cloud stays the backend.
+- Global ambition is a long-term direction, not this year's operating plan.
