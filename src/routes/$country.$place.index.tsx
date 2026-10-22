@@ -20,10 +20,12 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 
 import { AskThisPlace } from "@/components/ask-this-place";
 import { EntrySheet } from "@/components/entry-sheet";
-import { EmptyPlace } from "@/components/data-state";
+import { DataErrorState, DataLoadingState, EmptyPlace } from "@/components/data-state";
 import { LocalityQuestions } from "@/components/locality-questions";
 import { WhatsHappening } from "@/components/whats-happening";
 import { WhatsHere } from "@/components/whats-here";
@@ -31,6 +33,7 @@ import { WorkOpportunityFacts } from "@/components/work-opportunity-facts";
 import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
+import { getOpenNeeds } from "@/lib/needs.functions";
 import { localityPath } from "@/lib/locality-path";
 import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
 import { KIND_LABEL } from "@/lib/places";
@@ -187,6 +190,18 @@ function LocalityPage() {
   const { place, ancestors, children, siblings } = geography;
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle } = useLifeList();
+  const openNeedsFn = useServerFn(getOpenNeeds);
+  const openNeedsQuery = useQuery({
+    queryKey: ["open-needs", place.id],
+    queryFn: () => openNeedsFn({ data: { placeId: place.id } }),
+  });
+  const needCount =
+    openNeedsQuery.data === undefined ? null : openNeedsQuery.data.length;
+  const needsStatus = openNeedsQuery.isError
+    ? "error"
+    : openNeedsQuery.data === undefined
+      ? "loading"
+      : "ready";
   const { q } = Route.useSearch();
   const textMatches = useMemo(() => filterEntriesByText(entries, q), [entries, q]);
   const [quickFilters, setQuickFilters] = useState<TravellerFilterId[]>([]);
@@ -200,7 +215,7 @@ function LocalityPage() {
   const offers = useMemo(() => contributions(filtered), [filtered]);
   const categories = useMemo(() => categoriesPresent(entries), [entries]);
   const workOpportunities = useMemo(() => entries.filter(hasPublicWorkOpportunity), [entries]);
-  const questions = useMemo(() => localityQuestions(entries, 0), [entries]);
+  const questions = useMemo(() => localityQuestions(entries, needCount), [entries, needCount]);
   const demonstrations = entries.filter((entry) => entry.demonstration).length;
 
   return (
@@ -254,23 +269,38 @@ function LocalityPage() {
       ) : null}
 
       {entries.length === 0 ? (
-        <EmptyPlace
-          placeName={place.name}
-          needCount={0}
-          ancestors={ancestors.slice(0, 3)}
-          onStepOut={(slug) => {
-            const target = ancestors.find((a) => a.slug === slug);
-            if (target) {
-              void navigate({
-                to: "/$country/$place",
-                params: { country: target.countrySegment || "gb", place: target.slug },
-              });
-            }
-          }}
-        />
+        <>
+          {openNeedsQuery.isError && openNeedsQuery.data === undefined ? (
+            <DataErrorState
+              className="mt-3"
+              retry={() => void openNeedsQuery.refetch()}
+            />
+          ) : openNeedsQuery.data === undefined ? (
+            <DataLoadingState className="mt-3" label="Checking open needs…" />
+          ) : null}
+          <EmptyPlace
+            placeName={place.name}
+            needCount={needCount}
+            ancestors={ancestors.slice(0, 3)}
+            onStepOut={(slug) => {
+              const target = ancestors.find((a) => a.slug === slug);
+              if (target) {
+                void navigate({
+                  to: "/$country/$place",
+                  params: { country: target.countrySegment || "gb", place: target.slug },
+                });
+              }
+            }}
+          />
+        </>
       ) : (
         <div className="mt-6">
-          <LocalityQuestions placeName={place.name} questions={questions} />
+          <LocalityQuestions
+            placeName={place.name}
+            questions={questions}
+            needsStatus={needsStatus}
+            onRetryNeeds={() => void openNeedsQuery.refetch()}
+          />
           <AskThisPlace placeName={place.name} />
 
           <div className="mt-6">
