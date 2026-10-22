@@ -175,7 +175,34 @@ No paid acquisition until analytics can distinguish meaningful human activity fr
 
 ---
 
-## 5. The multi-agent operating model
+## 6. Commercial model and unit economics
+
+Global growth must lead to a sustainable service, but monetization should follow demonstrated value rather than be used to disguise a product that has not yet achieved reliable local liquidity.
+
+### Commercial principles
+
+- Keep essential discovery, participation and human connection accessible. Do not paywall basic safety, consent, reporting or access to a person's own data.
+- Do not sell private user data, use private needs/memories for targeting, or turn human relationships into a popularity/ranking economy.
+- Do not sell “verification.” Verification must reflect evidence and policy, not payment.
+- If placement is ever sponsored, label it clearly and keep relevance, eligibility and safety requirements intact. Payment must not turn an ineligible or stale item into a valid result.
+- Do not build payment flows, take rates or financial escrow until the value chain, liability, refunds, disputes, taxes, chargebacks and applicable country rules have been reviewed.
+- Treat each business model as a hypothesis. No pricing, contracts or financial commitments without human approval.
+
+### Candidate models to evaluate after the pilot
+
+1. **Free pilot / provider retention first.** Start by proving that the service creates value, that providers respond and that exchanges complete. Record provider time/cost and request fulfillment; do not assume willingness to pay.
+2. **Provider tools or business subscriptions.** Consider optional paid tools only if providers repeatedly value a verified profile, availability management, enquiry workflow, schedule, reporting or operational software beyond basic visibility.
+3. **Transparent transaction fee.** Consider only where the platform genuinely supports or manages the transaction and where the legal, payment, refund, dispute and support model is ready. A fee taken on off-platform outcomes may be unenforceable or damage trust.
+4. **Partner-funded local utility.** Community organisations, venues, municipalities, accommodation operators or business groups may sponsor clearly defined local services or onboarding where benefit and obligations are transparent.
+5. **Clearly labelled sponsored discovery.** Defer until there is enough high-quality organic supply and ranking governance to avoid undermining user trust.
+
+### Unit economics and go/no-go
+
+Measure cost per completed outcome, provider acquisition and onboarding cost, moderation/support cost, source/API costs, infrastructure and the share of providers who return. Measure willingness to pay with real conversations or approved experiments, not assumptions.
+
+Do not start major paid acquisition until the funnel is trustworthy, a locality has adequate supply, and the team knows what one incremental completed outcome costs. Any ad-spend test needs a human-approved budget, named owner, stop-loss threshold, attribution and a rollback plan. Agents may research, draft campaigns and report results; they may not increase budgets or accept commercial terms autonomously.
+
+## 6. The multi-agent operating model
 
 The objective is **continuous progress**, not continuous unbounded model activity. A healthy 24/7 system is event-driven: scheduled checks and new evidence wake bounded workers, work is recorded durably, and agents stop when no valid task is ready. It should not spin in endless chat loops or consume tokens for the appearance of activity.
 
@@ -255,7 +282,7 @@ A GitHub scheduled workflow can be useful for periodic checks, but a cron file a
 
 ---
 
-## 6. Autonomy levels and human gates
+## 7. Autonomy levels and human gates
 
 | Level | Allowed automation | Human gate |
 |---|---|---|
@@ -271,7 +298,7 @@ An automation may suggest an action and prepare the artifacts; authenticated cod
 
 ---
 
-## 7. Stage-gated path to global growth
+## 8. Stage-gated path to global growth
 
 The programme is rolling and outcome-gated, not a calendar promise. A blocked gate must be recorded; safe non-overlapping research can continue, but later stages do not inherit a presumed pass.
 
@@ -379,7 +406,7 @@ Paid acquisition, broad public campaigns, high-volume partner outreach, unattend
 
 ---
 
-## 8. Metrics that tell the truth
+## 9. Metrics that tell the truth
 
 ### Product north star
 
@@ -430,7 +457,7 @@ A high volume of agent activity with low acceptance, little user value, repeated
 
 ---
 
-## 9. Delivery protocol and guardrails
+## 10. Delivery protocol and guardrails
 
 Before a task:
 1. Read the current constitution, relevant ADRs, current board, issue history and exact current main SHA.
@@ -466,7 +493,7 @@ At handoff:
 
 ---
 
-## 10. The first ten tasks, in order
+## 11. The first ten tasks, in order
 
 The exact PR and security state must be refreshed before a task is claimed. This is the recommended sequence, not an instruction to bypass an owner gate.
 
@@ -485,7 +512,7 @@ If Gate 0 blocks, continue only safe non-overlapping research and review tasks. 
 
 ---
 
-## 11. Proposed owner decisions
+## 12. Proposed owner decisions
 
 The owner should explicitly approve or change these decisions before implementation expands:
 
@@ -500,7 +527,7 @@ These decisions give agents enough clarity to work without implicitly transferri
 
 ---
 
-## 12. Definition of done for this phase
+## 13. Definition of done for this phase
 
 The phase is not complete merely because this plan is merged, an assistant is connected, a sitemap exists or a scheduled workflow has run. It is complete when evidence shows that:
 
