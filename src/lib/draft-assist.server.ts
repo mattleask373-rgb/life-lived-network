@@ -14,7 +14,10 @@ function statusOf(err: unknown): number | null {
 export async function generateDraft(text: string, hint: string | null): Promise<DraftResult> {
   // Check before constructing a provider client or making any billable call.
   if (isDraftAssistDisabled(process.env["DRAFT_ASSIST_DISABLED"])) {
-    return { ok: false, error: "Drafting help is paused right now. You can still write it yourself." };
+    return {
+      ok: false,
+      error: "Drafting help is paused right now. You can still write it yourself.",
+    };
   }
 
   const apiKey = process.env["LOVABLE_API_KEY"];
