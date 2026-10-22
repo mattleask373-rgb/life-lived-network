@@ -10,8 +10,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 
-import { decodeCursor, pageLimit, toPage, type DiscoveryContext, type Page } from "./data/contract";
+import {
+  decodeCursor,
+  encodeCursor,
+  pageLimit,
+  type DiscoveryContext,
+  type Page,
+} from "./data/contract";
 import { asDataError } from "./data/errors";
+import {
+  decideSourceLifecycle,
+  type SourceLifecycleMetadata,
+  type SourceRecordLifecycleInput,
+} from "./source-lifecycle-policy";
 import { rowToEntry, type ListingRow } from "./listings";
 import { assertQueryableGeoBounds } from "./geo-bounds";
 import type { SourcePhoto, WorldEntry } from "./world-data";
@@ -67,9 +78,6 @@ async function readWorld(
       .select("*")
       .eq("status", "published")
       .neq("data_quality", "expired")
-      // Something cancelled or postponed is not something to go to. The record
-      // and its provenance stay; it simply stops being an answer.
-      .eq("cancellation", "")
       // Things with a real start time come first, soonest first; everything
       // else keeps its existing most-recent-first order.
       .order("starts_at", { ascending: true, nullsFirst: false })
@@ -155,56 +163,126 @@ async function readWorld(
       }
     }
 
-    // Where source-derived activity came from: one query for the page, never
-    // one per card, and only the fields needed to credit and link back.
-    const provenance = new Map<string, { sourceName: string; sourceUrl: string }>();
+    // Source records are authoritative for imported-record eligibility and attribution.
+    // A failed/incomplete provenance read never promotes an imported row to a resident post;
+    // resident records remain available, and transient source failures degrade freshness rather
+    // than erasing historical information.
     const imported = listings.filter((r) => r.origin === "source" || r.origin === "confirmed");
+    const sourceRecordsByListing = new Map<string, SourceRecordLifecycleInput[]>();
+    const sourceMetadata = new Map<string, SourceLifecycleMetadata>();
+    let sourceLifecycleReadFailed = false;
+
     if (imported.length) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: records } = await supabaseAdmin
+      const { data: sourceRecords, error: sourceRecordsError } = await supabaseAdmin
         .from("source_records")
-        .select("listing_id, source_id, source_url")
-        .in(
-          "listing_id",
-          imported.map((r) => r.id),
-        )
+        .select("listing_id, source_id, source_url, source_state, last_seen_at, source_updated_at")
+        .in("listing_id", [...new Set(imported.map((r) => r.id))])
         .abortSignal(signal);
       throwIfAborted(signal);
-      const sourceIds = [...new Set((records ?? []).map((r) => r.source_id))];
-      const sourceNames = new Map<string, string>();
-      if (sourceIds.length) {
-        const { data: sources } = await supabaseAdmin
-          .from("sources")
-          .select("id, name, attribution")
-          .in("id", sourceIds)
-          .abortSignal(signal);
-        throwIfAborted(signal);
-        for (const source of sources ?? []) {
-          sourceNames.set(source.id, source.attribution || source.name);
+
+      if (sourceRecordsError) {
+        sourceLifecycleReadFailed = true;
+      } else {
+        for (const record of sourceRecords ?? []) {
+          if (!record.listing_id) continue;
+          const lifecycleRecord: SourceRecordLifecycleInput = {
+            listingId: record.listing_id,
+            sourceId: record.source_id,
+            sourceUrl: record.source_url ?? "",
+            sourceState: record.source_state,
+            lastSeenAt: record.last_seen_at ?? null,
+            sourceUpdatedAt: record.source_updated_at ?? null,
+          };
+          const existing = sourceRecordsByListing.get(record.listing_id) ?? [];
+          existing.push(lifecycleRecord);
+          sourceRecordsByListing.set(record.listing_id, existing);
         }
-      }
-      for (const record of records ?? []) {
-        if (!record.listing_id) continue;
-        provenance.set(record.listing_id, {
-          sourceName: sourceNames.get(record.source_id) ?? "An outside source",
-          sourceUrl: record.source_url ?? "",
-        });
+
+        const sourceIds = [...new Set((sourceRecords ?? []).map((record) => record.source_id))];
+        if (sourceIds.length) {
+          const { data: sources, error: sourcesError } = await supabaseAdmin
+            .from("sources")
+            .select("id, name, attribution, status, enabled, refresh_minutes, consecutive_failures")
+            .in("id", sourceIds)
+            .abortSignal(signal);
+          throwIfAborted(signal);
+
+          if (sourcesError) {
+            sourceLifecycleReadFailed = true;
+          } else {
+            for (const source of sources ?? []) {
+              sourceMetadata.set(source.id, {
+                id: source.id,
+                name: source.name,
+                attribution: source.attribution ?? "",
+                status: source.status,
+                enabled: source.enabled,
+                refreshMinutes: source.refresh_minutes,
+                consecutiveFailures: source.consecutive_failures,
+              });
+            }
+          }
+        }
       }
     }
 
     throwIfAborted(signal);
-    const page = toPage(
-      listings.map((r) =>
+    const lifecycleNow = Date.now();
+    const worldItems: WorldEntry[] = [];
+
+    for (const row of listings) {
+      if (row.origin === "source" || row.origin === "confirmed") {
+        if (sourceLifecycleReadFailed) continue;
+
+        const decision = decideSourceLifecycle({
+          listingId: row.id,
+          records: sourceRecordsByListing.get(row.id) ?? [],
+          sources: sourceMetadata,
+          now: lifecycleNow,
+        });
+        if (!decision.eligible || !decision.sourceName || !decision.sourceUrl) continue;
+
+        // The listing-level cancellation and last-checked values can reflect a
+        // different linked source. Use the freshest eligible source observation.
+        worldItems.push(
+          rowToEntry(
+            {
+              ...row,
+              cancellation: "",
+              last_checked_at: decision.lastCheckedAt ?? null,
+              data_quality: decision.dataQualityOverride ?? row.data_quality,
+            },
+            row.creator_id ? names.get(row.creator_id) : undefined,
+            photos.get(row.id) ?? [],
+            { sourceName: decision.sourceName, sourceUrl: decision.sourceUrl },
+          ),
+        );
+        continue;
+      }
+
+      // Unknown origins are never silently reclassified as resident/community posts.
+      if (row.origin != null && row.origin !== "" && row.origin !== "resident") continue;
+      // Match the former query contract: only explicitly uncancelled resident rows are shown.
+      if (row.cancellation !== "") continue;
+
+      worldItems.push(
         rowToEntry(
-          r,
-          r.creator_id ? names.get(r.creator_id) : undefined,
-          photos.get(r.id) ?? [],
-          provenance.get(r.id),
+          row,
+          row.creator_id ? names.get(row.creator_id) : undefined,
+          photos.get(row.id) ?? [],
         ),
-      ),
-      offset,
-      limit,
-    );
+      );
+    }
+
+    // Cursor/pagination follows the raw bounded database window, not filtered item
+    // count. Otherwise a page with hidden/withdrawn source rows could stop early.
+    const hasMore = listings.length === limit;
+    const page: Page<WorldEntry> = {
+      items: worldItems,
+      hasMore,
+      nextCursor: hasMore ? encodeCursor(offset + listings.length) : null,
+    };
 
     // The trial layer, only on the first page, only for the locality being
     // looked at, and only ever labelled as a demonstration. A locality with no
