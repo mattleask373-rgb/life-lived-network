@@ -204,3 +204,13 @@ This snapshot supersedes earlier queue/check claims in this file for the PRs bel
 ### Non-negotiable release gates
 
 No autonomous merge, deployment, live host mutation, hosted DB/schema/RLS/grant change, source/feed activation, paid spend, provider/user outreach, or public AI activation. Owner/admin must first confirm the Lovable Git destination/non-main branch, deployed host/build SHA, Supabase project identity, effective main ruleset approval/deletion controls, and the intended stage/production isolation. Use concurrent agent capacity for read-only research, isolated PR work, deterministic tests and documentation, not to bypass these gates.
+
+
+## Consolidation correction — 22 October 2026, 19:12 UTC
+
+- #291 remains the single combined correctness candidate. Latest observed head `1f40d6d5337cbc138b71db391e0bc4f20402b148`; exact-head Verify was queued at the 19:10 UTC check read, with Preview skipped and other checks not yet all registered. Formatting issues reported by the prior Verify were corrected on the branch, but this is not yet proof the newest head passes.
+- The latest PR #291 includes the exact-count reconciliations for keyset scans (needed because a short response can be caused by a server response cap rather than end-of-data), fail-closed local scope and source eligibility, shared SEO/noindex policy, bounded viewport pagination, plus the unknown-not-zero open-needs status and retry wiring.
+- PRs #296, #298, #300, #301 and stale-base #194 are closed unmerged. Their intended changes were either ported to #291 or replaced by current-main #297. Do not list these as merge candidates.
+- Merge sequence is now: human/admin Gate 0 → review/merge #294 after fresh checks → review/merge #291 after exact-head checks + manual QA → review-only documentation #297 → separately review #289. PR #297 is not executable ACL remediation; #289 is not rate limiting.
+- Still unresolved at Gate 0: raw main ruleset requires zero approving reviews; deletion protection is not proven; Lovable Git target/deployed host/backend project identity remains unverified. Live sitemap and robots failures remain until owner-approved production verification.
+- Do not claim 24/7 coding from the three enabled daily audit automations. True unattended development remains blocked on a verified durable executor with task persistence, least-privilege capabilities, leases/fencing, idempotency, cancellation, budgets, monitoring, alerts and a tested kill switch.
