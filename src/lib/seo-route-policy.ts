@@ -13,11 +13,16 @@ export const PUBLIC_SITEMAP_CHILD_PATHS: readonly string[] = [
 
 export const PUBLIC_PATHS: readonly string[] = ["/", "/journey", "/road-trip", "/give", "/make"];
 
-/** Personal, private and internal screens must not be crawled. This is not access control. */
+/**
+ * These pages must not be indexed, but crawlers must be able to fetch their
+ * robots metadata. A robots.txt Disallow is not a substitute for noindex.
+ */
+export const NOINDEX_PATHS: readonly string[] = ["/life-list"];
+
+/** Routes intentionally disallowed to crawlers. This is not access control. */
 export const PRIVATE_PATHS: readonly string[] = [
   "/auth",
   "/profile",
-  "/life-list",
   "/conversations",
   "/need",
   "/help",

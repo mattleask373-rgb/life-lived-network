@@ -13,8 +13,8 @@
  * what a page already truthfully shows.
  */
 
-import { PRIVATE_PATHS, PUBLIC_PATHS, PUBLIC_SITEMAP_CHILD_PATHS } from "./seo-route-policy";
-export { PRIVATE_PATHS, PUBLIC_PATHS, PUBLIC_SITEMAP_CHILD_PATHS };
+import { NOINDEX_PATHS, PRIVATE_PATHS, PUBLIC_PATHS, PUBLIC_SITEMAP_CHILD_PATHS } from "./seo-route-policy";
+export { NOINDEX_PATHS, PRIVATE_PATHS, PUBLIC_PATHS, PUBLIC_SITEMAP_CHILD_PATHS };
 
 /**
  * The origin the public site is served from. Set VITE_SITE_ORIGIN when the site

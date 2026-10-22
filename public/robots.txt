@@ -1,12 +1,11 @@
 User-agent: *
 Allow: /
 
-# Personal, private and internal screens. Nothing useful for a search engine,
-# and nothing anyone else should be shown. These must stay in sync with
-# PRIVATE_PATHS in src/lib/seo-route-policy.ts. robots.txt is crawler policy, not access control.
+# Routes intentionally disallowed to crawlers. Keep in sync with PRIVATE_PATHS
+# in src/lib/seo-route-policy.ts. robots.txt is crawler policy, not access control.
+# NOINDEX_PATHS routes stay crawlable so crawlers can observe their noindex metadata.
 Disallow: /auth
 Disallow: /profile
-Disallow: /life-list
 Disallow: /conversations
 Disallow: /need
 Disallow: /help

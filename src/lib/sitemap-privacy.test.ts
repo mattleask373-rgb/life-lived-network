@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import {
+  NOINDEX_PATHS,
   PRIVATE_PATHS,
   PUBLIC_PATHS,
   PUBLIC_SITEMAP_CHILD_PATHS,
@@ -46,11 +47,17 @@ describe("public sitemap privacy", () => {
     expect(locs(xml).sort()).toEqual(PUBLIC_PATHS.map((p) => `${SITE_ORIGIN}${p}`).sort());
   });
 
-  it("never lists private, account, moderation or source screens", async () => {
+  it("never lists private, account, moderation, source or noindex routes", async () => {
     const { xml } = await body(PagesRoute);
-    for (const path of PRIVATE_PATHS) {
+    for (const path of [...PRIVATE_PATHS, ...NOINDEX_PATHS]) {
       expect(locs(xml)).not.toContain(`${SITE_ORIGIN}${path}`);
     }
+  });
+
+  it("robots.txt leaves noindex routes crawlable so their metadata can be read", () => {
+    const robots = readFileSync(new URL("../../public/robots.txt", import.meta.url), "utf8");
+    const rules = robots.split(/\r?\n/);
+    for (const path of NOINDEX_PATHS) expect(rules).not.toContain(`Disallow: ${path}`);
   });
 
   it("robots.txt disallows every route marked private", () => {
