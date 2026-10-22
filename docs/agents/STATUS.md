@@ -225,3 +225,13 @@ Code review found that `getMyOpportunities()` in `src/lib/needs.functions.ts` dr
 - Current #291 head as last rechecked: `aff961724e6f4ab5ea62200636a4851b14abd481`. CodeQL and dependency audit passed; Verify and TypeScript analysis were still running; Preview skipped. Re-fetch on next pass—never rely on this snapshot if the head moves.
 - #294 current documentation branch head before this update: `8865c93e8f2f9113758242607769952175d6190c`; prior exact-head Verify, CodeQL, TypeScript and locked-dependency audit passed, Preview skipped. This new status entry triggers fresh checks.
 - Ruleset #24946178 is active but approval count remains zero; deletion protection still unproven. No production/merge authority was changed.
+
+
+## Latest status correction — 22 October 2026, 19:17 UTC
+
+- New #302 draft https://github.com/mattleask373-rgb/life-lived-network/pull/302 records the next P1 wide-area opportunity completeness contract. Exact head `a51e738ffd465ba4d7c5481a29bf7c8152822c89`; Verify and TypeScript analysis were in progress, dependency audit passed, Supabase Preview skipped. It is documentation-only and cannot authorize RPC/schema/RLS/grant work.
+- #291 current observed head `aff961724e6f4ab5ea62200636a4851b14abd481`, base main `a99d09f...`; Verify/TypeScript were in progress after the last lint correction; locked-dependency audit passed; Preview skipped. Do not call CI green until checks complete on this exact head and CodeQL is refreshed.
+- #294 latest head is now `166fd912307f4e3af507db0e15cf9b18dc1cc8c3`; this status/plan append triggers fresh checks. The preceding head passed Verify, CodeQL, TypeScript and dependency audit, Preview skipped.
+- Current main stays `a99d09f1517523a7a388245ca6b3d5c1245816cb`. Main ruleset remains active but requires zero approving reviews; deletion protection is unproven. These human/admin controls remain the first gate.
+- The wide-area issue is completeness/ranking bias, not a confirmed privacy breach: a global newest-60 candidate query is later geography-filtered by the canonical evaluator but may omit a relevant opportunity before evaluation.
+- Do not merge, deploy, alter hosted DB permissions, activate AI/feed/provider integrations, spend, or communicate externally without the existing owner gates. Daily audits are not a persistent 24/7 executor.
