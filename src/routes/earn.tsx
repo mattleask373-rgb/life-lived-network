@@ -115,13 +115,16 @@ function EarnPage() {
           {paid.length === 0 ? (
             opps.data.status === "partial" ? (
               <div className="card-paper mt-3 p-5 text-sm">
-                <p>No paid match appeared in the bounded recent results checked; older asks may still exist.</p>
+                <p>
+                  No paid match appeared in the bounded recent results checked; older asks may still
+                  exist.
+                </p>
                 <p className="mt-2 text-muted-foreground">
                   Narrow your home or service areas on your{" "}
                   <Link to="/profile" className="focus-ink underline">
                     profile
-                  </Link>
-                  {" "}or try again later.
+                  </Link>{" "}
+                  or try again later.
                 </p>
               </div>
             ) : (
