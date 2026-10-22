@@ -51,8 +51,12 @@ describe("bounded source-record pagination", () => {
   it("requires an exact count to reject row-capped provenance reads", () => {
     const complete = orderedRows(3);
     expect(assertCompleteSourceRecordScan(complete, 3)).toEqual(complete);
-    expect(() => assertCompleteSourceRecordScan(complete, null)).toThrow(/exact source-record count/i);
-    expect(() => assertCompleteSourceRecordScan(complete.slice(0, 2), 3)).toThrow(/scan incomplete/i);
+    expect(() => assertCompleteSourceRecordScan(complete, null)).toThrow(
+      /exact source-record count/i,
+    );
+    expect(() => assertCompleteSourceRecordScan(complete.slice(0, 2), 3)).toThrow(
+      /scan incomplete/i,
+    );
   });
 
   it("rejects an exact source-record count above the safety cap", () => {
