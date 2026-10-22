@@ -20,7 +20,7 @@ export const Route = createFileRoute("/life-list")({
 });
 
 function LifeListPage() {
-  const { ids, ready, has, toggle } = useLifeList();
+  const { ids, ready, loadError, retryLoad, has, toggle } = useLifeList();
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const {
     data: world,
@@ -42,6 +42,8 @@ function LifeListPage() {
 
         {!ready || isLoading ? (
           <DataLoadingState />
+        ) : loadError ? (
+          <DataErrorState retry={() => retryLoad()} />
         ) : isError ? (
           <DataErrorState retry={() => void refetch()} />
         ) : saved.length ? (

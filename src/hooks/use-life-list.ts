@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   readLifeList,
@@ -9,49 +9,95 @@ import {
 import { useSession } from "./use-session";
 
 export function useLifeList() {
-  const { user, ready: sessionReady } = useSession();
+  const { user, ready: sessionReady, error: sessionError, retry: retrySession } = useSession();
   const [items, setItems] = useState<LifeListItem[]>([]);
   const [ready, setReady] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const generation = useRef(0);
 
-  // Local first, so the list appears instantly and works signed out.
-  useEffect(() => {
-    setItems(readLifeList());
-    setReady(true);
-  }, []);
+  const load = useCallback(async () => {
+    const request = ++generation.current;
+    const isCurrent = () => generation.current === request;
 
-  // Signed in: bring anything saved while exploring up into the account.
-  useEffect(() => {
-    if (!sessionReady || !user) return;
-    let alive = true;
-    (async () => {
+    setReady(false);
+    setLoadError(false);
+    if (!sessionReady) return;
+
+    // A failed session read is not proof that the visitor is signed out.
+    if (sessionError) {
+      if (isCurrent()) {
+        setLoadError(true);
+        setReady(true);
+      }
+      return;
+    }
+
+    const userId = user?.id ?? null;
+    if (!userId) {
+      if (isCurrent()) {
+        setItems(readLifeList());
+        setReady(true);
+      }
+      return;
+    }
+
+    try {
       const local = readLifeList();
       if (local.length) {
-        await supabase.from("saved_items").upsert(
-          local.map((i) => ({ user_id: user.id, ref: i.ref, category: i.category })),
+        const { error: syncError } = await supabase.from("saved_items").upsert(
+          local.map((item) => ({
+            user_id: userId,
+            ref: item.ref,
+            category: item.category,
+          })),
           { onConflict: "user_id,ref" },
         );
+
+        // Keep the local copy until the account confirms the merge. A transient
+        // backend failure must never look like a successful migration.
+        if (syncError) throw syncError;
         writeLifeList([]);
       }
-      const { data } = await supabase.from("saved_items").select("ref, category");
-      if (!alive) return;
+
+      // Defence in depth: RLS remains the authorization boundary, but the UI
+      // explicitly requests only the active account's saved rows as well.
+      const { data, error: readError } = await supabase
+        .from("saved_items")
+        .select("ref, category")
+        .eq("user_id", userId);
+      if (readError) throw readError;
+      if (data === null) throw new Error("The saved list response was incomplete.");
+
+      if (!isCurrent()) return;
       setItems(
-        (data ?? []).map((r) => ({
-          ref: r.ref,
-          category: r.category as LifeListCategory,
+        data.map((row) => ({
+          ref: row.ref,
+          category: row.category as LifeListCategory,
         })),
       );
       setReady(true);
-    })();
+    } catch {
+      if (!isCurrent()) return;
+      // Keep the current rows in memory, but expose an error state so callers
+      // do not render a failed read as a verified empty list.
+      setLoadError(true);
+      setReady(true);
+    }
+  }, [sessionReady, sessionError, user?.id]);
+
+  useEffect(() => {
+    void load();
     return () => {
-      alive = false;
+      // Ignore responses from a previous account or an obsolete retry.
+      generation.current += 1;
     };
-  }, [sessionReady, user]);
+  }, [load]);
 
   const toggle = useCallback(
     (ref: string, category: LifeListCategory = "want to do") => {
       setItems((prev) => {
-        const saved = prev.some((i) => i.ref === ref);
-        const next = saved ? prev.filter((i) => i.ref !== ref) : [...prev, { ref, category }];
+        const saved = prev.some((item) => item.ref === ref);
+        const next = saved ? prev.filter((item) => item.ref !== ref) : [...prev, { ref, category }];
         if (user) {
           if (saved) {
             void supabase.from("saved_items").delete().eq("ref", ref).eq("user_id", user.id);
@@ -72,7 +118,7 @@ export function useLifeList() {
   const setCategory = useCallback(
     (ref: string, category: LifeListCategory) => {
       setItems((prev) => {
-        const next = prev.map((i) => (i.ref === ref ? { ...i, category } : i));
+        const next = prev.map((item) => (item.ref === ref ? { ...item, category } : item));
         if (user) {
           void supabase
             .from("saved_items")
@@ -86,13 +132,23 @@ export function useLifeList() {
     [user],
   );
 
+  const retryLoad = () => {
+    if (sessionError) {
+      retrySession();
+    } else {
+      void load();
+    }
+  };
+
   return {
     items,
-    ids: items.map((i) => i.ref),
+    ids: items.map((item) => item.ref),
     ready,
+    loadError,
+    retryLoad,
     toggle,
     setCategory,
-    has: (ref: string) => items.some((i) => i.ref === ref),
+    has: (ref: string) => items.some((item) => item.ref === ref),
     signedIn: Boolean(user),
   };
 }
