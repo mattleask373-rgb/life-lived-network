@@ -107,7 +107,7 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.consume_ai_draft_quota() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.consume_ai_draft_quota() FROM PUBLIC, anon, service_role;
 GRANT EXECUTE ON FUNCTION public.consume_ai_draft_quota() TO authenticated;
 
 COMMENT ON FUNCTION public.consume_ai_draft_quota() IS
