@@ -43,6 +43,8 @@ Do not merge old branches wholesale. Port only unique useful behavior onto curre
 
 | Candidate | Disposition |
 |---|---|
+| [#311 bounded opportunity completeness](https://github.com/mattleask373-rgb/life-lived-network/pull/311) | Fresh-main draft. Adds a limit+1 sentinel, fail-closed null reads and complete/partial/needs-places UI states while retaining the single matcher and the existing 780-candidate maximum. At the latest check, exact-head Verify and CodeQL were still running; do not call it green or merge until both pass and independent review approves. |
+| [#310 event-local timezone correction](https://github.com/mattleask373-rgb/life-lived-network/pull/310) | Fresh-main draft. Converts provider localDate/localTime via IANA timezone and preserves valid global timezone identifiers; rejects DST gaps/folds rather than guessing. Exact-head Verify and CodeQL passed, but independent review remains mandatory. |
 | [#235 preview auth storage](https://github.com/mattleask373-rgb/life-lived-network/pull/235) | Blocked despite superficial mergeability. Create a fresh-main PR containing only the intended helper change plus focused tests. Validate exact trusted origin and sender window, strict reply schema and boolean, all localStorage error paths, timeout/absent broker, malformed replies and logout races. Independent security review required. |
 | [#34 search front door + telemetry](https://github.com/mattleask373-rgb/life-lived-network/pull/34) | Do not merge as-is. It loses search intent in navigation: “Drake Birmingham” lands with only locality; “gardener Brixton” routes to `/need` without locality. Port a typed, validated contract that preserves locality, intent family, subject and timeframe. Add regression tests for those examples and “things to do Birmingham tonight”. |
 | [#4 adversarial supply tests](https://github.com/mattleask373-rgb/life-lived-network/pull/4) → [#8 Possibility Contract](https://github.com/mattleask373-rgb/life-lived-network/pull/8) | Port #4 semantic negative tests first; then port the typed WHO/WHAT/WHERE/WHEN/WHY/UNKNOWN/ACTION adapter from #8 after the tests and contract are independently reviewed. Both branches use an old base. |
@@ -69,6 +71,8 @@ Do not merge old branches wholesale. Port only unique useful behavior onto curre
 
 ### 2. Repair security and freshness
 
+- Finish the current #311 exact-head Verify/CodeQL and independent review. Confirm the cap-plus-one sentinel, missing-row fail-closed behavior, and that the UI never presents bounded partial retrieval as definitive quiet.
+- Independently review #310's source-local timezone conversion, date-only handling, IANA-name validation and daylight-saving gap/fold behavior; retain the no-guessing rule.
 - Port #235's intended auth-storage fix and adversarial tests into a fresh branch; get an independent security review.
 - Propagate `listings.last_checked_at` and explicit provenance/freshness/cancellation state through the existing normalization/mapping boundary. The indexability policy already fails closed if this evidence is absent; do not weaken it to publish more pages.
 - Keep database/RLS changes out of scope until owner confirmation and disposable replay/security evidence exist.
