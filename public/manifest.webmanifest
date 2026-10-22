@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "Real World Atlas",
+  "short_name": "Atlas",
+  "description": "A calm, human map of real local experiences, needs and possibilities.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f3f0e8",
+  "theme_color": "#0c6b56",
+  "icons": [
+    {
+      "src": "/atlas-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
