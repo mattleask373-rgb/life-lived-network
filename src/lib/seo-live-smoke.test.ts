@@ -42,6 +42,10 @@ function sitemapIndex(paths: readonly string[]): string {
 
 function healthyDocuments(): SeoSmokeDocuments {
   const robots = [
+    "User-agent: OAI-SearchBot",
+    "Allow: /",
+    ...privatePaths.map((path) => "Disallow: " + path),
+    "",
     "User-agent: *",
     "Allow: /",
     ...privatePaths.map((path) => "Disallow: " + path),
@@ -100,6 +104,28 @@ function healthyIndexDocuments(): SeoSmokeDocuments {
 describe("public SEO live smoke contract", () => {
   it("accepts a correct public robots file, URL-set sitemap, rendered homepage and crawlable noindex page", () => {
     expect(evaluateSeoSmoke(healthyDocuments())).toEqual([]);
+  });
+
+  it("requires explicit ChatGPT Search access without weakening private-path exclusions", () => {
+    const documents = healthyDocuments();
+    documents.robots.body = documents.robots.body.replace(
+      "User-agent: OAI-SearchBot\nAllow: /\nDisallow: /auth\n",
+      "User-agent: OAI-SearchBot\nAllow: /\n",
+    );
+    expect(evaluateSeoSmoke(documents)).toContain(
+      "robots.txt: OAI-SearchBot group missing private-route crawler rule for /auth",
+    );
+  });
+
+  it("rejects a ChatGPT Search block on the noindex page whose metadata must stay readable", () => {
+    const documents = healthyDocuments();
+    documents.robots.body = documents.robots.body.replace(
+      "User-agent: OAI-SearchBot\n",
+      "User-agent: OAI-SearchBot\nDisallow: /life-list\n",
+    );
+    expect(evaluateSeoSmoke(documents)).toContain(
+      "robots.txt: OAI-SearchBot must be able to read noindex metadata for /life-list",
+    );
   });
 
   it("rejects a blocked noindex page, missing noindex metadata, canonical URL or sitemap entry", () => {
