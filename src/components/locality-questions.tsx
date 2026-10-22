@@ -31,7 +31,10 @@ export function LocalityQuestions({
           Checking the open-needs count…
         </p>
       ) : needsStatus === "error" ? (
-        <div role="alert" className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+        <div
+          role="alert"
+          className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground"
+        >
           <span>We couldn't verify the open-needs count just now.</span>
           {onRetryNeeds ? (
             <button type="button" onClick={onRetryNeeds} className="focus-ink min-h-11 underline">
@@ -45,7 +48,9 @@ export function LocalityQuestions({
           const body = (
             <>
               <p className="text-sm leading-snug">{q.question}</p>
-              <p className="mt-2 text-2xl leading-none">{q.count === null ? "Not confirmed" : q.count}</p>
+              <p className="mt-2 text-2xl leading-none">
+                {q.count === null ? "Not confirmed" : q.count}
+              </p>
               <p className="mt-1 text-xs text-muted-foreground">{q.unit}</p>
             </>
           );
