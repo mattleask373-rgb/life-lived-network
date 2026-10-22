@@ -95,7 +95,13 @@ function HelpPage() {
   const { user, ready } = useSession();
   const { from } = Route.useSearch();
   const load = useServerFn(getMyOpportunities);
-  const { data, isLoading, isError, error: dataErrorForScope, refetch } = useQuery({
+  const {
+    data,
+    isLoading,
+    isError,
+    error: dataErrorForScope,
+    refetch,
+  } = useQuery({
     queryKey: ["opportunities", "mine"],
     queryFn: () => load(),
     enabled: Boolean(user),
@@ -124,21 +130,21 @@ function HelpPage() {
       ) : null}
 
       {user && isLoading ? <p className="mt-6 text-sm text-muted-foreground">Looking…</p> : null}
-      {user && isError
-        ? isDataErrorCode(dataErrorForScope, "SCOPE_TOO_WIDE")
-          ? (
-            <div className="card-paper mt-6 p-4 text-sm" role="alert">
-              <p>This search covers more places than can be checked in one request.</p>
-              <p className="mt-1 text-muted-foreground">
-                Narrow the places on your profile, then try again.
-              </p>
-              <Link to="/profile" className="focus-ink mt-2 inline-block underline">
-                Review your places
-              </Link>
-            </div>
-          )
-          : <DataErrorState retry={() => void refetch()} />
-        : null}
+      {user && isError ? (
+        isDataErrorCode(dataErrorForScope, "SCOPE_TOO_WIDE") ? (
+          <div className="card-paper mt-6 p-4 text-sm" role="alert">
+            <p>This search covers more places than can be checked in one request.</p>
+            <p className="mt-1 text-muted-foreground">
+              Narrow the places on your profile, then try again.
+            </p>
+            <Link to="/profile" className="focus-ink mt-2 inline-block underline">
+              Review your places
+            </Link>
+          </div>
+        ) : (
+          <DataErrorState retry={() => void refetch()} />
+        )
+      ) : null}
 
       {user && data && data.length === 0 ? (
         <div className="card-paper mt-6 p-5 text-sm">
