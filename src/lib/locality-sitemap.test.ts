@@ -4,6 +4,8 @@ import { buildPlaceIndex, type Place } from "./places";
 import {
   indexableLocalityPaths,
   LOCALITY_SITEMAP_LISTING_SCAN_LIMIT,
+  readBoundedSitemapPages,
+  SitemapSourceLimitError,
   type PublicListingSitemapRow,
 } from "./locality-sitemap";
 
@@ -88,5 +90,59 @@ describe("locality sitemap indexability", () => {
 
   it("exports a bounded listing scan so the endpoint cannot grow without limit", () => {
     expect(LOCALITY_SITEMAP_LISTING_SCAN_LIMIT).toBe(20_000);
+  });
+});
+
+describe("bounded sitemap source paging", () => {
+  it("reads stable adjacent ranges until a short page proves the scan is complete", async () => {
+    const source = Array.from({ length: 2501 }, (_, index) => index);
+    const calls: Array<[number, number]> = [];
+    const rows = await readBoundedSitemapPages(3000, 1000, async (from, to) => {
+      calls.push([from, to]);
+      return source.slice(from, to + 1);
+    });
+
+    expect(rows).toEqual(source);
+    expect(calls).toEqual([
+      [0, 999],
+      [1000, 1999],
+      [2000, 2999],
+    ]);
+  });
+
+  it("fails closed when the scan reaches its hard cap", async () => {
+    const source = [0, 1, 2, 3, 4];
+    const calls: Array<[number, number]> = [];
+    await expect(
+      readBoundedSitemapPages(5, 2, async (from, to) => {
+        calls.push([from, to]);
+        return source.slice(from, to + 1);
+      }),
+    ).rejects.toBeInstanceOf(SitemapSourceLimitError);
+    expect(calls).toEqual([
+      [0, 1],
+      [2, 3],
+      [4, 4],
+    ]);
+  });
+
+  it("accepts a complete scan below the hard cap, including the final empty page", async () => {
+    const source = [0, 1, 2, 3];
+    const calls: Array<[number, number]> = [];
+    const rows = await readBoundedSitemapPages(5, 2, async (from, to) => {
+      calls.push([from, to]);
+      return source.slice(from, to + 1);
+    });
+    expect(rows).toEqual(source);
+    expect(calls).toEqual([
+      [0, 1],
+      [2, 3],
+      [4, 4],
+    ]);
+  });
+
+  it("rejects invalid scan bounds", async () => {
+    await expect(readBoundedSitemapPages(0, 10, async () => [])).rejects.toThrow(RangeError);
+    await expect(readBoundedSitemapPages(10, 0, async () => [])).rejects.toThrow(RangeError);
   });
 });

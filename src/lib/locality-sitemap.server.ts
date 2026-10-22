@@ -11,6 +11,8 @@ import {
   indexableLocalityPaths,
   LOCALITY_SITEMAP_LISTING_SCAN_LIMIT,
   LOCALITY_SITEMAP_PLACE_LIMIT,
+  readBoundedSitemapPages,
+  SitemapSourceLimitError,
   type PublicListingSitemapRow,
 } from "./locality-sitemap";
 import { indexableServicePaths } from "./service-sitemap";
@@ -20,8 +22,6 @@ const PLACE_SELECT =
   "id, parent_id, kind, name, slug, country_code, timezone, currency, lat, lng, blurb";
 const QUERY_PAGE_SIZE = 1000;
 const SNAPSHOT_TTL_MS = 60 * 60 * 1000;
-
-class SitemapSourceLimitError extends Error {}
 
 interface PublicSitemapSnapshot {
   index: ReturnType<typeof buildPlaceIndex>;
@@ -53,15 +53,19 @@ async function readPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot> {
 
 async function loadPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot> {
   const supabase = publicServerClient();
-  const { data: placeRows, error: placesError } = await supabase
-    .from("places")
-    .select(PLACE_SELECT)
-    .limit(LOCALITY_SITEMAP_PLACE_LIMIT + 1);
-  if (placesError) throw placesError;
-  const places = (placeRows ?? []) as unknown as Place[];
-  if (places.length >= LOCALITY_SITEMAP_PLACE_LIMIT) {
-    throw new SitemapSourceLimitError("Place hierarchy reached the sitemap source cap");
-  }
+  const places = await readBoundedSitemapPages<Place>(
+    LOCALITY_SITEMAP_PLACE_LIMIT,
+    QUERY_PAGE_SIZE,
+    async (from, to) => {
+      const { data, error } = await supabase
+        .from("places")
+        .select(PLACE_SELECT)
+        .order("id", { ascending: true })
+        .range(from, to);
+      if (error) throw error;
+      return (data ?? []) as unknown as Place[];
+    },
+  );
 
   const index = buildPlaceIndex(places);
   const settled = new Date(Date.now() - 3 * 3_600_000).toISOString();
