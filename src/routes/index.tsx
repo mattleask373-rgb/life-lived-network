@@ -555,7 +555,7 @@ function Home() {
               to="/need"
               className="focus-ink rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
             >
-              {openNeedsCountQuery.data && openNeedsCountQuery.data > 0
+              {openNeedsCountQuery.isSuccess && openNeedsCountQuery.data > 0
                 ? `${openNeedsCountQuery.data} ${openNeedsCountQuery.data === 1 ? "thing" : "things"} people have asked for`
                 : "Ask for something yourself"}
             </Link>
