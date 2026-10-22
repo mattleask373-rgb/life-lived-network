@@ -268,6 +268,9 @@ function Band({
               {r.trust.label} ·{" "}
               {r.freshness === "unknown" ? "Freshness not known" : r.freshness.replaceAll("_", " ")}
             </p>
+            {r.personId ? (
+              <ReportPublicContent subjectType="profile" subjectId={r.personId} label="profile" />
+            ) : null}
             {canInvite && r.personId ? <Invite needId={needId} personId={r.personId} /> : null}
           </li>
         ))}
