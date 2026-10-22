@@ -181,7 +181,9 @@ export function evaluateSeoSmoke(
   for (const path of NOINDEX_PATHS) {
     const rule = new RegExp("^Disallow:\\s*" + escapedRegExp(path) + "(?:/|\\s|$)", "im");
     if (rule.test(documents.robots.body)) {
-      failures.push("robots.txt: noindex route must remain crawlable for metadata inspection: " + path);
+      failures.push(
+        "robots.txt: noindex route must remain crawlable for metadata inspection: " + path,
+      );
     }
     const page = documents.noindexPages?.find((entry) => entry.path === path);
     if (!page) {
@@ -189,20 +191,31 @@ export function evaluateSeoSmoke(
       continue;
     }
     const document = page.document;
-    if (document.networkError) failures.push(path + ": request failed (" + document.networkError + ")");
-    if (document.status !== 200) failures.push(path + ": expected HTTP 200, received " + document.status);
+    if (document.networkError) {
+      failures.push(path + ": request failed (" + document.networkError + ")");
+    }
+    if (document.status !== 200) {
+      failures.push(path + ": expected HTTP 200, received " + document.status);
+    }
     if (!/text\/html/i.test(document.contentType ?? "")) {
       failures.push(path + ": expected an HTML content type");
     }
     try {
       const finalUrl = new URL(document.finalUrl);
-      if (finalUrl.origin !== origin) failures.push(path + ": final response left the expected origin");
-      if (finalUrl.pathname !== path) failures.push(path + ": redirected to unexpected path " + finalUrl.pathname);
+      if (finalUrl.origin !== origin) {
+        failures.push(path + ": final response left the expected origin");
+      }
+      if (finalUrl.pathname !== path) {
+        failures.push(path + ": redirected to unexpected path " + finalUrl.pathname);
+      }
     } catch {
       failures.push(path + ": response did not provide a valid final URL");
     }
-    const robotsTag = document.body.match(/<meta\b(?=[^>]*\bname=["']robots["'])[^>]*>/i)?.[0];
-    const robotsContent = robotsTag?.match(/\bcontent=["']([^"']+)["']/i)?.[1]?.toLowerCase() ?? "";
+    const robotsTag = document.body.match(
+      /<meta\b(?=[^>]*\bname=["']robots["'])[^>]*>/i,
+    )?.[0];
+    const robotsContent =
+      robotsTag?.match(/\bcontent=["']([^"']+)["']/i)?.[1]?.toLowerCase() ?? "";
     const robotsDirectives = robotsContent.split(/[\s,]+/).filter(Boolean);
     if (!robotsDirectives.includes("noindex")) {
       failures.push(path + ": robots metadata must contain noindex");
@@ -298,7 +311,8 @@ export function evaluateSeoSmoke(
   const robotsTag = documents.homepage.body.match(
     /<meta\b(?=[^>]*\bname=["']robots["'])[^>]*>/i,
   )?.[0];
-  const robotsContent = robotsTag?.match(/\bcontent=["']([^"']+)["']/i)?.[1]?.toLowerCase() ?? "";
+    const robotsContent =
+      robotsTag?.match(/\bcontent=["']([^"']+)["']/i)?.[1]?.toLowerCase() ?? "";
   if (!robotsContent.includes("index") || robotsContent.includes("noindex")) {
     failures.push("homepage: robots metadata must permit indexing");
   }
@@ -414,7 +428,9 @@ export async function runSeoSmoke(): Promise<number> {
     for (const failure of failures) console.error("  - " + failure);
     return 1;
   }
-  console.log("PASSED: robots, sitemap(s), noindex pages, canonical URL, and public indexing metadata");
+  console.log(
+    "PASSED: robots, sitemap(s), noindex pages, canonical URL, and public indexing metadata",
+  );
   return 0;
 }
 

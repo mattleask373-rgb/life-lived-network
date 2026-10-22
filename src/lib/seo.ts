@@ -13,7 +13,12 @@
  * what a page already truthfully shows.
  */
 
-import { NOINDEX_PATHS, PRIVATE_PATHS, PUBLIC_PATHS, PUBLIC_SITEMAP_CHILD_PATHS } from "./seo-route-policy";
+import {
+  NOINDEX_PATHS,
+  PRIVATE_PATHS,
+  PUBLIC_PATHS,
+  PUBLIC_SITEMAP_CHILD_PATHS,
+} from "./seo-route-policy";
 export { NOINDEX_PATHS, PRIVATE_PATHS, PUBLIC_PATHS, PUBLIC_SITEMAP_CHILD_PATHS };
 
 /**

@@ -107,13 +107,18 @@ describe("public SEO live smoke contract", () => {
     const page = docs.noindexPages?.find((entry) => entry.path === "/life-list");
     if (!page) throw new Error("Test fixture is missing /life-list");
     docs.robots.body += "\nDisallow: /life-list";
-    page.document.body = '<!doctype html><html><head><link rel="canonical" href="' + origin + '/life-list"></head></html>';
+    page.document.body =
+      '<!doctype html><html><head><link rel="canonical" href="' +
+      origin +
+      '/life-list"></head></html>';
     docs.sitemap.body = docs.sitemap.body.replace(
       "</urlset>",
       "<url><loc>" + origin + "/life-list</loc></url></urlset>",
     );
     const failures = evaluateSeoSmoke(docs);
-    expect(failures).toContain("robots.txt: noindex route must remain crawlable for metadata inspection: /life-list");
+    expect(failures).toContain(
+      "robots.txt: noindex route must remain crawlable for metadata inspection: /life-list",
+    );
     expect(failures).toContain("/life-list: robots metadata must contain noindex");
     expect(failures).toContain("/life-list: noindex page must not emit a canonical link");
     expect(failures).toContain("sitemap.xml: noindex route must not be listed: /life-list");
