@@ -30,6 +30,8 @@ DECLARE
   v_now timestamptz;
   v_hour_start timestamptz;
   v_day_start timestamptz;
+  v_previous_hour_start timestamptz;
+  v_previous_day_start timestamptz;
   v_hour_count integer;
   v_day_count integer;
 BEGIN
@@ -40,31 +42,50 @@ BEGIN
   END IF;
 
   v_now := clock_timestamp();
-  -- Use fixed UTC windows so a deployment/session timezone cannot change quotas.
   v_hour_start := date_trunc('hour', v_now AT TIME ZONE 'UTC') AT TIME ZONE 'UTC';
   v_day_start := date_trunc('day', v_now AT TIME ZONE 'UTC') AT TIME ZONE 'UTC';
 
-  -- The unique user row serializes concurrent requests across app instances.
-  -- Each call consumes one attempt; failed or blocked attempts cannot evade
-  -- the limit by racing requests or by replaying the same valid payload.
-  INSERT INTO public.ai_draft_rate_limits AS existing (
+  -- Create the row if needed. The following FOR UPDATE is the serialization
+  -- point; refresh the clock only after obtaining it so a delayed request from
+  -- the previous window cannot roll a newer account row back in time.
+  INSERT INTO public.ai_draft_rate_limits (
     user_id, hour_started_at, hour_count, day_started_at, day_count, updated_at
   )
-  VALUES (v_user_id, v_hour_start, 1, v_day_start, 1, v_now)
-  ON CONFLICT (user_id) DO UPDATE
+  VALUES (v_user_id, v_hour_start, 0, v_day_start, 0, v_now)
+  ON CONFLICT (user_id) DO NOTHING;
+
+  SELECT hour_started_at, hour_count, day_started_at, day_count
+    INTO v_previous_hour_start, v_hour_count, v_previous_day_start, v_day_count
+  FROM public.ai_draft_rate_limits
+  WHERE user_id = v_user_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RETURN QUERY SELECT false, 0, 'unavailable'::text;
+    RETURN;
+  END IF;
+
+  v_now := clock_timestamp();
+  v_hour_start := date_trunc('hour', v_now AT TIME ZONE 'UTC') AT TIME ZONE 'UTC';
+  v_day_start := date_trunc('day', v_now AT TIME ZONE 'UTC') AT TIME ZONE 'UTC';
+
+  v_hour_count := CASE
+    WHEN v_previous_hour_start = v_hour_start THEN v_hour_count + 1
+    ELSE 1
+  END;
+  v_day_count := CASE
+    WHEN v_previous_day_start = v_day_start THEN v_day_count + 1
+    ELSE 1
+  END;
+
+  UPDATE public.ai_draft_rate_limits
   SET
-    hour_count = CASE
-      WHEN existing.hour_started_at = EXCLUDED.hour_started_at THEN existing.hour_count + 1
-      ELSE 1
-    END,
-    hour_started_at = EXCLUDED.hour_started_at,
-    day_count = CASE
-      WHEN existing.day_started_at = EXCLUDED.day_started_at THEN existing.day_count + 1
-      ELSE 1
-    END,
-    day_started_at = EXCLUDED.day_started_at,
-    updated_at = EXCLUDED.updated_at
-  RETURNING hour_count, day_count INTO v_hour_count, v_day_count;
+    hour_started_at = v_hour_start,
+    hour_count = v_hour_count,
+    day_started_at = v_day_start,
+    day_count = v_day_count,
+    updated_at = v_now
+  WHERE user_id = v_user_id;
 
   IF v_day_count > 20 THEN
     RETURN QUERY SELECT
