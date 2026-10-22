@@ -48,6 +48,34 @@ export function chunkOpportunityPlaceIds(
   return chunks;
 }
 
+export interface BoundedOpportunityPage<T> {
+  /** The newest rows retained for matching; the sentinel row is never returned. */
+  rows: T[];
+  /** True when at least one additional row exists outside the retained window. */
+  truncated: boolean;
+}
+
+/**
+ * Keep a bounded page while preserving whether the query hit its cap.
+ * Callers must ask the database for limit + 1 rows so exact-cap and over-cap
+ * results can be distinguished. Missing data is a failed read, never empty.
+ */
+export function boundOpportunityPage<T>(
+  rows: readonly T[] | null | undefined,
+  maximumRows = OPPORTUNITY_CANDIDATES_PER_CHUNK,
+): BoundedOpportunityPage<T> {
+  if (!Array.isArray(rows)) {
+    throw new Error("Opportunity candidate read returned no row collection");
+  }
+  if (!Number.isSafeInteger(maximumRows) || maximumRows < 1) {
+    throw new RangeError("Opportunity candidate window must be a positive safe integer");
+  }
+  return {
+    rows: rows.slice(0, maximumRows),
+    truncated: rows.length > maximumRows,
+  };
+}
+
 /**
  * Merge per-place-chunk top-N windows. Since a need belongs to one place ID,
  * reading N rows per chunk is sufficient to calculate the global newest N:
