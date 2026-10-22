@@ -179,7 +179,9 @@ async function readWorld(
 
     // Use the shared bounded provenance resolver. A failed/incomplete lookup
     // excludes imported rows while resident rows remain independently eligible.
-    const imported = listings.filter((row) => row.origin === "source" || row.origin === "confirmed");
+    const imported = listings.filter(
+      (row) => row.origin === "source" || row.origin === "confirmed",
+    );
     const sourceLifecycle = await resolvePublicListingLifecycles(
       imported.map((row) => row.id),
       signal,
