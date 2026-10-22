@@ -1,4 +1,5 @@
 import { publicPage } from "@/lib/seo";
+import { isDataErrorCode } from "@/lib/data/errors";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -84,6 +85,7 @@ function Home() {
     data: world,
     isLoading: worldLoading,
     isError: worldError,
+    error: worldErrorDetails,
     refetch: refetchWorld,
   } = useQuery({
     queryKey: ["world", discoveryPlace?.id ?? null],
@@ -94,6 +96,7 @@ function Home() {
     data: viewportPage,
     isFetching: viewportFetching,
     isError: viewportError,
+    error: viewportErrorDetails,
     isRefetchError: viewportRefreshError,
     refetch: refetchViewport,
   } = useQuery({
@@ -174,6 +177,9 @@ function Home() {
     viewportPending ||
     (viewportRequestIsCurrent ? !viewportPage && viewportFetching : worldLoading);
   const mapError = viewportRequestIsCurrent ? viewportError && !viewportPage : worldError;
+  const worldScopeTooWide = isDataErrorCode(worldErrorDetails, "SCOPE_TOO_WIDE");
+  const viewportScopeTooWide = isDataErrorCode(viewportErrorDetails, "SCOPE_TOO_WIDE");
+  const mapScopeTooWide = viewportRequestIsCurrent ? viewportScopeTooWide : worldScopeTooWide;
   const mapRefreshError = Boolean(viewportRequestIsCurrent && viewportPage && viewportRefreshError);
   const viewportTooBroad = Boolean(view && !isViewportQueryable(view));
   const refetchMap = viewportRequestIsCurrent ? refetchViewport : refetchWorld;
@@ -195,14 +201,18 @@ function Home() {
         </p>
       ) : mapError ? (
         <p role="alert" className="text-sm text-muted-foreground">
-          We couldn't load {viewportBounds ? "records for this map view" : "what's here"}.{" "}
-          <button
-            type="button"
-            onClick={() => void refetchMap()}
-            className="focus-ink min-h-11 underline underline-offset-4"
-          >
-            Try again
-          </button>
+          {mapScopeTooWide
+            ? "This locality is too large to search at once. Choose a smaller locality to see verified records."
+            : `We couldn't load ${viewportBounds ? "records for this map view" : "what's here"}.`}
+          {!mapScopeTooWide ? (
+            <button
+              type="button"
+              onClick={() => void refetchMap()}
+              className="focus-ink min-h-11 underline underline-offset-4"
+            >
+              Try again
+            </button>
+          ) : null}
         </p>
       ) : mapEntries.length === 0 ? (
         emptyListState(mapBaseFilteredEntries.length, layers.length > 0) === "filtered-out" ? (
@@ -288,8 +298,10 @@ function Home() {
               ? "Checking what's recorded here…"
               : !place
                 ? "Choose a supported place to see what's recorded here."
-                : worldError
-                  ? "We couldn't check what's recorded here."
+                : worldScopeTooWide
+                  ? "This locality is too large to search at once. Choose a smaller locality to see verified records."
+                  : worldError
+                    ? "We couldn't check what's recorded here."
                   : `${all.length} ${all.length === 1 ? "thing" : "things"} recorded here · ${needCount} ${needCount === 1 ? "open need" : "open needs"}`}
           </p>
           <div className="mt-5 flex flex-wrap gap-2">

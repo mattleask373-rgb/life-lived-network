@@ -9,7 +9,7 @@ import {
   pageLimit,
   toPage,
 } from "./contract";
-import { DataError, asDataError } from "./errors";
+import { DataError, asDataError, isDataErrorCode } from "./errors";
 
 describe("paging is bounded and opaque", () => {
   it("never lets a caller ask for an unbounded page", () => {
@@ -45,6 +45,21 @@ describe("data errors stay predictable and quiet", () => {
     expect(error).toBeInstanceOf(DataError);
     expect(error.code).toBe("DATA_UNAVAILABLE");
     expect(error.message).not.toContain("listings");
+  });
+
+  it("recognises safe data error codes after server serialization", () => {
+    expect(isDataErrorCode(new DataError("SCOPE_TOO_WIDE"), "SCOPE_TOO_WIDE")).toBe(true);
+    expect(
+      isDataErrorCode(
+        {
+          name: "DataError",
+          code: "SCOPE_TOO_WIDE",
+          message: "This area is too large to search all at once. Choose a smaller area or zoom in.",
+        },
+        "SCOPE_TOO_WIDE",
+      ),
+    ).toBe(true);
+    expect(isDataErrorCode(new DataError("DATA_UNAVAILABLE"), "SCOPE_TOO_WIDE")).toBe(false);
   });
 
   it("recognises auth and policy failures", () => {

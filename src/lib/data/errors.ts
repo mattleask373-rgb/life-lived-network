@@ -51,5 +51,12 @@ export function asDataError(
 }
 
 export function isDataErrorCode(error: unknown, code: DataErrorCode): boolean {
-  return error instanceof DataError && error.code === code;
+  if (error instanceof DataError) return error.code === code;
+  if (typeof error !== "object" || error === null) return false;
+
+  const candidate = error as { code?: unknown; name?: unknown; message?: unknown };
+  return (
+    candidate.code === code ||
+    (candidate.name === "DataError" && candidate.message === DATA_ERROR_MESSAGE[code])
+  );
 }
