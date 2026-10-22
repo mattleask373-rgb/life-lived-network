@@ -1168,6 +1168,27 @@ Use bounded, idempotent activities and explicit retry classification. Transient 
 
 **Pilot-selection method:** compare at most three candidate locality/category pairs. For each, record dated local short-stay supply estimates and how they were obtained, legally reusable data sources, likely reachable opt-in workers, transition frequency, travel time, time-to-clean, consumables, cancellations/no-shows, incident insurance/support cost, payment and dispute duties, local rules, and a conservative gross-margin range. Do not infer demand from national overnight-trip totals, publish nonconsenting supply, scrape against site terms or start outreach without approval. Select no city until that local evidence and a reviewed safety/support runbook are complete.
 
+### Grok provider evaluation — current official API facts, 22 October 2026
+
+This section records the current official xAI/SpaceXSI developer-doc review for #209. It is research only: no provider is selected, no API credentials are created, and no paid API call is authorized.
+
+- **Model/API:** current docs present Grok 4.7 with a 500k-token context, configurable reasoning and listed pricing of US$2 per million input tokens / US$6 per million output tokens. The model page states May 2026 training cutoff; current facts need server-side retrieval rather than assuming model weights are current. Pricing and model availability must be rechecked before implementation/contract. https://docs.x.ai/developers/models
+- **Tools and schemas:** the Responses API/function-calling pattern is request → local app executes the requested tool → local result returned. The model never supplies its own authority. Structured Outputs provide schema guarantees for supported schema features, but the vendor explicitly marks some constraints as best-effort; app-side domain validation remains mandatory. https://docs.x.ai/developers/tools/function-calling and https://docs.x.ai/developers/model-capabilities/text/structured-outputs
+- **Actual cost accounting:** the API returns per-response cost_in_usd_ticks, with 1 USD = 10,000,000,000 ticks, including token and server-side tool invocation charges. Persist the minimal numerical cost/usage/latency outcome per request and sum all turns/tool calls. Do not rely only on estimated token counts. https://docs.x.ai/developers/cost-tracking
+- **Provider rate control:** xAI documents per-model RPS and TPM limits and 429s when exceeded; the published usage tiers rise with cumulative spend. Implement our own per-account, per-tool, concurrency and global hard-cost ceilings; bounded exponential backoff; and alerts. Do not spend to unlock rate tiers. https://docs.x.ai/developers/rate-limits
+- **API data handling:** the current API security FAQ says inputs/outputs are encrypted at rest and retained on provider servers for 30 days by default for abuse/audit, and not used to train without explicit permission. Team-wide Zero Data Retention disables persistence but also disables stateful Responses API history, Files, Collections and Batch. It is a team-admin/terms choice, not a code flag; verify the actual setting/response header and product/legal fit before sending real user content. https://docs.x.ai/developers/faq/security and https://x.ai/legal/terms-of-service-enterprise
+- **Search and citations:** built-in Web Search offers allowed-domain filters (maximum five) and citations. Treat its results as untrusted evidence; apply a curated source policy and preserve citations, provenance and timestamps. It does not replace canonical internal retrieval, supply/need eligibility, source rights or findSupply(). https://docs.x.ai/developers/tools/web-search
+
+**Acceptance contract before any live provider request:**
+1. Provider adapter is server-only with secret-managed API key; no browser key, prompt/log/analytics secret leakage or repository secret.
+2. Retrieval uses canonical public/rights-cleared records and findSupply() as the only need-discovery authority. The model cannot query arbitrary tables, assert permission, publish data, contact users or change state.
+3. Minimize provider-bound context; do not send private Life List data, emails, phone numbers or precise personal location unless a separately approved, necessary use case exists. Any safety identifier must be opaque/pseudonymous, never a direct identity field.
+4. Apply atomic per-account/per-IP limits, concurrency ceilings, total request/tool-step caps, per-user and provider-global budget, timeout/cancellation, retry classification, hard kill switch and an outage/fallback policy.
+5. Synthetic-fixture evaluations cover citations/grounding, same-place privacy isolation, stale or withdrawn sources, prompt injection, fabricated prices/availability, malformed output, 429, provider outage, retry storm, cancellation, budget exhaustion and retention behavior. Store evidence IDs/model version/usage/cost, not raw prompts by default.
+6. The public feature remains disabled until #164/#194 access-control evidence, #209 evaluation, #290 durable spend/abuse controls, the actual provider terms/retention decision, and owner release approval all pass.
+
+Status: current-doc research is complete for this narrow evaluation; adapter implementation, API credentials, team settings, live calls, paid usage and public activation are NOT RUN / NOT AUTHORIZED.
+
 ### Final human approval register (last)
 
 1. Correct and re-fetch main ruleset review count/deletion protection.
