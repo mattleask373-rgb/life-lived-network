@@ -123,9 +123,6 @@ function Home() {
     viewportPage &&
       canLoadMoreViewportPages(viewportPageData?.pages.length ?? 0, viewportPage.hasMore),
   );
-  const viewportPageLimitReached = Boolean(
-    viewportPage && viewportPage.hasMore && !canLoadMoreViewport,
-  );
 
   const openNeedsFn = useServerFn(getOpenNeeds);
   const { data: openNeeds } = useQuery({
