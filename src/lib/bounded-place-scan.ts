@@ -33,7 +33,9 @@ export function assertCompletePlaceScan<T>(
   }
   if (expectedCount > maximumRows) throw new PlaceScanLimitError(maximumRows);
   if (rows.length !== expectedCount) {
-    throw new Error(`Place scan incomplete: expected ${expectedCount} rows, received ${rows.length}`);
+    throw new Error(
+      `Place scan incomplete: expected ${expectedCount} rows, received ${rows.length}`,
+    );
   }
   return [...rows];
 }
