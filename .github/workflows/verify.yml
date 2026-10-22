@@ -27,45 +27,7 @@ jobs:
           bun-version: latest
 
       - name: Reject tracked environment files
-        shell: bash
-        run: |
-          tracked_env_files="$(git ls-files | while IFS= read -r tracked_file; do
-            case "$tracked_file" in
-              .env.example|*/.env.example) ;;
-              .env|.env.*|*/.env|*/.env.*) printf '%s ' "$tracked_file" ;;
-            esac
-          done)
-          if [ -n "$tracked_env_files" ]; then
-            echo "::error::Tracked environment files are not allowed; only placeholder .env.example may be committed."
-            exit 1
-          fi
-
-      - run: bun install --frozen-lockfile
-
-      - run: bun run lint
-      - run: bun run test
-      - run: bun run build
-
-      - name: Set up k6 for load-test script validation
-        if: ${{ hashFiles('tests/load/staging-public-read.js') != '' }}
-        uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065
-        with:
-          k6-version: "2.3.0"
-
-      - name: Parse k6 script without sending traffic
-        if: ${{ hashFiles('tests/load/staging-public-read.js') != '' }}
-        env:
-          # k6 inspect doesn't reliably apply its --env flags to top-level script initialization.
-          # Use process environment variables so the guard sees an inert, non-routable target.
-          LOAD_TEST_ENV: staging
-          LOAD_TEST_BASE_URL: https://preview.staging.example.invalid
-          LOAD_TEST_APPROVED: YES_I_APPROVE_STAGING_LOAD
-        run: k6 inspect --execution-requirements tests/load/staging-public-read.js
- || true)"
-          if [ -n "$tracked_env_files" ]; then
-            printf '::error::Refusing tracked environment files. Keep real values in secret storage, not Git.\n'
-            exit 1
-          fi
+        run: bash scripts/check-tracked-env-files.sh
 
       - run: bun install --frozen-lockfile
       - run: bun run lint
@@ -80,10 +42,4 @@ jobs:
 
       - name: Parse k6 script without sending traffic
         if: ${{ hashFiles('tests/load/staging-public-read.js') != '' }}
-        env:
-          # k6 inspect doesn't reliably apply its --env flags to top-level script initialization.
-          # Use process environment variables so the guard sees an inert, non-routable target.
-          LOAD_TEST_ENV: staging
-          LOAD_TEST_BASE_URL: https://preview.staging.example.invalid
-          LOAD_TEST_APPROVED: YES_I_APPROVE_STAGING_LOAD
         run: k6 inspect --execution-requirements tests/load/staging-public-read.js
