@@ -24,7 +24,11 @@ describe("bounded source-record pagination", () => {
     });
 
     expect(rows.map((row) => row.id)).toEqual(source.map((row) => row.id));
-    expect(calls).toEqual([[null, 3], ["0003", 3], ["0006", 3]]);
+    expect(calls).toEqual([
+      [null, 3],
+      ["0003", 3],
+      ["0006", 3],
+    ]);
   });
 
   it("probes cap plus one and rejects an incomplete scan instead of returning partial evidence", async () => {
@@ -36,7 +40,11 @@ describe("bounded source-record pagination", () => {
         return source.filter((row) => afterId === null || row.id > afterId).slice(0, limit);
       }),
     ).rejects.toBeInstanceOf(SourceRecordScanLimitError);
-    expect(calls).toEqual([[null, 2], ["0002", 2], ["0004", 2]]);
+    expect(calls).toEqual([
+      [null, 2],
+      ["0002", 2],
+      ["0004", 2],
+    ]);
   });
 
   it("accepts exactly the cap when the sentinel query proves there are no more rows", async () => {
@@ -90,7 +98,9 @@ describe("bounded source-record pagination", () => {
     await expect(
       readBoundedSourceRecordPages(10, 2, async (afterId) => {
         if (afterId === "0002") throw new Error("read failed");
-        return orderedRows(4).filter((row) => afterId === null || row.id > afterId).slice(0, 2);
+        return orderedRows(4)
+          .filter((row) => afterId === null || row.id > afterId)
+          .slice(0, 2);
       }),
     ).rejects.toThrow("read failed");
   });
