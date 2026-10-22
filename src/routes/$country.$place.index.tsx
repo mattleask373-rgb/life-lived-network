@@ -39,6 +39,7 @@ import { localityPath } from "@/lib/locality-path";
 import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
 import { KIND_LABEL } from "@/lib/places";
 import { evaluateLocalityIndexability } from "@/lib/locality-indexability";
+import { breadcrumbListJsonLd, jsonLdScript } from "@/lib/structured-data";
 import { privatePage, publicPage } from "@/lib/seo";
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import { hasPublicWorkOpportunity } from "@/lib/work-opportunity-presentation";
@@ -83,9 +84,25 @@ export const Route = createFileRoute("/$country/$place/")({
     // Over-wide areas stay navigable but must never be described as empty or indexed.
     if (scopeTooWide) return privatePage({ path, title, description });
     const indexability = evaluateLocalityIndexability({ place: geography.place, entries });
-    return indexability.status === "INDEXABLE"
-      ? publicPage({ path, title, description })
-      : privatePage({ path, title, description });
+    if (indexability.status !== "INDEXABLE") {
+      return privatePage({ path, title, description });
+    }
+
+    return {
+      ...publicPage({ path, title, description }),
+      scripts: [
+        jsonLdScript(
+          breadcrumbListJsonLd([
+            { name: "Real World Atlas", path: "/" },
+            ...[...geography.ancestors].reverse().map((step) => ({
+              name: step.name,
+              path: localityPath(step),
+            })),
+            { name, path },
+          ]),
+        ),
+      ],
+    };
   },
   component: LocalityPage,
   errorComponent: LocalityError,
