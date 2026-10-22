@@ -89,7 +89,7 @@ describe("crawler policy", () => {
   it("keeps static and server-generated crawler rules aligned", () => {
     const staticPolicy = readFileSync(new URL("../../public/robots.txt", import.meta.url), "utf8");
     const normaliseOrigin = (value: string) =>
-      value.replace(/^Sitemap:\\s*.*$/m, "Sitemap: <canonical-origin>");
+      value.replace(/^Sitemap:\s*.*$/m, "Sitemap: <canonical-origin>");
     expect(normaliseOrigin(staticPolicy)).toBe(normaliseOrigin(robotsTxt()));
   });
 });
