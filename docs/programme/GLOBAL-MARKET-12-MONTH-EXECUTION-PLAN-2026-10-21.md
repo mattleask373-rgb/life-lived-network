@@ -175,7 +175,7 @@ No paid acquisition until analytics can distinguish meaningful human activity fr
 
 ---
 
-## 6. Commercial model and unit economics
+## 5. Commercial model and unit economics
 
 Global growth must lead to a sustainable service, but monetization should follow demonstrated value rather than be used to disguise a product that has not yet achieved reliable local liquidity.
 
