@@ -57,7 +57,9 @@ function validatedBaseUrl() {
       stop("staging mode requires HTTPS on a non-local hostname.");
     }
     if (
-      !/(^|[.-])(staging|stage|preview|test|testing|qa|perf|performance|load)([.-]|$)/i.test(hostname)
+      !/(^|[.-])(staging|stage|preview|test|testing|qa|perf|performance|load)([.-]|$)/i.test(
+        hostname,
+      )
     ) {
       stop("staging hostname must contain a staging/preview/test/QA/performance label.");
     }
