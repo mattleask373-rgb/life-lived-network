@@ -77,6 +77,10 @@ function NeedAnswer() {
   }
 
   const { need, results, quiet } = data;
+  const canReportNeed =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      need.id,
+    );
 
   return (
     <Shell>
@@ -98,7 +102,7 @@ function NeedAnswer() {
         {need.description ? <p className="mt-3 text-sm">{need.description}</p> : null}
       </header>
 
-      {/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(need.id) ? (
+      {canReportNeed ? (
         <ReportPublicContent subjectType="need" subjectId={need.id} label="need" />
       ) : null}
 
