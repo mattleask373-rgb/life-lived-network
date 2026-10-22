@@ -35,7 +35,7 @@ export const draftInputSchema = z
   .strict();
 
 export function cleanInput(text: string): string {
-  return text.replace(/\\s+/g, " ").trim().slice(0, MAX_INPUT);
+  return text.replace(/\s+/g, " ").trim().slice(0, MAX_INPUT);
 }
 
 /** Never let a draft carry more than a person would review at a glance. */
