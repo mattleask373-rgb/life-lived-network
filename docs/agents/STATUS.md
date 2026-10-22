@@ -185,3 +185,22 @@ This update follows the 19:33 UTC integration snapshot above. It records new dra
 - No PR merge or deployment was performed in the work represented by this update. The one-year prompt requires the eventual persistent executor to be separately implemented and tested; this documentation is not proof that a 24/7 runner is alive.
 
 The core invariants remain: \`findSupply()\` is the single discovery authority; user/private memories never become public supply; demo and unreviewed/rights-uncleared content is not published or indexed; and protected release/production actions require the appropriate human authority.
+
+
+## Current execution order refresh — 22 October 2026, 19:00 UTC
+
+This snapshot supersedes earlier queue/check claims in this file for the PRs below. Re-fetch current main and exact heads on the next run.
+
+- Canonical main remains `a99d09f1517523a7a388245ca6b3d5c1245816cb`; no main merge or direct-main write was performed.
+- **#291** is the first combined correctness candidate, head `70831fc20603afa2c88fef4c9c9456f00f8f415c`, based on current main. Successful exact-head Verify run: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39835902770/job/120024176957 (78 test files passed, 1 skipped); CodeQL, TypeScript and locked dependency checks passed at that head. A separate exact-head Verify attempt was cancelled; Supabase Preview skipped. Still draft and no human review submission. Must complete independent review and manual accessibility/mobile/date-line QA before merge.
+- **#298** is a new stacked draft for open-needs unknown-vs-zero UX, head `e3c18e5722e77087e191c042c784c1566364f4d0`, based on #291's head. It must not merge before #291; after #291 merges, retarget/rebase to current main and rerun exact-head CI/review. Initial check read showed Supabase Preview skipped only; refresh all other checks.
+- **#297** is a draft documentation-only port of the least-privilege proposal, head `2ed1c5bc71a41b5a8e9e71bae16224b0aefe8fd7`, based directly on main. Verify, CodeQL, TypeScript and locked dependency audit passed; Preview skipped. No review submission. #194 is closed as superseded/unmerged. The proposal is not SQL approval; project target identity remains unverified.
+- **#294** is the current Year-One plan/status reconciliation, head was `8e18433fbc8cce7202a886642cadad293418dd3f` before this update; this append triggers new checks and changes the final head. Prior exact-head Verify, CodeQL, TypeScript and locked dependency audit passed, but that does not apply to the new content until checks finish. Remains draft/no review.
+- **#289** input-validation hardening has prior green checks at `ee7937da4b3600b1fbac0ff637fa657778a710ad`, no human review submission. It does not implement durable per-user/IP rate limiting or cost caps. Keep public AI disabled until separate rate-limit/budget/kill-switch and grounded-retrieval acceptance gates pass.
+- Active ruleset #24946178 is enabled, but raw `required_approving_review_count=0`; deletion protection is not established by the returned ruleset. Administrator must require at least one approval and verify deletion protection.
+- Published SEO blocker remains: latest direct endpoint evidence found HTML 404 for `/sitemap.xml`, incorrect/incomplete `robots.txt`, and Life List noindex metadata on the observed host; deployed host/build identity is still unconfirmed. Do not claim live SEO fixed from PR tests.
+- New required next engineering slice: verify PR #291 after latest head; merge only following effective governance gate, independent review and manual QA; then integrate/rebase #298; review/merge #294 and #297 after fresh exact-head checks; review #289 separately. Next, run #164 least-privilege work only in a confirmed disposable DB, reconcile #100/#116 control-plane migration lineage, and prove a real authenticated durable worker before any 24/7 claim.
+
+### Non-negotiable release gates
+
+No autonomous merge, deployment, live host mutation, hosted DB/schema/RLS/grant change, source/feed activation, paid spend, provider/user outreach, or public AI activation. Owner/admin must first confirm the Lovable Git destination/non-main branch, deployed host/build SHA, Supabase project identity, effective main ruleset approval/deletion controls, and the intended stage/production isolation. Use concurrent agent capacity for read-only research, isolated PR work, deterministic tests and documentation, not to bypass these gates.
