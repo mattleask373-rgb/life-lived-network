@@ -7,6 +7,7 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { DataError } from "./data/errors";
 import { canonicalizeNeedPlace, createNeedInput, needIdInput } from "./server-inputs";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -115,9 +116,15 @@ export const getOpenNeeds = createServerFn({ method: "GET" })
       const { loadPlaceIndex } = await import("./place-index.server");
       const { descendantIdsOf } = await import("./places");
       const index = await loadPlaceIndex(supabase);
+      if (!index.byId.has(data.placeId)) throw new DataError("NOT_FOUND");
       const inside = descendantIdsOf(index, data.placeId);
-      if (inside.length > 1 && inside.length <= 400) query = query.in("place_id", inside);
-      else if (inside.length <= 1) query = query.eq("place_id", data.placeId);
+      if (inside.length > 400) {
+        throw new DataError(
+          "SCOPE_TOO_WIDE",
+          `Open-need locality has ${inside.length} descendant places.`,
+        );
+      }
+      query = query.in("place_id", inside);
     }
     const { data: rows, error } = await query;
     if (error) throw error;
@@ -153,21 +160,37 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
     const { loadPlaceIndex } = await import("./place-index.server");
     const geo = needGeography(await loadPlaceIndex(supabase), need.placeId);
 
-    // People whose home place is in or under the need's place, or whose stated
-    // service area covers it. Bounded on both sides.
-    const localIds = geo.localPlaceIds.slice(0, 400);
-    const scopeIds = geo.serviceScopeIds.slice(0, 400);
+    // Never pretend the first 400 IDs represent a complete global locality.
+    const candidateCap = 400;
+    if (geo.localPlaceIds.length > candidateCap || geo.serviceScopeIds.length > candidateCap) {
+      throw new DataError("SCOPE_TOO_WIDE", "Need locality exceeds the safe matching scope.");
+    }
+    const localIds = geo.localPlaceIds;
+    const scopeIds = geo.serviceScopeIds;
     const userIds = new Set<string>();
     if (localIds.length) {
-      const [{ data: locals }, { data: areas }] = await Promise.all([
-        supabase.from("profiles").select("id").eq("discoverable", true).in("place_id", localIds),
-        supabase
-          .from("service_areas")
-          .select("user_id")
-          .neq("relation", "travelling_through")
-          .in("place_id", scopeIds)
-          .limit(400),
-      ]);
+      const [{ data: locals, error: localsError }, { data: areas, error: areasError }] =
+        await Promise.all([
+          supabase
+            .from("profiles")
+            .select("id")
+            .eq("discoverable", true)
+            .in("place_id", localIds)
+            .limit(candidateCap + 1),
+          supabase
+            .from("service_areas")
+            .select("user_id")
+            .neq("relation", "travelling_through")
+            .in("place_id", scopeIds)
+            .limit(candidateCap + 1),
+        ]);
+      if (localsError || areasError) throw new DataError("DATA_UNAVAILABLE");
+      if ((locals?.length ?? 0) > candidateCap || (areas?.length ?? 0) > candidateCap) {
+        throw new DataError(
+          "SCOPE_TOO_WIDE",
+          "Too many possible people for a complete bounded match.",
+        );
+      }
       for (const p of locals ?? []) userIds.add(p.id);
       for (const a of areas ?? []) userIds.add(a.user_id);
     }
@@ -186,9 +209,15 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
       for (const id of kept) userIds.add(id);
     }
 
+    if (userIds.size > 200) {
+      throw new DataError(
+        "SCOPE_TOO_WIDE",
+        "More than 200 unique candidates require a narrower locality.",
+      );
+    }
     const people: PersonCandidate[] = [];
     if (userIds.size) {
-      const ids = [...userIds].slice(0, 200);
+      const ids = [...userIds];
       const [
         { data: profiles },
         { data: caps },

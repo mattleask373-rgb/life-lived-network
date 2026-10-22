@@ -66,8 +66,8 @@ export function contributions(entries: WorldEntry[]): WorldEntry[] {
 export interface LocalityQuestion {
   id: "happening" | "here" | "who" | "needed" | "possible";
   question: string;
-  /** How many real answers exist. 0 is a valid, honest answer. */
-  count: number;
+  /** How many real answers exist. Null means the count has not been verified. */
+  count: number | null;
   /** What the count is counting, in plain words. */
   unit: string;
   /** Where the answer lives: a section on this page, or another screen. */
@@ -81,7 +81,7 @@ export interface LocalityQuestion {
  */
 export function localityQuestions(
   entries: WorldEntry[],
-  openNeeds: number,
+  openNeeds: number | null,
   now = Date.now(),
 ): LocalityQuestion[] {
   const services = providerGroups(entries);
@@ -111,7 +111,7 @@ export function localityQuestions(
       id: "needed",
       question: "What's needed?",
       count: openNeeds,
-      unit: "things people have asked for",
+      unit: openNeeds === null ? "count not confirmed yet" : "things people have asked for",
       href: "/need",
     },
     {

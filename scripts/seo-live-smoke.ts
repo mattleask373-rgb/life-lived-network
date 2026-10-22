@@ -1,29 +1,14 @@
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 
-import { SERVICE_SITEMAP_SHARD_PATHS } from "../src/lib/sitemap-shards";
+import {
+  NOINDEX_PATHS,
+  PRIVATE_PATHS,
+  PUBLIC_PATHS,
+  PUBLIC_SITEMAP_CHILD_PATHS as SITEMAP_CHILD_PATHS,
+} from "../src/lib/seo-route-policy";
 
 export const DEFAULT_SEO_SMOKE_ORIGIN = "https://life-lived-network.lovable.app";
-
-const PUBLIC_PATHS = ["/", "/journey", "/road-trip", "/life-list", "/give", "/make"];
-const PRIVATE_PATHS = [
-  "/auth",
-  "/profile",
-  "/conversations",
-  "/need",
-  "/help",
-  "/moderation",
-  "/sources",
-  "/memories",
-  "/partners",
-  "/partner-tracker",
-  "/earn",
-];
-export const SITEMAP_CHILD_PATHS: readonly string[] = [
-  "/api/public/sitemap-pages.xml",
-  "/api/public/sitemap-localities.xml",
-  ...SERVICE_SITEMAP_SHARD_PATHS,
-];
 
 export interface SmokeDocument {
   status: number;
@@ -44,6 +29,8 @@ export interface SeoSmokeDocuments {
   homepage: SmokeDocument;
   /** Required when /sitemap.xml is a sitemap index. */
   sitemapChildren?: SitemapChildSmokeDocument[];
+  /** Crawlable pages that must emit noindex and no canonical URL. */
+  noindexPages?: SitemapChildSmokeDocument[];
 }
 
 function escapedRegExp(value: string): string {
@@ -58,6 +45,10 @@ function extractLocations(xml: string): string[] {
 
 function isPrivatePath(pathname: string): boolean {
   return PRIVATE_PATHS.some((path) => pathname === path || pathname.startsWith(path + "/"));
+}
+
+function isNoindexPath(pathname: string): boolean {
+  return NOINDEX_PATHS.some((path) => pathname === path || pathname.startsWith(path + "/"));
 }
 
 /** Every URL must be canonical, same-origin HTTPS, non-private and unique. */
@@ -80,6 +71,8 @@ function validateSitemapLocations(
       }
       if (isPrivatePath(url.pathname)) {
         failures.push(label + ": private route must not be listed: " + url.pathname);
+      } else if (isNoindexPath(url.pathname)) {
+        failures.push(label + ": noindex route must not be listed: " + url.pathname);
       }
       if (url.search || url.hash) {
         failures.push(
@@ -105,7 +98,7 @@ function validateUrlset(
   body: string,
   origin: string,
   failures: string[],
-  requiredPaths: string[] = [],
+  requiredPaths: readonly string[] = [],
   exactRequiredPaths = false,
 ): void {
   if (!/<urlset\b/i.test(body)) {
@@ -182,6 +175,53 @@ export function evaluateSeoSmoke(
     const rule = new RegExp("^Disallow:\\s*" + escapedRegExp(path) + "\\s*$", "im");
     if (!rule.test(documents.robots.body)) {
       failures.push("robots.txt: missing private-route crawler rule for " + path);
+    }
+  }
+
+  for (const path of NOINDEX_PATHS) {
+    const rule = new RegExp("^Disallow:\\s*" + escapedRegExp(path) + "(?:/|\\s|$)", "im");
+    if (rule.test(documents.robots.body)) {
+      failures.push(
+        "robots.txt: noindex route must remain crawlable for metadata inspection: " + path,
+      );
+    }
+    const page = documents.noindexPages?.find((entry) => entry.path === path);
+    if (!page) {
+      failures.push("noindex page response was not checked for " + path);
+      continue;
+    }
+    const document = page.document;
+    if (document.networkError) {
+      failures.push(path + ": request failed (" + document.networkError + ")");
+    }
+    if (document.status !== 200) {
+      failures.push(path + ": expected HTTP 200, received " + document.status);
+    }
+    if (!/text\/html/i.test(document.contentType ?? "")) {
+      failures.push(path + ": expected an HTML content type");
+    }
+    try {
+      const finalUrl = new URL(document.finalUrl);
+      if (finalUrl.origin !== origin) {
+        failures.push(path + ": final response left the expected origin");
+      }
+      if (finalUrl.pathname !== path) {
+        failures.push(path + ": redirected to unexpected path " + finalUrl.pathname);
+      }
+    } catch {
+      failures.push(path + ": response did not provide a valid final URL");
+    }
+    const robotsTag = document.body.match(/<meta\b(?=[^>]*\bname=["']robots["'])[^>]*>/i)?.[0];
+    const robotsContent = robotsTag?.match(/\bcontent=["']([^"']+)["']/i)?.[1]?.toLowerCase() ?? "";
+    const robotsDirectives = robotsContent.split(/[\s,]+/).filter(Boolean);
+    if (!robotsDirectives.includes("noindex")) {
+      failures.push(path + ": robots metadata must contain noindex");
+    }
+    if (robotsDirectives.includes("index")) {
+      failures.push(path + ": robots metadata must not permit indexing");
+    }
+    if (/<link\b[^>]*rel=["']canonical["'][^>]*>/i.test(document.body)) {
+      failures.push(path + ": noindex page must not emit a canonical link");
     }
   }
 
@@ -318,11 +358,16 @@ export async function runSeoSmoke(): Promise<number> {
     throw new Error("SEO_SMOKE_ORIGIN must be an HTTPS origin without embedded credentials");
   }
   const origin = parsedOrigin.origin;
-  const [robots, sitemap, homepage] = await Promise.all([
+  const [robots, sitemap, homepage, ...noindexDocs] = await Promise.all([
     fetchDocument("/robots.txt", origin),
     fetchDocument("/sitemap.xml", origin),
     fetchDocument("/", origin),
+    ...NOINDEX_PATHS.map((path) => fetchDocument(path, origin)),
   ]);
+  const noindexPages = NOINDEX_PATHS.map((path, index) => ({
+    path,
+    document: noindexDocs[index]!,
+  }));
 
   const sitemapChildren: SitemapChildSmokeDocument[] = [];
   if (/<sitemapindex\b/i.test(sitemap.body)) {
@@ -349,7 +394,7 @@ export async function runSeoSmoke(): Promise<number> {
     }
   }
 
-  const documents = { robots, sitemap, homepage, sitemapChildren };
+  const documents = { robots, sitemap, homepage, sitemapChildren, noindexPages };
   const failures = evaluateSeoSmoke(documents, origin);
 
   console.log("Public SEO smoke check — " + new Date().toISOString());
@@ -379,7 +424,9 @@ export async function runSeoSmoke(): Promise<number> {
     for (const failure of failures) console.error("  - " + failure);
     return 1;
   }
-  console.log("PASSED: robots, sitemap(s), canonical URL, and public indexing metadata");
+  console.log(
+    "PASSED: robots, sitemap(s), noindex pages, canonical URL, and public indexing metadata",
+  );
   return 0;
 }
 

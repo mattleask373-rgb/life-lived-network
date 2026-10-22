@@ -1,4 +1,4 @@
-import { publicPage } from "@/lib/seo";
+import { privatePage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { EntryCard } from "@/components/entry-card";
@@ -15,7 +15,7 @@ const description =
   "The things you said why not to: places to go, people to meet, skills to learn and projects to help with. A private list, not a public performance.";
 
 export const Route = createFileRoute("/life-list")({
-  head: () => publicPage({ path: "/life-list", title, description }),
+  head: () => privatePage({ path: "/life-list", title, description }),
   component: LifeListPage,
 });
 

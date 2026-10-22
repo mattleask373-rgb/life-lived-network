@@ -6,8 +6,10 @@ import {
   publicPage,
   PUBLIC_PATHS,
   PRIVATE_PATHS,
+  NOINDEX_PATHS,
   sitemapIndexXml,
   sitemapXml,
+  robotsTxt,
   SITE_ORIGIN,
 } from "./seo";
 
@@ -52,6 +54,20 @@ describe("what a page says about itself", () => {
 
   it("keeps public and private screens apart", () => {
     for (const path of PRIVATE_PATHS) expect(PUBLIC_PATHS).not.toContain(path);
+  });
+
+  it("keeps the personal life list out of public indexability", () => {
+    expect(NOINDEX_PATHS).toContain("/life-list");
+    expect(PRIVATE_PATHS).not.toContain("/life-list");
+    expect(PUBLIC_PATHS).not.toContain("/life-list");
+    const head = privatePage({
+      path: "/life-list",
+      title: "Your life list",
+      description: "A private list.",
+    });
+    expect(head.meta).toContainEqual({ name: "robots", content: "noindex, nofollow" });
+    expect(head.links).toEqual([]);
+    expect(robotsTxt()).not.toContain("Disallow: /life-list");
   });
 });
 

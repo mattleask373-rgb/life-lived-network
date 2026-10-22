@@ -1,29 +1,23 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  NOINDEX_PATHS,
+  PRIVATE_PATHS,
+  PUBLIC_PATHS,
+  PUBLIC_SITEMAP_CHILD_PATHS as childPaths,
+} from "./seo-route-policy";
+import {
   DEFAULT_SEO_SMOKE_ORIGIN,
   evaluateSeoSmoke,
-  SITEMAP_CHILD_PATHS as childPaths,
   type SeoSmokeDocuments,
   type SitemapChildSmokeDocument,
   type SmokeDocument,
 } from "../../scripts/seo-live-smoke";
 
 const origin = DEFAULT_SEO_SMOKE_ORIGIN;
-const publicPaths = ["/", "/journey", "/road-trip", "/life-list", "/give", "/make"];
-const privatePaths = [
-  "/auth",
-  "/profile",
-  "/conversations",
-  "/need",
-  "/help",
-  "/moderation",
-  "/sources",
-  "/memories",
-  "/partners",
-  "/partner-tracker",
-  "/earn",
-];
+const publicPaths = [...PUBLIC_PATHS];
+const privatePaths = [...PRIVATE_PATHS];
+const noindexPaths = [...NOINDEX_PATHS];
 function document(path: string, contentType: string, body: string): SmokeDocument {
   return { status: 200, contentType, body, finalUrl: new URL(path, origin).toString() };
 }
@@ -67,6 +61,14 @@ function healthyDocuments(): SeoSmokeDocuments {
     robots: document("/robots.txt", "text/plain; charset=utf-8", robots),
     sitemap: document("/sitemap.xml", "application/xml; charset=utf-8", urlset(publicPaths)),
     homepage: document("/", "text/html; charset=utf-8", homepage),
+    noindexPages: noindexPaths.map((path) => ({
+      path,
+      document: document(
+        path,
+        "text/html; charset=utf-8",
+        '<!doctype html><html><head><title>Private</title><meta name="robots" content="noindex, nofollow"></head><body></body></html>',
+      ),
+    })),
   };
 }
 
@@ -96,8 +98,30 @@ function healthyIndexDocuments(): SeoSmokeDocuments {
 }
 
 describe("public SEO live smoke contract", () => {
-  it("accepts a correct public robots file, URL-set sitemap and rendered homepage", () => {
+  it("accepts a correct public robots file, URL-set sitemap, rendered homepage and crawlable noindex page", () => {
     expect(evaluateSeoSmoke(healthyDocuments())).toEqual([]);
+  });
+
+  it("rejects a blocked noindex page, missing noindex metadata, canonical URL or sitemap entry", () => {
+    const docs = healthyDocuments();
+    const page = docs.noindexPages?.find((entry) => entry.path === "/life-list");
+    if (!page) throw new Error("Test fixture is missing /life-list");
+    docs.robots.body += "\nDisallow: /life-list";
+    page.document.body =
+      '<!doctype html><html><head><link rel="canonical" href="' +
+      origin +
+      '/life-list"></head></html>';
+    docs.sitemap.body = docs.sitemap.body.replace(
+      "</urlset>",
+      "<url><loc>" + origin + "/life-list</loc></url></urlset>",
+    );
+    const failures = evaluateSeoSmoke(docs);
+    expect(failures).toContain(
+      "robots.txt: noindex route must remain crawlable for metadata inspection: /life-list",
+    );
+    expect(failures).toContain("/life-list: robots metadata must contain noindex");
+    expect(failures).toContain("/life-list: noindex page must not emit a canonical link");
+    expect(failures).toContain("sitemap.xml: noindex route must not be listed: /life-list");
   });
 
   it("accepts a sitemap index and validates every child sitemap", () => {

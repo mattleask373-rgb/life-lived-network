@@ -14,10 +14,12 @@ import {
   decodeCursor,
   encodeCursor,
   pageLimit,
+  splitPageWithLookahead,
   type DiscoveryContext,
   type Page,
 } from "./data/contract";
-import { asDataError } from "./data/errors";
+import { asDataError, DataError } from "./data/errors";
+import { localityQueryScope } from "./locality-query-scope";
 import {
   decideSourceLifecycle,
   type SourceLifecycleMetadata,
@@ -25,6 +27,12 @@ import {
 } from "./source-lifecycle-policy";
 import { rowToEntry, type ListingRow } from "./listings";
 import { assertQueryableGeoBounds } from "./geo-bounds";
+import {
+  assertCompleteSourceRecordScan,
+  readBoundedSourceRecordPages,
+  SOURCE_RECORD_SCAN_LIMIT,
+  SOURCE_RECORD_SCAN_PAGE_SIZE,
+} from "./source-record-pagination";
 import type { SourcePhoto, WorldEntry } from "./world-data";
 
 export const getWorld = createServerFn({ method: "GET" })
@@ -63,14 +71,31 @@ async function readWorld(
     // the request itself the bottleneck; the browser only says where it is.
     let insideIds = context.placeIds ?? [];
     let insideSlugs = context.placeSlugs ?? [];
-    if (!context.bounds && context.placeId && !insideIds.length) {
+    if (!context.bounds && context.placeId) {
+      // Client descendant IDs are display/cache hints, not authoritative query scope.
+      // Always rebuild scope from the complete server index so a truncated client index
+      // cannot make a globally-wide locality appear to fit beneath the 400-ID filter cap.
       const { loadPlaceIndex } = await import("./place-index.server");
       const { descendantIdsOf } = await import("./places");
       const index = await loadPlaceIndex(supabase);
+      if (!index.byId.has(context.placeId)) {
+        throw new DataError(
+          "NOT_FOUND",
+          "Selected place ID is not present in the canonical hierarchy",
+        );
+      }
       insideIds = descendantIdsOf(index, context.placeId);
       insideSlugs = insideIds
         .map((id) => index.byId.get(id)?.slug)
         .filter((slug): slug is string => Boolean(slug));
+    }
+
+    const localityScope = context.bounds ? null : localityQueryScope(context.placeId, insideIds);
+    if (localityScope?.kind === "too-wide") {
+      throw new DataError(
+        "SCOPE_TOO_WIDE",
+        `Selected locality has ${localityScope.count} descendant IDs; the safe filter cap is ${localityScope.cap}.`,
+      );
     }
 
     let query = supabase
@@ -82,7 +107,8 @@ async function readWorld(
       // else keeps its existing most-recent-first order.
       .order("starts_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1)
+      .order("id", { ascending: true })
+      .range(offset, offset + limit)
       .abortSignal(signal);
     // The selected locality and visible map rectangle are different scopes.
     // A viewport takes precedence over place filters so panning can retrieve new
@@ -97,16 +123,10 @@ async function readWorld(
         // validated before reaching this query, so only finite numbers enter OR.
         query = query.or(`lng.gte.${bounds.minLng},lng.lte.${bounds.maxLng}`);
       }
-    } else {
-      // A very wide locality selection can name more IDs than a sensible filter.
-      // Drop the filter instead of hiding activity from an arbitrary ID slice;
-      // the bounded page limit still applies.
-      const LOCALITY_FILTER_CAP = 400;
-      if (insideIds.length && insideIds.length <= LOCALITY_FILTER_CAP) {
-        query = query.in("place_id", insideIds);
-      } else if (!insideIds.length && context.placeId) {
-        query = query.eq("place_id", context.placeId);
-      }
+    } else if (localityScope?.kind === "place-ids") {
+      query = query.in("place_id", localityScope.placeIds);
+    } else if (localityScope?.kind === "exact-place") {
+      query = query.eq("place_id", localityScope.placeId);
     }
 
     // An event that has finished is never upcoming. Anything without a start
@@ -119,7 +139,11 @@ async function readWorld(
     if (error) throw error;
     throwIfAborted(signal);
 
-    const listings = (rows ?? []) as unknown as ListingRow[];
+    // Use one sentinel row to distinguish an exactly-full final page from a page with more data.
+    // The sentinel is not processed; it becomes the first row of the next offset page.
+    const boundedRows = splitPageWithLookahead(rows ?? [], limit);
+    const listings = boundedRows.items as unknown as ListingRow[];
+    const hasMore = boundedRows.hasMore;
     // One extra query for all creators, never one per listing.
     const names = new Map<string, string>();
     const creatorIds = [
@@ -174,17 +198,55 @@ async function readWorld(
 
     if (imported.length) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: sourceRecords, error: sourceRecordsError } = await supabaseAdmin
-        .from("source_records")
-        .select("listing_id, source_id, source_url, source_state, last_seen_at, source_updated_at")
-        .in("listing_id", [...new Set(imported.map((r) => r.id))])
-        .abortSignal(signal);
-      throwIfAborted(signal);
+      const listingIds = [...new Set(imported.map((r) => r.id))];
+      let sourceRecords: {
+        id: string;
+        listing_id: string | null;
+        source_id: string;
+        source_url: string | null;
+        source_state: string;
+        last_seen_at: string | null;
+        source_updated_at: string | null;
+      }[] = [];
 
-      if (sourceRecordsError) {
+      try {
+        const { count: expectedCount, error: countError } = await supabaseAdmin
+          .from("source_records")
+          .select("id", { count: "exact", head: true })
+          .in("listing_id", listingIds)
+          .abortSignal(signal);
+        throwIfAborted(signal);
+        if (countError) throw countError;
+
+        const scannedRecords = await readBoundedSourceRecordPages(
+          SOURCE_RECORD_SCAN_LIMIT,
+          SOURCE_RECORD_SCAN_PAGE_SIZE,
+          async (afterId, limit) => {
+            let query = supabaseAdmin
+              .from("source_records")
+              .select(
+                "id, listing_id, source_id, source_url, source_state, last_seen_at, source_updated_at",
+              )
+              .in("listing_id", listingIds)
+              .order("id", { ascending: true })
+              .limit(limit);
+            if (afterId !== null) query = query.gt("id", afterId);
+            const { data, error } = await query.abortSignal(signal);
+            throwIfAborted(signal);
+            if (error) throw error;
+            return (data ?? []) as typeof sourceRecords;
+          },
+        );
+        sourceRecords = assertCompleteSourceRecordScan(scannedRecords, expectedCount);
+      } catch {
+        // A failed, capped, or incomplete lifecycle read must never leave an older
+        // live observation as the sole evidence for an imported public listing.
+        throwIfAborted(signal);
         sourceLifecycleReadFailed = true;
-      } else {
-        for (const record of sourceRecords ?? []) {
+      }
+
+      if (!sourceLifecycleReadFailed) {
+        for (const record of sourceRecords) {
           if (!record.listing_id) continue;
           const lifecycleRecord: SourceRecordLifecycleInput = {
             listingId: record.listing_id,
@@ -199,7 +261,7 @@ async function readWorld(
           sourceRecordsByListing.set(record.listing_id, existing);
         }
 
-        const sourceIds = [...new Set((sourceRecords ?? []).map((record) => record.source_id))];
+        const sourceIds = [...new Set(sourceRecords.map((record) => record.source_id))];
         if (sourceIds.length) {
           const { data: sources, error: sourcesError } = await supabaseAdmin
             .from("sources")
@@ -277,11 +339,10 @@ async function readWorld(
 
     // Cursor/pagination follows the raw bounded database window, not filtered item
     // count. Otherwise a page with hidden/withdrawn source rows could stop early.
-    const hasMore = listings.length === limit;
     const page: Page<WorldEntry> = {
       items: worldItems,
       hasMore,
-      nextCursor: hasMore ? encodeCursor(offset + listings.length) : null,
+      nextCursor: hasMore ? encodeCursor(offset + limit) : null,
     };
 
     // The trial layer, only on the first page, only for the locality being
