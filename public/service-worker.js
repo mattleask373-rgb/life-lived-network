@@ -55,8 +55,7 @@ self.addEventListener("fetch", (event) => {
 
   // Only cache versioned build assets after a successful network read.
   // Requests for API/data endpoints, uploads and unversioned routes are untouched.
-  const isBuildAsset =
-    url.pathname.startsWith("/assets/") || url.pathname.startsWith("/_build/");
+  const isBuildAsset = url.pathname.startsWith("/assets/") || url.pathname.startsWith("/_build/");
   const isStaticResource = ["script", "style", "font", "image"].includes(request.destination);
   if (!isBuildAsset || !isStaticResource) return;
 
