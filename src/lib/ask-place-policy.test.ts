@@ -112,12 +112,10 @@ describe("prepareAskPlaceContext", () => {
 
   it("fails closed when the candidate array exceeds the input-work limit", () => {
     const candidates = Array.from(
-      { length: ASK_PLACE_POLICY_LIMITS.candidates + 1 },
-      (_, index) => eligibleCandidate({ id: `listing-${index}` }),
+      { length: ASK_PLACE_POLICY_LIMITS.candidates + 1 }, (_, index) =>
+        eligibleCandidate({ id: `listing-${index}` }),
     );
-    expect(
-      prepareAskPlaceContext(PLACE_ID, "What is recorded?", candidates),
-    ).toMatchObject({
+    expect(prepareAskPlaceContext(PLACE_ID, "What is recorded?", candidates)).toMatchObject({
       status: "unavailable",
       reason: "too_many_candidates",
       records: [],
@@ -127,14 +125,15 @@ describe("prepareAskPlaceContext", () => {
 
   it("inspects only a bounded prefix of detail elements", () => {
     const details = [
-      ...Array.from({ length: ASK_PLACE_POLICY_LIMITS.detailItemsInspected }, (_, i) => `detail-${i}`),
+      ...Array.from(
+        { length: ASK_PLACE_POLICY_LIMITS.detailItemsInspected },
+        (_, i) => `detail-${i}`,
+      ),
       "a detail outside the inspected prefix",
     ];
-    const result = prepareAskPlaceContext(
-      PLACE_ID,
-      "What is recorded?",
-      [eligibleCandidate({ details })],
-    );
+    const result = prepareAskPlaceContext(PLACE_ID, "What is recorded?", [
+      eligibleCandidate({ details }),
+    ]);
     expect(result.status).toBe("eligible_context");
     if (result.status !== "eligible_context") return;
     expect(result.records[0]?.text).not.toContain("a detail outside the inspected prefix");
