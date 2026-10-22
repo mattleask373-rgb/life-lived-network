@@ -121,7 +121,7 @@ function Home() {
   );
   const canLoadMoreViewport = Boolean(
     viewportPage &&
-      canLoadMoreViewportPages(viewportPageData?.pages.length ?? 0, viewportPage.hasMore),
+    canLoadMoreViewportPages(viewportPageData?.pages.length ?? 0, viewportPage.hasMore),
   );
 
   const openNeedsFn = useServerFn(getOpenNeeds);
