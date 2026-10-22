@@ -28,6 +28,7 @@ import {
 import { rowToEntry, type ListingRow } from "./listings";
 import { assertQueryableGeoBounds } from "./geo-bounds";
 import {
+  assertCompleteSourceRecordScan,
   readBoundedSourceRecordPages,
   SOURCE_RECORD_SCAN_LIMIT,
   SOURCE_RECORD_SCAN_PAGE_SIZE,
@@ -209,7 +210,15 @@ async function readWorld(
       }[] = [];
 
       try {
-        sourceRecords = await readBoundedSourceRecordPages(
+        const { count: expectedCount, error: countError } = await supabaseAdmin
+          .from("source_records")
+          .select("id", { count: "exact", head: true })
+          .in("listing_id", listingIds)
+          .abortSignal(signal);
+        throwIfAborted(signal);
+        if (countError) throw countError;
+
+        const scannedRecords = await readBoundedSourceRecordPages(
           SOURCE_RECORD_SCAN_LIMIT,
           SOURCE_RECORD_SCAN_PAGE_SIZE,
           async (afterId, limit) => {
@@ -228,6 +237,7 @@ async function readWorld(
             return (data ?? []) as typeof sourceRecords;
           },
         );
+        sourceRecords = assertCompleteSourceRecordScan(scannedRecords, expectedCount);
       } catch {
         // A failed, capped, or incomplete lifecycle read must never leave an older
         // live observation as the sole evidence for an imported public listing.
