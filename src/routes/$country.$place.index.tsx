@@ -32,6 +32,7 @@ import { WhatsHere } from "@/components/whats-here";
 import { WorkOpportunityFacts } from "@/components/work-opportunity-facts";
 import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
+import { loadLocalityEntries } from "@/lib/locality-page-data";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
 import { getOpenNeeds } from "@/lib/needs.functions";
 import { localityPath } from "@/lib/locality-path";
