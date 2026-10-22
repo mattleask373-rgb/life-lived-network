@@ -7,6 +7,7 @@ import {
   emptyPage,
   encodeCursor,
   pageLimit,
+  splitPageWithLookahead,
   toPage,
 } from "./contract";
 import { DataError, asDataError, isDataErrorCode } from "./errors";
@@ -24,6 +25,17 @@ describe("paging is bounded and opaque", () => {
     expect(decodeCursor(encodeCursor(60))).toBe(60);
     expect(decodeCursor(null)).toBe(0);
     expect(decodeCursor("nonsense")).toBe(0);
+  });
+
+  it("uses a sentinel row to distinguish exactly-full from genuinely-more pages", () => {
+    expect(splitPageWithLookahead([1, 2], 3)).toEqual({ items: [1, 2], hasMore: false });
+    expect(splitPageWithLookahead([1, 2, 3], 3)).toEqual({ items: [1, 2, 3], hasMore: false });
+    expect(splitPageWithLookahead([1, 2, 3, 4], 3)).toEqual({ items: [1, 2, 3], hasMore: true });
+  });
+
+  it("rejects invalid look-ahead limits", () => {
+    expect(() => splitPageWithLookahead([1], 0)).toThrow(RangeError);
+    expect(() => splitPageWithLookahead([1], 1.5)).toThrow(RangeError);
   });
 
   it("only offers a next page when the read filled the limit", () => {

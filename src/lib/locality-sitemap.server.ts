@@ -84,6 +84,7 @@ async function loadPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot> {
       .or(`starts_at.is.null,starts_at.gte.${settled}`)
       .order("starts_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
       .range(offset, end);
 
     if (error) throw error;
