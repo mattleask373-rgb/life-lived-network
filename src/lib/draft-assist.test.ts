@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { cleanInput, draftInputSchema, isDraftAssistDisabled, MAX_INPUT, tidyDraft } from "./draft-assist";
+import {
+  cleanInput,
+  draftInputSchema,
+  isDraftAssistDisabled,
+  MAX_INPUT,
+  tidyDraft,
+} from "./draft-assist";
 
 describe("draft assist", () => {
   it("uses an explicit truthy environment value as an emergency stop", () => {
