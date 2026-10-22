@@ -10,6 +10,11 @@ const migration = readFileSync(
   ),
   "utf8",
 );
+const needDetail = readFileSync(new URL("../routes/need.$id.tsx", import.meta.url), "utf8");
+const reportControl = readFileSync(
+  new URL("../components/report-public-content.tsx", import.meta.url),
+  "utf8",
+);
 
 const valid = {
   subjectType: "listing",
@@ -53,6 +58,15 @@ describe("public content report input contract", () => {
     expect(() => validatePublicContentReport({ ...valid, note: 12 as unknown as string })).toThrow(
       /note isn't valid/i,
     );
+  });
+});
+
+describe("public report entry points", () => {
+  it("lets people report discoverable profiles presented as need-matching previews", () => {
+    expect(needDetail).toContain('subjectType="profile"');
+    expect(needDetail).toContain("subjectId={r.personId}");
+    expect(reportControl).toContain('subjectType: PublicReportSubject;');
+    expect(reportControl).toContain("Sign in to send a private report");
   });
 });
 
