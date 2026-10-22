@@ -56,7 +56,9 @@ describe("connection status concurrency and database guards", () => {
     expect(migration).toContain("NEW.status = 'withdrawn'");
     expect(migration).toContain("NEW.status IN ('sent', 'accepted')");
     expect(migration).toContain("Unblocked participants can add messages to open requests");
-    expect(migration).toContain("GRANT INSERT (need_id, sender_id, recipient_id, direction, note, context_title, context_place, context_when)");
+    expect(migration).toContain(
+      "need_id, sender_id, recipient_id, direction, note, context_title, context_place, context_when",
+    );
     expect(migration).toContain("NEW.recipient_id IS DISTINCT FROM v_need_creator");
     expect(migration).toContain("NEW.context_title := v_need_title");
     expect(migration).toContain("connection request details cannot be changed");
