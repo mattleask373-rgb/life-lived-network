@@ -1249,3 +1249,25 @@ This section supersedes any earlier snapshot in this document for the PRs and ma
 #### Human gates remain last, but block unsafe production work now
 
 Human review is needed now for the ruleset, sync source-of-truth and environment identity; final product/legal/worker classification, provider terms and data rights; any RLS/grant/schema/migration, provider activation, spend, outreach, launch/marketing and deployment decisions. Agents can continue read-only audit, isolated branch work, deterministic unit/adversarial testing and documentation while these are pending. No auto-merge, auto-deploy or unrestricted external action is permitted by the one-year plan.
+
+
+### Consolidation correction — 22 October 2026, 19:12 UTC
+
+This correction supersedes the preceding subsection's #298 merge instruction. During the latest integration pass, the nullable `LocalityQuestion` contract, error/loading presentation and regression test were already added to #291 by a concurrent agent. The remaining caller wiring was then ported directly into #291 so the feature is one review path, not a chain of near-duplicate UI PRs.
+
+**Latest observed #291 head:** `1f40d6d5337cbc138b71db391e0bc4f20402b148`, base main `a99d09f1517523a7a388245ca6b3d5c1245816cb`. At the 19:10 UTC check read, Verify was queued, Supabase Preview was skipped, and other checks had not yet all registered on this exact head. Earlier Verify runs on intermediate heads failed formatting checks; the two most recent reported formatting defects have been corrected on the branch. Do not infer that CI is green until every required check on this exact head completes.
+
+PRs #296, #298, #300 and #301 are closed unmerged to eliminate stale/duplicated dependent branches. Their needed open-needs caller behaviour is now in #291. PR #194 is also closed unmerged and superseded by documentation-only #297. These closed PRs are not part of the merge order.
+
+#### Corrected merge order
+
+1. **Owner/admin Gate 0:** require at least one main-branch approval and authoritatively verify deletion protection; confirm the Lovable repository/non-main sync branch, deployed host/build SHA and Supabase project identity. These are not waived by automation.
+2. **PR #294 — this plan/status reconciliation:** review the R&D package register, migration-lineage evidence, source dates, human approval register and this correction. Latest known exact-head checks passed before this addendum; rerun all checks after the append, then independent review.
+3. **PR #291 — single canonical correctness integration:** locality scope; fail-closed place-index exact-count/keyset scan; source-record exact-count/keyset scan; route registry and Life List noindex/sitemap policy; date-line/map pagination; source freshness; open-needs query failure as unknown with retry and quiet-place copy. Require fresh exact-head Verify, CodeQL, TypeScript and locked-dependency audit; independent review; combined tests; manual accessibility/mobile/date-line QA. Supabase Preview is skipped, not passed.
+4. **PR #297 — least-privilege proposal documentation:** independent security review and exact-head checks. This is an inventory/proposal only; a separate implementation and disposable-database validation is required before any SQL or hosted privilege change.
+5. **PR #289 — AI draft request validation:** independent review plus fresh exact-head checks. It does not satisfy shared rate limiting, concurrency caps, spend limits or a kill switch; these remain prerequisites to any public model endpoint.
+6. **New security/runtime work:** address #164 on an owner-confirmed disposable database, reconcile #100/#116 migration lineage, implement durable rate/cost controls for any future AI, and prove durable identity/leases/fencing/idempotency/cancellation/heartbeat/recovery on non-production before any 24/7 claim.
+7. **Release only after host identity is confirmed:** owner-authorized publish, then GET-only robots/sitemap index/child sitemap/noindex smoke on the confirmed host. Never equate passing source CI with fixing the live endpoint.
+8. **Market growth last:** evidence-backed opt-in supply and local/legal/support review; complete the provider → eligible listing → scoped discovery → consented request → response → completion/feedback loop; distinguish bot traffic from people; prove repeat use and support capacity before new categories, paid acquisition or geography expansion.
+
+No merges, deployment, hosted database change, permission modification, feed activation, public AI activation, provider outreach or spending were performed in this pass.
