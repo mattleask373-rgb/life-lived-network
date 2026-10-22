@@ -149,3 +149,37 @@ This update follows the 19:33 UTC integration snapshot above. It records new dra
 - No PR merge or deployment was performed in the work represented by this update. The one-year prompt requires the eventual persistent executor to be separately implemented and tested; this documentation is not proof that a 24/7 runner is alive.
 
 The core invariants remain: \`findSupply()\` is the single discovery authority; user/private memories never become public supply; demo and unreviewed/rights-uncleared content is not published or indexed; and protected release/production actions require the appropriate human authority.
+
+## Verified snapshot — 2026-10-22 (Grok coordination cycle)
+
+### Canonical baseline (this cycle)
+- Current main SHA: `d02459a384cb8ffcc6201839d45645e178ef0b2b` (Merge pull request #284).
+- CI on recent main-related runs: Verify success observed (e.g. runs around 2026-10-22 02:57 UTC). Supabase Preview remains skipped.
+- Issue #125 remains the coordination issue (open, agent-coordination label).
+
+### Live SEO gap (verified this cycle, unauthenticated public GET)
+- `https://life-lived-network.lovable.app/robots.txt` returns platform-default blanket `Allow: /` for Googlebot/Bingbot/Twitterbot/facebookexternalhit/* . No Disallow rules, no Sitemap directive. Content-Type text/plain.
+- `https://life-lived-network.lovable.app/sitemap.xml` returns HTML 404 ("Page not found"), not XML.
+- Repository on main: `public/robots.txt` contains the full Disallow list aligned with `PRIVATE_PATHS` from `src/lib/seo.ts` plus Sitemap directive. Dynamic `src/routes/robots[.]txt.ts` and `src/routes/sitemap[.]xml.ts` exist. `public/sitemap.xml` is a sitemap index.
+- Conclusion: source is aligned; published Lovable origin is not serving current public assets or server routes for these paths. This is a hosting/republish diagnosis, not a source mismatch. No code change required for alignment. Human-authorized republish of current main followed by fresh live verification is the gate.
+
+### Key PR status (evidence-backed)
+- #157 (env hygiene): MERGED.
+- #129 (SEO private routes): MERGED.
+- #131 (fixtures): CLOSED.
+- #155 (discovery service area): CLOSED.
+- #154 (honest open needs): OPEN, but mergeable=CONFLICTING (base stale relative to current main). CI green on old head only. Prefer rebase/reconcile over duplicate.
+- #156 / #214 lineage (auth route tests): OPEN drafts; later #232 was merged. Prefer current-main reconciliation.
+- Multiple other drafts (#271 SEO route policy, #283 status, etc.) await independent human review. Do not spawn duplicates.
+
+### Invariants held
+- `findSupply()` remains the sole discovery engine.
+- No fabricated inventory, availability, users, traction or revenue.
+- No merge to main, no force-push, no production DB/RLS/credentials changes performed.
+
+### Next owner actions
+- Founder: authorize republish/sync of current main to Lovable origin, then re-probe /robots.txt and /sitemap.xml.
+- Reviewers: triage open green/draft PRs starting with security/hygiene and SEO policy; independent review required.
+- Platform: history secret scan and human-approved read-only live RLS verification plan remain outstanding.
+
+Evidence or it did not happen. This update is documentation only.
