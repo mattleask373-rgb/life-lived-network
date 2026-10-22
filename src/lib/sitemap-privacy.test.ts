@@ -12,6 +12,7 @@ import { Route as IndexRoute } from "@/routes/api/public/sitemap[.]xml";
 import { Route as PagesRoute } from "@/routes/api/public/sitemap-pages[.]xml";
 import { Route as RobotsRoute } from "@/routes/robots[.]txt";
 import { Route as SitemapRoute } from "@/routes/sitemap[.]xml";
+import { Route as LifeListRoute } from "@/routes/life-list";
 
 /**
  * Regression guard: the fixed-pages sitemap lists only known public screens;
@@ -20,6 +21,8 @@ import { Route as SitemapRoute } from "@/routes/sitemap[.]xml";
  * fails closed rather than becoming an invented or thin search landing page.
  */
 type Handler = () => Response | Promise<Response>;
+type Head = () => { meta: Array<Record<string, string>>; links: Array<Record<string, string>> };
+const lifeListHead = (LifeListRoute as unknown as { options: { head: Head } }).options.head;
 const handler = (route: unknown): Handler =>
   (route as { options: { server: { handlers: { GET: Handler } } } }).options.server.handlers.GET;
 
@@ -31,6 +34,12 @@ async function body(route: unknown): Promise<{ xml: string; res: Response }> {
 const locs = (xml: string) => [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1] ?? "");
 
 describe("public sitemap privacy", () => {
+  it("marks the personal life-list route noindex without a canonical URL", () => {
+    const head = lifeListHead();
+    expect(head.meta).toContainEqual({ name: "robots", content: "noindex, nofollow" });
+    expect(head.links).toEqual([]);
+  });
+
   it("pages sitemap lists exactly the public screens, nothing else", async () => {
     const { xml, res } = await body(PagesRoute);
     expect(res.headers.get("content-type")).toContain("xml");
