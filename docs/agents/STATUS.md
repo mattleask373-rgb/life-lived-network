@@ -249,3 +249,50 @@ Code review found that `getMyOpportunities()` in `src/lib/needs.functions.ts` dr
 Current automation inventory shows three enabled daily tasks: Living World Fleet Control (read-only), Daily Security & Release Audit (read-only), and Year-One Safe Build Loop (write-blocked pending authoritative Lovable repo/non-main branch proof and owner authorization). Each is configured daily at approximately 08:00 Europe/Amsterdam beginning 23 Oct; latest run times were around 19:22–19:23 UTC. The API reports `next_run_time: null` for all three, so next dispatch is not independently confirmed.
 
 Draft PR #270 is only an hourly read-only documentation probe, not an executor. No persistent coding runtime has been proven. No extra automation was created. Human owner must reconcile the automation's write-gate prompt with the explicit PR-only workflow before enabling agents to push further implementation; Lovable direct sync to main remains prohibited until Settings are verified.
+
+
+## Live audit delta — 22 October 2026, 21:45 UTC
+
+This section supersedes earlier embedded snapshots for the facts it covers. All observations below are read-only and do not authorize merge, deployment, hosted-data access or launch.
+
+### Canonical repository, queue and protection
+
+- Current observed main: 86283de035db4d8543cd169f4346e27fa26eadb8. Current API inventory returned **81 open PRs**. Treat the full queue as a convergence/ownership problem, not a reason to create another overlapping PR. Several older PRs are clearly stale by their own recorded base SHAs; compare each head/base/check set before integration.
+- Active ruleset 24946178 targets the default branch and requires one approving PR review, dismissal of stale approvals, approval of the latest push, review-thread resolution and the verify check. Raw response shows bypass_actors: [] and current_user_can_bypass: never. The ruleset itself has no deletion rule. Classic branch-protection read returned 403 for this integration; therefore deletion protection is **NOT VERIFIED**, not assumed absent or present.
+- Main combined commit-status API returned no legacy status objects. This is not a statement that required checks failed or passed; use exact-head Actions check runs.
+- Current-tree metadata lists .env.example, not a root .env; the older open report claiming a tracked root .env is a stale snapshot and should be re-checked before use. Do not retrieve or print secrets.
+
+### Exact-head draft PR truth
+
+- **#304 — bounded opportunity retrieval:** head afc2b544b36a96d64f3b51602532f1c49d1d1313; Verify and CodeQL passed. Draft, no submitted independent review, Supabase Preview skipped. The implementation evaluates a bounded candidate set (max 13 × 60 candidates), not every possible need; user-facing results must not be labelled exhaustive. Manual mobile, accessibility and date-line QA remains.
+- **#305 — draft-assist stop:** head 0af4d814c827970d567d16a0afdb5930d978d5f8; Verify and CodeQL passed. Draft, unreviewed. Its DRAFT_ASSIST_DISABLED switch is feature-specific; durable quotas, concurrent/replay protection, provider-side budgets/alerts and distributed immediate kill-switch evidence remain open. Public Ask-this-place remains disabled.
+- **#306 — this status documentation PR:** head 2bbd9fbda161d94c02d6c18463556d119c7b126f; recorded Verify and CodeQL passed before this appended delta. Re-run checks after this commit. Draft, unreviewed.
+- **#307 — sitemap eligibility parity:** head e7d9a0177c8f062343672fcfc78cb82a57a8cbd4; Verify passed including lint/tests/build and non-traffic k6 parsing; CodeQL/TypeScript analysis and locked dependency audit passed. Draft, no submitted reviews. Not deployed; live-host checks remain red.
+- **#308 — Life List failure handling:** head 0081e6b7f5ff8c0b21e09d93f291d8777c5784e6; Verify passed including lint/tests/build and non-traffic k6 parsing; CodeQL/TypeScript analysis and locked dependency audit passed. Draft, no submitted reviews. This is not proof of actual RLS isolation. Signed-in toggle/category writes are still fire-and-forget; persistence failure and optimistic-state recovery should be handled in a separate scoped, regression-tested follow-up before claiming full save durability.
+- **#299 — control-plane migration lineage:** head f5ac2728edf52743319b95434e4b484f69fdb715; historical recorded Verify/CodeQL are green, but base SHA a99d09f1517523a7a388245ca6b3d5c1245816cb is stale, GitHub reports non-mergeable, there is no independent review, and Supabase Preview is skipped. Keep separate until the owner confirms the actual Supabase target and migration history; do not apply or reconcile remote migration history in automation.
+
+### Current published-host evidence and divergence
+
+Fresh GET-only checks from 22 October 2026:
+- https://life-lived-network.lovable.app/robots.txt returns HTTP 200 and allows all crawlers, but its response lacks the Sitemap: directive present in canonical public/robots.txt.
+- https://life-lived-network.lovable.app/sitemap.xml returns HTTP 404 HTML, while current main contains the sitemap index file and server route. The host artifact/source/route mapping is not authoritatively linked; do not assume that merging code alone will change the live host.
+- /life-list returns HTTP 200 and generic Life List content. The fetched document did not expose a visible canonical or noindex directive, while current source calls privatePage(). This is a published-output metadata discrepancy and an indexing/privacy hygiene concern—not proof of saved-item exposure or an RLS failure.
+- /api/public/sitemap.xml, pages/localities/services feeds and tested service shards also need fresh host checks after the intended build is confirmed.
+
+### Growth, global rollout and human-connection outcomes
+
+- No reliable product-analytics source was retrieved for DAU/WAU, acquisition channel performance, activation, conversion, retention, CAC/LTV, request/response outcomes or offline connection energy. Treat scale values copied from prompts as targets/context only, not telemetry.
+- Instrument only privacy-minimal, consented events at each funnel boundary: qualified landing/search impression → intent submitted → canonical eligible supply shown → voluntary request → reply → confirmed outcome. Log unknown/error separately from verified zero, and measure latency, abandonment, eligible-supply coverage and complaint/abuse rates.
+- Treat HCR-7 (optional self-report of a real-world interaction facilitated within seven days) as an **unvalidated candidate metric**. Publish denominators, response rates, missingness and opt-in bias; measure reciprocity/continuity and harms separately. Never infer loneliness or vulnerability from scrolling, scrape contacts/messages, or use background location to manipulate engagement.
+- The current repository tree contains no ios/, android/ or Capacitor native-project paths. Native build/signing, store listing, privacy disclosures/manifests, account-deletion flow, moderation/report/block controls, release tracks and device QA are therefore not evidenced by this source tree. Google Play's official target-API page states Android 16/API 36 for new apps and updates from 31 August 2026 (with an extension process); verify the current Play Console exception/status for the actual submission. Apple requires appropriate privacy disclosures and account deletion when account creation is supported, and UGC products need robust safety/moderation mechanisms.
+- Global market expansion must be supply-led: prove source license/attribution, freshness/withdrawal, local-language taxonomy, correct currency minor units/time zones/DST, verified local coverage, local stewardship, complaint escalation, accessibility and request-to-confirmed-outcome before indexing and growth spend. Avoid doorway pages, fabricated supply and global-live claims.
+
+### Next dependency-ordered actions
+
+1. Maintainer and independent reviewer: inspect and review #307 and #308 fresh combined diffs, including the shared imported-listing lifecycle resolver and the still fire-and-forget signed-in Life List mutations. Keep draft until accepted; no auto-merge.
+2. Authorized owner/security: confirm canonical Lovable project/repository/sync branch and deployed build SHA, intended Supabase project/environment, deletion protection and bypass actor evidence; then arrange two-user-plus-anon disposable RLS tests and a separately approved disposable migration replay.
+3. Maintainer: re-run #306 exact-head checks; review #304's bounded-not-exhaustive retrieval semantics and #305's narrow kill-switch scope; do not treat skipped Supabase Preview as success.
+4. Site owner: repair the host/build/route mapping so sitemap and robots output match source; verify actual live sitemap index and shards, canonical/noindex for private routes, structured-data eligibility and supply-backed pages after controlled deployment.
+5. Product/growth owner: approve a privacy-preserving, consent-first measurement protocol and one locally stewarded pilot with verified supply and demand; do not start public-AI traffic, market acquisition spend or mass-market launch until all P0 evidence gates and the relevant human release authorization are closed.
+
+**Status:** source/CI evidence is improving; published-host, database, rights, pilot outcome, native release, durable worker and public-AI launch evidence remain open. No production mutations, merges or deployments are implied by this status section.
