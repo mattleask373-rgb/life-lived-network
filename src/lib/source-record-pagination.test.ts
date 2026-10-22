@@ -15,7 +15,11 @@ describe("bounded source-record pagination", () => {
     });
 
     expect(rows).toEqual(source);
-    expect(calls).toEqual([[0, 2], [3, 5], [6, 8]]);
+    expect(calls).toEqual([
+      [0, 2],
+      [3, 5],
+      [6, 8],
+    ]);
   });
 
   it("probes cap plus one and rejects an incomplete scan instead of returning partial evidence", async () => {
@@ -27,7 +31,11 @@ describe("bounded source-record pagination", () => {
         return source.slice(from, to + 1);
       }),
     ).rejects.toBeInstanceOf(SourceRecordScanLimitError);
-    expect(calls).toEqual([[0, 1], [2, 3], [4, 5]]);
+    expect(calls).toEqual([
+      [0, 1],
+      [2, 3],
+      [4, 5],
+    ]);
   });
 
   it("accepts exactly the cap only after an empty sentinel read proves completeness", async () => {
@@ -39,7 +47,11 @@ describe("bounded source-record pagination", () => {
     });
 
     expect(rows).toEqual(source);
-    expect(calls).toEqual([[0, 1], [2, 3], [4, 5]]);
+    expect(calls).toEqual([
+      [0, 1],
+      [2, 3],
+      [4, 5],
+    ]);
   });
 
   it("propagates failed pages rather than silently treating partial results as complete", async () => {

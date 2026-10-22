@@ -196,7 +196,9 @@ async function readWorld(
           async (from, to) => {
             const { data, error } = await supabaseAdmin
               .from("source_records")
-              .select("listing_id, source_id, source_url, source_state, last_seen_at, source_updated_at")
+              .select(
+                "listing_id, source_id, source_url, source_state, last_seen_at, source_updated_at",
+              )
               .in("listing_id", listingIds)
               .order("last_seen_at", { ascending: false, nullsFirst: false })
               .order("listing_id", { ascending: true })
