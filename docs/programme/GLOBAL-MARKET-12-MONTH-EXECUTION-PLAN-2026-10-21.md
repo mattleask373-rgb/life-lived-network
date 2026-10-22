@@ -1004,3 +1004,77 @@ The complete 88-PR inventory, current file scope, individual disposition, depend
 - The documentation update on head 9b77d9034734b2b58041aef13f172dde0fcb6ec4 triggered Verify run [39764111074](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39764111074), which failed at the k6 inspection step because that run still used the old load-test script; CodeQL run [39764111160](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39764111160) was in progress at last check. After this run started, #288 was retargeted to the #285 safety-fix branch to make the dependency explicit. These runs predate that base change; confirm a fresh run for the next head before claiming Verify green.
 - This inventory includes all PR metadata and changed-file scope, with deeper diff inspection focused on integration/security risks. It is **not** a claim that each of the 88 diffs has received complete line-by-line independent review.
 - Repository AGENTS policy requires independent review and prohibits autonomous merges to main. The owner/admin must verify required-review and branch-protection rules; do not treat this plan as a waiver.
+
+
+---
+
+## 21. Immediate execution backlog after PR reconciliation
+
+This backlog converts the year plan into the next dependency-ordered outcomes. It is not a commitment that human-gated reviews, staging access, interviews or production actions have already happened. Each item has a tangible artifact and a stop condition.
+
+### B0 — Establish release authority and environment truth
+**Owner:** repository/product owner and repository admin.  
+**Output:** record the required branch protection, reviewer/check rules, bypass roles, authoritative Lovable repository/sync branch, intended live hostname, published build SHA, and connected Supabase project.  
+**Accept when:** GitHub settings and official project dashboards are checked by an authorized human and the findings are linked from issue #263/#279.  
+**Stop condition:** until confirmed, no main bypass, Lovable bulk sync, hosted database write, permission change, deploy or production-target load test.
+
+### B1 — Restore a trustworthy CI baseline
+**Owner:** independent code reviewer + repository maintainer.  
+**Candidate:** #285 (or a minimal equivalent port).  
+**Output:** accepted k6 parser-safety/action-pin patch, followed by a green Verify run on resulting main. Verify the safety guards run before every actual HTTP request and that static k6 inspection sends no traffic. Confirm the action SHAs and upstream repositories from authoritative sources.  
+**Accept when:** a distinct reviewer records the review required by repository policy; exact-head Verify and the relevant security workflow pass; the resulting main SHA and links are recorded in issue #263.  
+**Current fact:** #285's own head passed Verify/CodeQL, while #288's new documentation head also passed Verify on its temporary dependency base. No merge has been performed here.
+
+### B2 — Remove tracked environment configuration safely
+**Owner:** security reviewer + repository maintainer.  
+**Candidate source:** minimal patch from #120, reconciled with #122/#286.  
+**Output:** delete the tracked real .env from Git, preserve a placeholder-only .env.example, retain correct ignore rules, and add a guard that rejects future tracked real environment files. Keep unrelated earning/agent files out of this patch.  
+**Accept when:** a repository index scan proves no real .env files are tracked; secret scanning and code review pass; the environment template includes only names and dummy placeholders; CI passes after the change. Do not print or copy any variable values into comments/reports.
+
+### B3 — Close connection authorization and migration findings
+**Owner:** database/security specialist + independent reviewer + owner for any hosted project decision.  
+**Candidates:** #162/#286/#161 and issue #164.  
+**Output:** one canonical authorization matrix and one reviewed migration/implementation path. Test request participant roles, pending-only accept/decline/withdraw transitions, compare-and-set concurrency, need exists/open/not expired, block relationships, sender/recipient isolation, anonymous access and message/report controls.  
+**Accept when:** fresh-database replay, upgrade path, rollback, direct PostgREST access, and both allowed and denied cases pass in a disposable isolated DB; no ambiguous duplicate triggers remain; any remaining privilege findings are resolved or explicitly release-blocking.  
+**Stop condition:** no hosted migration, RLS/grant mutation, or environment with shared production data until the owner authorizes it.
+
+### B4 — Stabilize the canonical discovery and locality contract
+**Owner:** product/domain owner + full-stack reviewer + QA.  
+**Candidates:** #4/#8 tests, #169 input/place validation, #172/#154 exact counts, #272 locality/date-line, #160/#166 context continuity, #59 stale Journey behavior, #158 honest empty state.  
+**Output:** one behavior matrix for query subject/intent, service area vs current/temporary presence, selected locality, date-line geometry, ancestor/radius bounds, pagination, stale data, no results and errors. Preserve findSupply() as the sole discovery authority.  
+**Accept when:** the matrix is approved (including issue #281 semantics), focused tests prove that a selected locality never silently broadens, invalid inputs fail closed, and the exact main build passes. Port one coherent implementation; close duplicates only after checking their unique tests.
+
+### B5 — Establish public/private SEO and route truth
+**Owner:** SEO engineer + security reviewer.  
+**Candidates:** #271 route registry, #257 structured data, #168 privacy-safe measurement.  
+**Output:** a single route-policy contract that controls canonical URLs, indexability, internal links, robots, sitemap, public APIs, structured data and private Life List data. Define a minimal, privacy-conscious funnel contract before wiring events.  
+**Accept when:** unit/route tests cover public, private, stale, incomplete and empty data; private content is blocked through authorization/RLS/API/cache/model context, not merely noindex/robots; sitemap enumeration fails closed when incomplete. Live GET-only checks use a human-confirmed host after authorized publication.
+
+### B6 — Separate search growth from telemetry and source ingestion
+**Owner:** product analytics + privacy reviewer + adapter owner.  
+**Candidates:** #34/#43 and #168.  
+**Output:** independent bounded patches: (a) useful local search/front-door quality and (b) fixture/provider adapter contracts. Keep event fields enumerated and purpose-limited; don't transmit/store raw query or person/recipient/connection identifiers without an approved need, access, retention and consent story.  
+**Accept when:** tests show event schema validation and redaction, the source adapter fails closed on invalid bounds and missing provenance/rights, and no provider feed is activated by the code change itself. The analytics baseline distinguishes human outcomes from crawler/sitemap activity.
+
+### B7 — Make the Australia beachhead a verified decision, not a presumption
+**Owner:** market research + Australian legal/work-rights reviewer + human operator.  
+**Output:** a ranked, dated dossier for up to four candidate localities; host/property-manager interview guide; explicit work classification and Award/visa review; verified opt-in cleaning-business supply; operating support/dispute plan and unit-economics assumptions.  
+**Accept when:** evidence supports one locality and use case, real providers agree to participate, lawful engagement and pay/insurance/safety requirements are reviewed, and the owner makes a written go/no-go decision. Visitor visas/ETAs are not a work authorization route. Research notes, provider names found online, or drafted outreach are not equivalent to opt-in supply or an interview.
+
+### B8 — Implement and measure one complete real-world loop
+**Owner:** full-stack implementation + product operations + QA.  
+**Output:** provider onboarding → eligible listing → scoped discovery → clear terms/availability → consented enquiry → provider reply → agreement/cancellation → completion/feedback/report/support.  
+**Accept when:** at least one real permitted service path completes end-to-end with participant consent, no fabricated listings or availability, durable status and support escalation. Measure time to useful match, response/completion, cancellation/dispute, freshness, retention and per-completion cost. Don't expand geographies before repeatability is demonstrated.
+
+### B9 — Prove staging capacity and resilience
+**Owner:** performance engineer + platform/security reviewer + owner of the environment.  
+**Output:** workload assumptions, SLOs/rollback thresholds, an isolated staging target and a stepwise smoke/load/spike/soak/failure-recovery report with latency percentiles, error rate, resources, saturation, queue lag and cost.  
+**Accept when:** target identity, data isolation and budget are explicitly approved; each test passes the previous stage; capacity is reported as measured requests/concurrency, not inferred DAU or an aspirational billion-user figure. No production load testing by default.
+
+### B10 — Prove governed continuous operations, then consider expansion
+**Owner:** platform/security owner + independent reviewer.  
+**Output:** one selected control-plane architecture after reconciling #61/#64/#101–#109/#115/#122 with issues #74/#100/#116/#117/#121. Prove task identity/scope, leases and fencing, idempotency, cancellation, crash recovery, rate/cost limits, observability, audit receipts, human approvals and kill switch in staging.  
+**Accept when:** a durable task survives restart/failure tests and unauthorized/cross-project actions are denied. A scheduled GitHub workflow or daily review automation does not qualify as a continuous production executor. No autonomous merge/deploy, external contact, paid spend or production mutation.
+
+### How the master plan advances
+B0–B3 are prerequisites for safe integration; B4–B6 establish trustworthy discovery, public data and measurement; B7–B8 decide and prove the first market loop; B9–B10 govern scaling and autonomy. If a gate blocks, continue with independent research and docs work, but do not claim the blocked capability is complete. Every close-out note must include current SHA, exact test links, skipped checks, risk/rollback and human decision still needed.
