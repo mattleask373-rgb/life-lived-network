@@ -26,6 +26,9 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Reject tracked environment files
+        run: bash scripts/check-tracked-env-files.sh
+
       - run: bun install --frozen-lockfile
       - run: bun run lint
       - run: bun run test

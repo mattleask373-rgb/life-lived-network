@@ -116,9 +116,17 @@ export const moveConnectionRequest = createServerFn({ method: "POST" })
       .from("connection_requests")
       .update({ status: data.status })
       .eq("id", data.id)
+      // Compare-and-set against the state we authorized above so concurrent
+      // accepts/declines/withdrawals cannot overwrite a transition that won first.
+      .eq("status", request.status)
       .select("*")
-      .single();
+      .maybeSingle();
     if (error) throw error;
+    if (!row) {
+      throw new Error(
+        "This request changed before your update could be saved. Refresh and try again.",
+      );
+    }
     return rowToRequest(row as unknown as ConnectionRequestRow);
   });
 
