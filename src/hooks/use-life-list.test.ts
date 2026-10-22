@@ -35,9 +35,11 @@ describe("Life List persistence safety contracts", () => {
   });
 
   it("serializes mutations and checks signed-in writes before changing local state", () => {
-    expect(hookSource).toContain("const mutationQueueRef = useRef<Promise<void>>(Promise.resolve());");
+    expect(hookSource).toContain(
+      "const mutationQueueRef = useRef<Promise<void>>(Promise.resolve());",
+    );
     expect(hookSource).toContain("const handled = operation.catch(() => {");
-    expect(hookSource).toContain('const { error } = await supabase');
+    expect(hookSource).toContain("const { error } = await supabase");
     expect(hookSource).toContain("if (error) throw error;");
     expect(hookSource).toContain("setWriteError(true);");
     expect(hookSource).toContain("return handled;");

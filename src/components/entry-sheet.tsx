@@ -315,8 +315,12 @@ export function EntrySheet({
           </div>
 
           {saveError ? (
-            <p role="alert" className="mt-3 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
-              That change could not be saved. Your last confirmed list is still here; please try again.
+            <p
+              role="alert"
+              className="mt-3 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm"
+            >
+              That change could not be saved. Your last confirmed list is still here; please try
+              again.
             </p>
           ) : null}
 
