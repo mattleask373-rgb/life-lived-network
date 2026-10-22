@@ -55,6 +55,8 @@ describe("Life List persistence safety contracts", () => {
     expect(hookSource).toContain("const mounted = useRef(false);");
     expect(hookSource).toContain("if (!mounted.current) return;");
     expect(hookSource).toContain("if (mounted.current && generation.current === request)");
-    expect(hookSource).not.toContain("setLoadError(true);\n      setReady(true);\n      return false;");
+    expect(hookSource).not.toContain(
+      "setLoadError(true);\\n      setReady(true);\\n      return false;",
+    );
   });
 });
