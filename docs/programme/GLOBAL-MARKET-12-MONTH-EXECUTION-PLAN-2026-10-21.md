@@ -976,3 +976,31 @@ The enduring question for every feature, automation or market is:
 - Staged marketplace growth reference: [Two-sided marketplace playbook](https://twosided.io/blog/marketplace-growth-strategy), 4 July 2026. Treat it as directional industry commentary, not evidence about this product's demand.
 
 **Last rule:** a green check verifies only the thing it actually checked. A research dossier is not supply, a drafted outreach message is not a conversation, a PR is not a release, a preview is not production, and a scheduled agent is not a reliable 24/7 operating system until the entire loop has been demonstrated.
+
+
+---
+
+## 20. Complete PR integration order — 22 October 2026
+
+The complete 88-PR inventory, current file scope, individual disposition, dependency ordering, merge gates and acceptance checklist now live in the companion [PR integration register](PR-INTEGRATION-REGISTER-2026-10-22.md). Keep that register beside this plan rather than creating a competing execution board.
+
+### Required order
+
+1. **CI first:** independent review of #285's narrow k6 parse/action-pin fix; integrate only after required review and exact-head checks. Re-run Verify/CodeQL on the resulting main SHA.
+2. **Environment-file hygiene:** verify tracked env files and example templates. Split the minimal hygiene patch out of #120/#122; never expose key values in issues or commits.
+3. **Connection security:** reconcile #162, #286 and #161 with issue #164 as one authorization/RLS/migration contract; cover open-and-unexpired needs, compare-and-set, anon grants and both allow/deny paths in a disposable database. No hosted permission or migration action without owner approval.
+4. **Canonical matching/locality:** audit #4/#8 tests, then #169 input/place validation, #172/#154 exact counts, #272 fail-closed locality/date-line behavior, #160/#166 navigation context, #59 stale records and #158 honest empty states. Pick one implementation per contract.
+5. **SEO/privacy/measurement:** one route registry from #271, then eligible structured data (#257), a privacy-reviewed event schema (#168), and split unique search/adapter work from #34/#43. Validate live host behavior only with owner-approved GET-only checks.
+6. **Marketplace source lifecycle:** reconcile #49/#58/#134/#153/#175 and approved fixture/adapter code. Australia remains a research-and-gates pilot until real opt-in supply, lawful engagement, terms, a support path and completed exchanges are evidenced.
+7. **UI and product flow:** wait for connection policy before #15; consolidate #193/#195/#243/#53/#54/#57/#60 against already-merged #211/#220/#231; gate #235 on confirmed Lovable Git target and exact preview SHA.
+8. **Agent/control-plane architecture:** map current migrations against issues #74/#100/#116/#117/#121 before choosing between #61/#64 and the #101–#109 dependent migration chain. Reconcile #115/#122. Do not merge old stacks or call scheduled probes a 24/7 executor.
+9. **Close out duplicates and refresh this plan:** port verified unique value from docs and older PRs, then close/supersede duplicates with a source link. Process dependency upgrades individually after CI is stable. Do not bulk merge or bulk close.
+
+### Live integration evidence at this review
+
+- Live open PR inventory: **88** (47 draft, 41 non-draft); only #285, #286 and #288 were based on the exact main SHA during this inventory. A number of other PRs are stacked on open PRs or target historical base commits.
+- #285 exact-head Verify and CodeQL passed on bfbc283e870d2ed9ea5b94e2334ffd1127582ae5: [Verify](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39713955393), [CodeQL](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39713955371). Independent review is still required.
+- #286 exact-head Verify and CodeQL passed on 6b119f378a1b51a807edef087bb8cd2f3271a6f2: [Verify](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39706850577), [CodeQL](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39706850573). Passing CI does not resolve the database/security concerns.
+- The prior #288 head's CodeQL passed but Verify failed at k6 static inspection: [Verify](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39762651469), [CodeQL](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39762651650). Re-check the current head after this documentation update and after any CI fix.
+- This inventory includes all PR metadata and changed-file scope, with deeper diff inspection focused on integration/security risks. It is **not** a claim that each of the 88 diffs has received complete line-by-line independent review.
+- Repository AGENTS policy requires independent review and prohibits autonomous merges to main. The owner/admin must verify required-review and branch-protection rules; do not treat this plan as a waiver.
