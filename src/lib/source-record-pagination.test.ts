@@ -56,7 +56,11 @@ describe("bounded source-record pagination", () => {
     });
 
     expect(rows.map((row) => row.id)).toEqual(source.map((row) => row.id));
-    expect(calls).toEqual([[null, 2], ["0002", 2], ["0004", 2]]);
+    expect(calls).toEqual([
+      [null, 2],
+      ["0002", 2],
+      ["0004", 2],
+    ]);
   });
 
   it("does not let changes to mutable last-seen values reorder the existing cursor scan", async () => {
@@ -83,15 +87,15 @@ describe("bounded source-record pagination", () => {
   });
 
   it("rejects missing, duplicate, or out-of-order cursor IDs", async () => {
-    await expect(
-      readBoundedSourceRecordPages(10, 2, async () => [{ id: "" }]),
-    ).rejects.toThrow(/missing cursor ID/i);
-    await expect(
-      readBoundedSourceRecordPages(10, 2, async () => [{ id: "b" }, { id: "a" }]),
-    ).rejects.toThrow(/strictly increasing/i);
-    await expect(
-      readBoundedSourceRecordPages(10, 1, async () => [{ id: "a" }]),
-    ).rejects.toThrow(/strictly increasing/i);
+    await expect(readBoundedSourceRecordPages(10, 2, async () => [{ id: "" }])).rejects.toThrow(
+      /missing cursor ID/i,
+    );
+    await expect(readBoundedSourceRecordPages(10, 2, async () => [{ id: "b" }, { id: "a" }])).rejects.toThrow(
+      /strictly increasing/i,
+    );
+    await expect(readBoundedSourceRecordPages(10, 1, async () => [{ id: "a" }])).rejects.toThrow(
+      /strictly increasing/i,
+    );
   });
 
   it("propagates failed pages rather than silently treating partial results as complete", async () => {
