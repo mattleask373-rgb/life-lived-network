@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import {
+  NOINDEX_PATHS,
   PRIVATE_PATHS,
   PUBLIC_PATHS,
   PUBLIC_SITEMAP_CHILD_PATHS,
@@ -12,6 +13,7 @@ import { Route as IndexRoute } from "@/routes/api/public/sitemap[.]xml";
 import { Route as PagesRoute } from "@/routes/api/public/sitemap-pages[.]xml";
 import { Route as RobotsRoute } from "@/routes/robots[.]txt";
 import { Route as SitemapRoute } from "@/routes/sitemap[.]xml";
+import { Route as LifeListRoute } from "@/routes/life-list";
 
 /**
  * Regression guard: the fixed-pages sitemap lists only known public screens;
@@ -20,6 +22,8 @@ import { Route as SitemapRoute } from "@/routes/sitemap[.]xml";
  * fails closed rather than becoming an invented or thin search landing page.
  */
 type Handler = () => Response | Promise<Response>;
+type Head = () => { meta: Array<Record<string, string>>; links: Array<Record<string, string>> };
+const lifeListHead = (LifeListRoute as unknown as { options: { head: Head } }).options.head;
 const handler = (route: unknown): Handler =>
   (route as { options: { server: { handlers: { GET: Handler } } } }).options.server.handlers.GET;
 
@@ -31,18 +35,29 @@ async function body(route: unknown): Promise<{ xml: string; res: Response }> {
 const locs = (xml: string) => [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1] ?? "");
 
 describe("public sitemap privacy", () => {
+  it("marks the personal life-list route noindex without a canonical URL", () => {
+    const head = lifeListHead();
+    expect(head.meta).toContainEqual({ name: "robots", content: "noindex, nofollow" });
+    expect(head.links).toEqual([]);
+  });
+
   it("pages sitemap lists exactly the public screens, nothing else", async () => {
     const { xml, res } = await body(PagesRoute);
     expect(res.headers.get("content-type")).toContain("xml");
     expect(locs(xml).sort()).toEqual(PUBLIC_PATHS.map((p) => `${SITE_ORIGIN}${p}`).sort());
   });
 
-  it("never lists private, account, moderation or source screens", async () => {
+  it("never lists private, account, moderation, source or noindex routes", async () => {
     const { xml } = await body(PagesRoute);
-    for (const path of PRIVATE_PATHS) {
+    for (const path of [...PRIVATE_PATHS, ...NOINDEX_PATHS]) {
       expect(locs(xml)).not.toContain(`${SITE_ORIGIN}${path}`);
     }
-    expect(locs(xml)).not.toContain(`${SITE_ORIGIN}/life-list`);
+  });
+
+  it("robots.txt leaves noindex routes crawlable so their metadata can be read", () => {
+    const robots = readFileSync(new URL("../../public/robots.txt", import.meta.url), "utf8");
+    const rules = robots.split(/\r?\n/);
+    for (const path of NOINDEX_PATHS) expect(rules).not.toContain(`Disallow: ${path}`);
   });
 
   it("robots.txt disallows every route marked private", () => {

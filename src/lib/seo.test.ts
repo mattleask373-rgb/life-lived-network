@@ -6,6 +6,7 @@ import {
   publicPage,
   PUBLIC_PATHS,
   PRIVATE_PATHS,
+  NOINDEX_PATHS,
   sitemapIndexXml,
   sitemapXml,
   robotsTxt,
@@ -55,13 +56,14 @@ describe("what a page says about itself", () => {
     for (const path of PRIVATE_PATHS) expect(PUBLIC_PATHS).not.toContain(path);
   });
 
-  it("deindexes the private Life List without blocking crawlers from observing noindex", () => {
-    expect(PUBLIC_PATHS).not.toContain("/life-list");
+  it("keeps the personal life list out of public indexability", () => {
+    expect(NOINDEX_PATHS).toContain("/life-list");
     expect(PRIVATE_PATHS).not.toContain("/life-list");
+    expect(PUBLIC_PATHS).not.toContain("/life-list");
     const head = privatePage({
       path: "/life-list",
       title: "Your life list",
-      description: "Private",
+      description: "A private list.",
     });
     expect(head.meta).toContainEqual({ name: "robots", content: "noindex, nofollow" });
     expect(head.links).toEqual([]);
