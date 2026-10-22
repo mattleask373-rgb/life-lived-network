@@ -114,7 +114,9 @@ function clampSpan(span: number): number {
 
 /** Normalise a longitude or longitude delta to the shortest signed arc. */
 function normaliseLongitude(longitude: number): number {
-  return (((longitude + 180) % 360) + 360) % 360 - 180;
+  const shifted = longitude + 180;
+  const wrapped = ((shifted % 360) + 360) % 360;
+  return wrapped - 180;
 }
 
 /** Find the smallest circular longitude arc covering the supplied points. */
