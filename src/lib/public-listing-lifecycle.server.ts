@@ -183,7 +183,7 @@ export async function resolvePublicListingLifecycles(
     }
     throwIfAborted(signal);
     return { failed: false, decisions };
-  } catch (error) {
+  } catch {
     throwIfAborted(signal);
     // Deliberately expose failure separately from an eligible=false decision.
     // Callers can keep resident rows while excluding every imported row.
