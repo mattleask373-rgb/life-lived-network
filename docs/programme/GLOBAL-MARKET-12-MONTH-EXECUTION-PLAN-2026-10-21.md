@@ -83,6 +83,41 @@ No persistent executor, durable work-queue heartbeat, lease recovery, kill switc
 
 The current verified mode should be treated as **on-demand agent work with shared GitHub records**, until a scheduled non-production executor is demonstrated and independently checked. Do not claim the fleet is already operating continuously.
 
+### Current AI work and integration review — 22 October 2026
+
+A fresh GitHub REST pull-request inventory returned **88 open PRs**: 47 drafts and 41 marked ready for review. Sixty had not been updated since before 20 October. Only three open PRs were directly based on the current main SHA (d02459a384cb8ffcc6201839d45645e178ef0b2b) at the time of this read: #285, #286 and #288. Many other candidates are based on older snapshots or depend on another unmerged branch. Re-fetch this inventory before acting; it is a dated observation, not a permanent count.
+
+This is a convergence problem. Do not create more feature PRs simply because the year plan has many packages. Reduce duplicate and stale work, then promote one verified implementation per concern.
+
+#### Current high-priority work
+
+- **#285 — k6 inspection / workflow hardening:** exact-head Verify and CodeQL passed on bfbc283e870d2ed9ea5b94e2334ffd1127582ae5. It removes the fake environment variables from k6 inspect, keeps actual runtime load-target validation before requests, and pins several workflow actions. It is a draft and has no independent review submission recorded.
+- **#286 — k6 fix plus connection-request hardening:** exact-head Verify and CodeQL passed on 6b119f378a1b51a807edef087bb8cd2f3271a6f2, and it is based on current main. However, it overlaps #285 in .github/workflows/verify.yml and tests/load/staging-public-read.js, so the two must be reconciled rather than merged as competing versions. More importantly, its new database migration still has unresolved security-review findings: it does not yet enforce open/unexpired need checks that exist in #162; it does not resolve the anonymous-role privilege findings in #164; and its trigger definitions overlap with #162's different triggers. Supabase Preview was skipped, not passed. **Do not apply or merge its SQL migration until the unique protections in #162/#286 are consolidated, anonymous/authenticated privileges are tested in a disposable database, and an independent security reviewer signs off.**
+- **#272 — locality scope/date-line hardening:** exact-head Verify and CodeQL passed, but its base is 1cf9b21b6fae9fef2b504b2993d37d2f99766d6d, older than current main. Reconcile the branch against current main and the over-400-descendant and date-line acceptance criteria before release.
+- **#154 — truthful open-need counts (Grok-labelled branch):** currently based on the #285 branch and overlaps locality/route scope behavior with #272. Preserve its distinct exact-count and fail-closed need-count tests, but merge the shared locality decisions through one implementation. It is not an independent main-ready branch.
+- **#271 — route policy / Life List privacy:** Verify passed on its recorded head, but the PR is stacked on #285 rather than directly based on main. Keep the route registry and authorization/RLS checks together; move it to main only through a deliberate dependency/rebase plan and verify it against the current hosting routes.
+- **#194 — least-privilege ACL proposal:** documentation only and explicitly not authorization to apply grants. Keep it as evidence; use #164 as the security decision record and require disposable DB/PostgREST tests before any hosted remediation.
+- **#245 — fail-closed Ask-this-place policy:** pure policy/testing work only, also stacked on #285. It must not enable the public assistant. Issue #209's retrieval, isolation, prompt-injection, rate/cost and model-use prerequisites remain a separate gate.
+- **#283 — status/ADR refresh:** documentation only and stacked on #285. Preserve unique current facts, but reconcile it with this master programme and the canonical status file rather than maintaining competing current-state documents.
+- **#235 — preview auth storage:** its head is on Loveable/work/safely, which was measured as 16 commits ahead and 270 behind main. Keep it isolated for independent auth review; do not bulk-sync or treat the preview as current main.
+- **#270 — read-only scheduled control-plane probe:** a draft describing an hourly CI probe is not proof of a running durable executor. It must be reviewed, based on current main, and distinguished from the separate daily Global Growth Review automation.
+- **Older work:** multiple open map, search, accessibility, job-ingestion, control-plane and AI-kernel PRs are based on earlier main SHAs or stacked experimental branches. The agent coordinator must inspect file overlaps and unique tests before marking them integrate/superseded; do not auto-close them in bulk.
+
+#### Agent execution evidence
+
+GitHub branch names show work labelled for ChatGPT, Grok and Lovable, and the repository contains earlier Codex/implementation branches. Branch naming does not prove which model executed a task or whether a worker is still running. The connected Lovable history shows completed audit/strategy turns, not evidence of current-main UI integration or a persistent heartbeat. A plan-mode turn unexpectedly changed the project scratch note .lovable/plan.md; there is no verified code commit or sync for that action, and write-mode Lovable work remains blocked until the owner confirms the actual Git target. No independently verifiable active Claude run or connected Claude execution channel was found in the available evidence. Treat unobserved agents as NOT VERIFIED, not as running in the background.
+
+#### Required convergence order
+
+1. Owner confirms the Lovable repository, protected non-main sync branch, deployment SHA/host/backend, and an administrator verifies branch protections.
+2. Human reviewer compares #285 and #286, preserving the CI fix and unique environment-file/connection fixes while holding the unresolved migration out of any live environment; no auto-merge.
+3. Reconcile #272 with #154's unique exact-count work and current-main behavior; re-run checks and manual map tests on the final exact head.
+4. Reconcile #271 and current sitemap/privacy candidates onto one current-main-based route-policy change; no parallel sitemap gate.
+5. Resolve #164/#162/#286 in a disposable database and preserve the open/unexpired need, least-privilege, RLS and two-account denial tests. Never use a test that may TRUNCATE an unspecified/shared database without an explicit disposable-environment opt-in.
+6. Reconcile remaining useful older PRs against the year-plan packages. Only then assign Australia research/onboarding and later feature work; product semantics such as serves versus available_in in issue #281 require an owner decision before the first local-services pilot.
+
+This snapshot updates the previous queue statement to **88 open PRs**. It must be refreshed whenever a task is claimed or an integration decision is made.
+
 ### Consequence
 
 The first measure of progress should be verified real-world outcomes and the ability to reproduce them safely. Pageviews, prompts run, agents spawned, lines changed, PRs created, countries named and URLs indexed are diagnostic activity—not success measures.
@@ -748,7 +783,7 @@ Reconcile PR #285 and the failing Verify run referenced in current handoff. Pres
 
 ### Package 04 — PR and dependency convergence
 **Lane:** Orchestrator + ChatGPT reviewer.  
-Re-fetch every open PR head, base, overlap, review and checks. Classify one of: integrate, port unique fix, superseded, blocked or close after preservation. Reconcile main's 89-open-PR backlog before creating parallel feature work. Keep no more than five actively worked PRs.
+Re-fetch every open PR head, base, overlap, review and checks. Classify one of: integrate, port unique fix, superseded, blocked or close after preservation. Reconcile main's 88-open-PR backlog (observed 22 October 2026; re-fetch before action) before creating parallel feature work. Keep no more than five actively worked PRs.
 
 ### Package 05 — Map locality-scope correctness
 **Lane:** Map implementation agent + QA.  
