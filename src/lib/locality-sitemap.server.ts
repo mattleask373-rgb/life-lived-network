@@ -107,6 +107,11 @@ async function loadPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot> {
     .filter((row) => row.origin === "source" || row.origin === "confirmed")
     .map((row) => row.id);
   const lifecycle = await resolvePublicListingLifecycles(importedIds);
+  if (lifecycle.failed) {
+    throw new SitemapSourceLimitError(
+      "Source lifecycle scan failed or exceeded its configured cap",
+    );
+  }
   const entriesById = new Map<string, WorldEntry>();
   const orderedRows: PublicListingSitemapRow[] = rows.map((row) => {
     let publiclyEligible = false;
