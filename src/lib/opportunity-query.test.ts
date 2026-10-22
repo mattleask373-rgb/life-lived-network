@@ -5,6 +5,7 @@ import {
   OPPORTUNITY_PLACE_CHUNK_SIZE,
   OPPORTUNITY_CANDIDATES_PER_CHUNK,
   mergeNewestNeedRows,
+  boundOpportunityPage,
   OpportunityScopeTooWideError,
 } from "./opportunity-query";
 
@@ -53,6 +54,28 @@ describe("chunkOpportunityPlaceIds", () => {
     expect(() => chunkOpportunityPlaceIds(["a"], 0)).toThrow(RangeError);
     expect(() => chunkOpportunityPlaceIds(["a"], 1, 0)).toThrow(RangeError);
     expect(chunkOpportunityPlaceIds([])).toEqual([]);
+  });
+});
+
+describe("boundOpportunityPage", () => {
+  it("distinguishes an exact-cap read from an over-cap read using a sentinel row", () => {
+    const exact = Array.from({ length: OPPORTUNITY_CANDIDATES_PER_CHUNK }, (_, i) => i);
+    const over = [...exact, OPPORTUNITY_CANDIDATES_PER_CHUNK];
+
+    expect(boundOpportunityPage(exact)).toEqual({ rows: exact, truncated: false });
+    expect(boundOpportunityPage(over)).toEqual({ rows: exact, truncated: true });
+    expect(boundOpportunityPage(over).rows).toHaveLength(OPPORTUNITY_CANDIDATES_PER_CHUNK);
+  });
+
+  it("treats a missing row collection as a failed read, not an empty result", () => {
+    expect(() => boundOpportunityPage(null)).toThrow(/no row collection/i);
+    expect(() => boundOpportunityPage(undefined)).toThrow(/no row collection/i);
+    expect(boundOpportunityPage([])).toEqual({ rows: [], truncated: false });
+  });
+
+  it("validates the per-query bound", () => {
+    expect(() => boundOpportunityPage([1], 0)).toThrow(RangeError);
+    expect(() => boundOpportunityPage([1], Number.NaN)).toThrow(RangeError);
   });
 });
 
