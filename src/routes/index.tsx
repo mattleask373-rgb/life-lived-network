@@ -2,7 +2,7 @@ import { publicPage } from "@/lib/seo";
 import { isDataErrorCode } from "@/lib/data/errors";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, HeartHandshake } from "lucide-react";
 import { LivingMap } from "@/components/living-map";
 import { LayerFilter } from "@/components/layer-filter";
 import { EntrySheet } from "@/components/entry-sheet";
@@ -51,6 +51,7 @@ function Home() {
   const [layers, setLayers] = useState<LayerId[]>([]);
   const [mobileListOpen, setMobileListOpen] = useState(false);
   const [showAllLoaded, setShowAllLoaded] = useState(false);
+  const [showNeedsLayer, setShowNeedsLayer] = useState(true);
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle, ids } = useLifeList();
 
@@ -163,13 +164,24 @@ function Home() {
   const events = useMemo(() => upcomingEvents(all), [all]);
   const groups = useMemo(() => providerGroups(all), [all]);
   const given = useMemo(() => contributions(all), [all]);
-  // A failed or pending read is unknown, never a genuine zero.
-  const needCount = openNeedsError || openNeedsPending ? null : (openNeeds?.length ?? 0);
+  // The public read is bounded to 50 rows. At the cap, 50 is a lower bound,
+  // not an exact count; keep the UI honest rather than report a false zero/total.
+  const openNeedsAtLimit = !openNeedsError && !openNeedsPending && (openNeeds?.length ?? 0) >= 50;
+  const needCount =
+    openNeedsError || openNeedsPending || openNeedsAtLimit ? null : (openNeeds?.length ?? 0);
   const needsStatus = openNeedsPending ? "loading" : openNeedsError ? "error" : "ready";
-  const openNeedsSummary =
-    needCount === null
+  const openNeedsSummary = openNeedsPending
+    ? "checking open needs"
+    : openNeedsError
       ? "open-needs count unavailable"
-      : `${needCount} ${needCount === 1 ? "open need" : "open needs"}`;
+      : openNeedsAtLimit
+        ? "50 or more open needs (bounded read)"
+        : `${needCount} ${needCount === 1 ? "open need" : "open needs"}`;
+  const needsLayerLabel = openNeedsError
+    ? "Needs unavailable"
+    : openNeedsPending
+      ? "Needs · checking"
+      : `Needs · ${openNeedsAtLimit ? "50+" : (openNeeds?.length ?? 0)}`;
   const questions = useMemo(() => localityQuestions(all, needCount), [all, needCount]);
   const quiet = Boolean(place) && !worldLoading && !loading && !worldError && all.length === 0;
   const mapPartition = useMemo(() => partitionMapList(mapEntries, view), [mapEntries, view]);
@@ -456,14 +468,42 @@ function Home() {
                       : `${mapEntries.length} things`}
             </p>
           </div>
-          <div className="mt-3">
+          <div className="mt-3 space-y-2">
             <LayerFilter active={layers} onChange={setLayers} />
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                aria-pressed={showNeedsLayer}
+                onClick={() => setShowNeedsLayer((current) => !current)}
+                className={`focus-ink inline-flex min-h-11 items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                  showNeedsLayer
+                    ? "border-transparent bg-primary text-primary-foreground"
+                    : "border-border bg-card text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <HeartHandshake aria-hidden="true" size={15} />
+                {needsLayerLabel}
+              </button>
+              {showNeedsLayer && openNeedsAtLimit ? (
+                <p role="status" className="max-w-prose text-xs text-muted-foreground">
+                  This layer is bounded to the first 50 open requests. More may exist; only requests
+                  with safe place-level coordinates can be pinned.
+                </p>
+              ) : null}
+              {showNeedsLayer && openNeedsError ? (
+                <p role="status" className="text-xs text-muted-foreground">
+                  Open requests couldn't be checked, so their pins are unavailable.
+                </p>
+              ) : null}
+            </div>
           </div>
           <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1.12fr)_minmax(20rem,0.88fr)]">
             <div className="relative min-w-0">
               <div className="h-[62vh] min-h-80 sm:h-[30rem] lg:h-[calc(100vh-17rem)] lg:min-h-[34rem] lg:max-h-[48rem]">
                 <LivingMap
                   entries={mapEntries}
+                  needs={openNeeds ?? []}
+                  showNeeds={showNeedsLayer && !openNeedsError}
                   viewBasisEntries={all}
                   activeId={open?.id}
                   onSelect={setOpen}
