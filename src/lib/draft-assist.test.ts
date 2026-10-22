@@ -3,7 +3,7 @@ import { cleanInput, draftInputSchema, MAX_INPUT, tidyDraft } from "./draft-assi
 
 describe("draft assist", () => {
   it("normalises whitespace and caps input length", () => {
-    expect(cleanInput("  I \\n can \\t help  ")).toBe("I can help");
+    expect(cleanInput("  I \n can \t help  ")).toBe("I can help");
     expect(cleanInput("a".repeat(5000)).length).toBe(MAX_INPUT);
   });
 
