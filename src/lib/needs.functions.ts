@@ -482,7 +482,14 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
         return rows ?? [];
       }),
     );
-    const needRows = mergeNewestNeedRows(needPages, OPPORTUNITY_CANDIDATES_PER_CHUNK);
+    // Keep the per-chunk windows for evaluation: truncating them back to
+    // one global newest-60 window would let busier places crowd quieter places
+    // out before the canonical matcher has considered their needs. The total
+    // candidate count is still strictly bounded by 13 chunks × 60 rows = 780.
+    const needRows = mergeNewestNeedRows(
+      needPages,
+      placeChunks.length * OPPORTUNITY_CANDIDATES_PER_CHUNK,
+    );
 
     const { data: journeyRows, error: journeysError } = await supabase
       .from("journeys")
