@@ -1,8 +1,5 @@
 export type ReportSubject =
-  | "profile"
-  | "connection_request"
-  | "connection_message"
-  | "listing"
+  | "profile" | "connection_request" | "connection_message" | "listing"
   | "need";
 export type ReportReason = "safety" | "harassment" | "spam" | "misleading" | "other";
 
