@@ -240,9 +240,7 @@ export function evaluateSeoSmoke(
     }
     for (const path of PRIVATE_PATHS) {
       if (
-        !oaiSearchGroup.directives.some(
-          ({ name, value }) => name === "disallow" && value === path,
-        )
+        !oaiSearchGroup.directives.some(({ name, value }) => name === "disallow" && value === path)
       ) {
         failures.push(
           "robots.txt: OAI-SearchBot group missing private-route crawler rule for " + path,
