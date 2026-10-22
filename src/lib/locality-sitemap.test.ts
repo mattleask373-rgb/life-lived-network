@@ -62,6 +62,34 @@ describe("locality sitemap indexability", () => {
     expect(indexableLocalityPaths(geography, rowsFor("city", 3), { complete: false })).toEqual([]);
   });
 
+  it("fails closed for over-wide subtrees instead of using unrelated global rows", () => {
+    const wideIndex = buildPlaceIndex([
+      place({ id: "wide", name: "Wide area", slug: "wide-area", kind: "region" }),
+      ...Array.from({ length: 400 }, (_, index) =>
+        place({
+          id: `wide-child-${index}`,
+          name: `Wide child ${index}`,
+          slug: `wide-child-${index}`,
+          kind: "town",
+          parent_id: "wide",
+        }),
+      ),
+      place({ id: "other-root", name: "Other root", slug: "other-root", kind: "region" }),
+      place({
+        id: "other-city",
+        name: "Other city",
+        slug: "other-city",
+        kind: "city",
+        parent_id: "other-root",
+      }),
+    ]);
+    const paths = indexableLocalityPaths(wideIndex, rowsFor("other-city", 3));
+
+    expect(paths).toContain("/gb/other-city");
+    expect(paths).toContain("/gb/other-root");
+    expect(paths).not.toContain("/gb/wide-area");
+  });
+
   it("never builds a path from an invalid slug", () => {
     const invalid = buildPlaceIndex([
       place({ id: "bad", name: "Bad", slug: "../bad", kind: "city" }),
