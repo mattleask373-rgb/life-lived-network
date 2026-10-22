@@ -84,7 +84,6 @@ async function loadPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot> {
       .select("*")
       .eq("status", "published")
       .neq("data_quality", "expired")
-      
       .or(`starts_at.is.null,starts_at.gte.${settled}`)
       .order("starts_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
