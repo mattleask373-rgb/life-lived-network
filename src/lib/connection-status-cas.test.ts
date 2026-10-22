@@ -26,20 +26,34 @@ describe("connection status concurrency and database guards", () => {
     expect(moveHandler).toContain("This request changed before your update could be saved");
   });
 
-  it("limits authenticated updates to the status column", () => {
+  it("limits authenticated writes to required connection columns", () => {
     expect(migration).toContain(
       "REVOKE UPDATE ON TABLE public.connection_requests FROM authenticated;",
     );
     expect(migration).toContain(
       "GRANT UPDATE (status) ON TABLE public.connection_requests TO authenticated;",
     );
+    expect(migration).toContain(
+      "REVOKE INSERT ON TABLE public.connection_requests FROM authenticated;",
+    );
+    expect(migration).toContain(
+      "GRANT INSERT (request_id, sender_id, body) ON TABLE public.connection_messages TO authenticated;",
+    );
   });
 
   it("enforces permitted transitions and immutable request details in the database", () => {
+    expect(migration).toContain("CREATE TRIGGER connection_requests_guard_insert");
     expect(migration).toContain("CREATE TRIGGER connection_requests_guard_update");
-    expect(migration).toContain("OLD.status <> 'sent'");
+    expect(migration).toContain("CREATE TRIGGER connection_messages_guard_insert");
+    expect(migration).toContain(
+      "GRANT EXECUTE ON FUNCTION private.people_are_blocked(uuid, uuid) TO authenticated;",
+    );
+    expect(migration).toContain("NEW.status IS DISTINCT FROM 'sent'");
     expect(migration).toContain("NEW.status IN ('accepted', 'declined')");
     expect(migration).toContain("NEW.status = 'withdrawn'");
+    expect(migration).toContain("NEW.status IN ('sent', 'accepted')");
+    expect(migration).toContain("NEW.recipient_id IS DISTINCT FROM v_need_creator");
+    expect(migration).toContain("NEW.context_title := v_need_title");
     expect(migration).toContain("connection request details cannot be changed");
   });
 });
