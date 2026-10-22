@@ -58,15 +58,15 @@ export function indexableServicePaths(
     }
   }
 
-  const globalFirstPage = orderedRows.slice(0, LOCALITY_SITEMAP_PAGE_SIZE);
   const candidates: string[] = [];
   for (const place of index.places) {
     const canonical = eligiblePlace(index, place);
     if (!canonical) continue;
-    const pageRows =
-      (placeCount.get(place.id) ?? 1) > LOCALITY_FILTER_CAP
-        ? globalFirstPage
-        : (rowsByPlace.get(place.id) ?? []);
+    // The corresponding locality route does not claim indexability when its
+    // server-side query scope exceeds the supported place-ID filter cap.
+    // Never manufacture a service URL from unrelated global first-page rows.
+    if ((placeCount.get(place.id) ?? 1) > LOCALITY_FILTER_CAP) continue;
+    const pageRows = rowsByPlace.get(place.id) ?? [];
     const entries = pageRows
       .map((row) => entriesById.get(row.id))
       .filter((entry): entry is WorldEntry => entry !== undefined);
