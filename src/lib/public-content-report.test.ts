@@ -50,9 +50,9 @@ describe("public content report input contract", () => {
     expect(() => validatePublicContentReport({ ...valid, reason: "five_stars" })).toThrow(
       /choose a reason/i,
     );
-    expect(() =>
-      validatePublicContentReport({ ...valid, note: 12 as unknown as string }),
-    ).toThrow(/note isn't valid/i);
+    expect(() => validatePublicContentReport({ ...valid, note: 12 as unknown as string })).toThrow(
+      /note isn't valid/i,
+    );
   });
 });
 
