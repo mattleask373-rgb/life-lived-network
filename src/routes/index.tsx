@@ -124,7 +124,12 @@ function Home() {
   );
 
   const openNeedsFn = useServerFn(getOpenNeeds);
-  const { data: openNeeds } = useQuery({
+  const {
+    data: openNeeds,
+    isError: openNeedsError,
+    isPending: openNeedsPending,
+    refetch: refetchOpenNeeds,
+  } = useQuery({
     queryKey: ["open-needs", place?.id ?? null],
     enabled: Boolean(place),
     queryFn: () => openNeedsFn({ data: { placeId: place?.id ?? null } }),
@@ -158,7 +163,13 @@ function Home() {
   const events = useMemo(() => upcomingEvents(all), [all]);
   const groups = useMemo(() => providerGroups(all), [all]);
   const given = useMemo(() => contributions(all), [all]);
-  const needCount = openNeeds?.length ?? 0;
+  // A failed or pending read is unknown, never a genuine zero.
+  const needCount = openNeedsError || openNeedsPending ? null : (openNeeds?.length ?? 0);
+  const needsStatus = openNeedsPending ? "loading" : openNeedsError ? "error" : "ready";
+  const openNeedsSummary =
+    needCount === null
+      ? "open-needs count unavailable"
+      : `${needCount} ${needCount === 1 ? "open need" : "open needs"}`;
   const questions = useMemo(() => localityQuestions(all, needCount), [all, needCount]);
   const quiet = Boolean(place) && !worldLoading && !loading && !worldError && all.length === 0;
   const mapPartition = useMemo(() => partitionMapList(mapEntries, view), [mapEntries, view]);
@@ -345,7 +356,7 @@ function Home() {
                   ? "This locality is too large to search at once. Choose a smaller locality to see verified records."
                   : worldError
                     ? "We couldn't check what's recorded here."
-                    : `${all.length} ${all.length === 1 ? "thing" : "things"} recorded here · ${needCount} ${needCount === 1 ? "open need" : "open needs"}`}
+                    : `${all.length} ${all.length === 1 ? "thing" : "things"} recorded here · ${openNeedsSummary}`}
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             {quiet ? (
@@ -388,7 +399,14 @@ function Home() {
           </Link>
         ) : null}
 
-        {place ? <LocalityQuestions questions={questions} placeName={placeName} /> : null}
+        {place ? (
+          <LocalityQuestions
+            questions={questions}
+            placeName={placeName}
+            needsStatus={needsStatus}
+            onRetryNeeds={() => void refetchOpenNeeds()}
+          />
+        ) : null}
 
         {snapshot.length ? (
           <section aria-labelledby="happening-heading" className="card-paper mt-6 p-5">
@@ -593,9 +611,13 @@ function Home() {
               to="/need"
               className="focus-ink rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
             >
-              {needCount
-                ? `${needCount} ${needCount === 1 ? "thing" : "things"} people have asked for`
-                : "Ask for something yourself"}
+              {needCount === null
+                ? needsStatus === "loading"
+                  ? "Checking open needs…"
+                  : "Couldn't verify open needs"
+                : needCount
+                  ? `${needCount} ${needCount === 1 ? "thing" : "things"} people have asked for`
+                  : "Ask for something yourself"}
             </Link>
             <Link
               to="/give"
