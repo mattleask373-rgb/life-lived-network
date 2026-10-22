@@ -55,6 +55,7 @@ describe("privacy-safe PWA shell", () => {
     const offline = readPublic("offline.html");
     expect(offline).toContain("Offline for now.");
     expect(offline).toContain("account data haven't been saved for offline use");
+    expect(offline).toContain('name="robots" content="noindex, nofollow"');
     expect(offline).toContain("Try again");
   });
 });
