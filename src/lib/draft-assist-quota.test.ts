@@ -83,7 +83,7 @@ describe("AI draft quota database security contract", () => {
     expect(migration).toContain("SECURITY DEFINER");
     expect(migration).toContain("SET search_path = pg_catalog, public");
     expect(migration).toContain(
-      "REVOKE ALL ON FUNCTION public.consume_ai_draft_quota() FROM PUBLIC, anon;",
+      "REVOKE ALL ON FUNCTION public.consume_ai_draft_quota() FROM PUBLIC, anon, service_role;",
     );
     expect(migration).toContain(
       "GRANT EXECUTE ON FUNCTION public.consume_ai_draft_quota() TO authenticated;",
