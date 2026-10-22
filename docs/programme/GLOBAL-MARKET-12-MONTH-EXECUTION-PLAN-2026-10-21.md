@@ -1346,3 +1346,17 @@ Read-only Firecrawl fetches at this checkpoint returned:
 #### Honest 24/7 boundary
 
 The currently enabled “Living World Fleet Control” automation is a **daily read-only oversight task** (latest run was recorded around 19:22 UTC; its API response showed no next-run timestamp). The draft #270 workflow is only a repository-documentation probe. Neither is evidence of uninterrupted development. The repository must prove a durable authenticated task queue, real provider execution, heartbeat/lease persistence, lease fencing, idempotent attempt completion, stale recovery, logs/alerts, rate/cost ceilings, cancellation and a tested kill switch in non-production before any agent may be called continuously active. Current progress stays PR-only; do not represent this chat or a scheduled report as an always-running coding service.
+
+
+### Automation inventory correction — 22 October 2026, 19:28 UTC
+
+The task-automation inventory has **three enabled daily automations** for this project, not one:
+1. **Living World Fleet Control** — read-only evidence/release oversight.
+2. **Daily Security & Release Audit** — read-only security and release-gate checks.
+3. **Year-One Safe Build Loop** — execution-focused workstream, but it explicitly blocks repository/Lovable writes until authoritative project Git target/non-main branch proof and owner authorization exist; while blocked it is to produce safe audit, patches/specs, tests/query designs/runbooks without committing or opening PRs.
+
+All three use a daily 08:00 Europe/Amsterdam schedule starting 23 October 2026. Their latest run timestamps were recorded around 19:22–19:23 UTC on 22 October; the automation API returned `next_run_time: null` for each. Therefore the configured daily schedules are visible, but their next dispatch is **not independently confirmed by that field**. Do not promise a run at a precise time.
+
+The repository's draft #270 is a separate hourly *read-only repository-documentation probe* (if later approved and merged into the default branch); it is not a coding agent. There is still no verified persistent executor that claims and performs durable tasks continuously. No new automation was added because those three daily automations already overlap in oversight and the supported automation service only offers daily/weekly/monthly recurring schedules; creating another copy would increase duplicate work, not create a 24/7 executor.
+
+Before any later agent is authorized to push implementation PRs, the owner must explicitly reconcile the task-automation write gate with the current explicit repository-PR workflow, prove the actual Lovable Git destination/non-main branch and prohibit Lovable direct-main sync. Until that, keep automatic tasks read-only and keep human review/merge/deploy/production gates unchanged.
