@@ -250,3 +250,10 @@ Code review found that `getMyOpportunities()` in `src/lib/needs.functions.ts` dr
 - Fresh public reads: robots.txt HTTP 200 but wildcard/crawler rules only allow all and no Sitemap directive; /sitemap.xml is HTML 404; /life-list is HTTP 200 and presents “Only you see this” but extraction did not surface robots/canonical fields. This flags an SEO signalling mismatch, not evidence of another user's saved data exposure. Connected Lovable project/deployed host/build SHA remains human-unverified.
 - Ruleset #24946178 active, but required review count 0 and deletion protection not established. Owner/admin Gate 0 still blocks merging/production release.
 - Existing “Living World Fleet Control” is daily read-only oversight; #270 is a draft repo probe. Neither constitutes 24/7 coding. Need durable queue/provider execution, authenticated identity, persistent heartbeats/leases, fencing/idempotency/recovery, budgets, cancellation, monitoring/alerts and kill switch proved in non-production first.
+
+
+## Automation inventory correction — 22 October 2026, 19:28 UTC
+
+Current automation inventory shows three enabled daily tasks: Living World Fleet Control (read-only), Daily Security & Release Audit (read-only), and Year-One Safe Build Loop (write-blocked pending authoritative Lovable repo/non-main branch proof and owner authorization). Each is configured daily at approximately 08:00 Europe/Amsterdam beginning 23 Oct; latest run times were around 19:22–19:23 UTC. The API reports `next_run_time: null` for all three, so next dispatch is not independently confirmed.
+
+Draft PR #270 is only an hourly read-only documentation probe, not an executor. No persistent coding runtime has been proven. No extra automation was created. Human owner must reconcile the automation's write-gate prompt with the explicit PR-only workflow before enabling agents to push further implementation; Lovable direct sync to main remains prohibited until Settings are verified.
