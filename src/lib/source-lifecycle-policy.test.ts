@@ -121,9 +121,10 @@ describe("public source lifecycle policy", () => {
       eligible: true,
       dataQualityOverride: "unverified",
     });
-    expect(
-      decide([record({ sourceUpdatedAt: "2026-10-20T11:00:00.000Z" })]),
-    ).toMatchObject({ eligible: true, dataQualityOverride: "unverified" });
+    expect(decide([record({ sourceUpdatedAt: "2026-10-20T11:00:00.000Z" })])).toMatchObject({
+      eligible: true,
+      dataQualityOverride: "unverified",
+    });
   });
 
   it("only reports recently updated when both source modification and check are recent", () => {
