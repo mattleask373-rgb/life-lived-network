@@ -54,7 +54,8 @@ describe("data errors stay predictable and quiet", () => {
         {
           name: "DataError",
           code: "SCOPE_TOO_WIDE",
-          message: "This area is too large to search all at once. Choose a smaller area or zoom in.",
+          message:
+            "This area is too large to search all at once. Choose a smaller area or zoom in.",
         },
         "SCOPE_TOO_WIDE",
       ),

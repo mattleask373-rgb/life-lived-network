@@ -302,7 +302,7 @@ function Home() {
                   ? "This locality is too large to search at once. Choose a smaller locality to see verified records."
                   : worldError
                     ? "We couldn't check what's recorded here."
-                  : `${all.length} ${all.length === 1 ? "thing" : "things"} recorded here · ${needCount} ${needCount === 1 ? "open need" : "open needs"}`}
+                    : `${all.length} ${all.length === 1 ? "thing" : "things"} recorded here · ${needCount} ${needCount === 1 ? "open need" : "open needs"}`}
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             {quiet ? (
