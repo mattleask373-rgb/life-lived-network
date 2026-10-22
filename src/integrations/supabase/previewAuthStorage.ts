@@ -94,7 +94,7 @@ function localStorageOnly(): PreviewAuthStorage {
   };
 }
 
-function trustedAncestorOrigin(dev: boolean): string {
+function trustedAncestorOrigin(): string {
   try {
     const ancestor = location.ancestorOrigins?.[0];
     if (ancestor) return ancestor;
@@ -129,15 +129,14 @@ export function brokeredPreviewStorage(): PreviewAuthStorage | undefined {
     : undefined;
 
   const parentWindow = window.parent as Window | null;
-  const framed = parentWindow !== null && parentWindow !== window;
-  if (!projectId || !framed) return localStorageOnly();
+  if (!projectId || parentWindow === null || parentWindow === window) return localStorageOnly();
 
   const dev =
     host.endsWith(".lovableproject-dev.com") || host.endsWith(".gpt-eng.com");
   const editorPattern = dev
     ? /^https:\/\/([a-z0-9-]+\.)*(lovable\.dev|gptengineer\.app)$|^http:\/\/localhost:3000$/
     : /^https:\/\/([a-z0-9-]+\.)*(lovable\.dev|gptengineer\.app)$/;
-  const ancestor = trustedAncestorOrigin(dev);
+  const ancestor = trustedAncestorOrigin();
   const editorOrigins = ancestor && editorPattern.test(ancestor)
     ? [ancestor]
     : dev
