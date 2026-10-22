@@ -30,6 +30,10 @@ import {
   setServiceAreas,
 } from "@/lib/capability.functions";
 import { fetchPlaces } from "@/lib/places";
+import {
+  buildServiceAreaSelections,
+  MAX_SERVICE_AREA_SELECTIONS,
+} from "@/lib/service-area-selections";
 
 export function CapabilityPanel() {
   const qc = useQueryClient();
@@ -43,7 +47,13 @@ export function CapabilityPanel() {
   const refresh = () => qc.invalidateQueries({ queryKey: ["capability", "mine"] });
   const add = useMutation({ mutationFn: useServerFn(addCapability), onSuccess: refresh });
   const drop = useMutation({ mutationFn: useServerFn(removeCapability), onSuccess: refresh });
-  const areas = useMutation({ mutationFn: useServerFn(setServiceAreas), onSuccess: refresh });
+  const areas = useMutation({
+    mutationFn: useServerFn(setServiceAreas),
+    onSuccess: refresh,
+    // A multi-step replacement can partially succeed without a DB transaction.
+    // Re-fetch after failure so the UI does not retain a stale selection snapshot.
+    onError: refresh,
+  });
   const prefs = useMutation({ mutationFn: useServerFn(setPreferences), onSuccess: refresh });
   const addWindow = useMutation({ mutationFn: useServerFn(addAvailability), onSuccess: refresh });
   const dropWindow = useMutation({
@@ -69,7 +79,35 @@ export function CapabilityPanel() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
-  const chosenAreas = data?.serviceAreas.map((a) => a.placeId) ?? [];
+  const currentServiceAreas = data?.serviceAreas ?? [];
+  const chosenAreas = currentServiceAreas
+    .filter((area) => area.relation === "serves")
+    .map((area) => area.placeId);
+  const chosenAvailableIn = currentServiceAreas
+    .filter((area) => area.relation === "available_in")
+    .map((area) => area.placeId);
+  const chosenTravelThrough = currentServiceAreas
+    .filter((area) => area.relation === "travelling_through")
+    .map((area) => area.placeId);
+  const saveServiceAreas = (
+    servicePlaceIds: string[],
+    availableInPlaceIds: string[],
+    travellingThroughPlaceIds: string[],
+  ) => {
+    areas.mutate({
+      data: {
+        serviceAreas: buildServiceAreaSelections(
+          currentServiceAreas,
+          servicePlaceIds,
+          availableInPlaceIds,
+          travellingThroughPlaceIds,
+        ),
+      },
+    });
+  };
+  const atServiceAreaLimit =
+    chosenAreas.length + chosenAvailableIn.length + chosenTravelThrough.length >=
+    MAX_SERVICE_AREA_SELECTIONS;
   const chosenPrefs = data?.preferences ?? [];
   const chosenGives = data?.contributions.map((c) => c.contribution) ?? [];
   const earning = data?.earningPreference ?? "unstated";
@@ -283,9 +321,11 @@ export function CapabilityPanel() {
       </section>
 
       <section className="card-paper p-5">
-        <h2 className="text-xl">Where you'd actually go</h2>
+        <h2 className="text-xl">Where you work or can serve</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Places, not addresses. Leave it empty and nobody will be shown you for work nearby.
+          Places, not addresses. These are areas you explicitly say you serve or can work in; they
+          do not imply you're currently available. Up to {MAX_SERVICE_AREA_SELECTIONS} places can be
+          selected.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {(places ?? []).map((p) => {
@@ -294,14 +334,13 @@ export function CapabilityPanel() {
               <button
                 key={p.id}
                 type="button"
+                disabled={areas.isPending || (!on && atServiceAreaLimit)}
                 onClick={() =>
-                  areas.mutate({
-                    data: {
-                      placeIds: on
-                        ? chosenAreas.filter((id) => id !== p.id)
-                        : [...chosenAreas, p.id],
-                    },
-                  })
+                  saveServiceAreas(
+                    on ? chosenAreas.filter((id) => id !== p.id) : [...chosenAreas, p.id],
+                    chosenAvailableIn.filter((id) => id !== p.id),
+                    chosenTravelThrough.filter((id) => id !== p.id),
+                  )
                 }
                 aria-pressed={on}
                 className={`focus-ink rounded-full border px-3 py-1.5 text-sm ${
@@ -316,6 +355,85 @@ export function CapabilityPanel() {
           })}
         </div>
       </section>
+
+      <section className="card-paper p-5">
+        <h2 className="text-xl">Places you're around</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          This means you say you're around here; it is not the same as offering a service, and it
+          does not mean you're currently available.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(places ?? []).map((p) => {
+            const on = chosenAvailableIn.includes(p.id);
+            return (
+              <button
+                key={p.id}
+                type="button"
+                disabled={areas.isPending || (!on && atServiceAreaLimit)}
+                onClick={() =>
+                  saveServiceAreas(
+                    chosenAreas.filter((id) => id !== p.id),
+                    on
+                      ? chosenAvailableIn.filter((id) => id !== p.id)
+                      : [...chosenAvailableIn, p.id],
+                    chosenTravelThrough.filter((id) => id !== p.id),
+                  )
+                }
+                aria-pressed={on}
+                className={`focus-ink rounded-full border px-3 py-1.5 text-sm ${
+                  on
+                    ? "border-transparent bg-secondary text-secondary-foreground"
+                    : "border-border bg-card text-muted-foreground"
+                }`}
+              >
+                {p.name}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="card-paper p-5">
+        <h2 className="text-xl">Places you're only passing through</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          A journey window is not live location and never means you serve that place. Keep it
+          separate from your work areas.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(places ?? []).map((p) => {
+            const on = chosenTravelThrough.includes(p.id);
+            return (
+              <button
+                key={p.id}
+                type="button"
+                disabled={areas.isPending || (!on && atServiceAreaLimit)}
+                onClick={() =>
+                  saveServiceAreas(
+                    chosenAreas.filter((id) => id !== p.id),
+                    chosenAvailableIn.filter((id) => id !== p.id),
+                    on
+                      ? chosenTravelThrough.filter((id) => id !== p.id)
+                      : [...chosenTravelThrough, p.id],
+                  )
+                }
+                aria-pressed={on}
+                className={`focus-ink rounded-full border px-3 py-1.5 text-sm ${
+                  on
+                    ? "border-transparent bg-secondary text-secondary-foreground"
+                    : "border-border bg-card text-muted-foreground"
+                }`}
+              >
+                {p.name}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+      {areas.isError ? (
+        <p role="alert" className="text-sm text-destructive">
+          We couldn't finish updating these places. Review the current selections and try again.
+        </p>
+      ) : null}
 
       <section className="card-paper p-5">
         <h2 className="text-xl">What you're open to</h2>
