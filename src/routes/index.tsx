@@ -28,7 +28,13 @@ import { useWorldContext } from "@/lib/world-context";
 import { LocalityQuestions } from "@/components/locality-questions";
 import { WhatsHappening } from "@/components/whats-happening";
 import { WhatsHere } from "@/components/whats-here";
-import { contributions, localityQuestions, providerGroups, upcomingEvents, type OpenNeedsAnswer } from "@/lib/locality";
+import {
+  contributions,
+  localityQuestions,
+  providerGroups,
+  upcomingEvents,
+  type OpenNeedsAnswer,
+} from "@/lib/locality";
 import {
   activitySnapshot,
   meaningfulVariety,

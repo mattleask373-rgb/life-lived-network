@@ -34,7 +34,13 @@ import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
 import { localityPath } from "@/lib/locality-path";
-import { contributions, localityQuestions, providerGroups, upcomingEvents, type OpenNeedsAnswer } from "@/lib/locality";
+import {
+  contributions,
+  localityQuestions,
+  providerGroups,
+  upcomingEvents,
+  type OpenNeedsAnswer,
+} from "@/lib/locality";
 import { KIND_LABEL } from "@/lib/places";
 import { evaluateLocalityIndexability } from "@/lib/locality-indexability";
 import { privatePage, publicPage } from "@/lib/seo";

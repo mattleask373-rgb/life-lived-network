@@ -80,8 +80,7 @@ export interface LocalityQuestion {
  * and an invitation.
  */
 export type OpenNeedsAnswer =
-  | { status: "known"; count: number }
-  | { status: "checking" }
+  { status: "known"; count: number } | { status: "checking" }
   | { status: "unavailable" };
 
 function openNeedsQuestion(answer: OpenNeedsAnswer): LocalityQuestion {

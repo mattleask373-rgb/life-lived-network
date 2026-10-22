@@ -19,8 +19,8 @@ export function LocalityQuestions({
         {placeName}, as it actually is
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Five questions, answered from what is stored. A zero is a known absence; “Not known” means
-        a count has not been confirmed, not that it is zero.
+        Five questions, answered from what is stored. A zero is a known absence; “Not known” means a
+        count has not been confirmed, not that it is zero.
       </p>
       <ul className="mt-3 grid gap-2 sm:grid-cols-5">
         {questions.map((q) => {
