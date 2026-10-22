@@ -235,3 +235,18 @@ Code review found that `getMyOpportunities()` in `src/lib/needs.functions.ts` dr
 - Current main stays `a99d09f1517523a7a388245ca6b3d5c1245816cb`. Main ruleset remains active but requires zero approving reviews; deletion protection is unproven. These human/admin controls remain the first gate.
 - The wide-area issue is completeness/ranking bias, not a confirmed privacy breach: a global newest-60 candidate query is later geography-filtered by the canonical evaluator but may omit a relevant opportunity before evaluation.
 - Do not merge, deploy, alter hosted DB permissions, activate AI/feed/provider integrations, spend, or communicate externally without the existing owner gates. Daily audits are not a persistent 24/7 executor.
+
+
+## Re-audit checkpoint — 22 October 2026, 19:23 UTC
+
+- Main remains `a99d09f1517523a7a388245ca6b3d5c1245816cb`. GitHub returned 81 open PRs; merge only a narrow, explicitly reviewed queue. Many old control-plane/24-7 proposals are stacked on older or non-main bases.
+- #291 current head `415bfff7456ef32540f5f04b3b49578f6ec20e65`: Verify, CodeQL, TypeScript analysis and dependency audit pass; Supabase Preview skipped. Still draft and no independent review recorded. Manual mobile/accessibility/date-line QA remains outstanding.
+- #294 current head `53f304e32ed7dff30444b55967d3a55ab1b52da1`: Verify, CodeQL, TypeScript and dependency audit passed; Preview skipped; draft/no review. This appended snapshot changes its head and requires fresh checks.
+- #297 current head `2ed1c5bc71a41b5a8e9e71bae16224b0aefe8fd7`: green Verify/CodeQL/TypeScript/dependency audit, Preview skipped; documentation only, no review.
+- #302 current head `a51e738ffd465ba4d7c5481a29bf7c8152822c89`: latest success for Verify/CodeQL/TypeScript/dependency audit; a second Verify was cancelled; Preview skipped; documentation only, no review.
+- #299 current head `f5ac2728edf52743319b95434e4b484f69fdb715`: green Verify/CodeQL/TypeScript/dependency audit recorded, another Verify cancelled, Preview skipped. Adds 13 SQL migrations / 15 files, including SECURITY DEFINER RPCs, RLS/policies, role grants/revokes and DROP FUNCTION overloads. Static tests do not prove SQL replay/remote-history compatibility. Block merge pending independent security review and exact replay on an explicitly named disposable DB; no hosted DB changes.
+- #289 request-input validation head `ee7937da4b3600b1fbac0ff637fa657778a710ad` passed checks; still requires independent review. It is not rate/cost limiting or public AI authorization.
+- #270 hourly scheduled repository-doc probe is stale-base and read-only. It does not dispatch work, call a model or prove a persistent executor.
+- Fresh public reads: robots.txt HTTP 200 but wildcard/crawler rules only allow all and no Sitemap directive; /sitemap.xml is HTML 404; /life-list is HTTP 200 and presents “Only you see this” but extraction did not surface robots/canonical fields. This flags an SEO signalling mismatch, not evidence of another user's saved data exposure. Connected Lovable project/deployed host/build SHA remains human-unverified.
+- Ruleset #24946178 active, but required review count 0 and deletion protection not established. Owner/admin Gate 0 still blocks merging/production release.
+- Existing “Living World Fleet Control” is daily read-only oversight; #270 is a draft repo probe. Neither constitutes 24/7 coding. Need durable queue/provider execution, authenticated identity, persistent heartbeats/leases, fencing/idempotency/recovery, budgets, cancellation, monitoring/alerts and kill switch proved in non-production first.
