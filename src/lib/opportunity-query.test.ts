@@ -47,6 +47,18 @@ describe("mergeNewestNeedRows", () => {
     ]);
   });
 
+  it("can retain the whole bounded per-chunk candidate window beyond 60 rows", () => {
+    const rows = Array.from({ length: 780 }, (_, index) => ({
+      id: `need-${String(index).padStart(3, "0")}`,
+      created_at: new Date(Date.UTC(2026, 9, 22, 0, index)).toISOString(),
+    }));
+    const merged = mergeNewestNeedRows([rows], 780);
+
+    expect(merged).toHaveLength(780);
+    expect(merged[0]?.id).toBe("need-779");
+    expect(merged.at(-1)?.id).toBe("need-000");
+  });
+
   it("returns only the globally newest N rows", () => {
     const pages = [
       [row("n3", "2026-10-22T03:00:00.000Z"), row("n1", "2026-10-22T01:00:00.000Z")],
