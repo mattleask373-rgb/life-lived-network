@@ -212,8 +212,7 @@ export function evaluateSeoSmoke(
       failures.push(path + ": response did not provide a valid final URL");
     }
     const robotsTag = document.body.match(/<meta\b(?=[^>]*\bname=["']robots["'])[^>]*>/i)?.[0];
-    const robotsContent =
-      robotsTag?.match(/\bcontent=["']([^"']+)["']/i)?.[1]?.toLowerCase() ?? "";
+    const robotsContent = robotsTag?.match(/\bcontent=["']([^"']+)["']/i)?.[1]?.toLowerCase() ?? "";
     const robotsDirectives = robotsContent.split(/[\s,]+/).filter(Boolean);
     if (!robotsDirectives.includes("noindex")) {
       failures.push(path + ": robots metadata must contain noindex");
@@ -309,8 +308,7 @@ export function evaluateSeoSmoke(
   const robotsTag = documents.homepage.body.match(
     /<meta\b(?=[^>]*\bname=["']robots["'])[^>]*>/i,
   )?.[0];
-  const robotsContent =
-    robotsTag?.match(/\bcontent=["']([^"']+)["']/i)?.[1]?.toLowerCase() ?? "";
+  const robotsContent = robotsTag?.match(/\bcontent=["']([^"']+)["']/i)?.[1]?.toLowerCase() ?? "";
   if (!robotsContent.includes("index") || robotsContent.includes("noindex")) {
     failures.push("homepage: robots metadata must permit indexing");
   }
