@@ -14,6 +14,7 @@ import {
   decodeCursor,
   encodeCursor,
   pageLimit,
+  splitPageWithLookahead,
   type DiscoveryContext,
   type Page,
 } from "./data/contract";
@@ -83,7 +84,7 @@ async function readWorld(
       .order("starts_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
       .order("id", { ascending: true })
-      .range(offset, offset + limit - 1)
+      .range(offset, offset + limit)
       .abortSignal(signal);
     // The selected locality and visible map rectangle are different scopes.
     // A viewport takes precedence over place filters so panning can retrieve new
@@ -120,7 +121,11 @@ async function readWorld(
     if (error) throw error;
     throwIfAborted(signal);
 
-    const listings = (rows ?? []) as unknown as ListingRow[];
+    // Fetch one look-ahead row so an exactly-full final page does not invent a
+    // next page. The sentinel is not processed and will be read again at the next offset.
+    const boundedRows = splitPageWithLookahead(rows ?? [], limit);
+    const listings = boundedRows.items as unknown as ListingRow[];
+    const hasMore = boundedRows.hasMore;
     // One extra query for all creators, never one per listing.
     const names = new Map<string, string>();
     const creatorIds = [
@@ -278,11 +283,10 @@ async function readWorld(
 
     // Cursor/pagination follows the raw bounded database window, not filtered item
     // count. Otherwise a page with hidden/withdrawn source rows could stop early.
-    const hasMore = listings.length === limit;
     const page: Page<WorldEntry> = {
       items: worldItems,
       hasMore,
-      nextCursor: hasMore ? encodeCursor(offset + listings.length) : null,
+      nextCursor: hasMore ? encodeCursor(offset + limit) : null,
     };
 
     // The trial layer, only on the first page, only for the locality being

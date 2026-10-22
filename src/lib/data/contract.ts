@@ -58,6 +58,17 @@ export function pageLimit(limit?: number | null): number {
   return Math.min(Math.floor(limit), MAX_LIMIT);
 }
 
+/** Return a bounded page while using one sentinel row to prove hasMore. */
+export function splitPageWithLookahead<T>(
+  rows: readonly T[],
+  limit: number,
+): { items: T[]; hasMore: boolean } {
+  if (!Number.isSafeInteger(limit) || limit < 1) {
+    throw new RangeError("Page limit must be a positive safe integer");
+  }
+  return { items: rows.slice(0, limit), hasMore: rows.length > limit };
+}
+
 /**
  * Cursors are opaque to callers. Today they carry an offset; tomorrow they can
  * carry a keyset or a provider token without any caller changing.

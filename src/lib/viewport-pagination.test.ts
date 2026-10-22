@@ -42,7 +42,9 @@ describe("bounded viewport pagination", () => {
   });
 
   it("uses the last page cursor and has-more state", () => {
-    expect(combineViewportPages([page([{ id: "a" }], "o:1", true), page([{ id: "b" }], "o:2", true)])).toEqual({
+    expect(
+      combineViewportPages([page([{ id: "a" }], "o:1", true), page([{ id: "b" }], "o:2", true)]),
+    ).toEqual({
       items: [{ id: "a" }, { id: "b" }],
       nextCursor: "o:2",
       hasMore: true,
