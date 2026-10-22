@@ -181,9 +181,7 @@ export async function fetchPlaces(kinds?: PlaceKind[]): Promise<Place[]> {
       return (data ?? []) as unknown as PlaceRow[];
     },
   );
-  return rows
-    .map(toPlace)
-    .sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
+  return rows.map(toPlace).sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
 }
 
 /**

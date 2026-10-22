@@ -78,7 +78,10 @@ async function readWorld(
       const { descendantIdsOf } = await import("./places");
       const index = await loadPlaceIndex(supabase);
       if (!index.byId.has(context.placeId)) {
-        throw new DataError("NOT_FOUND", "Selected place ID is not present in the canonical hierarchy");
+        throw new DataError(
+          "NOT_FOUND",
+          "Selected place ID is not present in the canonical hierarchy",
+        );
       }
       insideIds = descendantIdsOf(index, context.placeId);
       insideSlugs = insideIds

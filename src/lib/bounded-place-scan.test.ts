@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  PLACE_SCAN_LIMIT,
-  PlaceScanLimitError,
-  readBoundedPlacePages,
-} from "./bounded-place-scan";
+import { PLACE_SCAN_LIMIT, PlaceScanLimitError, readBoundedPlacePages } from "./bounded-place-scan";
 
 type Row = { id: string; name: string };
 
@@ -24,7 +20,11 @@ describe("bounded canonical-place scan", () => {
       return source.filter((item) => afterId === null || item.id > afterId).slice(0, limit);
     });
     expect(result.map((item) => item.id)).toEqual(source.map((item) => item.id));
-    expect(calls).toEqual([[null, 3], ["00003", 3], ["00006", 3]]);
+    expect(calls).toEqual([
+      [null, 3],
+      ["00003", 3],
+      ["00006", 3],
+    ]);
   });
 
   it("probes cap plus one and rejects instead of returning a truncated hierarchy", async () => {
@@ -51,7 +51,9 @@ describe("bounded canonical-place scan", () => {
     await expect(
       readBoundedPlacePages(10, 2, async (afterId, limit) => {
         if (afterId === "00002") throw new Error("page failed");
-        return rows(5).filter((item) => afterId === null || item.id > afterId).slice(0, limit);
+        return rows(5)
+          .filter((item) => afterId === null || item.id > afterId)
+          .slice(0, limit);
       }),
     ).rejects.toThrow("page failed");
   });

@@ -119,7 +119,10 @@ export const getOpenNeeds = createServerFn({ method: "GET" })
       if (!index.byId.has(data.placeId)) throw new DataError("NOT_FOUND");
       const inside = descendantIdsOf(index, data.placeId);
       if (inside.length > 400) {
-        throw new DataError("SCOPE_TOO_WIDE", `Open-need locality has ${inside.length} descendant places.`);
+        throw new DataError(
+          "SCOPE_TOO_WIDE",
+          `Open-need locality has ${inside.length} descendant places.`,
+        );
       }
       query = query.in("place_id", inside);
     }
@@ -159,36 +162,34 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
 
     // Never pretend the first 400 IDs represent a complete global locality.
     const candidateCap = 400;
-    if (
-      geo.localPlaceIds.length > candidateCap ||
-      geo.serviceScopeIds.length > candidateCap
-    ) {
+    if (geo.localPlaceIds.length > candidateCap || geo.serviceScopeIds.length > candidateCap) {
       throw new DataError("SCOPE_TOO_WIDE", "Need locality exceeds the safe matching scope.");
     }
     const localIds = geo.localPlaceIds;
     const scopeIds = geo.serviceScopeIds;
     const userIds = new Set<string>();
     if (localIds.length) {
-      const [
-        { data: locals, error: localsError },
-        { data: areas, error: areasError },
-      ] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("id")
-          .eq("discoverable", true)
-          .in("place_id", localIds)
-          .limit(candidateCap + 1),
-        supabase
-          .from("service_areas")
-          .select("user_id")
-          .neq("relation", "travelling_through")
-          .in("place_id", scopeIds)
-          .limit(candidateCap + 1),
-      ]);
+      const [{ data: locals, error: localsError }, { data: areas, error: areasError }] =
+        await Promise.all([
+          supabase
+            .from("profiles")
+            .select("id")
+            .eq("discoverable", true)
+            .in("place_id", localIds)
+            .limit(candidateCap + 1),
+          supabase
+            .from("service_areas")
+            .select("user_id")
+            .neq("relation", "travelling_through")
+            .in("place_id", scopeIds)
+            .limit(candidateCap + 1),
+        ]);
       if (localsError || areasError) throw new DataError("DATA_UNAVAILABLE");
       if ((locals?.length ?? 0) > candidateCap || (areas?.length ?? 0) > candidateCap) {
-        throw new DataError("SCOPE_TOO_WIDE", "Too many possible people for a complete bounded match.");
+        throw new DataError(
+          "SCOPE_TOO_WIDE",
+          "Too many possible people for a complete bounded match.",
+        );
       }
       for (const p of locals ?? []) userIds.add(p.id);
       for (const a of areas ?? []) userIds.add(a.user_id);
@@ -209,7 +210,10 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
     }
 
     if (userIds.size > 200) {
-      throw new DataError("SCOPE_TOO_WIDE", "More than 200 unique candidates require a narrower locality.");
+      throw new DataError(
+        "SCOPE_TOO_WIDE",
+        "More than 200 unique candidates require a narrower locality.",
+      );
     }
     const people: PersonCandidate[] = [];
     if (userIds.size) {

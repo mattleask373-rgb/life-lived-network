@@ -11,8 +11,7 @@ import {
 } from "./bounded-place-scan";
 import { buildPlaceIndex, type Place, type PlaceIndex } from "./places";
 
-const SELECT =
-  "id, parent_id, kind, name, slug, country_code, timezone, currency, lat, lng, blurb";
+const SELECT = "id, parent_id, kind, name, slug, country_code, timezone, currency, lat, lng, blurb";
 
 export async function loadPlaceIndex(client: SupabaseClient<Database>): Promise<PlaceIndex> {
   const places = await readBoundedPlacePages(
