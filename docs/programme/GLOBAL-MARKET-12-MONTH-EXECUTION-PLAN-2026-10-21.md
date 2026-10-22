@@ -75,7 +75,7 @@ This section records observed state from the 22 October 2026 review. It separate
 
 ### Repository and Lovable continuity
 
-- The latest verified GitHub main SHA is a99d09f1517523a7a388245ca6b3d5c1245816cb.
+- The latest verified GitHub main SHA for this snapshot is `86283de035db4d8543cd169f4346e27fa26eadb8` (22 October 2026). Re-fetch the current branch before taking future actions; all PR checks are head-specific.
 - Comparing main with Loveable/work/safely returns diverged, with 18 commits ahead and 348 behind; merge base ccbcc6acdbc3dcdf6895c0f624b301418257a6e3.
 - The branch-only differences are .lovable/plan.md, src/integrations/supabase/previewAuthStorage.ts, src/lib/map-view.ts and src/lib/work-opportunities.ts. These need review, not blind merge/discard. The current Lovable revision SHA matches PR #235's head, but that does not prove the connected Git sync target or deployed build.
 - The exact Lovable Project Settings → Git repository and active sync branch still require human confirmation. Project metadata shows the Real World Atlas project exists and has a preview and published URL, but project metadata does not prove which branch or commit is deployed.
@@ -107,7 +107,7 @@ The current verified mode should be treated as **on-demand agent work with share
 
 ### Current AI work and integration review — 22 October 2026
 
-The previous PR inventory in this section is a dated snapshot and is no longer current. PR #285 and #286 have since merged into main; #288 closed after merging into the #285 feature branch, not main. The old 88-open-PR count and “three current-main PRs” statement must not be reused. Re-fetch each PR's exact head/base/review/check state before action. Current main-based draft fixes #291–#293 and #295 are summarized at the end of this document.
+The previous PR inventory in this section is a dated snapshot and is no longer current. By the latest live check, #291, #294, #297, #289 and #302 have merged. Draft implementation PR #304 now handles bounded wide-area opportunity retrieval and #305 adds a feature-specific paid-AI emergency stop; exact-head Verify, CodeQL, TypeScript analysis and locked-dependency audit passed for both. #303 is closed unmerged as a stale-base duplicate superseded by #304. #299 remains a high-risk, non-mergeable old-base migration proposal, and #270/#28 are old draft control-plane proposals rather than live executors. Use the current GitHub PR state and the authoritative status snapshot above this historical inventory before acting.
 
 This is a convergence problem. Do not create more feature PRs simply because the year plan has many packages. Reduce duplicate and stale work, then promote one verified implementation per concern.
 
@@ -1288,13 +1288,39 @@ No merges, deployment, hosted database change, permission modification, feed act
 
 **Dependencies:** finish Gate 0 source-of-truth/security authority first; keep this retrieval redesign out of PR #291’s current locality/SEO correctness diff unless an independently reviewed minimal fix is proved necessary. Track it as a separate design/implementation slice after #291 is merged and the canonical place-scope behavior is stable.
 
-### Latest implementation evidence — refresh before acting
+### Current implementation and release status — 22 October 2026, 20:20 UTC
 
-- Current main: `a99d09f1517523a7a388245ca6b3d5c1245816cb`.
-- PR #291 current observed head: `aff961724e6f4ab5ea62200636a4851b14abd481`, base current main. On that head, CodeQL and locked-dependency audit passed; Verify and TypeScript analysis were still running at the latest check read; Supabase Preview was skipped. This head includes the exact-count keyset source/place scans, noindex route policy, locality-scope fail-closed behavior and unknown-not-zero open-needs UI wiring. Keep it draft until all exact-head checks, independent review and manual accessibility/mobile/date-line QA pass.
-- PR #294 remains a documentation-only draft and its latest observed head `8865c93e8f2f9113758242607769952175d6190c` passed Verify, CodeQL, TypeScript analysis and the locked dependency audit; Preview skipped. This section changes its head and requires fresh checks.
-- Main ruleset #24946178 remains active but still requires zero approving reviews; deletion protection is not proven. No merge is authorized until an admin changes and re-fetches the ruleset.
+This section supersedes the older implementation and queue snapshots below this section in earlier revisions. The current repository main observed for this update is `86283de035db4d8543cd169f4346e27fa26eadb8`.
 
+#### Current PR evidence
+
+- **Merged to main:** #291 combined locality/SEO/map/date-line/source-scan hardening; #294 Year-One plan/status reconciliation; #297 least-privilege ACL proposal documentation; #289 AI draft request validation; #302 wide-area retrieval acceptance contract. Each remains subject to the limits documented in the PR discussion. In particular, #297 is documentation only, #289 does not add rate limits, and #302 does not implement retrieval.
+- **#304 — bounded opportunity retrieval:** https://github.com/mattleask373-rgb/life-lived-network/pull/304. Exact head `afc2b544b36a96d64f3b51602532f1c49d1d1313`, directly based on current main. Verify [#39846777812](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39846777812) and CodeQL/TypeScript/dependency audit [#39846777934](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39846777934) passed. It keeps server-side locality filters in every 400-ID chunk, caps total places at 5,000 and candidates at 780, fails closed above that scope, and preserves the existing reciprocal evaluator. Draft; no independent review. Supabase Preview is skipped, not passed. #303 was closed unmerged as its stale-base duplicate.
+- **#305 — AI draft emergency stop:** https://github.com/mattleask373-rgb/life-lived-network/pull/305. Exact head `0af4d814c827970d567d16a0afdb5930d978d5f8`, directly based on current main. Verify [#39846295094](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39846295094) and CodeQL/TypeScript/dependency audit [#39846295246](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39846295246) passed. This checks `DRAFT_ASSIST_DISABLED=true` before a paid draft-model call; it does not implement durable quotas or provider spend controls. Draft; independent security review remains.
+- **#299 — control-plane/migration lineage:** still open and non-mergeable, on a base older than current main. No hosted DB/schema/RLS/grant changes are authorized. Require owner confirmation of the exact Supabase environment and migration history, exact disposable-DB replay, rollback, role/default-privilege/RLS tests, and lease-fencing/idempotency/adversarial-worker review before merging or applying any migration.
+- **#270 and #28 — executor proposals:** both remain old drafts with stale/non-main bases; their presence is not evidence of a persistent coding-agent worker. #28 contains a markdown workflow source, but there is no generated `.lock.yml` or demonstrated scheduled model run/branch/PR/handoff loop. Do not call the fleet 24/7 active.
+
+#### Fresh published-origin check
+
+Read-only GETs against the currently published `https://life-lived-network.lovable.app` returned:
+- `/robots.txt` HTTP 200 but no `Sitemap:` directive.
+- `/sitemap.xml` HTTP 404 with an HTML page-not-found response.
+- `/life-list` HTTP 200 with “Only you see this” copy but no visible `robots=noindex` or canonical tag in the returned HTML.
+
+Current main already contains a sitemap index, robots sitemap directive, a noindex-only Life List policy, and the daily read-only `.github/workflows/seo-live-smoke.yml` probe. Therefore this is a live source/deployment parity or host-configuration failure; it is not proof of cross-account access to saved items. See the fresh evidence and required owner action in [issue #263](https://github.com/mattleask373-rgb/life-lived-network/issues/263). Do not republish/repoint through an unverified Lovable target.
+
+#### Automation and human gates
+
+Three enabled Automations remain configured daily at 08:00 Europe/Amsterdam: Fleet Control (read-only), Security & Release Audit (read-only) and the Year-One Safe Build Loop (bounded GitHub isolated-branch/draft-PR work is now allowed by the user's explicit instruction; Lovable writes remain blocked pending verified target identity). The automation service shows `next_run_time: null`; no exact next dispatch is proven. No persistent 24/7 agent executor is verified.
+
+Before any merge or release: an administrator must set at least one required approving review and verify deletion protection in raw ruleset #24946178; the owner must confirm the authoritative Lovable Git repository/sync branch, live build SHA and Supabase project/environment; independent review and relevant manual accessibility/mobile/date-line QA must pass. Public AI, external supply feeds, spending, outreach, legal/commercial choices, production database changes and production deployment remain owner-gated.
+
+#### Next dependency-ordered actions
+
+1. Independent review of #304 and #305; complete manual usability QA for #304 and durable, cross-instance rate/concurrency/replay and provider spend protection work for #290.
+2. Owner/admin Gate 0 and a controlled deployment/source-of-truth reconciliation; then re-run the existing live SEO smoke without changing backend/data state.
+3. Reconcile #299 against a confirmed disposable DB and migration history, then prove hosted non-production actor/RLS/fencing/idempotency and rollback behavior before proposing any runtime executor.
+4. Prove one consent-based pilot loop from verified supply through request/response/completion and measure human outcomes before any market replication.
 
 ### Latest follow-through — 22 October 2026, 19:17 UTC
 
@@ -1360,3 +1386,39 @@ All three use a daily 08:00 Europe/Amsterdam schedule starting 23 October 2026. 
 The repository's draft #270 is a separate hourly *read-only repository-documentation probe* (if later approved and merged into the default branch); it is not a coding agent. There is still no verified persistent executor that claims and performs durable tasks continuously. No new automation was added because those three daily automations already overlap in oversight and the supported automation service only offers daily/weekly/monthly recurring schedules; creating another copy would increase duplicate work, not create a 24/7 executor.
 
 Before any later agent is authorized to push implementation PRs, the owner must explicitly reconcile the task-automation write gate with the current explicit repository-PR workflow, prove the actual Lovable Git destination/non-main branch and prohibit Lovable direct-main sync. Until that, keep automatic tasks read-only and keep human review/merge/deploy/production gates unchanged.
+
+
+### Latest live-phase addendum — 22 October 2026, 20:20 UTC
+
+#### Current PR evidence
+
+- **Merged to main:** #291 combined locality/SEO/map/date-line/source-scan hardening; #294 Year-One plan/status reconciliation; #297 least-privilege ACL proposal documentation; #289 AI draft request validation; #302 wide-area retrieval acceptance contract. Each remains subject to the limits documented in the PR discussion. In particular, #297 is documentation only, #289 does not add rate limits, and #302 does not implement retrieval.
+- **#304 — bounded opportunity retrieval:** https://github.com/mattleask373-rgb/life-lived-network/pull/304. Exact head `afc2b544b36a96d64f3b51602532f1c49d1d1313`, directly based on current main. Verify [#39846777812](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39846777812) and CodeQL/TypeScript/dependency audit [#39846777934](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39846777934) passed. It keeps server-side locality filters in every 400-ID chunk, caps total places at 5,000 and candidates at 780, fails closed above that scope, and preserves the existing reciprocal evaluator. Draft; no independent review. Supabase Preview is skipped, not passed. #303 was closed unmerged as its stale-base duplicate.
+- **#305 — AI draft emergency stop:** https://github.com/mattleask373-rgb/life-lived-network/pull/305. Exact head `0af4d814c827970d567d16a0afdb5930d978d5f8`, directly based on current main. Verify [#39846295094](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39846295094) and CodeQL/TypeScript/dependency audit [#39846295246](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39846295246) passed. This checks `DRAFT_ASSIST_DISABLED=true` before a paid draft-model call; it does not implement durable quotas or provider spend controls. Draft; independent security review remains.
+- **#299 — control-plane/migration lineage:** still open and non-mergeable, on a base older than current main. No hosted DB/schema/RLS/grant changes are authorized. Require owner confirmation of the exact Supabase environment and migration history, exact disposable-DB replay, rollback, role/default-privilege/RLS tests, and lease-fencing/idempotency/adversarial-worker review before merging or applying any migration.
+- **#270 and #28 — executor proposals:** both remain old drafts with stale/non-main bases; their presence is not evidence of a persistent coding-agent worker. #28 contains a markdown workflow source, but there is no generated `.lock.yml` or demonstrated scheduled model run/branch/PR/handoff loop. Do not call the fleet 24/7 active.
+
+#### Fresh published-origin check
+
+Read-only GETs against the currently published `https://life-lived-network.lovable.app` returned:
+- `/robots.txt` HTTP 200 but no `Sitemap:` directive.
+- `/sitemap.xml` HTTP 404 with an HTML page-not-found response.
+- `/life-list` HTTP 200 with “Only you see this” copy but no visible `robots=noindex` or canonical tag in the returned HTML.
+
+Current main already contains a sitemap index, robots sitemap directive, a noindex-only Life List policy, and the daily read-only `.github/workflows/seo-live-smoke.yml` probe. Therefore this is a live source/deployment parity or host-configuration failure; it is not proof of cross-account access to saved items. See the fresh evidence and required owner action in [issue #263](https://github.com/mattleask373-rgb/life-lived-network/issues/263). Do not republish/repoint through an unverified Lovable target.
+
+#### Automation and human gates
+
+Three enabled Automations remain configured daily at 08:00 Europe/Amsterdam: Fleet Control (read-only), Security & Release Audit (read-only) and the Year-One Safe Build Loop (bounded GitHub isolated-branch/draft-PR work is now allowed by the user's explicit instruction; Lovable writes remain blocked pending verified target identity). The automation service shows `next_run_time: null`; no exact next dispatch is proven. No persistent 24/7 agent executor is verified.
+
+Before any merge or release: an administrator must set at least one required approving review and verify deletion protection in raw ruleset #24946178; the owner must confirm the authoritative Lovable Git repository/sync branch, live build SHA and Supabase project/environment; independent review and relevant manual accessibility/mobile/date-line QA must pass. Public AI, external supply feeds, spending, outreach, legal/commercial choices, production database changes and production deployment remain owner-gated.
+
+#### Next dependency-ordered actions
+
+1. Independent review of #304 and #305; complete manual usability QA for #304 and durable, cross-instance rate/concurrency/replay and provider spend protection work for #290.
+2. Owner/admin Gate 0 and a controlled deployment/source-of-truth reconciliation; then re-run the existing live SEO smoke without changing backend/data state.
+3. Reconcile #299 against a confirmed disposable DB and migration history, then prove hosted non-production actor/RLS/fencing/idempotency and rollback behavior before proposing any runtime executor.
+4. Prove one consent-based pilot loop from verified supply through request/response/completion and measure human outcomes before any market replication.
+
+
+Historical appendix entries above are evidence of what was observed at their stated times, not current state. The authoritative top section of `docs/agents/STATUS.md` and this latest addendum supersede any conflicting older PR status or automation claim.
