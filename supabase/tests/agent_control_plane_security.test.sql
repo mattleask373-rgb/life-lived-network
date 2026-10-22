@@ -72,13 +72,19 @@ select ok(
 );
 
 select ok(
-  has_table_privilege('service_role', 'public.agent_events', 'SELECT')
-  and has_table_privilege('service_role', 'public.agent_tasks', 'SELECT')
-  and has_table_privilege('service_role', 'public.agent_task_completions', 'SELECT')
-  and has_table_privilege('service_role', 'public.agent_execution_runs', 'SELECT')
-  and has_table_privilege('service_role', 'public.agent_execution_attempts', 'SELECT')
-  and has_table_privilege('service_role', 'public.agent_execution_audit', 'SELECT'),
-  'service_role retains explicit access to durable control-plane tables'
+  (
+    select bool_and(has_table_privilege('service_role', t.table_name, p.privilege))
+    from (values
+      ('public.agent_events'),
+      ('public.agent_tasks'),
+      ('public.agent_task_completions'),
+      ('public.agent_execution_runs'),
+      ('public.agent_execution_attempts'),
+      ('public.agent_execution_audit')
+    ) as t(table_name)
+    cross join (values ('SELECT'), ('INSERT'), ('UPDATE'), ('DELETE')) as p(privilege)
+  ),
+  'service_role retains CRUD access to durable control-plane tables'
 );
 
 select ok(
