@@ -58,6 +58,14 @@ describe("locality sitemap indexability", () => {
     expect(indexableLocalityPaths(geography, rows)).not.toContain("/gb/birmingham");
   });
 
+  it("does not backfill an ineligible raw row from after the first 60 page slots", () => {
+    const hidden = rowsFor("city", 60).map((row) => ({ ...row, publiclyEligible: false }));
+    const laterEligible = rowsFor("city", 3);
+    expect(indexableLocalityPaths(geography, [...hidden, ...laterEligible])).not.toContain(
+      "/gb/birmingham",
+    );
+  });
+
   it("fails closed when a bounded source scan may be incomplete", () => {
     expect(indexableLocalityPaths(geography, rowsFor("city", 3), { complete: false })).toEqual([]);
   });
