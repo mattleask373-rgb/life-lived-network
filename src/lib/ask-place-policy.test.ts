@@ -111,9 +111,8 @@ describe("prepareAskPlaceContext", () => {
   });
 
   it("fails closed when the candidate array exceeds the input-work limit", () => {
-    const candidates = Array.from(
-      { length: ASK_PLACE_POLICY_LIMITS.candidates + 1 }, (_, index) =>
-        eligibleCandidate({ id: `listing-${index}` }),
+    const candidates = Array.from({ length: ASK_PLACE_POLICY_LIMITS.candidates + 1 }, (_, index) =>
+      eligibleCandidate({ id: `listing-${index}` }),
     );
     expect(prepareAskPlaceContext(PLACE_ID, "What is recorded?", candidates)).toMatchObject({
       status: "unavailable",
