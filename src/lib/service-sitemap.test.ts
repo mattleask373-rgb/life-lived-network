@@ -98,6 +98,38 @@ describe("service sitemap indexability", () => {
     expect(indexableServicePaths(index, rows, entries)).not.toContain("/gb/birmingham/cleaning");
   });
 
+  it("does not derive wide-area service URLs from an unrelated global page", () => {
+    const wideIndex = buildPlaceIndex([
+      place({ id: "wide", name: "Wide area", slug: "wide-area", kind: "region" }),
+      ...Array.from({ length: 400 }, (_, index) =>
+        place({
+          id: `wide-child-${index}`,
+          name: `Wide child ${index}`,
+          slug: `wide-child-${index}`,
+          kind: "town",
+          parent_id: "wide",
+        }),
+      ),
+      place({ id: "other-root", name: "Other root", slug: "other-root", kind: "region" }),
+      place({
+        id: "other-city",
+        name: "Other city",
+        slug: "other-city",
+        kind: "city",
+        parent_id: "other-root",
+      }),
+    ]);
+    const cleaner = entry({ id: "other-cleaner", placeId: "other-city" });
+    const rows: PublicListingSitemapRow[] = [
+      { id: cleaner.id, place_id: "other-city", demonstration: false },
+    ];
+    const paths = indexableServicePaths(wideIndex, rows, new Map([[cleaner.id, cleaner]]));
+
+    expect(paths).toContain("/gb/other-city/cleaning");
+    expect(paths).toContain("/gb/other-root/cleaning");
+    expect(paths).not.toContain("/gb/wide-area/cleaning");
+  });
+
   it("fails closed when the bounded source scan is incomplete", () => {
     const cleaner = entry();
     expect(
