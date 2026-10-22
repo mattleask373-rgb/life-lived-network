@@ -20,6 +20,8 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 
 import { AskThisPlace } from "@/components/ask-this-place";
 import { EntrySheet } from "@/components/entry-sheet";
@@ -32,12 +34,19 @@ import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
 import { localityPath } from "@/lib/locality-path";
-import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
+import {
+  contributions,
+  localityQuestions,
+  providerGroups,
+  upcomingEvents,
+  type OpenNeedsAnswer,
+} from "@/lib/locality";
 import { KIND_LABEL } from "@/lib/places";
 import { evaluateLocalityIndexability } from "@/lib/locality-indexability";
 import { privatePage, publicPage } from "@/lib/seo";
 import { categoriesPresent } from "@/lib/service-taxonomy";
 import { hasPublicWorkOpportunity } from "@/lib/work-opportunity-presentation";
+import { getOpenNeedsCount } from "@/lib/needs.functions";
 import { filterEntriesByText, parseQuerySearch } from "@/lib/search-context";
 import {
   applyTravellerFilters,
@@ -200,7 +209,21 @@ function LocalityPage() {
   const offers = useMemo(() => contributions(filtered), [filtered]);
   const categories = useMemo(() => categoriesPresent(entries), [entries]);
   const workOpportunities = useMemo(() => entries.filter(hasPublicWorkOpportunity), [entries]);
-  const questions = useMemo(() => localityQuestions(entries, 0), [entries]);
+  const openNeedsCountFn = useServerFn(getOpenNeedsCount);
+  const openNeedsCountQuery = useQuery({
+    queryKey: ["open-needs-count", place.id],
+    queryFn: () => openNeedsCountFn({ data: { placeId: place.id } }),
+  });
+  const needsAnswer = useMemo<OpenNeedsAnswer>(
+    () =>
+      openNeedsCountQuery.isError
+        ? { status: "unavailable" }
+        : openNeedsCountQuery.data === undefined
+          ? { status: "checking" }
+          : { status: "known", count: openNeedsCountQuery.data },
+    [openNeedsCountQuery.data, openNeedsCountQuery.isError],
+  );
+  const questions = useMemo(() => localityQuestions(entries, needsAnswer), [entries, needsAnswer]);
   const demonstrations = entries.filter((entry) => entry.demonstration).length;
 
   return (
@@ -256,7 +279,7 @@ function LocalityPage() {
       {entries.length === 0 ? (
         <EmptyPlace
           placeName={place.name}
-          needCount={0}
+          needCount={openNeedsCountQuery.data ?? null}
           ancestors={ancestors.slice(0, 3)}
           onStepOut={(slug) => {
             const target = ancestors.find((a) => a.slug === slug);

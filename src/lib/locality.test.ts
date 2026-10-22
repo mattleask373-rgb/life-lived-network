@@ -69,15 +69,29 @@ describe("a locality read as one thing", () => {
   });
 
   it("answers every question, including with nought", () => {
-    const questions = localityQuestions([], 0, NOW);
+    const questions = localityQuestions([], { status: "known", count: 0 }, NOW);
     expect(questions).toHaveLength(5);
     expect(questions.every((q) => q.count === 0)).toBe(true);
     expect(questions.map((q) => q.id)).toEqual(["happening", "here", "who", "needed", "possible"]);
   });
 
   it("reports what people asked for from the number given, not from guesses", () => {
-    const questions = localityQuestions([entry({})], 3, NOW);
+    const questions = localityQuestions([entry({})], { status: "known", count: 3 }, NOW);
     expect(questions.find((q) => q.id === "needed")?.count).toBe(3);
     expect(questions.find((q) => q.id === "possible")?.count).toBe(1);
+  });
+
+  it("does not turn a checking or failed count into zero", () => {
+    const checking = localityQuestions([], { status: "checking" }, NOW);
+    expect(checking.find((q) => q.id === "needed")).toMatchObject({
+      count: null,
+      unit: "checking the current count",
+    });
+
+    const unavailable = localityQuestions([], { status: "unavailable" }, NOW);
+    expect(unavailable.find((q) => q.id === "needed")).toMatchObject({
+      count: null,
+      unit: "count could not be checked",
+    });
   });
 });

@@ -67,7 +67,7 @@ export interface LocalityQuestion {
   id: "happening" | "here" | "who" | "needed" | "possible";
   question: string;
   /** How many real answers exist. 0 is a valid, honest answer. */
-  count: number;
+  count: number | null;
   /** What the count is counting, in plain words. */
   unit: string;
   /** Where the answer lives: a section on this page, or another screen. */
@@ -79,9 +79,28 @@ export interface LocalityQuestion {
  * hidden because the answer is zero — a quiet locality is a fact worth saying,
  * and an invitation.
  */
+export type OpenNeedsAnswer =
+  { status: "known"; count: number } | { status: "checking" } | { status: "unavailable" };
+
+function openNeedsQuestion(answer: OpenNeedsAnswer): LocalityQuestion {
+  const known = answer.status === "known";
+  return {
+    id: "needed",
+    question: "What's needed?",
+    count: known ? answer.count : null,
+    unit:
+      answer.status === "checking"
+        ? "checking the current count"
+        : answer.status === "unavailable"
+          ? "count could not be checked"
+          : "things people have asked for",
+    href: "/need",
+  };
+}
+
 export function localityQuestions(
   entries: WorldEntry[],
-  openNeeds: number,
+  openNeeds: OpenNeedsAnswer,
   now = Date.now(),
 ): LocalityQuestion[] {
   const services = providerGroups(entries);
@@ -107,13 +126,7 @@ export function localityQuestions(
       unit: "offers of time or skill",
       href: "#who",
     },
-    {
-      id: "needed",
-      question: "What's needed?",
-      count: openNeeds,
-      unit: "things people have asked for",
-      href: "/need",
-    },
+    openNeedsQuestion(openNeeds),
     {
       id: "possible",
       question: "What could happen?",
