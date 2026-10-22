@@ -214,3 +214,14 @@ No autonomous merge, deployment, live host mutation, hosted DB/schema/RLS/grant 
 - Merge sequence is now: human/admin Gate 0 → review/merge #294 after fresh checks → review/merge #291 after exact-head checks + manual QA → review-only documentation #297 → separately review #289. PR #297 is not executable ACL remediation; #289 is not rate limiting.
 - Still unresolved at Gate 0: raw main ruleset requires zero approving reviews; deletion protection is not proven; Lovable Git target/deployed host/backend project identity remains unverified. Live sitemap and robots failures remain until owner-approved production verification.
 - Do not claim 24/7 coding from the three enabled daily audit automations. True unattended development remains blocked on a verified durable executor with task persistence, least-privilege capabilities, leases/fencing, idempotency, cancellation, budgets, monitoring, alerts and a tested kill switch.
+
+
+## Additional P1 work package — wide-area opportunity completeness (22 Oct 2026)
+
+Code review found that `getMyOpportunities()` in `src/lib/needs.functions.ts` drops its place filter for descendant sets over 400, then scans only the globally newest 60 public/local-discovery needs before handing them to `findOpportunitiesForPerson()`. That evaluator still filters by actual geography, so this is **not evidence of a privacy disclosure**; it can silently omit legitimate matches before evaluation. Add a separately reviewed work package after #291: compare hierarchy-aware RLS-respecting database retrieval with bounded chunk/keyset merge and explicit partial-result semantics; preserve stable order, block/visibility/own-need filters and opted-in journey rules; add 400/401, >400, duplicate, tie, fail/partial read and “relevant match beyond newest 60” tests. Never issue an unbounded full-table read or claim a truncated candidate set is complete. Any RPC/index/migration/RLS change stays human-gated and Supabase Preview is currently skipped.
+
+### Exact-head correction
+
+- Current #291 head as last rechecked: `aff961724e6f4ab5ea62200636a4851b14abd481`. CodeQL and dependency audit passed; Verify and TypeScript analysis were still running; Preview skipped. Re-fetch on next pass—never rely on this snapshot if the head moves.
+- #294 current documentation branch head before this update: `8865c93e8f2f9113758242607769952175d6190c`; prior exact-head Verify, CodeQL, TypeScript and locked-dependency audit passed, Preview skipped. This new status entry triggers fresh checks.
+- Ruleset #24946178 is active but approval count remains zero; deletion protection still unproven. No production/merge authority was changed.
