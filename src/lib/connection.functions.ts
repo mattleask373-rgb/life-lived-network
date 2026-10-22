@@ -123,7 +123,9 @@ export const moveConnectionRequest = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw error;
     if (!row) {
-      throw new Error("This request changed before your update could be saved. Refresh and try again.");
+      throw new Error(
+        "This request changed before your update could be saved. Refresh and try again.",
+      );
     }
     return rowToRequest(row as unknown as ConnectionRequestRow);
   });
