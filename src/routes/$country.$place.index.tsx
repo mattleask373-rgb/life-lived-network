@@ -195,8 +195,7 @@ function LocalityPage() {
     queryKey: ["open-needs", place.id],
     queryFn: () => openNeedsFn({ data: { placeId: place.id } }),
   });
-  const needCount =
-    openNeedsQuery.data === undefined ? null : openNeedsQuery.data.length;
+  const needCount = openNeedsQuery.data === undefined ? null : openNeedsQuery.data.length;
   const needsStatus = openNeedsQuery.isError
     ? "error"
     : openNeedsQuery.data === undefined
@@ -271,10 +270,7 @@ function LocalityPage() {
       {entries.length === 0 ? (
         <>
           {openNeedsQuery.isError && openNeedsQuery.data === undefined ? (
-            <DataErrorState
-              className="mt-3"
-              retry={() => void openNeedsQuery.refetch()}
-            />
+            <DataErrorState className="mt-3" retry={() => void openNeedsQuery.refetch()} />
           ) : openNeedsQuery.data === undefined ? (
             <DataLoadingState className="mt-3" label="Checking open needs…" />
           ) : null}
