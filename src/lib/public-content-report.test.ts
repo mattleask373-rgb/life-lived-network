@@ -66,6 +66,13 @@ describe("database-enforced public report contract", () => {
     expect(migration).toContain("'need'");
   });
 
+  it("preserves connection-request reporting while verifying new public subjects", () => {
+    expect(migration).toContain("NEW.reporter_id IS DISTINCT FROM actor");
+    expect(migration).toContain("NEW.subject_type = 'connection_request'");
+    expect(migration).toContain("FROM public.connection_requests AS r");
+    expect(migration).toContain("Only a conversation participant may report it");
+  });
+
   it("derives the reported owner and verifies the currently public subject in the trigger", () => {
     expect(migration).toContain("NEW.reporter_id IS DISTINCT FROM actor");
     expect(migration).toContain("FROM public.listings AS l");
