@@ -5,9 +5,7 @@ const hookSource = readFileSync(new URL("./use-life-list.ts", import.meta.url), 
 
 describe("Life List account-read safety contracts", () => {
   it("filters signed-in reads by the currently authenticated user as defense in depth", () => {
-    expect(hookSource).toMatch(
-      /\.select\("ref, category"\)\s*\.eq\("user_id", userId\)/,
-    );
+    expect(hookSource).toMatch(/\.select\("ref, category"\)\s*\.eq\("user_id", userId\)/);
   });
 
   it("keeps local items until the account confirms a successful merge", () => {
@@ -21,7 +19,9 @@ describe("Life List account-read safety contracts", () => {
   it("distinguishes read/session failure from a valid empty account list", () => {
     expect(hookSource).toContain("if (sessionError)");
     expect(hookSource).toContain("if (readError) throw readError;");
-    expect(hookSource).toContain('if (data === null) throw new Error("The saved list response was incomplete.");');
+    expect(hookSource).toContain(
+      'if (data === null) throw new Error("The saved list response was incomplete.");',
+    );
     expect(hookSource).toContain("setLoadError(true);");
   });
 
