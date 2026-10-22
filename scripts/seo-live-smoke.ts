@@ -51,6 +51,57 @@ function isNoindexPath(pathname: string): boolean {
   return NOINDEX_PATHS.some((path) => pathname === path || pathname.startsWith(path + "/"));
 }
 
+interface ParsedRobotsDirective {
+  name: string;
+  value: string;
+}
+
+interface ParsedRobotsGroup {
+  userAgents: string[];
+  directives: ParsedRobotsDirective[];
+  hasDirective: boolean;
+}
+
+/** Parse just the group semantics needed for the deployment smoke gate. */
+function parseRobotsGroups(body: string): ParsedRobotsGroup[] {
+  const groups: ParsedRobotsGroup[] = [];
+  let current: ParsedRobotsGroup | null = null;
+
+  for (const rawLine of body.split(/\\r?\\n/)) {
+    const line = rawLine.replace(/#.*$/, "").trim();
+    if (!line) continue;
+    const separator = line.indexOf(":");
+    if (separator <= 0) continue;
+
+    const name = line.slice(0, separator).trim().toLowerCase();
+    const value = line.slice(separator + 1).trim();
+    if (name === "user-agent") {
+      if (!current || current.hasDirective) {
+        current = { userAgents: [], directives: [], hasDirective: false };
+        groups.push(current);
+      }
+      current.userAgents.push(value.toLowerCase());
+      continue;
+    }
+
+    if (!current) continue;
+    if (name === "allow" || name === "disallow") {
+      current.directives.push({ name, value });
+      current.hasDirective = true;
+    }
+  }
+
+  return groups;
+}
+
+function groupDisallowsPath(group: ParsedRobotsGroup, path: string): boolean {
+  return group.directives.some(({ name, value }) => {
+    if (name !== "disallow" || !value) return false;
+    const rule = value.replace(/\\/+$/, "");
+    return path === rule || path.startsWith(rule + "/");
+  });
+}
+
 /** Every URL must be canonical, same-origin HTTPS, non-private and unique. */
 function validateSitemapLocations(
   label: string,
@@ -175,6 +226,27 @@ export function evaluateSeoSmoke(
     const rule = new RegExp("^Disallow:\\s*" + escapedRegExp(path) + "\\s*$", "im");
     if (!rule.test(documents.robots.body)) {
       failures.push("robots.txt: missing private-route crawler rule for " + path);
+    }
+  }
+
+  const oaiSearchGroup = parseRobotsGroups(documents.robots.body).find((group) =>
+    group.userAgents.includes("oai-searchbot"),
+  );
+  if (!oaiSearchGroup) {
+    failures.push("robots.txt: missing explicit OAI-SearchBot group for ChatGPT Search discovery");
+  } else {
+    if (!oaiSearchGroup.directives.some(({ name, value }) => name === "allow" && value === "/")) {
+      failures.push("robots.txt: OAI-SearchBot group must explicitly allow public pages");
+    }
+    for (const path of PRIVATE_PATHS) {
+      if (!oaiSearchGroup.directives.some(({ name, value }) => name === "disallow" && value === path)) {
+        failures.push("robots.txt: OAI-SearchBot group missing private-route crawler rule for " + path);
+      }
+    }
+    for (const path of NOINDEX_PATHS) {
+      if (groupDisallowsPath(oaiSearchGroup, path)) {
+        failures.push("robots.txt: OAI-SearchBot must be able to read noindex metadata for " + path);
+      }
     }
   }
 
