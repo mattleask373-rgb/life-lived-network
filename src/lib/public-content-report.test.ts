@@ -4,7 +4,10 @@ import { describe, expect, it } from "vitest";
 import { validatePublicContentReport } from "./public-content-report";
 
 const migration = readFileSync(
-  new URL("../../supabase/migrations/20261022230000_extend_public_content_reports.sql", import.meta.url),
+  new URL(
+    "../../supabase/migrations/20261022230000_extend_public_content_reports.sql",
+    import.meta.url,
+  ),
   "utf8",
 );
 
@@ -38,18 +41,18 @@ describe("public content report input contract", () => {
   });
 
   it("rejects private or unsupported subjects, malformed IDs and unknown reasons", () => {
-    expect(() => validatePublicContentReport({ ...valid, subjectType: "connection_message" })).toThrow(
-      /something public/i,
-    );
-    expect(() => validatePublicContentReport({ ...valid, subjectType: "need", subjectId: "need-123" })).toThrow(
-      /isn't available/i,
-    );
+    expect(() =>
+      validatePublicContentReport({ ...valid, subjectType: "connection_message" }),
+    ).toThrow(/something public/i);
+    expect(() =>
+      validatePublicContentReport({ ...valid, subjectType: "need", subjectId: "need-123" }),
+    ).toThrow(/isn't available/i);
     expect(() => validatePublicContentReport({ ...valid, reason: "five_stars" })).toThrow(
       /choose a reason/i,
     );
-    expect(() => validatePublicContentReport({ ...valid, note: 12 as unknown as string })).toThrow(
-      /note isn't valid/i,
-    );
+    expect(() =>
+      validatePublicContentReport({ ...valid, note: 12 as unknown as string }),
+    ).toThrow(/note isn't valid/i);
   });
 });
 
