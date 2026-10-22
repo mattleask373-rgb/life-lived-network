@@ -30,14 +30,16 @@ describe("chunkOpportunityPlaceIds", () => {
 
     const atTotalCap = Array.from({ length: MAX_OPPORTUNITY_PLACE_IDS }, (_, i) => `scope-${i}`);
     const chunks = chunkOpportunityPlaceIds(atTotalCap);
-    expect(chunks).toHaveLength(Math.ceil(MAX_OPPORTUNITY_PLACE_IDS / OPPORTUNITY_PLACE_CHUNK_SIZE));
+    expect(chunks).toHaveLength(
+      Math.ceil(MAX_OPPORTUNITY_PLACE_IDS / OPPORTUNITY_PLACE_CHUNK_SIZE),
+    );
     expect(chunks.flat()).toHaveLength(MAX_OPPORTUNITY_PLACE_IDS);
     expect(chunks.every((chunk) => chunk.length <= OPPORTUNITY_PLACE_CHUNK_SIZE)).toBe(true);
     expect(chunks.length * OPPORTUNITY_CANDIDATES_PER_CHUNK).toBeLessThanOrEqual(780);
 
-    expect(() =>
-      chunkOpportunityPlaceIds([...atTotalCap, "scope-over-cap"]),
-    ).toThrow(OpportunityScopeTooWideError);
+    expect(() => chunkOpportunityPlaceIds([...atTotalCap, "scope-over-cap"])).toThrow(
+      OpportunityScopeTooWideError,
+    );
   });
 
   it("fails closed instead of dropping the locality predicate over the total cap", () => {
