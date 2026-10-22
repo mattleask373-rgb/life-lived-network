@@ -19,10 +19,7 @@ import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-quer
 import { useServerFn } from "@tanstack/react-start";
 import { fetchWorld, fetchWorldEntries } from "@/lib/listings";
 import { MAX_LIMIT } from "@/lib/data/contract";
-import {
-  canLoadMoreViewportPages,
-  combineViewportPages,
-} from "@/lib/viewport-pagination";
+import { canLoadMoreViewportPages, combineViewportPages } from "@/lib/viewport-pagination";
 import { geoBoundsForViewport, isViewportQueryable, type GeoBounds } from "@/lib/geo-bounds";
 import { densityOf } from "@/lib/trust";
 import { getOpenNeeds } from "@/lib/needs.functions";
@@ -113,10 +110,7 @@ function Home() {
     initialPageParam: null as string | null,
     queryFn: ({ signal, pageParam }) => {
       if (!viewportBounds) throw new Error("Map viewport bounds are required.");
-      return fetchWorld(
-        { bounds: viewportBounds, limit: MAX_LIMIT, cursor: pageParam },
-        signal,
-      );
+      return fetchWorld({ bounds: viewportBounds, limit: MAX_LIMIT, cursor: pageParam }, signal);
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });
@@ -126,7 +120,7 @@ function Home() {
   );
   const canLoadMoreViewport = Boolean(
     viewportPage &&
-      canLoadMoreViewportPages(viewportPageData?.pages.length ?? 0, viewportPage.hasMore),
+    canLoadMoreViewportPages(viewportPageData?.pages.length ?? 0, viewportPage.hasMore),
   );
 
   const openNeedsFn = useServerFn(getOpenNeeds);

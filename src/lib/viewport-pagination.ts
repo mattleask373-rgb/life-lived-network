@@ -7,9 +7,7 @@ export const MAX_VIEWPORT_PAGES = 5;
  * The latest instance of a duplicate wins while its first-seen list position is
  * retained, keeping pins/list stable between incremental reads.
  */
-export function combineViewportPages<T extends { id: string }>(
-  pages: readonly Page<T>[],
-): Page<T> {
+export function combineViewportPages<T extends { id: string }>(pages: readonly Page<T>[]): Page<T> {
   const order: string[] = [];
   const byId = new Map<string, T>();
 
