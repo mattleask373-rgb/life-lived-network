@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useSession } from "@/hooks/use-session";
 import { PersonAvatar } from "@/components/person-avatar";
 import { sendConnectionRequest } from "@/lib/connection.functions";
+import { ReportPublicContent } from "@/components/report-public-content";
 
 import { findSupplyForNeed } from "@/lib/needs.functions";
 import { getWorld } from "@/lib/world.functions";
@@ -96,6 +97,10 @@ function NeedAnswer() {
         </p>
         {need.description ? <p className="mt-3 text-sm">{need.description}</p> : null}
       </header>
+
+      {/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(need.id) ? (
+        <ReportPublicContent subjectType="need" subjectId={need.id} label="need" />
+      ) : null}
 
       {quiet ? (
         <section className="card-paper mt-8 p-5">
