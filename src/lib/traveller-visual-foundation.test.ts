@@ -28,7 +28,7 @@ describe("traveller-facing journey and road-trip surfaces", () => {
     expect(src).toContain('label="Heading to"');
     expect(src).toContain("min-h-11 w-full rounded-2xl");
     expect(src).toContain("aria-pressed={mode === option.id}");
-    expect(src).toContain('aria-label={`Remove ${stop.title}`}');
+    expect(src).toContain("aria-label={`Remove ${stop.title}`}");
     expect(src).toContain('className="min-h-11 rounded-full"');
   });
 });
