@@ -77,6 +77,14 @@ jobs:
         if: ${{ steps.migration-changes.outputs.changed == 'true' }}
         run: supabase db reset --local
 
+      - name: Run local agent control-plane SQL security tests
+        if: ${{ steps.migration-changes.outputs.changed == 'true' }}
+        run: supabase test db --local
+
+      - name: Lint local database functions
+        if: ${{ steps.migration-changes.outputs.changed == 'true' }}
+        run: supabase db lint --local --fail-on error
+
       - name: Stop isolated local Supabase stack
         if: ${{ always() && steps.migration-changes.outputs.changed == 'true' }}
         run: supabase stop --no-backup
