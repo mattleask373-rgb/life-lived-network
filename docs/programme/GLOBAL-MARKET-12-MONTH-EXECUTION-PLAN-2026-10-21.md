@@ -1271,3 +1271,26 @@ PRs #296, #298, #300 and #301 are closed unmerged to eliminate stale/duplicated 
 8. **Market growth last:** evidence-backed opt-in supply and local/legal/support review; complete the provider → eligible listing → scoped discovery → consented request → response → completion/feedback loop; distinguish bot traffic from people; prove repeat use and support capacity before new categories, paid acquisition or geography expansion.
 
 No merges, deployment, hosted database change, permission modification, feed activation, public AI activation, provider outreach or spending were performed in this pass.
+
+
+### Scale correctness follow-up — wide-area opportunity retrieval
+
+**Finding from source review, 22 October 2026:** `src/lib/needs.functions.ts:getMyOpportunities()` expands the signed-in person's home/service-area/through-travel place IDs. If the descendant set exceeds 400 IDs, it disables the `place_id` predicate and reads only the newest 60 public/local-discovery needs globally, then hands those rows to the canonical `findOpportunitiesForPerson()` matcher. The matcher still applies geography/eligibility before presenting results, so this finding is **not evidence of a cross-locality disclosure**. It is a correctness/completeness and potential ranking-bias risk: relevant opportunities in a very wide legitimate area may be silently omitted before the canonical matcher sees them.
+
+**Next-phase task WIDE-AREA-01 — bounded, complete candidate retrieval contract (P1):**
+- Preserve `findSupply()` as the sole need-to-supply discovery authority and `findOpportunitiesForPerson()` as the existing reciprocal opportunity evaluator. Do not create a second ranker.
+- Design and independently review a server-owned locality-scope retrieval contract for large place hierarchies. Compare: (a) recursive hierarchy-aware database query/RPC that respects caller RLS, (b) bounded chunk/keyset reads plus deterministic merge, and (c) explicit partial-result semantics where completeness cannot be proven.
+- No arbitrary first-400 slice, no unbounded full-table read, no silently dropped locality predicate. Do not treat a missing/failed geography read as an empty locality or “no opportunities”.
+- Bound DB work, concurrency and rows; use stable ordering/tie-breakers and a cap/continuation contract. If the cap is reached before all candidates are evaluated, expose that results are partial and give a user-safe way to narrow/widen scope; never assert that a truncated candidate set is complete.
+- Retain public/local-discovery visibility, exclude the signed-in owner's own needs, keep block filtering, and ensure travel-through status is not treated as service-area authority. Travel-specific matches must continue to require the existing opted-in journey/time overlap rules.
+- Add adversarial tests around 400/401 and much larger descendant counts, overlapping stated areas, duplicate need IDs across chunks, ties in `created_at`, failed/partial reads, row-cap behavior, unknown places, blocked owners, expired/withdrawn/private needs, and a relevant match placed after the current global newest 60.
+- Any migration, RPC, index, RLS/grant/default privilege or SECURITY DEFINER implementation requires a separately reviewed proposal and owner approval, a confirmed isolated DB target, and real disposable/preview tests. Supabase Preview currently skips; do not claim hosted query behavior is proven.
+
+**Dependencies:** finish Gate 0 source-of-truth/security authority first; keep this retrieval redesign out of PR #291’s current locality/SEO correctness diff unless an independently reviewed minimal fix is proved necessary. Track it as a separate design/implementation slice after #291 is merged and the canonical place-scope behavior is stable.
+
+### Latest implementation evidence — refresh before acting
+
+- Current main: `a99d09f1517523a7a388245ca6b3d5c1245816cb`.
+- PR #291 current observed head: `aff961724e6f4ab5ea62200636a4851b14abd481`, base current main. On that head, CodeQL and locked-dependency audit passed; Verify and TypeScript analysis were still running at the latest check read; Supabase Preview was skipped. This head includes the exact-count keyset source/place scans, noindex route policy, locality-scope fail-closed behavior and unknown-not-zero open-needs UI wiring. Keep it draft until all exact-head checks, independent review and manual accessibility/mobile/date-line QA pass.
+- PR #294 remains a documentation-only draft and its latest observed head `8865c93e8f2f9113758242607769952175d6190c` passed Verify, CodeQL, TypeScript analysis and the locked dependency audit; Preview skipped. This section changes its head and requires fresh checks.
+- Main ruleset #24946178 remains active but still requires zero approving reviews; deletion protection is not proven. No merge is authorized until an admin changes and re-fetches the ruleset.
