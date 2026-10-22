@@ -67,7 +67,7 @@ function parseRobotsGroups(body: string): ParsedRobotsGroup[] {
   const groups: ParsedRobotsGroup[] = [];
   let current: ParsedRobotsGroup | null = null;
 
-  for (const rawLine of body.split(/\\r?\\n/)) {
+  for (const rawLine of body.split(/\r?\n/)) {
     const line = rawLine.replace(/#.*$/, "").trim();
     if (!line) continue;
     const separator = line.indexOf(":");
@@ -97,7 +97,7 @@ function parseRobotsGroups(body: string): ParsedRobotsGroup[] {
 function groupDisallowsPath(group: ParsedRobotsGroup, path: string): boolean {
   return group.directives.some(({ name, value }) => {
     if (name !== "disallow" || !value) return false;
-    const rule = value.replace(/\\/+$/, "");
+    const rule = value.replace(/\/+$/, "");
     return path === rule || path.startsWith(rule + "/");
   });
 }
