@@ -8,19 +8,29 @@ import {
 } from "@/lib/life-list";
 import { useSession } from "./use-session";
 
+type LifeListMutation = (current: LifeListItem[]) => Promise<LifeListItem[]>;
+
 export function useLifeList() {
   const { user, ready: sessionReady, error: sessionError, retry: retrySession } = useSession();
   const [items, setItems] = useState<LifeListItem[]>([]);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [writeError, setWriteError] = useState(false);
+  const itemsRef = useRef<LifeListItem[]>([]);
   const generation = useRef(0);
+  // Serialize mutations so quick consecutive clicks cannot calculate from the same
+  // stale snapshot or let a slower request overwrite a newer choice.
+  const mutationQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   const load = useCallback(async () => {
+    // A retry/read must not race a pending write and restore an older server view.
+    await mutationQueueRef.current;
     const request = ++generation.current;
     const isCurrent = () => generation.current === request;
 
     setReady(false);
     setLoadError(false);
+    setWriteError(false);
     if (!sessionReady) return;
 
     // A failed session read is not proof that the visitor is signed out.
@@ -35,7 +45,9 @@ export function useLifeList() {
     const userId = user?.id ?? null;
     if (!userId) {
       if (isCurrent()) {
-        setItems(readLifeList());
+        const local = readLifeList();
+        itemsRef.current = local;
+        setItems(local);
         setReady(true);
       }
       return;
@@ -69,12 +81,12 @@ export function useLifeList() {
       if (data === null) throw new Error("The saved list response was incomplete.");
 
       if (!isCurrent()) return;
-      setItems(
-        data.map((row) => ({
-          ref: row.ref,
-          category: row.category as LifeListCategory,
-        })),
-      );
+      const loaded = data.map((row) => ({
+        ref: row.ref,
+        category: row.category as LifeListCategory,
+      }));
+      itemsRef.current = loaded;
+      setItems(loaded);
       setReady(true);
     } catch {
       if (!isCurrent()) return;
@@ -93,43 +105,82 @@ export function useLifeList() {
     };
   }, [load]);
 
+  const enqueueMutation = useCallback((mutate: LifeListMutation): Promise<boolean> => {
+    const operation = mutationQueueRef.current.then(async () => {
+      // Invalidate any read already in flight before applying a confirmed write.
+      generation.current += 1;
+      const current = itemsRef.current;
+      const next = await mutate(current);
+      itemsRef.current = next;
+      setItems(next);
+      setWriteError(false);
+      setLoadError(false);
+      setReady(true);
+      return true;
+    });
+
+    // Consume the rejection and expose it to the component without an unhandled
+    // promise. Failed writes leave the last confirmed state unchanged.
+    const handled = operation.catch(() => {
+      setWriteError(true);
+      setLoadError(true);
+      setReady(true);
+      return false;
+    });
+    mutationQueueRef.current = handled.then(() => undefined);
+    return handled;
+  }, []);
+
   const toggle = useCallback(
-    (ref: string, category: LifeListCategory = "want to do") => {
-      setItems((prev) => {
-        const saved = prev.some((item) => item.ref === ref);
-        const next = saved ? prev.filter((item) => item.ref !== ref) : [...prev, { ref, category }];
+    (ref: string, category: LifeListCategory = "want to do"): Promise<boolean> =>
+      enqueueMutation(async (current) => {
+        const saved = current.some((item) => item.ref === ref);
+        const next = saved
+          ? current.filter((item) => item.ref !== ref)
+          : [...current, { ref, category }];
+
         if (user) {
           if (saved) {
-            void supabase.from("saved_items").delete().eq("ref", ref).eq("user_id", user.id);
+            const { error } = await supabase
+              .from("saved_items")
+              .delete()
+              .eq("ref", ref)
+              .eq("user_id", user.id);
+            if (error) throw error;
           } else {
-            void supabase
+            const { error } = await supabase
               .from("saved_items")
               .upsert({ user_id: user.id, ref, category }, { onConflict: "user_id,ref" });
+            if (error) throw error;
           }
         } else {
           writeLifeList(next);
         }
+
         return next;
-      });
-    },
-    [user],
+      }),
+    [enqueueMutation, user],
   );
 
   const setCategory = useCallback(
-    (ref: string, category: LifeListCategory) => {
-      setItems((prev) => {
-        const next = prev.map((item) => (item.ref === ref ? { ...item, category } : item));
+    (ref: string, category: LifeListCategory): Promise<boolean> =>
+      enqueueMutation(async (current) => {
+        const existing = current.find((item) => item.ref === ref);
+        if (!existing) return current;
+        const next = current.map((item) => (item.ref === ref ? { ...item, category } : item));
+
         if (user) {
-          void supabase
+          const { error } = await supabase
             .from("saved_items")
             .upsert({ user_id: user.id, ref, category }, { onConflict: "user_id,ref" });
+          if (error) throw error;
         } else {
           writeLifeList(next);
         }
+
         return next;
-      });
-    },
-    [user],
+      }),
+    [enqueueMutation, user],
   );
 
   const retryLoad = () => {
@@ -145,6 +196,7 @@ export function useLifeList() {
     ids: items.map((item) => item.ref),
     ready,
     loadError,
+    writeError,
     retryLoad,
     toggle,
     setCategory,

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { LAYERS, QUALITY_LABEL, relatedEntries, type WorldEntry } from "@/lib/world-data";
 import {
@@ -29,7 +29,7 @@ export function EntrySheet({
   /** The entries this screen is already showing; related things come from here. */
   world?: WorldEntry[];
   saved: boolean;
-  onSave: (id: string) => void;
+  onSave: (id: string) => void | Promise<void | boolean>;
   onClose: () => void;
   onOpenEntry: (entry: WorldEntry) => void;
 }) {
@@ -41,7 +41,22 @@ export function EntrySheet({
   // Remember what had focus when the sheet first opened, so closing it puts
   // keyboard and screen-reader users back where they were. The sheet unmounts
   // on close, so the dialog's own focus return has nothing to return to.
+  const [saveError, setSaveError] = useState(false);
+  const [saving, setSaving] = useState(false);
   const opener = useRef<HTMLElement | null>(null);
+
+  const saveEntry = async () => {
+    setSaving(true);
+    setSaveError(false);
+    try {
+      const result = await onSave(entry.id);
+      if (result === false) setSaveError(true);
+    } catch {
+      setSaveError(true);
+    } finally {
+      setSaving(false);
+    }
+  };
   useEffect(() => {
     opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     return () => {
@@ -279,14 +294,16 @@ export function EntrySheet({
           <div className="mt-5 flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => onSave(entry.id)}
-              className={`focus-ink min-h-11 rounded-full px-4 py-2 text-sm transition-colors ${
+              onClick={() => void saveEntry()}
+              disabled={saving}
+              aria-busy={saving}
+              className={`focus-ink min-h-11 rounded-full px-4 py-2 text-sm transition-colors disabled:cursor-wait disabled:opacity-60 ${
                 saved
                   ? "border border-primary bg-primary/10 text-primary"
                   : "bg-primary text-primary-foreground"
               }`}
             >
-              {saved ? "On your life list" : "Why not — save it"}
+              {saving ? "Saving…" : saved ? "On your life list" : "Why not — save it"}
             </button>
             <button
               type="button"
@@ -296,6 +313,12 @@ export function EntrySheet({
               Put the phone away and go
             </button>
           </div>
+
+          {saveError ? (
+            <p role="alert" className="mt-3 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm">
+              That change could not be saved. Your last confirmed list is still here; please try again.
+            </p>
+          ) : null}
 
           {related.length ? (
             <div className="mt-6 border-t border-border pt-4">
