@@ -4,11 +4,7 @@ import { clusterMapNeeds, placeNeedsForMap, type MapNeed } from "./map-needs";
 import type { MapView } from "./map-view";
 
 const view: MapView = { lat: 0, lng: 0, spanLat: 10, spanLng: 14 };
-const need = (
-  id: string,
-  lat: number | null,
-  lng: number | null,
-): MapNeed => ({
+const need = (id: string, lat: number | null, lng: number | null): MapNeed => ({
   id,
   title: `Help request ${id}`,
   placeText: "Town centre",
