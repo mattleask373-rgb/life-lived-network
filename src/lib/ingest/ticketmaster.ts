@@ -163,7 +163,11 @@ interface LocalWallTime {
  * reject gaps and repeated wall times around daylight-saving transitions:
  * without an offset from the source there is no safe instant to invent.
  */
-function localWallTimeToInstant(localDate: string, localTime: string, timezone: string): string | null {
+function localWallTimeToInstant(
+  localDate: string,
+  localTime: string,
+  timezone: string,
+): string | null {
   const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(localDate);
   const timeMatch = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(localTime);
   if (!dateMatch || !timeMatch || !timezone) return null;
