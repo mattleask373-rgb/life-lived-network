@@ -5,6 +5,7 @@ import { check, sleep } from "k6";
 const rawBaseUrl = (__ENV.LOAD_TEST_BASE_URL || "").trim();
 const targetEnvironment = (__ENV.LOAD_TEST_ENV || "").trim().toLowerCase();
 const explicitlyApproved = (__ENV.LOAD_TEST_APPROVED || "") === "YES_I_APPROVE_STAGING_LOAD";
+const parseOnly = (__ENV.LOAD_TEST_PARSE_ONLY || "") === "1";
 
 function stop(message) {
   throw new Error(`[load-test safety stop] ${message}`);
@@ -20,26 +21,23 @@ if (!["staging", "local"].includes(targetEnvironment)) {
   stop("LOAD_TEST_ENV must be exactly 'staging' or 'local'.");
 }
 
-let parsedBaseUrl;
-try {
-  parsedBaseUrl = new URL(rawBaseUrl);
-} catch {
-  stop("LOAD_TEST_BASE_URL must be a valid absolute URL.");
+// Keep this validation independent of browser-only URL globals: k6 inspection
+// must be able to parse the script in CI without reaching the network.
+const originMatch = /^(https?):\/\/([^/?#]+)\/?$/i.exec(rawBaseUrl);
+if (!originMatch) {
+  stop("LOAD_TEST_BASE_URL must be an absolute http(s) origin with no path, query or fragment.");
 }
-
-if (parsedBaseUrl.username || parsedBaseUrl.password) {
+const protocol = `${originMatch[1].toLowerCase()}:`;
+const authority = originMatch[2];
+if (authority.includes("@")) {
   stop("credentials in LOAD_TEST_BASE_URL are not permitted.");
 }
-if (parsedBaseUrl.search || parsedBaseUrl.hash) {
-  stop("use an origin only; query strings and fragments are not permitted.");
-}
-if (parsedBaseUrl.pathname !== "/" && parsedBaseUrl.pathname !== "") {
-  stop("use the origin only; the test owns its request paths.");
+const hostname = authority.split(":")[0].toLowerCase().replace(/\.$/, "");
+if (!hostname || !/^[a-z0-9.-]+$/.test(hostname)) {
+  stop("LOAD_TEST_BASE_URL must use a valid DNS hostname or supported local IP.");
 }
 
-const hostname = parsedBaseUrl.hostname.toLowerCase().replace(/\.$/, "");
 const knownProductionHosts = new Set(["life-lived-network.lovable.app"]);
-
 if (knownProductionHosts.has(hostname)) {
   stop("the known production hostname is blocked.");
 }
@@ -50,7 +48,7 @@ if (targetEnvironment === "local") {
     stop("local mode only permits localhost or 127.0.0.1.");
   }
 } else {
-  if (isLocalHost || parsedBaseUrl.protocol !== "https:") {
+  if (isLocalHost || protocol !== "https:") {
     stop("staging mode requires HTTPS on a non-local hostname.");
   }
   if (
@@ -58,9 +56,12 @@ if (targetEnvironment === "local") {
   ) {
     stop("staging hostname must contain a staging/preview/test/QA/performance label.");
   }
+  if (hostname.endsWith(".invalid") && !parseOnly) {
+    stop("reserved .invalid hostnames are permitted only for no-traffic script inspection.");
+  }
 }
 
-const BASE_URL = parsedBaseUrl.origin;
+const BASE_URL = `${protocol}//${authority.toLowerCase()}`;
 
 export const options = {
   scenarios: {
@@ -91,6 +92,12 @@ const publicRoutes = [
 ];
 
 export default function () {
+  // The CI inspection profile must never issue a request, even if someone
+  // accidentally uses k6 run rather than k6 inspect with its explicit flag.
+  if (parseOnly) {
+    stop("LOAD_TEST_PARSE_ONLY is inspection-only; execution is blocked before any request.");
+  }
+
   const route = publicRoutes[(__VU + __ITER) % publicRoutes.length];
   const response = http.get(`${BASE_URL}${route.path}`, {
     timeout: "10s",
