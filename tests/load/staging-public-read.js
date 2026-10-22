@@ -3,7 +3,7 @@ import http from "k6/http";
 import { check, sleep } from "k6";
 
 function stop(message) {
-  throw new Error(\`[load-test safety stop] \${message}\`);
+  throw new Error("[load-test safety stop] " + message);
 }
 
 // k6 inspect imports this module to parse it but doesn't run the default function.
