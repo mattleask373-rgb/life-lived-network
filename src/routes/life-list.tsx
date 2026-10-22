@@ -1,4 +1,4 @@
-import { publicPage } from "@/lib/seo";
+import { privatePage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { EntryCard } from "@/components/entry-card";

@@ -8,6 +8,7 @@ import {
   PRIVATE_PATHS,
   sitemapIndexXml,
   sitemapXml,
+  robotsTxt,
   SITE_ORIGIN,
 } from "./seo";
 
