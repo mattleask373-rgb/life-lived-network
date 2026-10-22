@@ -18,6 +18,7 @@ export function useLifeList() {
   const [writeError, setWriteError] = useState(false);
   const itemsRef = useRef<LifeListItem[]>([]);
   const generation = useRef(0);
+  const mounted = useRef(false);
   // Serialize mutations so quick consecutive clicks cannot calculate from the same
   // stale snapshot or let a slower request overwrite a newer choice.
   const mutationQueueRef = useRef<Promise<void>>(Promise.resolve());
@@ -25,8 +26,9 @@ export function useLifeList() {
   const load = useCallback(async () => {
     // A retry/read must not race a pending write and restore an older server view.
     await mutationQueueRef.current;
+    if (!mounted.current) return;
     const request = ++generation.current;
-    const isCurrent = () => generation.current === request;
+    const isCurrent = () => mounted.current && generation.current === request;
 
     setReady(false);
     setLoadError(false);
@@ -98,33 +100,38 @@ export function useLifeList() {
   }, [sessionReady, sessionError, user?.id]);
 
   useEffect(() => {
+    mounted.current = true;
     void load();
     return () => {
+      mounted.current = false;
       // Ignore responses from a previous account or an obsolete retry.
       generation.current += 1;
     };
   }, [load]);
 
   const enqueueMutation = useCallback((mutate: LifeListMutation): Promise<boolean> => {
+    let request = 0;
     const operation = mutationQueueRef.current.then(async () => {
       // Invalidate any read already in flight before applying a confirmed write.
-      generation.current += 1;
+      request = ++generation.current;
       const current = itemsRef.current;
       const next = await mutate(current);
+      // An in-flight write may finish after this hook unmounts.
+      if (!mounted.current || generation.current !== request) return true;
       itemsRef.current = next;
       setItems(next);
       setWriteError(false);
-      setLoadError(false);
       setReady(true);
       return true;
     });
 
-    // Consume the rejection and expose it to the component without an unhandled
-    // promise. Failed writes leave the last confirmed state unchanged.
+    // Keep read errors and write errors separate, and never call state setters
+    // after unmount. A failed write leaves the last confirmed state unchanged.
     const handled = operation.catch(() => {
-      setWriteError(true);
-      setLoadError(true);
-      setReady(true);
+      if (mounted.current && generation.current === request) {
+        setWriteError(true);
+        setReady(true);
+      }
       return false;
     });
     mutationQueueRef.current = handled.then(() => undefined);
