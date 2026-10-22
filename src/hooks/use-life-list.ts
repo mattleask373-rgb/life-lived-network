@@ -9,12 +9,7 @@ import {
 import { useSession } from "./use-session";
 
 export function useLifeList() {
-  const {
-    user,
-    ready: sessionReady,
-    error: sessionError,
-    retry: retrySession,
-  } = useSession();
+  const { user, ready: sessionReady, error: sessionError, retry: retrySession } = useSession();
   const [items, setItems] = useState<LifeListItem[]>([]);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -102,9 +97,7 @@ export function useLifeList() {
     (ref: string, category: LifeListCategory = "want to do") => {
       setItems((prev) => {
         const saved = prev.some((item) => item.ref === ref);
-        const next = saved
-          ? prev.filter((item) => item.ref !== ref)
-          : [...prev, { ref, category }];
+        const next = saved ? prev.filter((item) => item.ref !== ref) : [...prev, { ref, category }];
         if (user) {
           if (saved) {
             void supabase.from("saved_items").delete().eq("ref", ref).eq("user_id", user.id);
