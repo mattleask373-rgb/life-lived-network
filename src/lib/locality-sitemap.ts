@@ -19,6 +19,8 @@ export interface PublicListingSitemapRow {
   id: string;
   place_id: string | null;
   demonstration: boolean | null;
+  /** False when canonical public-discovery policy excludes this raw row. */
+  publiclyEligible?: boolean;
 }
 
 export interface LocalitySitemapBuildOptions {
@@ -90,7 +92,9 @@ export function indexableLocalityPaths(
     // Do not substitute unrelated global rows, which could create a false SEO claim.
     if ((placeCount.get(place.id) ?? 1) > LOCALITY_FILTER_CAP) continue;
     const firstPage = rowsByPlace.get(place.id) ?? [];
-    const realCount = firstPage.filter((row) => row.demonstration !== true).length;
+    const realCount = firstPage.filter(
+      (row) => row.publiclyEligible !== false && row.demonstration !== true,
+    ).length;
     if (realCount < 3) continue;
 
     candidates.push(localityPath({ slug: place.slug, countrySegment: code }));
