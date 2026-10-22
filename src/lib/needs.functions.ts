@@ -27,6 +27,12 @@ import { rowToEntry, type ListingRow } from "./listings";
 import { findSupply, type PersonCandidate, type SupplyAnswer } from "./supply-engine";
 import { freshness } from "./capability-freshness";
 import { needGeography } from "./geo-scope";
+import {
+  chunkOpportunityPlaceIds,
+  mergeNewestNeedRows,
+  OPPORTUNITY_CANDIDATES_PER_CHUNK,
+  OpportunityScopeTooWideError,
+} from "./opportunity-query";
 import type { JourneyContext, JourneyVisibility, JourneyStatus } from "./journey-context";
 
 export interface NeedDraft {
@@ -420,18 +426,28 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<PersonOpportunity[]> => {
     const { supabase, userId } = context;
-    const [{ data: profile }, { data: caps }, { data: areas }, { data: windows }, { data: prefs }] =
-      await Promise.all([
-        supabase
-          .from("profiles")
-          .select("display_name, photo_url, location, place_id, wants_to_learn")
-          .eq("id", userId)
-          .maybeSingle(),
-        supabase.from("person_capabilities").select("*").eq("user_id", userId),
-        supabase.from("service_areas").select("place_id, relation").eq("user_id", userId),
-        supabase.from("availability_windows").select("starts_at, ends_at").eq("user_id", userId),
-        supabase.from("opportunity_preferences").select("preference").eq("user_id", userId),
-      ]);
+    const [profileResult, capsResult, areasResult, windowsResult, prefsResult] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("display_name, photo_url, location, place_id, wants_to_learn")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase.from("person_capabilities").select("*").eq("user_id", userId),
+      supabase.from("service_areas").select("place_id, relation").eq("user_id", userId),
+      supabase.from("availability_windows").select("starts_at, ends_at").eq("user_id", userId),
+      supabase.from("opportunity_preferences").select("preference").eq("user_id", userId),
+    ]);
+    if (profileResult.error) throw profileResult.error;
+    if (capsResult.error) throw capsResult.error;
+    if (areasResult.error) throw areasResult.error;
+    if (windowsResult.error) throw windowsResult.error;
+    if (prefsResult.error) throw prefsResult.error;
+
+    const profile = profileResult.data;
+    const caps = capsResult.data;
+    const areas = areasResult.data;
+    const windows = windowsResult.data;
+    const prefs = prefsResult.data;
 
     const serviceAreaPlaceIds = (areas ?? [])
       .filter((a) => a.relation !== "travelling_through")
@@ -453,41 +469,61 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
     const { descendantIdsOf } = await import("./places");
     const index = await loadPlaceIndex(supabase);
     const placeIds = [...new Set(stated.flatMap((id) => descendantIdsOf(index, id)))];
-    // Somebody who covers a whole nation names more localities than belong in
-    // one filter. Filtering by a slice of them would hide real needs inside the
-    // area they said they cover, so at that width the locality filter is
-    // dropped instead — the row limit below still bounds the read.
-    const wideArea = placeIds.length > 400;
+    let placeChunks: string[][];
+    try {
+      placeChunks = chunkOpportunityPlaceIds(placeIds);
+    } catch (error) {
+      if (error instanceof OpportunityScopeTooWideError) {
+        throw new DataError("SCOPE_TOO_WIDE", error.message);
+      }
+      throw error;
+    }
 
     const geographies = new Map<string, ReturnType<typeof needGeography>>();
 
     // A block works both ways, whoever set it.
-    const { data: blockRows } = await supabase
+    const { data: blockRows, error: blocksError } = await supabase
       .from("user_blocks")
       .select("blocker_id, blocked_id")
       .or(`blocker_id.eq.${userId},blocked_id.eq.${userId}`);
+    if (blocksError) throw blocksError;
     const blockedIds = new Set(
       (blockRows ?? []).map((row) => (row.blocker_id === userId ? row.blocked_id : row.blocker_id)),
     );
 
-    let needQuery = supabase
-      .from("needs")
-      .select("*")
-      .eq("status", "open")
-      .in("visibility", ["public", "local_discovery"])
-      .neq("creator_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(60);
-    if (!wideArea) needQuery = needQuery.in("place_id", placeIds);
-    const { data: needRows, error } = await needQuery;
-    if (error) throw error;
+    // Keep every query locality-scoped. Broad areas use one bounded newest-first
+    // window per chunk, which is merged before the canonical evaluator runs.
+    const needPages = await Promise.all(
+      placeChunks.map(async (chunk) => {
+        const { data: rows, error: needsError } = await supabase
+          .from("needs")
+          .select("*")
+          .eq("status", "open")
+          .in("visibility", ["public", "local_discovery"])
+          .neq("creator_id", userId)
+          .in("place_id", chunk)
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: true })
+          .limit(OPPORTUNITY_CANDIDATES_PER_CHUNK);
+        if (needsError) throw needsError;
+        return rows ?? [];
+      }),
+    );
+    // Do not truncate candidate collection to a single global newest-60 window:
+    // that would let high-volume places crowd out smaller places before matching.
+    // At most 13 chunks × 60 rows = 780 candidates are considered.
+    const needRows = mergeNewestNeedRows(
+      needPages,
+      placeChunks.length * OPPORTUNITY_CANDIDATES_PER_CHUNK,
+    );
 
-    const { data: journeyRows } = await supabase
+    const { data: journeyRows, error: journeysError } = await supabase
       .from("journeys")
       .select("*, journey_places(*)")
       .eq("owner_id", userId)
       .eq("status", "active")
       .limit(20);
+    if (journeysError) throw journeysError;
     const journeys: JourneyContext[] = (journeyRows ?? []).map((journey) => ({
       id: journey.id,
       ownerId: journey.owner_id,
