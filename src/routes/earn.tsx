@@ -98,13 +98,13 @@ function EarnPage() {
               : "These are possible paid matches from a bounded recent search."}
           </p>
           <p className="mt-1 text-muted-foreground">
-            {opps.data.cappedChunks} part{opps.data.cappedChunks === 1 ? " of the search returned" : "s of the search returned"}
-            {" "}more open asks than the safe window can examine. Older asks may exist outside the results checked.
+            At least {opps.data.cappedChunks} part{opps.data.cappedChunks === 1 ? "" : "s"} of this
+            search reached the candidate limit, so older asks may exist beyond the results checked.
             Narrow your home or service areas in your{" "}
             <Link to="/profile" className="focus-ink underline">
               profile
-            </Link>
-            {" "}to search a smaller scope.
+            </Link>{" "}
+            to search a smaller scope.
           </p>
         </div>
       ) : null}
