@@ -17,6 +17,31 @@ export class SourceRecordScanLimitError extends Error {
   }
 }
 
+/**
+ * Verify that pagination returned the exact number of matching observations.
+ * A server-side row cap can otherwise make a short first page look complete.
+ */
+export function assertCompleteSourceRecordScan<T>(
+  rows: readonly T[],
+  expectedCount: number | null,
+  maximumRows = SOURCE_RECORD_SCAN_LIMIT,
+): T[] {
+  if (
+    typeof expectedCount !== "number" ||
+    !Number.isSafeInteger(expectedCount) ||
+    expectedCount < 0
+  ) {
+    throw new Error("Exact source-record count is unavailable");
+  }
+  if (expectedCount > maximumRows) throw new SourceRecordScanLimitError(maximumRows);
+  if (rows.length !== expectedCount) {
+    throw new Error(
+      `Source-record scan incomplete: expected ${expectedCount} rows, received ${rows.length}`,
+    );
+  }
+  return [...rows];
+}
+
 export async function readBoundedSourceRecordPages<T extends { id: string }>(
   maximumRows: number,
   pageSize: number,
