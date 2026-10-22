@@ -1,7 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { cleanInput, draftInputSchema, MAX_INPUT, tidyDraft } from "./draft-assist";
+import {
+  cleanInput,
+  draftInputSchema,
+  isDraftAssistDisabled,
+  MAX_INPUT,
+  tidyDraft,
+} from "./draft-assist";
 
 describe("draft assist", () => {
+  it("uses an explicit truthy environment value as an emergency stop", () => {
+    expect(isDraftAssistDisabled("true")).toBe(true);
+    expect(isDraftAssistDisabled(" TRUE ")).toBe(true);
+    expect(isDraftAssistDisabled(undefined)).toBe(false);
+    expect(isDraftAssistDisabled("false")).toBe(false);
+    expect(isDraftAssistDisabled("1")).toBe(false);
+  });
+
   it("normalises whitespace and caps input length", () => {
     expect(cleanInput("  I \n can \t help  ")).toBe("I can help");
     expect(cleanInput("a".repeat(5000)).length).toBe(MAX_INPUT);

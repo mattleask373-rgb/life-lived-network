@@ -1,7 +1,7 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { Output, streamText } from "ai";
 import { createLovableAiGatewayRunIdFetch } from "./ai/run-id";
-import { DRAFT_INSTRUCTIONS, draftSchema, tidyDraft } from "./draft-assist";
+import { DRAFT_INSTRUCTIONS, draftSchema, isDraftAssistDisabled, tidyDraft } from "./draft-assist";
 import type { DraftResult } from "./draft-assist.functions";
 
 const MODEL = "openai/gpt-6-astra";
@@ -12,6 +12,14 @@ function statusOf(err: unknown): number | null {
 }
 
 export async function generateDraft(text: string, hint: string | null): Promise<DraftResult> {
+  // Check before constructing a provider client or making any billable call.
+  if (isDraftAssistDisabled(process.env["DRAFT_ASSIST_DISABLED"])) {
+    return {
+      ok: false,
+      error: "Drafting help is paused right now. You can still write it yourself.",
+    };
+  }
+
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) return { ok: false, error: "Drafting help isn't set up right now." };
   const runIdFetch = createLovableAiGatewayRunIdFetch();
