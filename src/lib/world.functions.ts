@@ -181,6 +181,7 @@ async function readWorld(
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const listingIds = [...new Set(imported.map((r) => r.id))];
       let sourceRecords: {
+        id: string;
         listing_id: string | null;
         source_id: string;
         source_url: string | null;
@@ -193,18 +194,17 @@ async function readWorld(
         sourceRecords = await readBoundedSourceRecordPages(
           SOURCE_RECORD_SCAN_LIMIT,
           SOURCE_RECORD_SCAN_PAGE_SIZE,
-          async (from, to) => {
-            const { data, error } = await supabaseAdmin
+          async (afterId, limit) => {
+            let query = supabaseAdmin
               .from("source_records")
               .select(
-                "listing_id, source_id, source_url, source_state, last_seen_at, source_updated_at",
+                "id, listing_id, source_id, source_url, source_state, last_seen_at, source_updated_at",
               )
               .in("listing_id", listingIds)
-              .order("last_seen_at", { ascending: false, nullsFirst: false })
-              .order("listing_id", { ascending: true })
-              .order("source_id", { ascending: true })
-              .range(from, to)
-              .abortSignal(signal);
+              .order("id", { ascending: true })
+              .limit(limit);
+            if (afterId !== null) query = query.gt("id", afterId);
+            const { data, error } = await query.abortSignal(signal);
             throwIfAborted(signal);
             if (error) throw error;
             return (data ?? []) as typeof sourceRecords;

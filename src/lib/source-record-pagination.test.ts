@@ -5,60 +5,92 @@ import {
   SourceRecordScanLimitError,
 } from "./source-record-pagination";
 
+type Row = { id: string; lastSeenAt: number };
+
+function orderedRows(count: number): Row[] {
+  return Array.from({ length: count }, (_, index) => ({
+    id: String(index + 1).padStart(4, "0"),
+    lastSeenAt: index,
+  }));
+}
+
 describe("bounded source-record pagination", () => {
-  it("reads adjacent stable pages until a short page proves the scan is complete", async () => {
-    const source = Array.from({ length: 7 }, (_, index) => index);
-    const calls: Array<[number, number]> = [];
-    const rows = await readBoundedSourceRecordPages(10, 3, async (from, to) => {
-      calls.push([from, to]);
-      return source.slice(from, to + 1);
+  it("reads adjacent keyset pages by immutable ID until a short page proves completion", async () => {
+    const source = orderedRows(7);
+    const calls: Array<[string | null, number]> = [];
+    const rows = await readBoundedSourceRecordPages(10, 3, async (afterId, limit) => {
+      calls.push([afterId, limit]);
+      return source.filter((row) => afterId === null || row.id > afterId).slice(0, limit);
     });
 
-    expect(rows).toEqual(source);
-    expect(calls).toEqual([
-      [0, 2],
-      [3, 5],
-      [6, 8],
-    ]);
+    expect(rows.map((row) => row.id)).toEqual(source.map((row) => row.id));
+    expect(calls).toEqual([[null, 3], ["0003", 3], ["0006", 3]]);
   });
 
   it("probes cap plus one and rejects an incomplete scan instead of returning partial evidence", async () => {
-    const source = Array.from({ length: 6 }, (_, index) => index);
-    const calls: Array<[number, number]> = [];
+    const source = orderedRows(6);
+    const calls: Array<[string | null, number]> = [];
     await expect(
-      readBoundedSourceRecordPages(5, 2, async (from, to) => {
-        calls.push([from, to]);
-        return source.slice(from, to + 1);
+      readBoundedSourceRecordPages(5, 2, async (afterId, limit) => {
+        calls.push([afterId, limit]);
+        return source.filter((row) => afterId === null || row.id > afterId).slice(0, limit);
       }),
     ).rejects.toBeInstanceOf(SourceRecordScanLimitError);
-    expect(calls).toEqual([
-      [0, 1],
-      [2, 3],
-      [4, 5],
-    ]);
+    expect(calls).toEqual([[null, 2], ["0002", 2], ["0004", 2]]);
   });
 
-  it("accepts exactly the cap only after an empty sentinel read proves completeness", async () => {
-    const source = [0, 1, 2, 3, 4];
-    const calls: Array<[number, number]> = [];
-    const rows = await readBoundedSourceRecordPages(5, 2, async (from, to) => {
-      calls.push([from, to]);
-      return source.slice(from, to + 1);
+  it("accepts exactly the cap when the sentinel query proves there are no more rows", async () => {
+    const source = orderedRows(5);
+    const calls: Array<[string | null, number]> = [];
+    const rows = await readBoundedSourceRecordPages(5, 2, async (afterId, limit) => {
+      calls.push([afterId, limit]);
+      return source.filter((row) => afterId === null || row.id > afterId).slice(0, limit);
     });
 
-    expect(rows).toEqual(source);
-    expect(calls).toEqual([
-      [0, 1],
-      [2, 3],
-      [4, 5],
-    ]);
+    expect(rows.map((row) => row.id)).toEqual(source.map((row) => row.id));
+    expect(calls).toEqual([[null, 2], ["0002", 2], ["0004", 2]]);
+  });
+
+  it("does not let changes to mutable last-seen values reorder the existing cursor scan", async () => {
+    const source = orderedRows(5);
+    const calls: Array<string | null> = [];
+    const rows = await readBoundedSourceRecordPages(10, 2, async (afterId, limit) => {
+      calls.push(afterId);
+      const page = source
+        .filter((row) => afterId === null || row.id > afterId)
+        .sort((a, b) => a.id.localeCompare(b.id))
+        .slice(0, limit);
+      if (afterId === null) {
+        // Simulate ingestion updating mutable observation timestamps after page one.
+        source[2]!.lastSeenAt = 10_000;
+        source[3]!.lastSeenAt = -10_000;
+        source[4]!.lastSeenAt = 20_000;
+      }
+      return page;
+    });
+
+    expect(rows.map((row) => row.id)).toEqual(["0001", "0002", "0003", "0004", "0005"]);
+    expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);
+    expect(calls).toEqual([null, "0002", "0004"]);
+  });
+
+  it("rejects missing, duplicate, or out-of-order cursor IDs", async () => {
+    await expect(
+      readBoundedSourceRecordPages(10, 2, async () => [{ id: "" }]),
+    ).rejects.toThrow(/missing cursor ID/i);
+    await expect(
+      readBoundedSourceRecordPages(10, 2, async () => [{ id: "b" }, { id: "a" }]),
+    ).rejects.toThrow(/strictly increasing/i);
+    await expect(
+      readBoundedSourceRecordPages(10, 1, async () => [{ id: "a" }]),
+    ).rejects.toThrow(/strictly increasing/i);
   });
 
   it("propagates failed pages rather than silently treating partial results as complete", async () => {
     await expect(
-      readBoundedSourceRecordPages(10, 2, async (from) => {
-        if (from === 2) throw new Error("read failed");
-        return [from, from + 1];
+      readBoundedSourceRecordPages(10, 2, async (afterId) => {
+        if (afterId === "0002") throw new Error("read failed");
+        return orderedRows(4).filter((row) => afterId === null || row.id > afterId).slice(0, 2);
       }),
     ).rejects.toThrow("read failed");
   });

@@ -1,9 +1,11 @@
 /**
- * Read linked source observations in stable bounded pages.
+ * Read source observations in stable, bounded keyset pages.
  *
- * The extra sentinel row distinguishes a complete scan at the configured cap
- * from a truncated scan. Callers must treat overflow as incomplete evidence and
- * fail closed rather than trust whatever subset arrived first.
+ * source_records.id is an immutable UUID primary key. Use it as the cursor
+ * rather than mutable last_seen_at, which can reorder rows between HTTP reads.
+ * The cap+1 sentinel detects overflow. Keyset paging avoids offset shifts from
+ * updates to sort fields; it does not provide a transaction-wide DB snapshot,
+ * so concurrent inserts/deletes may still require a later reconciliation pass.
  */
 export const SOURCE_RECORD_SCAN_LIMIT = 5_000;
 export const SOURCE_RECORD_SCAN_PAGE_SIZE = 500;
@@ -15,10 +17,10 @@ export class SourceRecordScanLimitError extends Error {
   }
 }
 
-export async function readBoundedSourceRecordPages<T>(
+export async function readBoundedSourceRecordPages<T extends { id: string }>(
   maximumRows: number,
   pageSize: number,
-  readPage: (from: number, to: number) => Promise<readonly T[]>,
+  readPage: (afterId: string | null, limit: number) => Promise<readonly T[]>,
 ): Promise<T[]> {
   if (
     !Number.isSafeInteger(maximumRows) ||
@@ -32,19 +34,35 @@ export async function readBoundedSourceRecordPages<T>(
 
   const sentinelLimit = maximumRows + 1;
   const rows: T[] = [];
-  for (let from = 0; from < sentinelLimit; from += pageSize) {
-    const to = Math.min(from + pageSize - 1, sentinelLimit - 1);
-    const page = await readPage(from, to);
-    const requestedRows = to - from + 1;
-    if (page.length > requestedRows) {
-      throw new Error("Source-record page exceeded its requested range");
-    }
-    rows.push(...page);
+  let afterId: string | null = null;
 
+  while (rows.length < sentinelLimit) {
+    const requestedRows = Math.min(pageSize, sentinelLimit - rows.length);
+    const page = await readPage(afterId, requestedRows);
+
+    if (page.length > requestedRows) {
+      throw new Error("Source-record page exceeded its requested limit");
+    }
+
+    let previousId = afterId;
+    for (const row of page) {
+      if (typeof row.id !== "string" || row.id.length === 0) {
+        throw new Error("Source-record page contains a missing cursor ID");
+      }
+      if (previousId !== null && row.id <= previousId) {
+        throw new Error("Source-record page IDs must be strictly increasing");
+      }
+      previousId = row.id;
+    }
+
+    rows.push(...page);
     if (rows.length > maximumRows) {
       throw new SourceRecordScanLimitError(maximumRows);
     }
     if (page.length < requestedRows) break;
+
+    afterId = page[page.length - 1]!.id;
   }
+
   return rows;
 }
