@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { PLACE_SCAN_LIMIT, PlaceScanLimitError, readBoundedPlacePages } from "./bounded-place-scan";
+import {
+  assertCompletePlaceScan,
+  PLACE_SCAN_LIMIT,
+  PlaceScanLimitError,
+  readBoundedPlacePages,
+} from "./bounded-place-scan";
 
 type Row = { id: string; name: string };
 
@@ -34,6 +39,17 @@ describe("bounded canonical-place scan", () => {
         source.filter((item) => afterId === null || item.id > afterId).slice(0, limit),
       ),
     ).rejects.toBeInstanceOf(PlaceScanLimitError);
+  });
+
+  it("requires an exact count to distinguish complete data from server-capped pages", () => {
+    const complete = rows(3);
+    expect(assertCompletePlaceScan(complete, 3)).toEqual(complete);
+    expect(() => assertCompletePlaceScan(complete, null)).toThrow(/exact place count/i);
+    expect(() => assertCompletePlaceScan(complete.slice(0, 2), 3)).toThrow(/scan incomplete/i);
+  });
+
+  it("rejects an exact place count above the configured safety cap", () => {
+    expect(() => assertCompletePlaceScan([], 6, 5)).toThrow(PlaceScanLimitError);
   });
 
   it("accepts exactly the cap when a final short page proves completion", async () => {
