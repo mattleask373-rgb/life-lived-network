@@ -36,7 +36,7 @@ describe("bounded canonical-place scan", () => {
     ).rejects.toBeInstanceOf(PlaceScanLimitError);
   });
 
-  it("accepts exactly the cap when a final empty sentinel request proves completion", async () => {
+  it("accepts exactly the cap when a final short page proves completion", async () => {
     const source = rows(5);
     const calls: Array<[string | null, number]> = [];
     const result = await readBoundedPlacePages(5, 2, async (afterId, limit) => {
