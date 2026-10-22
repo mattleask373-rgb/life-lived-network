@@ -45,23 +45,30 @@ select ok(
 );
 
 select ok(
-  not has_table_privilege('anon', 'public.agent_events', 'SELECT')
-  and not has_table_privilege('anon', 'public.agent_events', 'INSERT')
-  and not has_table_privilege('authenticated', 'public.agent_events', 'SELECT')
-  and not has_table_privilege('authenticated', 'public.agent_events', 'INSERT')
-  and not has_table_privilege('anon', 'public.agent_tasks', 'SELECT')
-  and not has_table_privilege('anon', 'public.agent_tasks', 'INSERT')
-  and not has_table_privilege('authenticated', 'public.agent_tasks', 'SELECT')
-  and not has_table_privilege('authenticated', 'public.agent_tasks', 'INSERT')
-  and not has_table_privilege('anon', 'public.agent_task_completions', 'SELECT')
-  and not has_table_privilege('authenticated', 'public.agent_task_completions', 'SELECT')
-  and not has_table_privilege('anon', 'public.agent_execution_runs', 'SELECT')
-  and not has_table_privilege('authenticated', 'public.agent_execution_runs', 'SELECT')
-  and not has_table_privilege('anon', 'public.agent_execution_attempts', 'SELECT')
-  and not has_table_privilege('authenticated', 'public.agent_execution_attempts', 'SELECT')
-  and not has_table_privilege('anon', 'public.agent_execution_audit', 'SELECT')
-  and not has_table_privilege('authenticated', 'public.agent_execution_audit', 'SELECT'),
-  'anon and authenticated have no direct read/insert grants on control-plane tables'
+  (
+    select bool_and(
+      not has_table_privilege(r.role_name, t.table_name, p.privilege)
+    )
+    from (values ('anon'), ('authenticated')) as r(role_name)
+    cross join (values
+      ('public.agent_events'),
+      ('public.agent_tasks'),
+      ('public.agent_task_completions'),
+      ('public.agent_execution_runs'),
+      ('public.agent_execution_attempts'),
+      ('public.agent_execution_audit')
+    ) as t(table_name)
+    cross join (values
+      ('SELECT'),
+      ('INSERT'),
+      ('UPDATE'),
+      ('DELETE'),
+      ('TRUNCATE'),
+      ('REFERENCES'),
+      ('TRIGGER')
+    ) as p(privilege)
+  ),
+  'anon and authenticated have no direct table privileges on the control-plane schema'
 );
 
 select ok(
