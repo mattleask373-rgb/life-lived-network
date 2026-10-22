@@ -1,6 +1,8 @@
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 
+import { SERVICE_SITEMAP_SHARD_PATHS } from "../src/lib/sitemap-shards";
+
 export const DEFAULT_SEO_SMOKE_ORIGIN = "https://life-lived-network.lovable.app";
 
 const PUBLIC_PATHS = ["/", "/journey", "/road-trip", "/life-list", "/give", "/make"];
@@ -17,11 +19,11 @@ const PRIVATE_PATHS = [
   "/partner-tracker",
   "/earn",
 ];
-const SITEMAP_CHILD_PATHS = [
+export const SITEMAP_CHILD_PATHS: readonly string[] = [
   "/api/public/sitemap-pages.xml",
   "/api/public/sitemap-localities.xml",
-  "/api/public/sitemap-services.xml",
-] as const;
+  ...SERVICE_SITEMAP_SHARD_PATHS,
+];
 
 export interface SmokeDocument {
   status: number;

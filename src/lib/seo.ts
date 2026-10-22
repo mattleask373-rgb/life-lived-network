@@ -1,3 +1,5 @@
+import { SERVICE_SITEMAP_SHARD_PATHS } from "./sitemap-shards";
+
 /**
  * The public face of Real World Atlas.
  *
@@ -89,11 +91,11 @@ export function privatePage(meta: Omit<PageMeta, "image">): {
   };
 }
 
-/** Fixed public app screens. Eligible locality and service URLs live in bounded child sitemaps. */
+/** Fixed public screens and bounded locality/service URL sets. */
 export const PUBLIC_SITEMAP_CHILD_PATHS: readonly string[] = [
   "/api/public/sitemap-pages.xml",
   "/api/public/sitemap-localities.xml",
-  "/api/public/sitemap-services.xml",
+  ...SERVICE_SITEMAP_SHARD_PATHS,
 ];
 
 export const PUBLIC_PATHS: readonly string[] = [

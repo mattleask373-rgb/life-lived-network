@@ -7,6 +7,27 @@
     <loc>https://life-lived-network.lovable.app/api/public/sitemap-localities.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>https://life-lived-network.lovable.app/api/public/sitemap-services.xml</loc>
+    <loc>https://life-lived-network.lovable.app/api/public/sitemap-services/1.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://life-lived-network.lovable.app/api/public/sitemap-services/2.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://life-lived-network.lovable.app/api/public/sitemap-services/3.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://life-lived-network.lovable.app/api/public/sitemap-services/4.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://life-lived-network.lovable.app/api/public/sitemap-services/5.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://life-lived-network.lovable.app/api/public/sitemap-services/6.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://life-lived-network.lovable.app/api/public/sitemap-services/7.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://life-lived-network.lovable.app/api/public/sitemap-services/8.xml</loc>
   </sitemap>
 </sitemapindex>
