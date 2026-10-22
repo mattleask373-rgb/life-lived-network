@@ -430,3 +430,9 @@ PR **#287** (agent/grok/status-seo-gap-2026-10-22) edits only docs/agents/STATUS
 ### SEO caveat retained
 
 Current source has static/dynamic robots and sitemap routes, but the personal Life List is still included in PUBLIC_PATHS on main until #271 merges, so source parity is not fully correct yet. Fresh unauthenticated GETs on life-lived-network.lovable.app continue to show allow-all robots without Sitemap/Disallows and 404 HTML for root and child sitemap paths. The exact deployed build SHA and Lovable sync target are unconfirmed. These observations block launch; no sync, republish or deployment was performed.
+
+## Queue snapshot correction — 2026-10-22 03:25 UTC
+
+After the unique facts from duplicate STATUS-only PR #287 were ported into this file and the duplicate was closed unmerged, the current canonical GET /pulls?state=open query returns **89 open PRs: 45 drafts, 44 non-drafts**. 56 have not been updated for over 7 days; 32 for over 14 days. **15** target non-main branches: the four intentional stacks #194/#245/#271/#283 on #285, plus eleven older control-plane/dependency chains (#62, #109, #106, #108, #104, #103, #102, #101, #86, #57, #58). This supersedes the immediately previous 90/46/44 and 14 non-main snapshot.
+
+PR #287’s unique verified facts (coordination issue #125; canonical states for #129/#131/#154/#155/#157/#156/#214/#232) are preserved in the addendum above and in the conversation on #279. No PR was merged in this status reconciliation; #287 was closed unmerged after its unique findings were ported. Re-fetch live counts before the next closure/triage pass because agents are still working concurrently.
