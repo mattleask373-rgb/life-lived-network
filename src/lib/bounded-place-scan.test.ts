@@ -44,12 +44,8 @@ describe("bounded canonical-place scan", () => {
   it("requires an exact count to distinguish complete data from server-capped pages", () => {
     const complete = rows(3);
     expect(assertCompletePlaceScan(complete, 3)).toEqual(complete);
-    expect(() => assertCompletePlaceScan(complete, null)).toThrow(
-      /exact place count/i,
-    );
-    expect(() => assertCompletePlaceScan(complete.slice(0, 2), 3)).toThrow(
-      /scan incomplete/i,
-    );
+    expect(() => assertCompletePlaceScan(complete, null)).toThrow(/exact place count/i);
+    expect(() => assertCompletePlaceScan(complete.slice(0, 2), 3)).toThrow(/scan incomplete/i);
   });
 
   it("rejects an exact place count above the configured safety cap", () => {
