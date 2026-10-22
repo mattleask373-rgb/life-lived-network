@@ -65,7 +65,7 @@ describe("public report entry points", () => {
   it("lets people report discoverable profiles presented as need-matching previews", () => {
     expect(needDetail).toContain('subjectType="profile"');
     expect(needDetail).toContain("subjectId={r.personId}");
-    expect(reportControl).toContain('subjectType: PublicReportSubject;');
+    expect(reportControl).toContain("subjectType: PublicReportSubject;");
     expect(reportControl).toContain("Sign in to send a private report");
   });
 });
