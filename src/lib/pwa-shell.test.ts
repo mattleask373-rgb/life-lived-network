@@ -37,14 +37,14 @@ describe("privacy-safe PWA shell", () => {
     const worker = readPublic("service-worker.js");
     expect(worker).toContain('if (request.method !== "GET") return;');
     expect(worker).toContain('if (request.mode === "navigate")');
-    expect(worker).toContain('fetch(request).catch(async () =>');
+    expect(worker).toContain("fetch(request).catch(async () =>");
     expect(worker).toContain('caches.match("/offline.html")');
     expect(worker).toContain("Never make cached, potentially private or stale HTML look current.");
   });
 
   it("caches only same-origin build assets requested as static resources", () => {
     const worker = readPublic("service-worker.js");
-    expect(worker).toContain('if (url.origin !== self.location.origin) return;');
+    expect(worker).toContain("if (url.origin !== self.location.origin) return;");
     expect(worker).toContain('url.pathname.startsWith("/assets/")');
     expect(worker).toContain('url.pathname.startsWith("/_build/")');
     expect(worker).toContain('["script", "style", "font", "image"].includes(request.destination)');
