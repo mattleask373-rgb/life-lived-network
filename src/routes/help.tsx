@@ -168,9 +168,9 @@ function HelpPage() {
               : "These are possible matches from a bounded recent search."}
           </p>
           <p className="mt-1 text-muted-foreground">
-            At least {data.cappedChunks} part{data.cappedChunks === 1 ? "" : "s"} of this search reached
-            the candidate limit, so older asks may exist beyond the results checked. Narrow your home
-            or service areas in your{" "}
+            At least {data.cappedChunks} part{data.cappedChunks === 1 ? "" : "s"} of this search
+            reached the candidate limit, so older asks may exist beyond the results checked. Narrow
+            your home or service areas in your{" "}
             <Link to="/profile" className="focus-ink underline">
               profile
             </Link>{" "}
