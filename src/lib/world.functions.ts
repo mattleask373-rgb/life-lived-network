@@ -25,6 +25,11 @@ import {
 } from "./source-lifecycle-policy";
 import { rowToEntry, type ListingRow } from "./listings";
 import { assertQueryableGeoBounds } from "./geo-bounds";
+import {
+  readBoundedSourceRecordPages,
+  SOURCE_RECORD_SCAN_LIMIT,
+  SOURCE_RECORD_SCAN_PAGE_SIZE,
+} from "./source-record-pagination";
 import type { SourcePhoto, WorldEntry } from "./world-data";
 
 export const getWorld = createServerFn({ method: "GET" })
@@ -174,17 +179,44 @@ async function readWorld(
 
     if (imported.length) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: sourceRecords, error: sourceRecordsError } = await supabaseAdmin
-        .from("source_records")
-        .select("listing_id, source_id, source_url, source_state, last_seen_at, source_updated_at")
-        .in("listing_id", [...new Set(imported.map((r) => r.id))])
-        .abortSignal(signal);
-      throwIfAborted(signal);
+      const listingIds = [...new Set(imported.map((r) => r.id))];
+      let sourceRecords: {
+        listing_id: string | null;
+        source_id: string;
+        source_url: string | null;
+        source_state: string;
+        last_seen_at: string | null;
+        source_updated_at: string | null;
+      }[] = [];
 
-      if (sourceRecordsError) {
+      try {
+        sourceRecords = await readBoundedSourceRecordPages(
+          SOURCE_RECORD_SCAN_LIMIT,
+          SOURCE_RECORD_SCAN_PAGE_SIZE,
+          async (from, to) => {
+            const { data, error } = await supabaseAdmin
+              .from("source_records")
+              .select("listing_id, source_id, source_url, source_state, last_seen_at, source_updated_at")
+              .in("listing_id", listingIds)
+              .order("last_seen_at", { ascending: false, nullsFirst: false })
+              .order("listing_id", { ascending: true })
+              .order("source_id", { ascending: true })
+              .range(from, to)
+              .abortSignal(signal);
+            throwIfAborted(signal);
+            if (error) throw error;
+            return (data ?? []) as typeof sourceRecords;
+          },
+        );
+      } catch {
+        // A failed, capped, or incomplete lifecycle read must never leave an older
+        // live observation as the sole evidence for an imported public listing.
+        throwIfAborted(signal);
         sourceLifecycleReadFailed = true;
-      } else {
-        for (const record of sourceRecords ?? []) {
+      }
+
+      if (!sourceLifecycleReadFailed) {
+        for (const record of sourceRecords) {
           if (!record.listing_id) continue;
           const lifecycleRecord: SourceRecordLifecycleInput = {
             listingId: record.listing_id,
@@ -199,7 +231,7 @@ async function readWorld(
           sourceRecordsByListing.set(record.listing_id, existing);
         }
 
-        const sourceIds = [...new Set((sourceRecords ?? []).map((record) => record.source_id))];
+        const sourceIds = [...new Set(sourceRecords.map((record) => record.source_id))];
         if (sourceIds.length) {
           const { data: sources, error: sourcesError } = await supabaseAdmin
             .from("sources")
