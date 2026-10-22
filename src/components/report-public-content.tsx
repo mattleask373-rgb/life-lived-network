@@ -26,7 +26,7 @@ export function ReportPublicContent({
   subjectId,
   label,
 }: {
-  subjectType: Extract<PublicReportSubject, "listing" | "need">;
+  subjectType: PublicReportSubject;
   subjectId: string;
   label: string;
 }) {
