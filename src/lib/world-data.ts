@@ -15,7 +15,7 @@ import type { WorkOpportunity } from "./work-opportunities";
 export type LayerId =
   "work" | "experience" | "music" | "art" | "community" | "people" | "nature" | "food";
 
-export type TimeBand = "now" | "today" | "tonight" | "tomorrow" | "weekend";
+export type TimeBand = "now" | "today" | "tonight" | "tomorrow" | "weekend" | "by_arrangement";
 
 export interface SourcePhoto {
   url: string;

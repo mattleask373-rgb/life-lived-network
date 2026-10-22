@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { createListing, KINDS, type NewListing } from "@/lib/listings";
+import { SERVICE_CATEGORIES } from "@/lib/service-taxonomy";
+import { parseServiceOfferDraft, ServiceOfferValidationError } from "@/lib/service-offer";
 import { currencySymbol } from "@/components/layer-colour";
 import { useWorldContext } from "@/lib/world-context";
 import { PlacePicker } from "@/components/place-picker";
@@ -12,7 +14,7 @@ import { DraftHelper } from "@/components/draft-helper";
 
 const title = "Make something happen — Real World Atlas";
 const description =
-  "Offer work, host an experience, put on an event, share a project, open a table or offer an hour of what you're good at.";
+  "Offer work, host an experience, post an event, share a project, offer a local service or open a table.";
 
 export const Route = createFileRoute("/make")({
   head: () => publicPage({ path: "/make", title, description }),
@@ -36,6 +38,7 @@ const BANDS: { id: TimeBand; label: string }[] = [
   { id: "tonight", label: "Tonight" },
   { id: "tomorrow", label: "Tomorrow" },
   { id: "weekend", label: "At the weekend" },
+  { id: "by_arrangement", label: "By arrangement / no time confirmed" },
 ];
 
 function MakePage() {
@@ -52,6 +55,7 @@ function MakePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [doneKind, setDoneKind] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -70,6 +74,11 @@ function MakePage() {
     people_needed: "",
     accessibility: "",
     contact_note: "",
+    serviceCategory: "",
+    organisation: "",
+    providerNote: "",
+    bookingState: "not_bookable",
+    bookingUrl: "",
   });
 
   useEffect(() => {
@@ -86,7 +95,21 @@ function MakePage() {
     const k = KINDS.find((x) => x.id === id);
     setKind(id);
     setDone(false);
-    if (k) setForm((f) => ({ ...f, layer: k.layer, pays: id === "work" }));
+    if (k) {
+      setForm((f) => ({
+        ...f,
+        layer: k.layer,
+        pays: id === "work",
+        band: id === "service" ? "by_arrangement" : f.band === "by_arrangement" ? "today" : f.band,
+        when_text:
+          id === "service"
+            ? f.when_text || "By arrangement — timing not confirmed"
+            : f.when_text === "By arrangement — timing not confirmed"
+              ? ""
+              : f.when_text,
+        cost: id === "service" ? (kind === "service" ? f.cost : "") : f.cost.trim() ? f.cost : "0",
+      }));
+    }
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -97,42 +120,73 @@ function MakePage() {
     const amount = Math.abs(Number(form.cost) || 0);
     const drawn = illustrativePosition(form.title || kind);
     try {
-      await createListing(
-        {
-          kind,
-          layer: form.layer,
-          title: form.title,
-          summary: form.summary,
-          details: form.details
-            .split("\n")
-            .map((d) => d.trim())
-            .filter(Boolean),
-          place: form.place || (chosen?.name ?? ""),
-          neighbourhood: chosen?.name ?? "",
-          x: drawn.x,
-          y: drawn.y,
-          when_text: form.when_text,
-          band: form.band,
-          minutes: Math.round((Number(form.hours) || 1) * 60),
-          cost: form.pays ? -amount : amount,
-          give: form.give.trim() || null,
-          social: form.social,
-          outdoors: form.outdoors,
-          people_needed: form.people_needed ? Number(form.people_needed) : null,
-          accessibility: form.accessibility.trim() || null,
-          contact_note: form.contact_note.trim() || null,
-          place_id: chosen?.id ?? null,
-          // Place-level coordinates only. Never an address, never a home.
-          lat: chosen?.lat ?? null,
-          lng: chosen?.lng ?? null,
-        },
-        user.id,
-      );
+      const serviceFields =
+        kind === "service"
+          ? parseServiceOfferDraft({
+              serviceCategory: form.serviceCategory,
+              organisation: form.organisation,
+              providerNote: form.providerNote,
+              bookingState: form.bookingState,
+              bookingUrl: form.bookingUrl,
+              cost: form.cost,
+            })
+          : undefined;
+      const listing: NewListing = {
+        kind,
+        layer: form.layer,
+        title: form.title,
+        summary: form.summary,
+        details: form.details
+          .split("\\n")
+          .map((d) => d.trim())
+          .filter(Boolean),
+        place: form.place || (chosen?.name ?? ""),
+        neighbourhood: chosen?.name ?? "",
+        x: drawn.x,
+        y: drawn.y,
+        when_text:
+          kind === "service"
+            ? form.when_text.trim() || "By arrangement — timing not confirmed"
+            : form.when_text,
+        band: kind === "service" ? "by_arrangement" : form.band,
+        minutes: kind === "service" ? 0 : Math.round((Number(form.hours) || 1) * 60),
+        cost: serviceFields?.cost ?? (form.pays ? -amount : amount),
+        currency: chosen?.currency ?? place?.currency ?? "EUR",
+        give: kind === "service" ? null : form.give.trim() || null,
+        social: kind === "service" ? "friendly" : form.social,
+        outdoors: kind === "service" ? false : form.outdoors,
+        people_needed: form.people_needed ? Number(form.people_needed) : null,
+        accessibility: form.accessibility.trim() || null,
+        contact_note: form.contact_note.trim() || null,
+        place_id: chosen?.id ?? null,
+        // Place-level coordinates only. Never an address, never a home.
+        lat: chosen?.lat ?? null,
+        lng: chosen?.lng ?? null,
+        ...(serviceFields ?? {}),
+      };
+      await createListing(listing, user.id);
+      setDoneKind(kind);
       setDone(true);
       setKind(null);
-      setForm((f) => ({ ...f, title: "", summary: "", details: "", when_text: "" }));
-    } catch {
-      setError("We couldn't save that right now. Please try again.");
+      setForm((f) => ({
+        ...f,
+        title: "",
+        summary: "",
+        details: "",
+        when_text: "",
+        cost: "0",
+        serviceCategory: "",
+        organisation: "",
+        providerNote: "",
+        bookingState: "not_bookable",
+        bookingUrl: "",
+      }));
+    } catch (cause) {
+      setError(
+        cause instanceof ServiceOfferValidationError
+          ? cause.message
+          : "We couldn't save that right now. Please try again.",
+      );
     } finally {
       setBusy(false);
     }
@@ -180,7 +234,9 @@ function MakePage() {
           <div className="card-paper mt-6 p-5">
             <p>It's on the map.</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              People will see it marked as not yet checked until someone who went confirms it.
+              {doneKind === "service"
+                ? "This is a self-declared service offer. It is shown as not yet checked; no appointment or live availability is confirmed here."
+                : "People will see it marked as not yet checked until someone who went confirms it."}
             </p>
             <Link
               to="/"
@@ -258,6 +314,96 @@ function MakePage() {
               </label>
             </div>
 
+            {kind === "service" ? (
+              <section className="card-paper space-y-4 p-5">
+                <div>
+                  <h2 className="text-lg">Describe the service you offer</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    This is a self-declared offer for the selected locality. It does not confirm a
+                    time slot, platform verification, professional qualification, or service in
+                    other localities.
+                  </p>
+                </div>
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">
+                    Service category (choose explicitly)
+                  </span>
+                  <select
+                    required
+                    value={form.serviceCategory}
+                    onChange={(e) => setForm({ ...form, serviceCategory: e.target.value })}
+                    className={input}
+                  >
+                    <option value="">Choose a service category</option>
+                    {SERVICE_CATEGORIES.filter((category) => category.group !== "work").map(
+                      (category) => (
+                        <option key={category.slug} value={category.slug}>
+                          {category.label}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </label>
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">Provider / business name (optional)</span>
+                  <input
+                    value={form.organisation}
+                    onChange={(e) => setForm({ ...form, organisation: e.target.value })}
+                    maxLength={120}
+                    placeholder="Name used by the provider"
+                    className={input}
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">
+                    What is included, price basis or important boundaries (optional)
+                  </span>
+                  <textarea
+                    rows={3}
+                    value={form.providerNote}
+                    onChange={(e) => setForm({ ...form, providerNote: e.target.value })}
+                    maxLength={1000}
+                    placeholder="For example, what a typical price covers or what the service does not include"
+                    className={input}
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">Booking / enquiry pathway</span>
+                  <select
+                    value={form.bookingState}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        bookingState: e.target.value,
+                        bookingUrl: e.target.value === "external" ? form.bookingUrl : "",
+                      })
+                    }
+                    className={input}
+                  >
+                    <option value="not_bookable">No booking pathway yet</option>
+                    <option value="enquire">Enquiries only — no booking confirmed here</option>
+                    <option value="external">Provider's external booking page</option>
+                  </select>
+                </label>
+                {form.bookingState === "external" ? (
+                  <label className="block text-sm">
+                    <span className="text-muted-foreground">
+                      Public booking URL (http or https)
+                    </span>
+                    <input
+                      required
+                      type="url"
+                      value={form.bookingUrl}
+                      onChange={(e) => setForm({ ...form, bookingUrl: e.target.value })}
+                      maxLength={2000}
+                      placeholder="https://provider.example/booking"
+                      className={input}
+                    />
+                  </label>
+                ) : null}
+              </section>
+            ) : null}
+
             <div className="card-paper grid gap-4 p-5 sm:grid-cols-2">
               <label className="block text-sm">
                 <span className="text-muted-foreground">Where (a place name, not an address)</span>
@@ -270,7 +416,9 @@ function MakePage() {
               </label>
               <label className="block text-sm">
                 <span className="text-muted-foreground">
-                  Which locality{path ? ` (inside ${path})` : ""}
+                  {kind === "service"
+                    ? `Locality where you say this service is offered${path ? ` (inside ${path})` : ""}`
+                    : `Which locality${path ? ` (inside ${path})` : ""}`}
                 </span>
                 <select
                   value={areaId || (place?.id ?? "")}
@@ -284,72 +432,97 @@ function MakePage() {
                   ))}
                 </select>
                 <span className="mt-1 block text-xs text-muted-foreground">
-                  Somewhere else? Change where you are at the top of this page.
+                  {kind === "service"
+                    ? "This does not imply service coverage outside this listing locality."
+                    : "Somewhere else? Change where you are at the top of this page."}
                 </span>
               </label>
               <label className="block text-sm">
-                <span className="text-muted-foreground">When, in words</span>
+                <span className="text-muted-foreground">
+                  {kind === "service"
+                    ? "Timing / lead time, if known — not live availability"
+                    : "When, in words"}
+                </span>
                 <input
-                  required
+                  required={kind !== "service"}
                   value={form.when_text}
                   onChange={(e) => setForm({ ...form, when_text: e.target.value })}
-                  placeholder="Tuesday evening, from 21:00"
+                  placeholder={
+                    kind === "service"
+                      ? "By arrangement — exact timing is not confirmed"
+                      : "Tuesday evening, from 21:00"
+                  }
                   className={input}
                 />
               </label>
-              <label className="block text-sm">
-                <span className="text-muted-foreground">Roughly when</span>
-                <select
-                  value={form.band}
-                  onChange={(e) => setForm({ ...form, band: e.target.value as TimeBand })}
-                  className={input}
-                >
-                  {BANDS.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-sm">
-                <span className="text-muted-foreground">How many hours it takes</span>
-                <input
-                  type="number"
-                  min="0.5"
-                  step="0.5"
-                  value={form.hours}
-                  onChange={(e) => setForm({ ...form, hours: e.target.value })}
-                  className={input}
-                />
-              </label>
+              {kind === "service" ? null : (
+                <>
+                  <label className="block text-sm">
+                    <span className="text-muted-foreground">Roughly when</span>
+                    <select
+                      value={form.band}
+                      onChange={(e) => setForm({ ...form, band: e.target.value as TimeBand })}
+                      className={input}
+                    >
+                      {BANDS.filter((band) => band.id !== "by_arrangement").map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block text-sm">
+                    <span className="text-muted-foreground">How many hours it takes</span>
+                    <input
+                      type="number"
+                      min="0.5"
+                      step="0.5"
+                      value={form.hours}
+                      onChange={(e) => setForm({ ...form, hours: e.target.value })}
+                      className={input}
+                    />
+                  </label>
+                </>
+              )}
               <label className="block text-sm">
                 <span className="text-muted-foreground">
-                  {form.pays
-                    ? `What it pays (${currencySymbol(place?.currency)})`
-                    : `What it costs (${currencySymbol(place?.currency)}, 0 for free)`}
+                  {kind === "service"
+                    ? `Typical service price (${currencySymbol(chosen?.currency)}; enter 0 only if free)`
+                    : form.pays
+                      ? `What it pays (${currencySymbol(chosen?.currency)})`
+                      : `What it costs (${currencySymbol(chosen?.currency)}, 0 for free)`}
                 </span>
                 <input
                   type="number"
                   min="0"
+                  required={kind === "service"}
                   value={form.cost}
                   onChange={(e) => setForm({ ...form, cost: e.target.value })}
                   className={input}
                 />
+                {kind === "service" ? (
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    Describe what the price covers in the service details. The platform does not set
+                    or verify prices.
+                  </span>
+                ) : null}
               </label>
-              <label className="block text-sm">
-                <span className="text-muted-foreground">Which layer of the map</span>
-                <select
-                  value={form.layer}
-                  onChange={(e) => setForm({ ...form, layer: e.target.value as LayerId })}
-                  className={input}
-                >
-                  {LAYERS.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              {kind === "service" ? null : (
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">Which layer of the map</span>
+                  <select
+                    value={form.layer}
+                    onChange={(e) => setForm({ ...form, layer: e.target.value as LayerId })}
+                    className={input}
+                  >
+                    {LAYERS.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label className="block text-sm">
                 <span className="text-muted-foreground">How many people, if it matters</span>
                 <input
@@ -363,17 +536,19 @@ function MakePage() {
             </div>
 
             <div className="card-paper space-y-4 p-5">
-              <label className="block text-sm">
-                <span className="text-muted-foreground">
-                  Something a person could give here, if there is one
-                </span>
-                <input
-                  value={form.give}
-                  onChange={(e) => setForm({ ...form, give: e.target.value })}
-                  placeholder="Play something. Or photograph whoever does."
-                  className={input}
-                />
-              </label>
+              {kind === "service" ? null : (
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">
+                    Something a person could give here, if there is one
+                  </span>
+                  <input
+                    value={form.give}
+                    onChange={(e) => setForm({ ...form, give: e.target.value })}
+                    placeholder="Play something. Or photograph whoever does."
+                    className={input}
+                  />
+                </label>
+              )}
               <label className="block text-sm">
                 <span className="text-muted-foreground">
                   Access — steps, seating, noise, anything useful to know
@@ -385,46 +560,56 @@ function MakePage() {
                 />
               </label>
               <label className="block text-sm">
-                <span className="text-muted-foreground">How someone gets in touch</span>
+                <span className="text-muted-foreground">
+                  {kind === "service"
+                    ? "Next-step note (do not include personal contact details)"
+                    : "How someone gets in touch"}
+                </span>
                 <input
                   value={form.contact_note}
                   onChange={(e) => setForm({ ...form, contact_note: e.target.value })}
-                  placeholder="Say hello here first and we'll share the address"
+                  placeholder={
+                    kind === "service"
+                      ? "What someone should ask or confirm before booking"
+                      : "Say hello here first and we'll share the address"
+                  }
                   className={input}
                 />
               </label>
-              <div className="flex flex-wrap items-center gap-4 text-sm">
-                <label className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Feels</span>
-                  <select
-                    value={form.social}
-                    onChange={(e) =>
-                      setForm({ ...form, social: e.target.value as NewListing["social"] })
-                    }
-                    className="focus-ink rounded-lg border border-border bg-background px-3 py-2"
-                  >
-                    <option value="quiet">quiet</option>
-                    <option value="friendly">friendly</option>
-                    <option value="lively">lively</option>
-                  </select>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={form.outdoors}
-                    onChange={(e) => setForm({ ...form, outdoors: e.target.checked })}
-                  />
-                  Outdoors
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={form.pays}
-                    onChange={(e) => setForm({ ...form, pays: e.target.checked })}
-                  />
-                  This pays the person
-                </label>
-              </div>
+              {kind === "service" ? null : (
+                <div className="flex flex-wrap items-center gap-4 text-sm">
+                  <label className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Feels</span>
+                    <select
+                      value={form.social}
+                      onChange={(e) =>
+                        setForm({ ...form, social: e.target.value as NewListing["social"] })
+                      }
+                      className="focus-ink rounded-lg border border-border bg-background px-3 py-2"
+                    >
+                      <option value="quiet">quiet</option>
+                      <option value="friendly">friendly</option>
+                      <option value="lively">lively</option>
+                    </select>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={form.outdoors}
+                      onChange={(e) => setForm({ ...form, outdoors: e.target.checked })}
+                    />
+                    Outdoors
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={form.pays}
+                      onChange={(e) => setForm({ ...form, pays: e.target.checked })}
+                    />
+                    This pays the person
+                  </label>
+                </div>
+              )}
             </div>
 
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
