@@ -77,6 +77,5 @@ describe("exception-safe local auth storage primitives", () => {
   it("never accepts a same-origin response from a different WindowProxy", () => {
     expect(source).toContain("if (event.source !== parentWindow) return;");
     expect(source).toContain("if (!editorOrigins.includes(event.origin)) return;");
-    expect(source).toContain("if (!editorOrigins.includes(event.origin)) return;")
   });
 });
