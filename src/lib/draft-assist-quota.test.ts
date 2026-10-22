@@ -59,7 +59,9 @@ describe("AI draft quota database security contract", () => {
   it("binds the limit to auth.uid and serializes concurrent callers per account", () => {
     expect(migration).toContain("v_user_id := auth.uid();");
     expect(migration).toContain("user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE");
-    expect(migration).toContain("ON CONFLICT (user_id) DO UPDATE");
+    expect(migration).toContain("ON CONFLICT (user_id) DO NOTHING");
+    expect(migration).toContain("FOR UPDATE");
+    expect(migration).toContain("UPDATE public.ai_draft_rate_limits");
     expect(migration).toContain("hour_count = CASE");
     expect(migration).toContain("day_count = CASE");
     expect(migration).toContain("5 per UTC hour and 20 per UTC day");
