@@ -7,6 +7,7 @@ import {
   servicePagePath,
 } from "./service-page";
 import type { WorldEntry } from "./world-data";
+import type { WorkOpportunity } from "./work-opportunities";
 
 function entry(overrides: Partial<WorldEntry>): WorldEntry {
   return {
@@ -40,6 +41,30 @@ const demoGardener = entry({
   demonstration: true,
 });
 
+const publishedOpportunity: WorkOpportunity = {
+  arrangement: "short_term",
+  engagementKind: "paid_work",
+  compensation: { status: "stated_paid", amountMinorUnits: 2500, currency: "AUD", basis: "hour" },
+  accommodation: "not_stated",
+  skillRequirements: ["Cleaning experience"],
+  hostExpectations: ["Confirm the shift before travelling"],
+  conditions: ["Bring closed shoes"],
+  jurisdictionCountryCode: "AU",
+  policyReviewStatus: "approved_by_human",
+  publicationStatus: "published",
+  provenance: { kind: "owner_declared", sourceName: "Test host" },
+  rightsStatus: "cleared",
+};
+
+const publishedWork = entry({
+  id: "w1",
+  layer: "work",
+  kind: "work",
+  title: "Published gardening shift",
+  serviceCategory: "gardening",
+  workOpportunity: publishedOpportunity,
+});
+
 describe("servicePageListings", () => {
   it("returns null for an unknown service slug", () => {
     expect(servicePageListings([gardener], "not-a-service")).toBeNull();
@@ -63,6 +88,19 @@ describe("servicePageListings", () => {
     const baker = entry({ id: "b1", title: "Sourdough mornings", summary: "Bread, weekly" });
     const result = servicePageListings([baker], "gardening");
     expect(result?.real).toEqual([]);
+  });
+
+  it("includes only published, rights-cleared work opportunities within their declared category", () => {
+    expect(servicePageListings([publishedWork], "gardening")?.real.map((e) => e.id)).toEqual([
+      "w1",
+    ]);
+    expect(servicePageListings([publishedWork], "plumbing")?.real).toEqual([]);
+    const draftWork = entry({
+      ...publishedWork,
+      id: "w2",
+      workOpportunity: { ...publishedOpportunity, publicationStatus: "review_required" },
+    });
+    expect(servicePageListings([draftWork], "gardening")?.real).toEqual([]);
   });
 });
 
