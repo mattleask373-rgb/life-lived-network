@@ -1,666 +1,1092 @@
-# Real World Atlas — Global Network R&D, SEO Recovery and Integration Master Plan
-## Revision 2: full-stack audit, dependency recovery, AI integration, and a rolling 12-month route to worldwide usefulness
+# Real World Atlas — Global Growth Phase Reset
 
-**Audit date:** 21 October 2026  
-**Programme horizon:** 12 months from human acceptance; rolling, outcome-based, no guaranteed launch date.  
-**Canonical repository snapshot:** main commit `ccbcc6acdbc3dcdf6895c0f624b301418257a6e3` (also recorded as the base SHA for current PR #262 when rechecked). Always refresh before acting.  
-**Repository:** `mattleask373-rgb/life-lived-network`  
-**Companion operating prompt:** [PR #248 — Grok Year-One Master Operating Prompt](https://github.com/mattleask373-rgb/life-lived-network/pull/248)  
-**This plan:** replacement for the earlier version in [PR #262](https://github.com/mattleask373-rgb/life-lived-network/pull/262).
+**Revision:** 4 — 22 October 2026  
+**Status:** Current-main reconciliation draft; not a launch authorization  
+**Canonical repository snapshot reviewed:** main at a99d09f1517523a7a388245ca6b3d5c1245816cb  
+**Purpose:** Replace the previous activity-heavy rolling plan with one outcome-led strategy for global growth and governed, continuous AI operations.
 
-> **Mission:** Help people live more of their lives in the real world. Build a trustworthy network where a resident can find everyday activities or a cleaner, a host can find legitimate property-turnover help, a traveller can meet local people and guides, a visitor can learn Spanish with locals in South America, somebody can find work or exchange skills, and a village community can share real needs, offers, nature, culture, events and projects. Use AI to make discovery and operations more useful—not to invent real-world facts, manufacture supply or maximise screen time.
+### Current-main reconciliation snapshot — 22 October 2026
 
----
+This snapshot supersedes older notes below wherever they conflict about the current main SHA, whether CI fixes are merged, ruleset approval count, current PR status or live SEO endpoints. Older inventory and check details are historical until re-fetched.
 
-## 1. Executive direction
+- Canonical main is a99d09f1517523a7a388245ca6b3d5c1245816cb. Exact-main Verify passed in run #39768462635 and CodeQL passed in run #39768462699. k6 was parsed without sending traffic; this is not a load test.
+- PR #285 merged to main at 0d68f446f493910583faff55fe14fe38e99995ff and PR #286 merged to main at b9753024162c0c0858577761dcba5daf9dd27433. Their merge status does not close issue #164 or prove a hosted migration/RLS setup is safe.
+- PR #288’s revision-3 plan was merged into the #285 feature branch, not directly into main. This revision is a clean current-main-based candidate for canonical strategy/status.
+- Live ruleset #24946178 is active and requires exact strict verify, latest-push approval and review-thread resolution, but raw required_approving_review_count is 0 and the returned rules omit deletion protection. Admin correction and re-fetch remain required.
+- Lovable metadata reports revision 7ca12a5900d708014d63b03847f2c922965ea1be. The Loveable/work/safely branch is 18 ahead / 348 behind main from merge base ccbcc6acdbc3dcdf6895c0f624b301418257a6e3. The actual Project Settings Git target and deployed backend/build identity remain unverified.
+- Fresh GET probes show robots.txt HTTP 200 with blanket Allow rules and no sitemap directive, /sitemap.xml HTTP 404 HTML, and /life-list HTTP 200 without extracted noindex metadata. This is a publication/indexability mismatch, not proof that private saved data has leaked.
+- Current main-based draft fixes #291, #292 and #293 address Life List/locality/map correctness, stale source-freshness labels and bounded source-record paging. They remain unmerged; exact-head tests, independent review and integration decisions are required.
 
-The next phase is not “add more pages” or “connect an LLM”. It is to integrate the strongest existing foundations into one dependable system, resolve competing implementation branches, prove privacy and source truth, establish a measurable market-launch engine, and grow supply and usefulness locality by locality.
 
-**Worldwide reach is the direction; verified local usefulness is the unit of progress.** A global map with no reliable local information is not a global network. A thousand indexed service pages that cannot fulfil a request are not marketplace liquidity. A running AI workflow without durable state, identity, budget, cancellation and kill switches is not a 24/7 operator. A green unit-test suite does not prove production security, live SEO, source rights, or customer value.
+> **Strategic decision:** Build a globally repeatable system for creating real-world value, one verified local market at a time. Do not attempt to launch every category in every country at once. Automate research, verification, delivery, learning and preparation wherever safe; retain human control of production, money, legal commitments, private data and consequential external actions.
 
-The first-year outcome should be a repeatable, measurable, human-governed platform with several validated end-to-end journeys and evidence-backed pilot markets; thereafter, each market can be added using the same playbook. Do not promise that all countries or all categories will be operational in twelve months. Do not turn the aspirational billion-user north star into a capacity assertion or forecast.
-
-### Three outcomes drive all work
-
-1. **A real person reaches a real-world outcome:** find a current eligible result, contact/request a provider with consent, attend an experience, learn a skill, complete a work opportunity, contribute to a community, or understand honestly that no verified option is currently available.
-2. **A market can be onboarded safely and repeatedly:** canonical place data, rights-cleared supply, localised presentation, trustworthy requests, moderation/support, technical SEO, measurement, legal review, reliability, and named ownership.
-3. **AI improves verified usefulness per unit of human attention:** research intent and gaps, interpret queries, organise evidence, help providers maintain records, answer grounded questions, propose implementation tasks, test changes, and surface risks. Human owners retain consequential decisions and production authority.
-
-This programme expands the living-world domains already described in `README.md` and the canonical Human–AI programme specification. It does not merge programme-state machinery into the product domain or replace the existing discovery authority.
+This document is the proposed operating plan. It does not authorize merge, publish, production data changes, provider activation, paid spend, external contact, or autonomous production actions. The product constitution in README.md and the canonical architecture ADRs continue to govern the application. Issues #263 and #279 remain the execution and release-readiness references until their status is explicitly reconciled.
 
 ---
 
-## 2. Audit scope, evidence boundary and what “compromised” means here
+## 1. Executive evaluation
 
-This review reconciles current repository files, PR metadata and review notes available through GitHub, including `README.md`, `roadmap.md`, `docs/agents/STATUS.md`, `docs/agents/README.md`, `docs/agents/OBSERVABILITY.md`, `docs/programme/MASTER-PROGRAMME-SPECIFICATION.md`, SEO PRs #247/#249/#251/#252/#253/#257, map PRs #238/#242/#261, source/work-opportunity PRs #197/#241/#244/#259, AI policy PR #245, security automation PR #260, and issue reports #24/#29/#30/#31/#42/#74/#100/#111/#116/#117/#121/#164/#256.
+Real World Atlas has a differentiated and worthwhile ambition: help people turn an intention, a need, a skill or a moment of curiosity into a real-world experience. Over time, its opportunity is to connect capabilities, needs, places, work, music, local knowledge, experiences and community into one trusted network.
 
-**Important distinction:** this audit found documented integration conflicts, incomplete launch paths and potentially serious access-control risks. It did **not** establish that a malicious breach occurred. “Compromised” below means product integrity, privacy guarantees, SEO correctness or end-to-end wiring may be undermined by unfinished/competing work. Treat security items as findings requiring verification, not as proven exploits unless the evidence says so.
+The global opportunity does **not** come from placing every possible category on a map, generating thousands of locality pages, adding an LLM to every surface, or running more AI agents than other companies. Those are inputs. The advantage comes from reliably connecting real intent to current, eligible supply, helping people act with consent, and learning which local interactions produce value.
 
-This is not a penetration test, a live production crawl, a hosted Supabase configuration inspection, a legal opinion, a global market study or a production load test. The current hosted origin could not be independently validated by the available tools. Historical repository notes report platform-default `robots.txt` and HTML 404 at `/sitemap.xml`; these reports are not a new live measurement. The production domain, deployed route precedence, effective database grants/RLS, production data quality, Search Console state, user metrics, performance, cost and restore capability must be verified by an authorised operator.
+### The product thesis
 
-The current open-PR search yielded a **100-result capped set**; this is not an exhaustive exact PR count. An earlier baseline counted 93 before subsequent work. Queue cardinality itself is a risk: duplicated effort, stale base branches, conflict debt, review load and misleading “green CI” evidence. Every audit pass must check the live current main SHA, pull-request base/head SHA, reviews and exact-head status before acting.
+**For a person with a real, time-bound need or intention, Real World Atlas should make it easier to find a real, relevant, willing person, place or opportunity; understand the evidence; choose whether to connect; and complete something worthwhile outside the app.**
 
----
+A user may find a service, discover work, meet a creative collaborator, attend an event, learn from a local, contribute to a community project, or honestly learn that no verified option is available yet. The product should help users take the next sensible step, not keep them browsing.
 
-## 3. Repository audit: what exists and what must not be mistaken for completed integration
+### What makes this different
 
-### 3.1 Canonical foundations to preserve
+1. **Truthful discovery:** real supply, visible provenance and freshness, precise locality scope, and honest uncertainty.
+2. **Human agency:** people control visibility and contact; AI suggests and explains but does not secretly decide.
+3. **Connection across domains:** a real opportunity may lead to an experience, a skill exchange, a community or a journey. Build these connections only when actual data and user value justify them.
+4. **Repeatable local operations:** every new locality uses the same quality gates, data contracts, safety controls, measurement and launch playbook.
+5. **Compounding learning:** the system learns which sources, offers, intents and experiences result in real outcomes, not just pageviews.
 
-The repository already contains substantial product and programme infrastructure:
+### The strategic correction
 
-- TypeScript, React, TanStack Start/Router, Supabase/Postgres/Auth/RLS, Bun, Vitest, ESLint and a production build pipeline.
-- The canonical place/locality hierarchy, generic locality pages, shared service taxonomy and public/private SEO helper conventions. The geography foundation is not yet evidence of complete, maintained global coverage.
-- The canonical discovery authority: `findSupply()` in `src/lib/supply-engine.ts`; grounded match reasoning lives in `src/lib/grounded-matching.ts`. Presentation and AI must not create a second candidate/ranking authority.
-- Existing world/listing retrieval and normalisation, provider-neutral ingestion contracts, source provenance/freshness patterns, work-opportunity schemas and fixture-first source adapters.
-- Need/possibility/connection paths, account/private features, saved place memories, user privacy controls and export capability described by the roadmap.
-- Grok-inspired home/detail/map design and the map/list synchronisation work are **not all merely open drafts**: PRs #211 (core accessible redesign), #220 (home map/list sync) and #231 (Journey/Road Trip design extension) are reported closed/merged. Verify current main and preserve the accepted implementation; do not restart those PRs or reapply stale diffs. Their historical verification and limited manual QA do not prove every current end-to-end journey works.
-- Place/service route foundations and technical SEO utilities for title, description, canonical, privacy and XML generation.
-- A signed-in, schema-bounded draft-assist helper that does not automatically save user drafts.
-- A fail-closed “Ask this place” eligibility policy candidate (#245), but it does **not** constitute an active public model endpoint. Its own PR states current records lack all required model-use/right/review attestations.
-- AI-agent/continuous-engineering operating documents, worker lanes, leases/heartbeats and orchestration contracts in the repository/PR queue. They do **not** prove that a durable authenticated always-on executor is live.
+The prior plan correctly identified many architectural, privacy, SEO, ingestion, analytics and agent-runtime dependencies. It also gave many of those ambitions equal prominence, creating a risk that the team improves infrastructure and expands scope indefinitely before proving the whole user journey.
 
-For every item, verify code on current main, real deployment behaviour, permissions and test evidence. Keep these distinctions in the status file: **implemented in code**, **tested in CI**, **verified in staging**, **verified in production**, **live and monitored**.
+The next phase must have one dominant objective: **prove and repeat one useful real-world exchange.** Security and source-of-truth work are not distractions; they are prerequisites to trust. SEO, data ingestion, AI and agent automation then become accelerators of a validated loop rather than parallel projects competing for attention.
 
-### 3.2 Governance and shared status
+### Global means repeatable, not simultaneously everywhere
 
-`docs/agents/STATUS.md` reports main SHA `8d79247991187bf64813cf72e3ec75aeb508e2e9` and says ruleset enforcement is disabled. PR #254 reports main SHA `ccbcc6acdbc3dcdf6895c0f624b301418257a6e3` and says main protection is active; the base SHA of PR #262 is also `ccbcc6acdbc3dcdf6895c0f624b301418257a6e3`. The status document is stale or the observations are from different times. The current PR search alone cannot prove the present ruleset setting.
+Build global-ready contracts and market operations now where they are already needed. Expand public supply and acquisition only where local evidence, permissions, trust and support exist. The sequence is:
 
-**Required before other integration work:** refresh the default branch SHA and repository/ruleset settings directly, verify PR review/required checks/last-push approval/resolved threads/no bypass, then update the canonical status document with a UTC timestamp and direct evidence. Confirm the Lovable project sync repository and branch and the deployed backend project by a human with dashboard access. Never guess that a connector’s default is the safe target.
+**one locality and one use case → a reliable exchange loop → a second locality using the same playbook → an adjacent category → a region → multiple countries → a global operating system.**
 
-The historical `.env` concern in issue #125 is reported as resolved by the current-main hygiene work recorded in PR #246: root `.env` absent and `.env.example` placeholders only. Re-check tracking safely; do not fetch, print or copy secret values. Run repository secret-history scanning and rotate any credential that is actually exposed. Removal from the current tree alone does not erase Git history.
-
-### 3.3 SEO and integration PR inventory
-
-- **#247 — shared locality/service route indexability gate:** adds explainable decisions and tests for real content, freshness, provenance and completeness. It notes that current-main normalisation drops `listings.last_checked_at` from `rowToEntry()`; some ingestion freshness states are ambiguous. This is a material data-contract dependency.
-- **#249 — dynamic sitemap candidate:** includes separate simpler locality/service gates and a non-paginated place-table query with a hard limit. A Supabase/PostgREST cap lower than that limit can silently truncate the hierarchy without proving source completeness. The PR comment already identifies both the eligibility mismatch and pagination risk.
-- **#252 — combined fail-closed gate/sitemap candidate:** proposes one route/sitemap eligibility path, numbered sitemap shards, complete scans, short-lived cache and failure-to-empty dynamic paths. It appears to be the most cohesive *candidate* for integration, but still needs exact-diff, policy-parity, pagination/ordering, route semantics and deployment review. Do not assume the branch is safe merely because Verify passed.
-- **#253 — private Life List SEO fix:** makes `/life-list` private/noindex and removes it from public sitemap paths. This matters because the product says the list is private.
-- **#257 — breadcrumb JSON-LD:** creates breadcrumb structured data from visible canonical hierarchy. It correctly avoids invented LocalBusiness/review/event claims and does not claim hreflang while translated variants are absent.
-- **#251 — live SEO smoke monitor:** a read-only daily/manual GET checker for homepage metadata, robots and sitemap index/children. It has passing repository CI reported on its last documented head, but the workflow was a draft and the live published test has not been proven to run successfully. Its fixed-page allowlist must be reconciled with #253’s removal of `/life-list`; otherwise the monitor can encode the wrong policy.
-- **#238/#242/#261 — viewport/map branch family:** #238 contains cached-refresh, cancellation, broad-view, and 200-row-limit protections; #242 was used to integrate the viewport/list experience. An earlier review found the span limit only in the browser, but a follow-up comment on #242 reports that a server-side queryability guard was later added and passed Verify on that branch. Do not treat that specific span finding as still unfixed without checking its exact head. The **separate** issue #256 describes a serious locality-scope failure when more than 400 descendant IDs are present and date-line map projection disagreement; #261 proposes typed fail-closed `SCOPE_TOO_WIDE` and antimeridian fixes, stacked on #242. The sequence and final-head fixes still require verification.
-- **#241/#244/#259 and #197 — source freshness/work opportunity:** #241 preserves `last_checked_at` and reviewed WorkOpportunity terms through the canonical normaliser; #244 provides a fixture-first Adzuna adapter without network calls/credentials/activation; #259 rejects contradictory paid/unpaid categories; #197 is a stale combined reconciliation branch. Select one clean current-main integration sequence and port unique fixes; do not merge overlapping chains independently.
-- **#260 — CodeQL/Dependabot/dependency audit:** reports a previously found set of 12 advisories, patched within ranges, and successful CI/security checks on its documented head. It is still a draft; it changed Bun lockfile format to v2. Confirm the deployed/Lovable build supports it and re-run the exact head before integration. CI security automation is not production security verification.
-- **#245 — Ask-this-place policy:** an eligibility policy only; no UI, endpoint, model call or retrieval path. Integration requires real server-attested publication, data quality, no-demo, source rights, review, model-use permission, freshness and place-scope evidence.
-- **#111 — public locality API issue:** current issue text says the code slice is implemented but NOT LIVE and hosted proof is pending. It requires parity with the shared sitemap/indexability rules, stable pagination/version/error semantics, privacy-safe observability and a hosted GET proof before saying “LIVE”.
-- **#164 — default ACL issue:** historical read-only metadata reported broad default privileges for `anon` and `authenticated` on the public schema across object-creating roles. Reachability/impact was not fully demonstrated. Treat it as a release-blocking access-control audit until there is a sanitized table/owner/ACL/RLS/policy inventory, role/action matrix, disposable-DB tests and authorised human review.
-- **#74/#100/#116/#117/#121 — autonomous control plane:** issue evidence conflicts over whether table/migration lineage exists only on a branch or is correctly represented on current main. #100 reports references to `agent_tasks` without a durable table definition on main; #116 specifies a competing canonical migration lineage that must be reconciled, not copied wholesale; #117 demands hosted non-production adversarial proof; #121 requires an actual durable scheduler/heartbeat/agent end-to-end trial. No autonomous production executor is proven.
-- **#29/#30/#31/#42 and #19/#20/#21/#24/#25/#36/#45 — growth/global research lanes:** the issues define search-intent front door, privacy-safe conversion telemetry, internationalisation, data acquisition/freshness, SEO-quality checks, supply gaps, product traction and performance/trust work. These are useful source task definitions, not evidence that every workstream is already implemented.
-
-### 3.4 Severity-ordered findings
-
-| Priority | Finding | Evidence/status | Required remediation / release rule |
-|---|---|---|---|
-| P0 | Repository/production source of truth can drift between docs, branches, Lovable and Supabase | Conflicting status snapshots; deployment not independently verified | Verify main SHA, protected settings, sync branch, production origin/backend; write one dated status. Stop production writes until target is confirmed. |
-| P0 | Public-schema default privileges and effective RLS/grants are incompletely proven | Issue #164 records broad historical default ACLs; actual application reachability still needs testing | Complete sanitized ACL/RLS/storage matrix and disposable DB adversarial tests; human approval before any hosted change. |
-| P0 | Candidate map integration can widen locality beyond the intended scope when descendants exceed the cap | Issue #256 against map branch; #261 is stacked proposed fix | Never merge #242 without checking final server query path and #261’s typed fail-closed or equivalent bounded merge. Selected locality must never silently turn into global results. |
-| P0 | Private “Life List” SEO policy conflicts with a live-smoke fixed-page allowlist | #253 removes `/life-list`; #251 earlier allowlist contains it | One public-route registry, route metadata and checker derive from it; private content remains auth-protected and never in public sitemap. |
-| P1 | Competing SEO implementations can ship different eligibility decisions | #247 and #249 overlap; #252 is a combined alternative | Choose/rebuild a single canonical route + sitemap chain. Preserve unique tests, close/supersede alternatives only after diff audit. |
-| P1 | Source freshness/provenance is lost or ambiguous at the normalisation seam | #247 and #241 document `last_checked_at` loss and ambiguous states | Integrate freshness through `WorldEntry`/normalisation; use explicit quality/freshness values; missing evidence must fail closed for public indexability and AI context. |
-| P1 | Sitemap enumeration can be partial but appear complete | #249 table scan uses a single limited places query; scale requirements exceed a single warm-instance snapshot | Cursor-safe deterministic pagination or database-side enumeration; hard-cap/error must emit no dynamic URLs, never a partial success. Verify output count/shards/checksums and restart consistency. |
-| P1 | The live crawler contract is not verified | #251 still draft/unrun against published host; historical reports of platform-default robots and HTML 404 are not fresh measurements | Fix hosting precedence, choose canonical sitemap index, run the monitor from CI against the exact deployed origin, and independently inspect robots/sitemap/status/SSR metadata. |
-| P1 | Map query limit is confused with complete discovery | #238/#242 use a 200-record page; a page cap is not a complete-world guarantee | Show “loaded results” honestly, use stable pagination/cursors where useful, preserve cancellation/cached-error state and document zoom/locality limits. |
-| P1 | Work opportunity and source adapters are still staging-oriented | #244 explicitly has no network calls/credentials/activation; #241 notes the persisted payload may not exist | Complete one reviewed contract→staging→publication pipeline and prove real permitted source/supply before user-facing availability claims. |
-| P1 | AI policy has no live retrieval boundary | #245 policy-only, attestations absent in current records | Keep model endpoint/UI disabled until server-grounded context, citations, isolation, evals, rate/cost caps and rollback are accepted. |
-| P1 | Durable 24/7 executor is unproven and its persistence lineage is conflicted | #74/#100/#116/#117/#121 | Reconcile existing migration history; prove identity, project scope, lease fencing, idempotency, RLS, cancellation and kill switch in non-production before scheduling real workers. |
-| P1 | Worldwide localization and market stewardship are not proven | #31 asks for audit of UK-centric geography, locale, time/currency/date and address assumptions | Build a versioned market/locale model and source-rights register before claiming full global coverage. |
-| P2 | SEO/growth funnel is not fully measurable | #29/#30/#36 define work but no reliable baseline was confirmed | Implement privacy-minimised typed funnel events and a dashboard only after telemetry scope and persistence/privacy review. |
-| P2 | Security automation may conflict with deployed build tool versions | #260 reports Bun lockfile v2 and CI success but deployment compatibility unknown | Validate exact runtime in CI/deployment staging; no lockfile/toolchain change without exact-head CI and rollback. |
-
-**Release rule:** P0 findings block a broad public-market expansion. P1 findings block the feature or surface they affect. If a finding affects only one category, keep that category disabled while delivering unrelated safe work.
+Each expansion is earned through measured outcomes and safety, not decided from ambition alone. Billion-user reach remains an aspiration, not a forecast, launch plan or claim of current capacity.
 
 ---
 
-## 4. A single integrated global architecture
+## 2. Evidence boundary and current reality
 
-Build on the existing stack, not a rewrite. Add new infrastructure only when measured limits show it is needed. The architecture should be one evidence-preserving flow:
+This section records observed state from the 22 October 2026 review. It separates tool observations from earlier reports and from facts that remain unknown. It is not a penetration test, complete market study, legal opinion, production audit or load test.
 
-1. **Intent capture:** natural-language or structured user request in their language; explicit manual place choice and date/time where needed. Never require GPS permission or a social account just to browse.
-2. **Canonical place resolution:** resolve to existing `PlaceIndex`/place identifiers, with country, locality, parents, aliases/transliterations, coordinate confidence, timezone, language and source evidence. Ask the user to disambiguate when the place is ambiguous; never infer precise personal whereabouts.
-3. **Deterministic canonical retrieval/discovery:** server validates scope/permissions and bounded query parameters; reads published, eligible data; applies canonical taxonomy and the existing `findSupply()` path. Avoid a second matcher/ranker. All query limits/pagination are explicit.
-4. **Evidence-aware eligibility:** evaluate publication/visibility, provenance/rights, freshness, data quality, moderation, source status, locality/service completeness and user consent. Return explicit reason codes. Do not transform “not in our dataset” into “does not exist”.
-5. **AI interpretation/explanation:** when enabled, the model may clarify ambiguous intent, translate user input, summarise retrieved eligible records and explain matched evidence. Output contains source IDs/URLs, last-checked values and uncertainty. Deterministic code validates all claims and action schemas. The model cannot create candidates, infer availability, override eligibility or self-authorise actions.
-6. **Action/transaction boundary:** separate service enquiry, connection request, event interest, application, booking, payment and completion. Each is its own truthful server-side state machine with consent, permission, idempotency and audit. Do not label an enquiry as a booking or an intention as a completed outcome.
-7. **Measurement and feedback:** measure search usefulness, safe action, response/completion, failed attempts, stale sources, no-result recoveries and user/provider correction. Remove or aggregate PII; no raw private contact details, precise residential coordinates or unnecessary raw query retention.
-8. **Operations/control plane:** data freshness, ingestion health, SEO audits, customer support, moderation, security checks, worker claims, cost guardrails and task handoffs. One canonical control plane, one queue/state vocabulary and explicit human gates.
+### Repository and Lovable continuity
 
-### Personas and real-world tasks
+- The latest verified GitHub main SHA is a99d09f1517523a7a388245ca6b3d5c1245816cb.
+- Comparing main with Loveable/work/safely returns diverged, with 18 commits ahead and 348 behind; merge base ccbcc6acdbc3dcdf6895c0f624b301418257a6e3.
+- The branch-only differences are .lovable/plan.md, src/integrations/supabase/previewAuthStorage.ts, src/lib/map-view.ts and src/lib/work-opportunities.ts. These need review, not blind merge/discard. The current Lovable revision SHA matches PR #235's head, but that does not prove the connected Git sync target or deployed build.
+- The exact Lovable Project Settings → Git repository and active sync branch still require human confirmation. Project metadata shows the Real World Atlas project exists and has a preview and published URL, but project metadata does not prove which branch or commit is deployed.
+- Do not write code through Lovable until the owner confirms the connected repository and an isolated, non-main sync branch. Do not rebase, force-push or bulk-sync a divergent branch. Preserve unique changes, reconcile using a normal review path, and verify the resulting commit and preview.
 
-Support the distinct needs of:
-- residents looking for daily activities, practical help, community, music, food, nature, projects and people nearby;
-- short-term-rental hosts/property managers seeking legitimate cleaning/turnover support and cleaners seeking safe, clear paid opportunities;
-- travellers and temporary residents seeking local guides, language exchanges, cultural experiences, casual work where legally permitted, volunteering and community connection;
-- local teachers, guides, artists, venues, businesses, tradespeople, organisations and event hosts seeking participants or customers;
-- people seeking or offering skills, time, collaboration, work, training and community support;
-- moderators, market stewards, source partners and support operators responsible for the trust fabric.
+Reference: [Lovable Git sync documentation](https://docs.lovable.dev/integrations/git-sync-overview).
 
-Casual work must not imply eligibility to work in a jurisdiction, a visa/work permit, guaranteed pay or accommodation. Provide locally reviewed disclosures and sources. Safety and legal boundaries may mean some categories are not launched in some markets.
+### Analytics are not evidence of market traction yet
 
-### Dense city versus small village
+The connected Lovable analytics report for **22 September–22 October 2026** uses a legacy analytics source and reports 927 visitors and 934 pageviews. The leading page paths include /sitemap.xml (525 views) and /api/public/sitemap.xml (283 views). Direct is the largest source at 867, followed by google.com at 54 and bing.com at 6; 808 visitor country records are Unknown. The session-duration series is not usable as a trustworthy completion or retention measure.
 
-A city may support neighbourhood-level service search and multiple categories; a small village may have one current provider, community contribution paths, nearby towns, regional experiences or no verified supply. The interface and indexability rules must adapt:
-- display the current scope, data freshness and number of eligible results;
-- keep sparse pages usable even when they must remain noindex;
-- offer a broader locality or user-approved search radius, never silently widen scope;
-- invite verified community/provider contributions with moderation and provenance;
-- avoid promising all categories are locally available;
-- link to useful neighbouring places only when the geography is canonical and evidence is clear;
-- never create indexable village×service pages merely because a URL can be generated.
+These measurements do **not** establish 927 human prospective customers, organic demand, active users, conversion, repeat participation or successful real-world exchanges. Sitemap endpoints dominate reported views, and the data may include crawler and automated traffic. Confirm analytics instrumentation and crawler treatment before using it to allocate acquisition spend.
 
-Every locality can eventually have a route; not every route is necessarily indexable, fully populated, or “launched”.
+Reference: [Google's explanation of Analytics and Search Console differences](https://developers.google.com/search/docs/monitor-debug/google-analytics-search-console).
 
----
+### Product and architecture
 
-## 5. SEO recovery and global search growth — implementation specification
+The existing direction already includes canonical locality discovery, map/list interaction, an ingestion contract, service and opportunity concepts, provenance and freshness work, indexability controls, and the principle that findSupply() remains the sole discovery authority. Use and reconcile existing implementations; do not build a second matcher or a parallel acquisition model.
 
-SEO is a trust and discoverability layer for real service—not an independent page-generation engine. Search demand discovers problems worth researching; it does not prove users will convert, supply exists, or a page deserves indexing.
+The current plan and live issue board flag integration dependencies across sitemap and route privacy, map query scope, source freshness and publication eligibility, authentication storage, default database privileges, and the proposed public place assistant. The exact current state of each PR, review, security finding and host behavior must be freshly checked by the lane owner before work begins. A historical report or passing unit test is not a substitute for a live verification.
 
-### 5.1 First recover the live crawler contract
+The public “Ask this place” assistant remains disabled unless issue #209's prerequisites are met. Parser tests do not prove licensed inventory, active imports, provider availability or a live market.
 
-Before adding more SEO features:
-1. Confirm the canonical production origin and which host/CDN/deployment path serves it.
-2. Probe `/`, `/robots.txt`, `/sitemap.xml`, `/api/public/sitemap.xml`, `/api/public/sitemap-pages.xml`, and a known locality/service route with GET only. Record UTC timestamp, DNS/host path if available, HTTP status, final URL, redirects, content type, response bytes, canonical and robots metadata, and cache headers.
-3. Determine why the historical probe reported default `robots.txt` and HTML 404 for `/sitemap.xml`; distinguish code route correctness from static asset/CDN/deployment precedence. Do not publish success on the basis of a local build.
-4. Choose one canonical public sitemap-index URL. Other legacy URLs must be an explicitly tested redirect or deliberately deprecated response; avoid duplicate independent index documents.
-5. Ensure the sitemap URL listed in robots points to the canonical index actually served. Do not point robots at a hidden API route while production serves a root 404.
-6. Deploy only with owner approval; re-run live smoke and verify production HTML/crawled URLs afterward.
+### Continuous AI operations
 
-The #251 checker is useful when brought onto the accepted branch and configured for the exact deployed origin, but it must be corrected and operated as a guard rather than a claim of automatic repair. It must check root/API endpoint precedence, child sitemap paths/content type/status, unexpected index entries, redirect paths, canonicals, privacy, metadata, and the true current public-page registry. A GET-only monitor cannot repair a hosting misconfiguration.
+No persistent executor, durable work-queue heartbeat, lease recovery, kill switch, spending controls and end-to-end audit trail have been verified together as a running 24/7 system. Documentation describing an intended control plane does not prove the worker exists, is scheduled, or can recover after failure.
 
-### 5.2 One indexability policy, not three versions
+The current verified mode should be treated as **on-demand agent work with shared GitHub records**, until a scheduled non-production executor is demonstrated and independently checked. Do not claim the fleet is already operating continuously.
 
-The route metadata, internal links, public API eligibility, and sitemap generator must share one pure policy and one normalised evidence object. Candidate #252 may serve as the starting point only if exact-code review proves this parity; otherwise port the best unique elements into one fresh current-main branch.
+### Current AI work and integration review — 22 October 2026
 
-The policy should include explicit outcomes/reason codes for:
-- canonical place exists and path is valid;
-- service/category exists and belongs to the supported taxonomy;
-- genuinely published and public data, excluding demo/fixture/draft/private/reported/expired/cancelled records;
-- meaningful unique page content and user utility;
-- freshness, source identity, provenance, attribution and rights;
-- current service/provider/request information when a page claims it;
-- sufficient local evidence for the category and locality;
-- correct locale/content variant and canonical URL;
-- no unresolved collisions, malformed slugs or unintended parent/child substitution;
-- moderation/policy gate passed.
+The previous PR inventory in this section is a dated snapshot and is no longer current. PR #285 and #286 have since merged into main; #288 closed after merging into the #285 feature branch, not main. The old 88-open-PR count and “three current-main PRs” statement must not be reused. Re-fetch each PR's exact head/base/review/check state before action. Current main-based draft fixes #291–#293 are summarized at the end of this document.
 
-A locality threshold of at least three genuine current records and a service-page threshold of one eligible real record are current candidate rules, not a universal guarantee of quality. Preserve them only if review shows they match the actual content and user-value definition. A single listing does not automatically make every page helpful. A missing/future/malformed `last_checked_at`, ambiguous “unverified” status, or missing rights evidence must fail closed for source-dependent indexing and AI context. Reconnect the real `last_checked_at` through `rowToEntry()` and `WorldEntry.lastCheckedAt` (candidate #241) before using freshness to grant eligibility.
+This is a convergence problem. Do not create more feature PRs simply because the year plan has many packages. Reduce duplicate and stale work, then promote one verified implementation per concern.
 
-### 5.3 Complete and scalable sitemaps
+#### Current high-priority work
 
-- Use explicit cursor/range pagination for both place hierarchy and listings with stable deterministic ordering and tie-breakers; validate every page’s count and errors. A single `.limit(N)` call is not proof that a table was completely enumerated.
-- If any chunk is missing, the source scan fails, a cap is reached, an upstream result is truncated, a page repeats, or a cache holds an incomplete snapshot, emit no dynamic URLs (or a clearly failed endpoint) rather than a partial sitemap that looks complete.
-- Use a sitemap index and bounded shards. Google’s documented limit is 50,000 URLs or 50 MB uncompressed per sitemap; a 40,000-URL target shard cap from #252 leaves headroom but byte size must also be checked. Keep URLs absolute, canonical and stable, and emit only URLs intended for search.
-- `lastmod` must come from a real meaningful update timestamp; do not manufacture daily freshness, use build time as content freshness, or re-emit a URL because cache time changed.
-- Cache only complete snapshots with a bounded TTL; include source revision/updated marker and stale-cache behavior. Document worker memory/time limits and database cost. For larger inventory, move toward database-side enumeration/sharding rather than scanning 20,000 listings and thousands of places per cold edge worker.
-- Monitor generated counts by country, locality depth, category and locale, exclusions by reason, scan duration/rows read/cache hit/error, duplicate/canonical collisions and shard sizes.
-- Every dynamic route and shard receives privacy, XML encoding, redirect, pagination and regression tests.
+- **#285 — k6 inspection / workflow hardening:** merged into main at 0d68f446f493910583faff55fe14fe38e99995ff. The safe k6 parser/action-pin foundation is integrated. The current-main Verify parses the script without sending traffic; a real load profile still requires a confirmed isolated staging origin.
+- **#286 — k6 fix plus connection-request hardening:** merged into main at b9753024162c0c0858577761dcba5daf9dd27433. This does not close the unresolved access-control concern in #164 or prove the connection migration safe against #162's transition rules. Require a disposable database matrix, conflict/rollback review and independent sign-off before any hosted migration or permissions action.
+- **#272 — locality scope/date-line hardening:** exact-head Verify and CodeQL passed, but its base is 1cf9b21b6fae9fef2b504b2993d37d2f99766d6d, older than current main. Reconcile the branch against current main and the over-400-descendant and date-line acceptance criteria before release.
+- **#154 — truthful open-need counts (Grok-labelled branch):** currently based on the #285 branch and overlaps locality/route scope behavior with #272. Preserve its distinct exact-count and fail-closed need-count tests, but merge the shared locality decisions through one implementation. It is not an independent main-ready branch.
+- **#271 — route policy / Life List privacy:** Verify passed on its recorded head, but the PR is stacked on #285 rather than directly based on main. Keep the route registry and authorization/RLS checks together; move it to main only through a deliberate dependency/rebase plan and verify it against the current hosting routes.
+- **#194 — least-privilege ACL proposal:** documentation only and explicitly not authorization to apply grants. Keep it as evidence; use #164 as the security decision record and require disposable DB/PostgREST tests before any hosted remediation.
+- **#245 — fail-closed Ask-this-place policy:** pure policy/testing work only, also stacked on #285. It must not enable the public assistant. Issue #209's retrieval, isolation, prompt-injection, rate/cost and model-use prerequisites remain a separate gate.
+- **#283 — status/ADR refresh:** documentation only and stacked on #285. Preserve unique current facts, but reconcile it with this master programme and the canonical status file rather than maintaining competing current-state documents.
+- **#235 — preview auth storage / source identity:** GitHub PR head and current Lovable project revision both report 7ca12a5900d708014d63b03847f2c922965ea1be; the branch is 18 ahead / 348 behind main. Project Settings → Git target and deployed build/backend remain unverified. Keep this branch isolated for independent auth review; no write-capable Lovable prompt or bulk sync until the owner verifies a protected non-main target.
+- **#270 — read-only scheduled control-plane probe:** a draft describing an hourly CI probe is not proof of a running durable executor. It must be reviewed, based on current main, and distinguished from the separate daily Global Growth Review automation.
+- **#34 — global search front door / telemetry (Lovable-labelled branch):** the PR is non-mergeable and an earlier 22 October review measured it as 452 commits behind current main. Its parsed subject/timeframe can be lost at navigation (for example, an artist search lands on only the locality route; a local-service query may land on generic /need). Its broad telemetry draft includes normalized query and person/need/connection identifiers, while persistence, retention and call-site behavior are not proven. Do not merge wholesale. Reconcile only unique local-page-quality work and use a narrowly typed, privacy-reviewed event contract.
+- **#168 — privacy-safe funnel event contract:** preferable as a narrow telemetry starting point because its intended contract uses explicit bounded fields/enums and runtime validation rather than a broad raw event bus. It is also based on an older main snapshot and does not prove telemetry is wired or measuring outcomes. Rebase/review it against current main, then explicitly add only the outcome events required by the pilot after privacy review.
+- **Older work:** multiple open map, search, accessibility, job-ingestion, control-plane and AI-kernel PRs are based on earlier main SHAs or stacked experimental branches. The agent coordinator must inspect file overlaps and unique tests before marking them integrate/superseded; do not auto-close them in bulk.
 
-### 5.4 Private paths and the Life List
+#### Agent execution evidence
 
-The Life List must follow its actual product contract: private data stays user-scoped, authenticated and out of public sitemaps, public API payloads, pre-rendered static HTML, structured data and AI contexts. Reconcile #253 with #251’s fixed-page allowlist so the automated smoke test does not expect `/life-list` in the public sitemap.
+GitHub branch names show work labelled for ChatGPT, Grok and Lovable, and the repository contains earlier Codex/implementation branches. Branch naming does not prove which model executed a task or whether a worker is still running. The connected Lovable history shows completed audit/strategy turns, not evidence of current-main UI integration or a persistent heartbeat. A plan-mode turn unexpectedly changed the project scratch note .lovable/plan.md; there is no verified code commit or sync for that action, and write-mode Lovable work remains blocked until the owner confirms the actual Git target. No independently verifiable active Claude run or connected Claude execution channel was found in the available evidence. Treat unobserved agents as NOT VERIFIED, not as running in the background.
 
-`robots.txt` is not access control. Do not rely on a disallow rule to protect content. Enforce authentication/authorisation on every data path, never expose per-user content to anonymous reads, send a safe `noindex` response for crawlable signed-out/private page surfaces where feasible, and ensure sensitive pages require authentication even when a URL is known. Be deliberate about robots/noindex interaction: if a route is disallowed to crawlers, they cannot see its page-level noindex. Private data must still be safe even if robots rules are ignored.
+#### Required convergence order
 
-Centralise public/private route policy rather than hand-maintaining `PUBLIC_PATHS`, `PRIVATE_PATHS`, static sitemap entries, dynamic API expected sets and smoke-test copies independently. Generate or test all copies from a canonical route registry.
+1. Owner confirms the Lovable repository, protected non-main sync branch, deployment SHA/host/backend, and an administrator verifies branch protections.
+2. Human reviewer compares #285 and #286, preserving the CI fix and unique environment-file/connection fixes while holding the unresolved migration out of any live environment; no auto-merge.
+3. Reconcile #272 with #154's unique exact-count work and current-main behavior; re-run checks and manual map tests on the final exact head.
+4. Reconcile #271 and current sitemap/privacy candidates onto one current-main-based route-policy change; no parallel sitemap gate.
+5. Resolve #164/#162/#286 in a disposable database and preserve the open/unexpired need, least-privilege, RLS and two-account denial tests. Never use a test that may TRUNCATE an unspecified/shared database without an explicit disposable-environment opt-in.
+6. Reconcile remaining useful older PRs against the year-plan packages. Only then assign Australia research/onboarding and later feature work; product semantics such as serves versus available_in in issue #281 require an owner decision before the first local-services pilot.
 
-### 5.5 Technical and content SEO for the global network
+This snapshot updates the previous queue statement to **88 open PRs**. It must be refreshed whenever a task is claimed or an integration decision is made.
 
-1. **Canonical URL model:** stable country/place/service/category/event/guide/opportunity route shapes; lowercase/canonical slugs; no duplicate aliases without redirect; strip tracking parameters from canonicals; avoid indexing filter/query permutations; avoid parent and child paths representing the same result set.
-2. **Internal discovery graph:** useful links between country → region → city/town/village → supported services/activities → provider/experience when eligible; breadcrumb paths match visible UI; link to related categories only when they exist and help. Do not mass-link empty pages to each other.
-3. **SSR and crawlability:** critical public content, headings, source attribution, availability caveats, canonical, robots and JSON-LD should be present in server-rendered HTML and verified against the published deployment.
-4. **Structured data:** #257 breadcrumb JSON-LD is a safe early slice when backed by visible hierarchy. Add `LocalBusiness`, `Event`, `JobPosting`, `Course` or other schemas only when the page actually represents that entity and the visible fields support it. Never manufacture reviews, ratings, addresses, credentials, prices, event status, employment facts or booking actions to fill a schema. Syntactically valid JSON-LD does not guarantee a rich result.
-5. **Images and attribution:** keep only source-backed/rights-cleared images with credit and consent where required. Do not treat design-reference assets or user uploads as licensed public SEO assets automatically.
-6. **Freshness and removals:** expired opportunities/events, withdrawn providers, reported records and removed source items must be reflected in page state, metadata and sitemap within an explicit SLA; return appropriate status/noindex/redirect behavior without leaving stale pages indexable indefinitely.
-7. **Multilingual/global SEO:** first implement real locale content and locale-aware canonical routing; only then add correct `hreflang` alternates to genuinely equivalent translated pages and reciprocal mappings. Do not emit hreflang merely because a translation is planned. Avoid locale-by-cookie-only content as the sole way crawlers discover languages.
-8. **Evidence-led content:** local explainers can add value by explaining real local practices, language, service scope, cultural context, and available choices with local review. AI can assist drafts but must cite the evidence and obtain review where claims are consequential. Generic autogenerated city/category copy, spun translations and doorway pages are prohibited.
-9. **Search demand research:** query clusters such as “cleaner for short-term rental turnover”, “Spanish conversation partner in [city]”, “local guide”, “things to do tonight”, “casual seasonal work” and “community gardening” should have evidence for intent, locale, seasonality, competition, provider density and user task. Record source/date/confidence/sample limits; never invent search volume.
-10. **Conversion, not ranking alone:** measure search landing → locality/category resolution → useful eligible result → detail → consented request/action → provider response → declared completion. Track no-result resolution (broaden, request, contribute) and support/report rates. Use Search Console and analytics only after human-approved account/access and privacy scope.
+### Consequence
 
-### 5.6 External search-engine standards referenced
-
-Keep these sources in the research checklist and recheck before release:
-- Google [Search spam policies](https://developers.google.com/search/docs/essentials/spam-policies): doorway/scaled-content risks, including mass pages produced using generative AI or scraped/transformed material that add no user value.
-- Google [multi-regional and multilingual SEO](https://developers.google.com/search/docs/specialty/international/managing-multi-regional-sites): locale-specific URLs and correct language/region signals; do not assume IP-based content switching is sufficient.
-- Google [sitemap construction and limits](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap): 50,000 URLs or 50 MB uncompressed per sitemap; use shards/index and absolute canonical URLs.
-- Google [structured-data general policies](https://developers.google.com/search/docs/appearance/structured-data/sd-policies) and [LocalBusiness documentation](https://developers.google.com/search/docs/appearance/structured-data/local-business): markup must truthfully represent visible page content; do not use invented or irrelevant properties.
-- OWASP [LLM01:2025 Prompt Injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/): RAG alone does not eliminate prompt injection; constrain capabilities, validate output, separate untrusted content, enforce least privilege and adversarially test.
+The first measure of progress should be verified real-world outcomes and the ability to reproduce them safely. Pageviews, prompts run, agents spawned, lines changed, PRs created, countries named and URLs indexed are diagnostic activity—not success measures.
 
 ---
 
-## 6. App integration recovery
+## 3. The first market: a disciplined beachhead
 
-### 6.1 Frontend / design integration
+The platform can eventually support many kinds of real-world activity. The first market must be narrow enough to build trust and liquidity, but representative enough to validate the core architecture.
 
-Keep the merged #211/#220/#231 work as the existing visual foundation. The next task is not a redesign rewrite; it is integrated QA and completing real action paths:
-- Explore/search/home, explicit locality choice, map/list, locality/service pages, Journey/Road Trip and detail sheets must share the same loaded/eligible result facts.
-- Preserve list entries that lack safe coordinates; never invent map pins. Distinguish viewport from chosen locality and the actual result scope.
-- Display loading, empty, stale-cached, cancelled, failure, broad-area and “more results may exist” states honestly, including on small screens.
-- Finish keyboard operation, visible focus, focus restore, semantic landmarks, screen readers, 200% zoom, reduced motion, high-contrast checks and 44px touch-area review in real-browser/manual QA.
-- Preserve photo provenance and safe fallback; confirm licences and typography/assets rights before launch.
-- Keep all critical forms usable without geolocation permission; use editable manual country/locality/search fields and remember only with consent.
+### Recommended product loop
 
-### 6.2 Map, locality scope and large datasets
+Start with one locality and one practical, repeatable, non-regulated or appropriately reviewed use case in which a requester and willing provider can find each other, agree on terms and confirm the outcome. The likely shape is a local offer-and-need exchange.
 
-Before accepting #242, review its latest branch head and unique review comments. If it includes the server-side span guard described in the follow-up, retain it and verify current head. Then integrate #261’s descendant-scope and antimeridian fixes in sequence—or deliberately replace them with an independently reviewed equivalent.
+Cleaning or short-term-rental turnover is an existing candidate in issue #263. Gardening, simple local help or another service may be a better candidate in a specific locality. **Do not declare the category chosen until evidence supports it.** Confirm local rules and insurance/worker-status implications, the ability to recruit genuine providers, the frequency and urgency of demand, user safety, and whether the existing product can support the exchange without speculative schema or a second discovery engine.
 
-Required rules:
-- a selected locality with more than 400 descendants must never silently remove the locality filter; either execute a bounded deterministic chunk/merge with stable ordering and cursors or return typed `SCOPE_TOO_WIDE`;
-- longitude wrapping near ±180° must agree among server bounds, map projection, point-in-view tests and map/list partitioning;
-- abort superseded requests and do not count intentional cancellations as data failures;
-- a failed refresh with usable cached results must disclose stale status; never convert error to known-empty;
-- 200 rows means “200 records loaded”, not “all records in the area”. Define pagination/load-more or zoom-in behaviour;
-- both client and server validate viewport bounds; response limits do not substitute for bounded database work;
-- test sparse village, dense city, null/out-of-range coordinates, overlapping grid clusters, huge locality hierarchy, stable ties, cache refresh, cancellation and date-line cases.
+Avoid initially depending on regulated work, complex payments, accommodation guarantees, emergency services, exact personal-location disclosure, or unverified third-party inventory.
 
-Reconcile #238’s unique UX/observability fixes with #242/#261 once. Avoid a competing PR that edits the same bounds/listing files.
+### Pilot selection scorecard
 
-### 6.3 Work, service and source data integration
+Score each candidate locality/category from evidence, with a written source and date for each material claim. Suggested weights are a proposal to make trade-offs explicit, not measured truth:
 
-Create one clean chain: strict domain contract → bounded source adapter → stage/normalise/dedupe → provenance/freshness/rights → local/category resolution → moderation/policy gate → publication → canonical route/search → user action. Existing source contracts should be reused and deliberately extended; no silent schema or semantics shift.
+| Criterion | Suggested weight | What counts as evidence |
+|---|---:|---|
+| Reachable real supply | 25% | Providers who can be contacted legitimately and are willing to participate |
+| Demonstrable local demand | 20% | Interviews, requests, first-party intent data or verifiable partner needs |
+| Access to anchor participants | 15% | Hosts, businesses, community groups or organisers who can help test |
+| Safety and regulatory simplicity | 15% | Low-risk category, understood local obligations, viable reporting/support |
+| Repeat use and local frequency | 10% | The need occurs often enough to test a repeat loop |
+| Lawful source/data path | 10% | Rights, terms, freshness and provenance are understood |
+| Localization and operational effort | 5% | Language, support and operational burden can be managed |
 
-For WorkOpportunity specifically, reconcile #241, #244, #259 and any useful parts of #197:
-- `last_checked_at` must survive normalisation for permitted source/confirmed records only;
-- compensation amount, currency, basis, dates, work location, conditions, engagement type, source and expiry stay explicit; do not infer pay or work eligibility;
-- contradictory paid/unpaid volunteering/training combinations are rejected;
-- Adzuna and other feeds remain fixtures/staging-only until terms, API ownership, credentials, rate limits, retention, rights, jurisdiction, moderation, support, cost and publication approval are verified;
-- imports are idempotent and deduped; expired/cancelled or rights-withdrawn items are removed from result eligibility, structured data and sitemap promptly;
-- provider claim/onboarding and first-party supply update are equally important to third-party feeds.
+Do not fill gaps with invented market-size numbers, search volumes or supplier estimates. Where evidence is unknown, record UNKNOWN and gather it.
 
-For public locality APIs, make response DTO, page tokens/cursor, scope, errors, cache/ETag, freshness and indexability consistent with the same canonical policies. An API route existing in source does not mean it is deployed or live; record a successful hosted check before calling it live.
+### Supply-first, not empty global expansion
 
-### 6.4 Security, privacy and trust integration
+For a two-sided or multi-sided product, expanding the demand side before enough eligible supply exists can create empty experiences in every new locality. Seed and verify a small amount of genuine supply in one market before driving meaningful demand into it. This is consistent with staged marketplace guidance, which warns against expanding geography before local liquidity is established ([reference](https://twosided.io/blog/marketplace-growth-strategy), 4 July 2026).
 
-Treat security/privacy as part of the application contract, not a final checklist:
-- Inventory public schemas/tables, owners, grants, default privileges, column privileges, RLS enabled/forced, policies, views/RPCs and storage bucket rules.
-- Build a role/action matrix for anonymous visitor, signed-in owner, unrelated signed-in user, provider, moderator/reviewer, ingestion worker and control-plane worker.
-- Test that an anonymous caller cannot read private Life List/memories, private profiles/contact details, private conversations, another user’s data or control-plane tasks/events/RPCs; validate every public suggestion path and admin-client read at field level.
-- Existing issue #164’s default ACL concern needs non-production proof. Do not run a hosted grant change from this plan; design the migration/rollback and get human security approval first.
-- Ensure all server write functions bind identity from trusted auth context, validate IDs/enums/lengths/time bounds, check blocks and permissions, and apply rate limits/idempotency.
-- Provider “verified” badges must correspond to a documented proof policy and its date/expiry. Do not equate registration, self-assertion or scraped listing data with a verified identity or qualification.
-- Make report/block, account/data export/deletion, consent withdrawal and source correction/removal work end-to-end.
-- Treat historical secret hygiene as risk until secret scanning/rotation evidence is recorded. Never include secret values in issues or handoffs.
-- A robots disallow or frontend conditional is not a permission boundary.
+Proposed pilot seed:
+- 10–20 opted-in, real providers or offers in one locality/category;
+- 5–10 real requesters or partner participants recruited through legitimate, human-led contact;
+- a clear description of price/pay, timing, eligibility and who is responsible for fulfilment;
+- a functioning path for enquiry, response, agreement, completion, reporting and support.
 
-### 6.5 Metrics and measurement integration
-
-Issues #29, #30 and #36 already define the direction of a vendor-neutral growth/telemetry spine. Re-audit current analytics/events before adding anything. Keep the smallest useful typed contract and avoid introducing an analytics vendor as an architecture dependency.
-
-Measure events such as:
-- search started/submitted (with raw text redacted/avoided where unnecessary);
-- canonical locality/intent resolved or ambiguous;
-- eligible result shown, no-result, stale/error, broadened scope;
-- detail opened, request initiated/sent/failed;
-- provider response, accepted/declined/cancelled, declared completion;
-- contribution/provider onboarding, source correction, moderation report;
-- SEO landing route/category, source freshness and route eligibility outcome.
-
-Use pseudonymous session or consented account context only as justified. Do not collect precise home coordinates, private phone/email, raw messages, sensitive needs, or cross-site identity graph for growth analytics. If persistence requires schema/RLS changes, create a separate migration task and gate it; do not smuggle it into a frontend PR.
+These are initial hypotheses to validate—not representations that the current system has that supply or that these numbers guarantee product-market fit.
 
 ---
 
-## 7. Full AI integration model
+## 4. Global growth engine: six connected systems
 
-“Fully integrated AI” means useful AI within explicit boundaries across the user experience and engineering operations, not unrestricted agents or one model call added to every screen.
+Growth should be an observable, evidence-led operating loop. It should not become a collection of unrelated marketing automations.
 
-### 7.1 User-facing AI, phased
+### A. Market intelligence
 
-**Phase A — no-model deterministic foundation**
-- Search parses obvious service/activity/place/time fields through deterministic existing contracts.
-- Show confirmation choices where ambiguous. Keep original query intact for the user, but minimise retention and redact analytics.
-- Call the canonical place resolver, retrieval and `findSupply()`/existing domain path. Do not add a separate embeddings/vector/LLM matcher by default.
+Continuously identify candidate demand patterns, locality gaps, source opportunities, competitor substitutes and partner types. Use reputable current sources, approved first-party analytics, search-console evidence and human interviews. Every market dossier must identify sources, dates, coverage limits, uncertainty and a specific testable hypothesis.
 
-**Phase B — read-only grounded assistant**
-- Ask-this-place can launch as a small feature-flagged pilot only after policy #245 or equivalent is integrated, required attestations are represented server-side, and public API + source rights + RLS boundary pass review.
-- The server supplies only eligible, current, place-scoped content and source references to the model. Clients never submit an authoritative list of records for the model to trust.
-- Responses distinguish facts from interpretation, cite source/title/URL/check date, and say “not recorded” or “unknown” when evidence is absent.
-- Strict schemas validate citations and permitted actions. The model has no database write, contact, booking, payment, publish or unrestricted internet-search tools.
-- Evaluation tests cover no-result, contradictory records, stale data, multilingual/code-switch input, private/cross-place leakage, malicious text in a provider listing, prompt injection, credentials/PII, fabricated availability, unsafe requests, source attribution, cost and latency.
-- Include timeouts, request/context/output limits, abuse/rate limits, daily/monthly spend cap, redaction, provider retention review, deterministic fallback, observability and a kill switch. Feature stays off until the exact criteria pass.
+Outputs: ranked hypotheses, an evidence ledger, candidate locality/category scorecards and a short list of validation actions. This lane researches; it does not assert demand merely because a phrase occurs in search data.
 
-**Phase C — consented user helpers**
-- Explore planning a day, language-practice discovery, itinerary assembly and recommendations only by transforming user intent plus eligible records. Preserve correct local time zones and do not claim routes/travel times when no route provider exists.
-- User-controlled memory/preferences are optional, inspectable, exportable/deletable and not used to infer sensitive facts without consent.
-- AI translation must not silently alter critical terms, pay, safety instructions, working conditions or cancellation policy; use human-reviewed strings for consequential interface copy.
+### B. Supply acquisition and onboarding
 
-**Phase D — operational agents**
-- Search Research agent (#19): query patterns, seasonality, demand hypotheses and evidence refs, never fabricated volume.
-- Locality Intelligence (#20/#31): geography coverage, names/aliases, language and market-readiness dossiers.
-- Supply Gap (#21): uses canonical discovery output to identify missing *eligible data*, not claim no providers exist.
-- External World/Events (#22) and Data Acquisition/Freshness (#25/#42): source-health monitoring, contract parsing, stale/cancelled-record proposals and staging tasks.
-- SEO Quality (#24): eligibility parity, thin/doorway/duplicate risk, stale pages, sitemaps, canonical and live crawl tests.
-- Growth/Measurement (#29/#30/#36): funnel evidence, low-risk experiments, completion quality and provider-side supply.
-- Reliability/Security (#32/#45): safe performance experiments, vulnerability triage, access policy tests and incident readiness.
-- Support/moderation helper: summarise reports and suggest actions, but do not silently adjudicate high-impact reports or reveal private data.
-- Orchestrator: chooses bounded tasks according to dependencies/lease/priority, checks CI evidence, updates the queue and escalates. It does not bypass human gates.
+For the chosen niche, discover legitimate ways to reach providers, prepare an onboarding offer, verify terms and eligibility, and help providers publish accurate listings. Begin with real direct conversations and a small number of anchor partners.
 
-Use the existing task/control-plane patterns where possible; never run multiple agents editing the same path without an explicit ownership agreement. Agent result is not evidence until artifacts, exact commits and tests are verified.
+AI may research public business information where permitted, deduplicate candidate records, draft personalised messages, prepare call scripts, monitor stale records and suggest improvements to provider onboarding. A human approves external communications and commercial commitments. Do not harvest personal data without a lawful basis, scrape prohibited data, spam, invent supplier consent, or auto-publish a provider who has not approved their information.
 
-### 7.2 Control plane must be proven before calling this continuous
+### C. Intent-to-outcome conversion
 
-Issues #74/#100 and #116 disagree on what persistence migration lineage is present/authoritative. Resolve by comparing current main migrations, alternate branches and database types; do not create a second `agent_tasks` schema or assume a hosted table exists.
+Instrument and improve the exact path:
 
-Required staging proof:
-- durable task/run/attempt/event state with one canonical status mapping;
-- server-derived authenticated actor identity and approved project/workspace scope;
-- atomic claim/lease/heartbeat/release and stale reclaim with fencing tokens/generation;
-- idempotent events/results, rejection of conflicting duplicates and cancelled-task resurrection;
-- RLS denying anon/authenticated direct table/RPC access except deliberately granted public surfaces;
-- bounded dispatch, capability declarations, timeout, cancellation, retry/backoff, dead-letter visibility, budget accounting and kill switch;
-- operator dashboard showing queue depth, lease expiry, last successful heartbeat, blocked reason, last CI evidence, provider failures and cost;
-- human approval IDs for gated tasks, audit trail and alerts/escalation;
-- non-production adversarial matrix from #117, with exact migration SHA, RPC responses and environment recorded.
+**intent → locality resolution → canonical findSupply() → eligible useful result or honest quiet state → consented enquiry → provider response → agreed activity → outcome confirmation → optional feedback or referral.**
 
-Until a real scheduled job records a verifiable heartbeat and completes a bounded end-to-end task in a confirmed non-production environment, describe it as **scheduled checks / manual AI-assisted work**, not a live 24/7 executor. No autonomous merge, production deploy, ACL changes, paid commitments, user/provider messaging or public publication.
+For each failure, determine whether it is an intent problem, locality problem, supply gap, freshness/eligibility issue, contact friction, slow response, trust concern or product defect. Do not “fix” empty results by adding fake pins, guessing availability, broadening the search silently or bypassing publication checks.
+
+### D. Search and content growth
+
+Use technical SEO to make genuinely useful public pages discoverable. Use one canonical policy for route metadata, public APIs, internal links, structured data, robots and sitemaps. Index only pages that pass that policy and have real, eligible, current content. Keep private routes and private user data out of public routes, sitemaps, exports and model context.
+
+A locality page is not valuable just because it exists. Never mass-generate thin pages or claims for markets that lack supply. Use Search Console impressions/clicks and qualified human actions as separate signals; sitemap hits do not show demand. Live robots/sitemap behavior must be verified against the confirmed production host after an explicitly approved release.
+
+### E. Trust, contribution and repeat participation
+
+Trust is part of conversion and supply quality. Make provider control, provenance, freshness, response expectations, consent, reporting and support obvious. After an exchange, ask for an optional confirmation and feedback; never turn kindness or connection into a popularity score.
+
+Only use referrals after a participant has a genuine useful outcome. The product should invite a person to share a useful experience, not send unsolicited mass invitations or pressure people into social interaction.
+
+### F. Experimentation and capital efficiency
+
+Each growth experiment must declare a hypothesis, target cohort/locality, baseline, one main variable, measure, duration or stopping rule, risk guardrails and owner. Prefer manual validation and small experiments before code or spend. Automate analysis and experiment reporting; do not autonomously approve or increase paid budgets.
+
+No paid acquisition until analytics can distinguish meaningful human activity from crawlers and the product has enough verified supply to serve the demand. Every experiment must be reversible and its outcome recorded.
 
 ---
 
-## 8. Global geography, localization and market onboarding
+## 5. Commercial model and unit economics
 
-### 8.1 Canonical world model
+Global growth must lead to a sustainable service, but monetization should follow demonstrated value rather than be used to disguise a product that has not yet achieved reliable local liquidity.
 
-Global reach requires a maintained locality and language layer, not a country selector plus UK-specific data. Define and source:
-- stable place ID; country ISO code; administrative levels; parent/child relationships; canonical URL slug; accepted alternate spellings, local names and transliterations;
-- coordinate reference and uncertainty; viewport/bounds rules; time zone; languages; postal/address conventions where applicable;
-- source, licence/terms, import revision, validation date, steward and retirement/merge rules;
-- support for places where official administrative units differ from user-recognised neighbourhoods/villages; alias collisions and duplicate names must ask the user to clarify.
+### Commercial principles
 
-Reuse the existing place index as the canonical runtime authority and document the licensed source that populates it. Compare gazetteer/map sources and data licensing before selecting or merging any provider. Do not import the whole globe at once without a maintenance/rights strategy. Every location used in public URLs must resolve consistently in page routes, search, map and APIs.
+- Keep essential discovery, participation and human connection accessible. Do not paywall basic safety, consent, reporting or access to a person's own data.
+- Do not sell private user data, use private needs/memories for targeting, or turn human relationships into a popularity/ranking economy.
+- Do not sell “verification.” Verification must reflect evidence and policy, not payment.
+- If placement is ever sponsored, label it clearly and keep relevance, eligibility and safety requirements intact. Payment must not turn an ineligible or stale item into a valid result.
+- Do not build payment flows, take rates or financial escrow until the value chain, liability, refunds, disputes, taxes, chargebacks and applicable country rules have been reviewed.
+- Treat each business model as a hypothesis. No pricing, contracts or financial commitments without human approval.
 
-### 8.2 Locale architecture
+### Candidate models to evaluate after the pilot
 
-- Separate content locale, user preferred language, provider spoken/taught languages, market/country and currency; they are not interchangeable.
-- Use locale-aware date/time/currency/number/address formatting with explicit timezone. Store money as integer minor units plus ISO currency; do not use floating-point prices or infer exchange conversion.
-- Build locale URL strategy and fallback rules. Translate page content, metadata, menus, error states, legal/safety notices and emails in a controlled bundle. Do not mark up/hreflang translated variants until they are live, reciprocal, equivalent and meaningfully translated.
-- Start with English and the minimum owner-approved launch language set based on the chosen pilot; select the next locales from actual user/supply research, not a universal guess.
-- Search should support user locale, local-language aliases and common visitor phrasing. Use AI for ambiguous interpretation only if it returns canonical intent candidates for confirmation or deterministic validation.
+1. **Free pilot / provider retention first.** Start by proving that the service creates value, that providers respond and that exchanges complete. Record provider time/cost and request fulfillment; do not assume willingness to pay.
+2. **Provider tools or business subscriptions.** Consider optional paid tools only if providers repeatedly value a verified profile, availability management, enquiry workflow, schedule, reporting or operational software beyond basic visibility.
+3. **Transparent transaction fee.** Consider only where the platform genuinely supports or manages the transaction and where the legal, payment, refund, dispute and support model is ready. A fee taken on off-platform outcomes may be unenforceable or damage trust.
+4. **Partner-funded local utility.** Community organisations, venues, municipalities, accommodation operators or business groups may sponsor clearly defined local services or onboarding where benefit and obligations are transparent.
+5. **Clearly labelled sponsored discovery.** Defer until there is enough high-quality organic supply and ranking governance to avoid undermining user trust.
 
-### 8.3 Market dossier
+### Unit economics and go/no-go
 
-Every country/launch region must have an approved dossier with:
-- target users and top jobs-to-be-done, demand/source evidence, competing options and confidence;
-- genuine consented provider/organiser supply by locality/category, freshness, coverage, requestability and contact route;
-- geographic hierarchy/aliases/time zones/language/currency;
-- data licenses, source terms, attribution, refresh/retention/removal;
-- trust/qualification/verification policy for each enabled category;
-- local legal review for employment/visitor work, tourism, privacy, consumers, payments, tax, moderation, safety and regulated areas;
-- language-support coverage, moderation coverage, customer response expectations and escalation;
-- UX, accessibility, SEO, route/canonical/sitemap/live-host checks;
-- real end-to-end request/result test, performance/error baseline, monitoring and rollback;
-- budget and unit-economics hypothesis, launch owner, stop/pivot conditions.
+Measure cost per completed outcome, provider acquisition and onboarding cost, moderation/support cost, source/API costs, infrastructure and the share of providers who return. Measure willingness to pay with real conversations or approved experiments, not assumptions.
 
-No dossier → no live launch claim. A market may be browsable but not indexable; a location may be represented but not have genuine supply; each status must be displayed honestly.
+Do not start major paid acquisition until the funnel is trustworthy, a locality has adequate supply, and the team knows what one incremental completed outcome costs. Any ad-spend test needs a human-approved budget, named owner, stop-loss threshold, attribution and a rollback plan. Agents may research, draft campaigns and report results; they may not increase budgets or accept commercial terms autonomously.
 
----
+## 6. The multi-agent operating model
 
-## 9. Twelve-month implementation programme
+The objective is **continuous progress**, not continuous unbounded model activity. A healthy 24/7 system is event-driven: scheduled checks and new evidence wake bounded workers, work is recorded durably, and agents stop when no valid task is ready. It should not spin in endless chat loops or consume tokens for the appearance of activity.
 
-Months begin on owner acceptance. Multiple safe lanes may run in parallel, but dependent changes must be sequenced and exit gates cannot be waived for calendar speed.
+### Roles and separation of duties
 
-### Month 1 — Establish authoritative state and stop integration drift
-
-**Audit/R&D**
-- Refresh current main SHA, enforced branch/ruleset/required checks, all PRs/issues, project sync target, production hostname/backend identity, environment variables (names only), route inventory, migrations, RLS/grants, source adapter statuses and historical exposed-secret risk.
-- Build a PR dependency graph. Mark each candidate **integrate**, **port unique fix**, **superseded**, **blocked**, or **close after preserving unique work**. Reconcile the already merged #211/#220/#231 state rather than treating it as open.
-- Resolve the contradiction in `docs/agents/STATUS.md` versus #254; update one canonical status file and link the evidence.
-- Establish baseline data: eligible public records per category/country/locality, freshness, source rights, route/sitemap counts, telemetry events if any, users, useful-result rate, requests/responses/completions, reports, latency/errors, query/database cost and hosting budget. Use UNKNOWN when data cannot be obtained.
-
-**Build**
-- Create task envelopes for P0 findings in Sections 3 and 6, with one owner, dependencies, file scope and exact acceptance gates.
-- Confirm a safe staging/disposable DB and a human owner for production, security, data and release.
-
-**Exit:** one verified repository/environment snapshot, a ranked risk register, an integration graph, and a measured-or-unknown baseline. No security/production setting change is used to get unstuck.
-
-### Month 2 — Repair SEO privacy, eligibility and live-host discovery
-
-**Build**
-- Select one route/sitemap implementation. Review #252 as the likely combined candidate against #247/#249 and preserve unique work before superseding alternatives.
-- Implement a single canonical policy for route metadata, internal visibility, public APIs and sitemap URLs. Add freshness normalisation from #241 or an accepted equivalent.
-- Fix the Life List registry mismatch across #253, #251, `PUBLIC_PATHS`, `PRIVATE_PATHS`, static assets and dynamic sitemap tests.
-- Fix complete pagination and fail-closed behaviour for places and listing scans. A scan limit/error can never look like an empty-but-complete sitemap.
-- Define the one production sitemap index endpoint and its child paths. Ensure robots points to it. Bring #251 live smoke checker onto the actual accepted policy and deployed hostname only after owner-approved deployment.
-- Add tests for all privacy paths, canonical collisions, stale/no-provenance/fixture data, incomplete scans, redirects, wrong content type, shard byte/URL bounds and private URL leakage.
-
-**Exit:** exact-head CI passes; all route/sitemap policy parity tests pass; complete scans are provable or fail closed; Life List is not public; live-host check is either verified pass or an explicit launch blocker with evidence.
-
-### Month 3 — Close access-control and core data-contract gaps
-
-**Build**
-- Complete #164 ACL/RLS/default-privilege inventory in a disposable/authorised non-production environment; document the role/action matrix and all public/admin-client exceptions.
-- Confirm auth gates, private routes and storage buckets; adversarially test anon, owner, unrelated user, provider, moderator and worker roles.
-- Reconcile WorkOpportunity/last-checked freshness: choose a main-based PR chain between #241/#244/#259 and useful #197 work. Keep feed activation off.
-- Trace a real eligible staging record through permitted read, normalisation, page/API, canonical discovery, action and visible truthful status. Repeat with private, demo, stale, expired, cancelled, blocked and failed-read records.
-
-**Exit:** security review of access matrix; no unresolved critical/high release blocker in the tested scope; test database proof; one coherent canonical source/eligibility/normalisation contract; explicit human sign-off for any migration/grant proposal. Do not change hosted ACLs without approval.
-
-### Month 4 — Global search front door, public APIs and useful no-result recovery
-
-**Build**
-- Audit/extend the current front door against issue #29: examples include “cleaner for short-term rental turnover”, “things to do here tonight”, “Spanish conversation practice”, “local guide”, “community garden”, and “casual work” with place/time constraints.
-- Parse intent through canonical service/event/opportunity/place contracts. Ambiguous places/categories get user choice; unresolved intent stays visible rather than triggering a hidden matcher.
-- Align public locality API, route metadata, results and sitemap candidate generation; add stable pagination/error/freshness/cache semantics and hosted verification before “LIVE” labels.
-- Build no-result recovery: broader area (with explicit user confirmation), nearby supported categories, request/share need, contribute/claim a local record, or honest quiet state. No silent scope broadening.
-- Add typed privacy-minimised funnel telemetry from #30 only after checking existing analytics and any required schema/RLS boundary.
-
-**Exit:** tested intent journey for residents and travellers; source-grounded results; typed no-result reasons; accessibility/manual QA; no second discovery engine; privacy-reviewed telemetry contract.
-
-### Month 5 — Cleaning / home services and short-term-rental turnover pilot
-
-**Research**
-- Select a pilot locality by documented search intent, property turnover evidence, genuine cleaner/host commitments, data rights, support capacity and local requirements. Airbnb is an example of short-term rentals, not a presumed partner or data licence.
-- Interview providers and hosts/property managers. Determine whether a turnover task needs a quote, recurring schedule, urgent availability, laundry/linen, inspection, supplies or an entirely different workflow.
-
-**Build**
-- Complete provider onboarding/claiming, service-area coverage, service categories, current source timestamps, declared price basis and contact/quote requests.
-- Implement a real request state machine with auth, consent, idempotency, spam limits, notification delivery state, block/report, cancellation and support escalation.
-- Keep service-area semantics explicit; a profile residence never implies coverage. Keep private phone/email/precise address private by default.
-- Show no booking confirmation unless the system actually reserves a provider/time. Show unknown availability when unknown.
-
-**Exit:** opt-in verified cohort (target for research: 15–25 providers and 5–10 hosts/property managers, adjustable by evidence); successful end-to-end request/response in staging then approved pilot; RLS/abuse tests; support runbook; real outcomes measured. Cohort numbers are test targets, not expected achievements.
-
-### Month 6 — Local guides, experiences and Spanish learning with locals
-
-**Research**
-- Compare South American candidate cities/neighbourhoods using actual visitor/resident demand, consented teacher/guide/experience supply, competition, seasonality, language support, trust/safety and regulation. Pick one based on evidence rather than fame.
-- Interview teachers, conversation partners, guides, cultural organisations, students and travellers. Distinguish informal language exchange, paid tutoring, tours, classes and community events.
-
-**Build**
-- Listings support taught/spoken languages, level only when stated, lesson/experience format, duration, meeting mode, timezone, stated currency/price, cancellation policy, source and contact preference.
-- Ensure profiles distinguish self-described skill from verified qualification. Use human-reviewed translation for consequential safety, price, cancellation and employment terms.
-- Add consent, report/block, provider correction/removal and current status. Do not launch reviews/ratings until moderation, authenticity, appeals and deletion policies exist.
-
-**Exit:** one evidence-selected market, real opted-in local supply and visitor participation, complete user journeys, verified source/rights, safe request flows and a market dossier. Do not claim a booking/payment system that is not integrated.
-
-### Month 7 — Everyday local life and adjacent categories
-
-- Activate events/culture/music, workshops, nature, community projects, volunteering, skill exchange, local businesses and work opportunities as distinct verticals with each category’s own evidence and risk contract.
-- Add event source adapters only with terms, attribution, event identity, duplicate handling, cancellation/expiry, time-zone correctness and legal source activation.
-- Keep opportunities separate: paid work, volunteering, unpaid training, expense reimbursement, stipend and unknown compensation are different facts. Never infer legal work eligibility, wages, accommodation or availability.
-- Add source/provider dashboard for status edits, verification evidence, expiration and report handling.
-- Establish sparse-village experience: local contributions and regional browsing without fabricating supply or indexing empty service pages. Add local partner/organisation onboarding and named steward.
-- Research regulated/higher-risk categories (housing, childcare, medical/health, finance, legal advice) separately; do not activate them merely because the category graph permits them.
-
-**Exit:** a small set of new categories passes policy, source, support, privacy, UX and end-to-end tests. Others remain visibly planned/disabled.
-
-### Month 8 — Localisation, authoritative place coverage and market operations
-
-- Inventory UK-centric assumptions, hard-coded currency/date/time/address/locale behavior and English-only strings (issue #31). Build locale-aware formatting, country/administrative models and alternate names without breaking canonical places.
-- Research appropriate authoritative/licensed gazetteer sources, attribution and update terms. Add import/merge/alias/collision tests. Maintain locality ownership, provenance and a way for locals to correct the record.
-- Select the next country/region only after market readiness; no “Australia live” or similar claim based on a route or fixture.
-- Add translation workflows with human review for critical policy/safety copy; enable true hreflang/locale links only for equivalent live locale pages.
-- Define low-bandwidth/resilient mobile behavior and manual place selection, because global usability includes users with slow networks, limited devices or denied location permissions.
-
-**Exit:** one additional locale/market works end-to-end in test, including dates/currency/place names, route/canonical behavior, fallback language, support coverage, source rights and local steward; expansion dossier accepted.
-
-### Month 9 — SEO and organic growth system for real utility
-
-- Operate the unified SEO gate/sitemap on the verified production origin. Track index eligibility, excluded-by-reason, canonical selection, duplicate/soft 404s, stale pages and live sitemap shard size.
-- Add #257 breadcrumb JSON-LD once route gating is stable. Test it against visible UI/hierarchy; then add category-specific schemas only after truthful field completeness and policy review.
-- Introduce multilingual/country-specific URL and internal-link strategy; do not index query filters, unreviewed user-generated content, private route variations or thin translated pages.
-- Use search data, Search Console and interviews to discover city/village category opportunities. Each opportunity needs source, timestamp, confidence, sample limitations, real supply evidence and an experiment decision.
-- Build a controlled local-content workflow: local expert/partner evidence → AI-assisted draft → citations/fact check → human review → indexability gate → live monitoring. Never mass-publish generic city text or doorways.
-
-**Exit:** current live SEO monitoring works; canonical/robots/sitemap/structured data checks are green; organic experiments track useful-result/request outcomes; no claim is made that search engines indexed pages without authoritative evidence.
-
-### Month 10 — Deploy a grounded read-only AI companion
-
-Only begin if #245 or an equivalent reviewed policy is integrated and necessary data rights/attestations exist.
-
-- Provide place-scoped “Ask about this place / help me find…” interactions as a feature-flagged pilot.
-- Retrieval happens server-side through eligible canonical sources; model receives only necessary fields. It cites sources and dates, states uncertainty, never invents prices/availability/ratings or recommends nonexistent providers.
-- Test prompt injection in listing text, private/cross-place leakage, malicious instructions, model hallucination, stale records, conflicting sources, empty results, multilingual queries, personal-data redaction, output-schema failure and cost/latency.
-- Enforce timeout/context/output/rate/cost caps, deterministic fallback, audit log minimisation and kill switch. User-facing AI has no database write, contact, booking, payment, publication or unrestricted external-action tool.
-- Keep the assistant off for categories/markets without adequate source evidence and local support.
-
-**Exit:** independently reviewed eval report, privacy/security review, source/citation fidelity threshold, cost/latency budget, failure handling and rollout/rollback plan. If evidence/rights are absent, the correct exit is “remain disabled and continue research.”
-
-### Month 11 — Reliability, scale tests, operations and supervised agent runtime
-
-- Establish real pilot SLO baselines. Proposed gates to ratify from evidence: 99.5% monthly availability during controlled pilot; public read p95 below 500 ms at declared workload where appropriate; server error rate below 1%; no unresolved critical/high release security findings. These are design targets, not current measurements.
-- Load/soak test the actual workload: location resolution, dense locality, sparse village, large hierarchies, sitemap generation, many simultaneous searches, popular-market hotspots, ingestion, stale cache, auth, report/request writes and AI requests.
-- Use query plans, indexes, cursor pagination, bounded batch/cache, CDN/SSR measurements, rate limits and queueing to address measured bottlenecks; never remove permission/evidence checks to improve speed.
-- Reconcile #74/#100/#116 and perform #117’s adversarial hosted *non-production* executor tests. Do not enable persistent dispatch until identities, project scope, schema/RLS, lease fencing, cancellation, retry caps, budgets and kill switch are proven.
-- Verify backup restore, rollback, incident response, log redaction, dependency scanning, secret rotation, support staffing and cost budgets.
-- Confirm the Bun v2 lockfile and Cloudflare/Nitro/Lovable deployment runtime compatibility before accepting #260.
-
-**Exit:** workload and cost report, recovery drill, security sign-off, source/SLO alerts, and proof of one bounded scheduled task/heartbeat on a confirmed non-production environment. No autonomous production executor or merge.
-
-### Month 12 — Launch review and the next market decision
-
-- Use staged rollout: staff/internal → invited provider/customer cohort → constrained public pilot → broader locality/category only after measured gates pass.
-- For each market, publish only supported live categories and clear states. Run real smoke requests for cleaning, local learning/guide, events or opportunity paths relevant to that cohort.
-- Review qualified result rate, provider response/completion, repeat supply, reports/cancellations, stale-source rate, user satisfaction, SEO quality, accessibility, latency, support cost and contribution margin.
-- Decide **build / pause / stop / pivot / explore** for each market-category pair. Remove categories that cannot maintain truthful supply, safety or operational support.
-- Add the next market only when the current onboarding playbook is repeatable and local supply/support/legal gates are met.
-
-**Exit:** written approval by product, engineering, security/privacy, data/source stewardship, support and market owner; launch metrics and incidents reviewed; a measured Year Two roadmap. The valid outcome may be a few highly useful markets plus a proven global expansion process—not a misleading claim that every village is fully populated.
-
----
-
-## 10. Continuous workstreams and exact acceptance standards
-
-### A. User journeys
-- Resident: location chosen manually or by consent → everyday intent → eligible options → source/freshness → action/request → real response → outcome/correction.
-- Host/property manager: task details → verified coverage → quote → provider response → agreed state (only if represented) → issue/report/resolution.
-- Cleaner/worker: profile/claim → service/work scope → clear compensation/terms → request/application → response → safety/report/support.
-- Traveller: selected city and dates/timezone → real guide/experience/language partner → clear price/terms/language → consented enquiry → meeting safety and follow-up.
-- Community member: need/offer/project/event → explicit visibility and consent → canonical discovery → contact/join → feedback and moderation.
-Every journey must test anonymous/signed-in states, empty/stale/error/unauthorised results, duplicate submission and mobile accessibility.
-
-### B. Real-world data contracts
-All public records need defined schema/version, canonical identity, source, rights/consent, last-checked/update timestamp when source-derived, visibility/publication state, category/place links, freshness expiry, correction/removal path and moderation policy. Use reason codes for rejects/holds. Staging never counts as public supply.
-
-### C. Supply growth and villages
-A locality page may exist even when sparse; indexability is separate from user access. Use the same canonical eligibility gate for link exposure/sitemap/indexing. Show source coverage limitations and offer contribution/nearby alternatives. Detect supply gaps from actual eligible records and demand evidence, then create provider-acquisition tasks requiring human outreach approval. No automatic scraping or claims based solely on missing data.
-
-### D. Reliability and global scale
-Before scale claims, model read/write volume, source refresh schedules, cache hit rates, cold starts, geographic queries, payload size, DB pool usage, shard generation, model tokens/cost and support load. Run 10×/100× scenarios as simulations after a measured baseline, and distinguish extrapolation from actual load tests. Define capacity per service/dependency and fail-safe behavior under rate limits or outages.
-
-### E. Privacy-respecting analytics
-Instrument the complete funnel with minimised data. Use aggregate locality/category rather than exact user coordinates where possible. Set retention limits, role-based dashboard access, user consent and deletion rules. Do not build ad-tech identity graphs or optimise vanity engagement.
-
-### F. Accessibility and trust
-Human QA with keyboard and screen reader, contrast, 200% zoom, reduced motion, mobile 375/390 and desktop 1280/1440 layouts, focus restore, forms, status announcements and target size. Define verification semantics by category and support appeals, correction, removal and abuse reporting.
-
-### G. Commercialization
-Research subscriptions, qualified leads, transparent booking commissions, organisational tools and clearly labelled sponsored placement. Historic prices are hypotheses. Do not enable live payment/outreach without explicit owner decision, jurisdiction/terms review, refund/dispute process, ledger reconciliation, chargeback handling, cost model and security check. Paid prominence must not quietly override evidence/relevance.
-
----
-
-## 11. Proposed metrics and release gates
-
-These are proposed gates that must be ratified after Month 1 baseline. They are not claims of current state.
-
-| Dimension | Metric | Gate or rule |
+| Role | Main responsibility | Must not do |
 |---|---|---|
-| Core discovery | Intent → eligible result rate; time to first useful result; no-result recovery | Baseline by category/market; every no-result has a truthful reason and safe next action. |
-| Real-world conversion | Search → detail → request → provider response → declared completion | Instrument only supported durable states; report each transition and failure reason separately. |
-| Data integrity | Public record provenance/freshness/visibility/rights status | 100% of public records have the required publication/visibility semantics and removal path; source-derived records show last-checked evidence or stay gated. |
-| SEO | Route/sitemap parity; private URL leakage; crawl status; duplicate/canonical conflicts | One eligibility policy; zero private/demo/unsupported URLs in public sitemaps; incomplete enumeration fails closed. |
-| SEO host validation | HTTP status, content type, canonical, robots and child-sitemap checks | Must run on deployed origin after authorised deployment; repository tests alone do not satisfy. |
-| Accessibility | Manual keyboard/screen-reader/responsive review | Required before public pilot for each primary flow; record evidence and unresolved exceptions. |
-| Security/privacy | RLS/grant matrix, private-path isolation, secrets and source-data rights | Zero unresolved critical/high release findings unless an owner records explicit risk acceptance/expiry; no unauthorised hosted mutations. |
-| Reliability | Availability, p95/p99 latency, error rate, recovery | Set by measured workload; proposals are 99.5% pilot availability, p95 <500 ms where appropriate, errors <1%; prove through actual monitoring/load. |
-| AI integrity | Citation precision, grounded answers, cross-place leakage, refusal/no-result, latency/cost | Establish an adversarial golden set; no launch without thresholds, budget, privacy review, feature flag and kill switch. |
-| Supply liquidity | Eligible providers/category/locality, response/freshness/coverage | Distinguish current eligible supply from all real-world supply; unknown is not zero in the world. |
-| Economics | Cost per useful outcome, support minutes, provider onboarding, CAC/retention/revenue | No monetisation expansion without measured unit economics and provider/user willingness-to-pay evidence. |
-| Agent operations | Durable queue, lease/heartbeat, stale task, duplicate dispatch, blocked work, audit trail and spend | No 24/7 claim without real scheduled non-production task/heartbeat, kill switch, bounded retries and human escalation. |
+| Human owner / product lead | Strategy, market/category selection, budget, safety posture, external commitments, merge and release approval | Delegate accountability for consequential decisions |
+| Orchestrator | Maintain the dependency graph, task queue, leases, priority and handoffs; prevent duplication | Invent product direction or bypass approval gates |
+| Market intelligence | Evidence-backed demand, source and locality dossiers | Invent demand, search volume, supply or market sizes |
+| Supply operations | Provider candidates, onboarding support, freshness and supply-gap diagnosis | Contact people or publish offers without authorization |
+| Implementation agent (e.g. Grok or an approved coding worker) | Bounded change in an isolated branch with tests and a draft PR | Commit directly to main, widen scope or merge its own PR |
+| UI implementation agent (Lovable) | UI work only after repo/sync branch is owner-confirmed and protected | Write into an unknown or main sync target |
+| Independent reviewer (e.g. ChatGPT/Claude) | Challenge assumptions, review diffs, adversarial tests, evidence quality and acceptance criteria | Rubber-stamp its own work or claim testing it did not run |
+| Security, privacy and QA lane | Route/data access, rights, adversarial tests, privacy, accessibility, reproducibility | Weaken access controls or tests to get green |
+| Data / SEO operations | Source permissions, ingestion evidence, indexability and host monitoring | Activate feeds, publish unqualified supply or create thin pages |
+| Analytics/evaluation lane | Validate event definitions, funnel, quality, cost and experiment effects | Treat model calls, bots or pageviews as completed outcomes |
 
-Do not optimise for page counts, commits, time in app, raw model calls or agent activity. A closed loop to a safe, useful offline outcome is success.
+These are work lanes, not proof that the corresponding agents, subscriptions, credentials or connectors are currently available. In this environment I can access GitHub and the connected Lovable project. I do not have a confirmed direct execution channel to start or schedule Grok and Claude on your accounts from this plan. Their participation requires a human to hand off the task or an explicitly configured, authenticated integration. Do not mark an agent active until a real run and its evidence are visible.
 
----
+### One shared contract for every agent task
 
-## 12. Grok execution protocol
+Every task begins with:
+- Objective and user/market outcome served;
+- Evidence and current SHA, plus links to the relevant issue and PRs;
+- Hypothesis and acceptance criteria;
+- Scope in and out, dependencies and file/area ownership;
+- Risk classification, privacy/security/SEO and source-rights impact;
+- Test plan and proof required; rollback or recovery path;
+- Required human decision and explicit stop conditions.
 
-Before every task:
-1. Read this plan, the companion prompt #248, `README.md`, `roadmap.md`, `AGENTS.md`, `docs/agents/README.md`, current `docs/agents/STATUS.md`, relevant ADRs and the exact issue/PR history.
-2. Fetch current default-branch SHA, PR bases/heads, exact check runs, changed paths, reviews and comments. Do not use old head SHA as current proof.
-3. Check active tasks, branch ownership and conflicting paths before claiming work. Follow claim/lease/handoff policy. If another agent is editing the same path, coordinate or work another lane.
-4. Produce a bounded task contract: problem, evidence, objective, scope in/out, dependencies, risks, acceptance criteria, tests, rollback, security/privacy/SEO effects and human gates.
-5. Research current external facts/rules/provider terms when material; cite source and date. Distinguish observed facts, hypotheses, proposed metrics and UNKNOWN. Avoid hallucinated market sizes, search volumes and supplier availability.
-6. Use a non-main branch; make the smallest reversible change. Do not rebase-force or rewrite another agent’s history. Do not edit via Lovable until its sync target is confirmed as the intended non-main branch.
-7. Test in increasing order: unit/adversarial → integration → type/lint/test/build → disposable DB/RLS when relevant → browser/a11y → hosted non-production → human-approved live check.
-8. Review the final diff for secrets, untrusted content, authentication, data rights, private route/sitemap leakage, canonical discovery duplication, pagination/truncation, query cost, stale cache, mobile/accessibility and rollback.
-9. Open/update a reviewable PR with exact SHA, CI links, manual evidence, skipped checks, known limits, dependency and risk. Update the canonical status/handoff.
-10. Stop and escalate on production writes, schema/RLS/grant changes, credentials, billing, external outreach, ambiguous legal semantics, data-rights uncertainty, conflicting branch lineage or repeated failure. After three materially similar failures, diagnose instead of retrying endlessly.
+Every handoff returns:
+- STATUS: done / partial / blocked;
+- owner/lane, branch, exact commit SHA and changed files;
+- exact-head CI links and exact commands/results;
+- manual checks performed and NOT RUN items;
+- evidence/source dates, assumptions, unknowns and limitations;
+- security/privacy/source/SEO impact;
+- human gate and next smallest safe action.
 
-**Never allowed without explicit human approval:** merging to main, deployment, production data writes, live-feed activation, credentials or permissions, hosted RLS/grant/default-ACL changes, destructive migrations, paid spend/autopay, external user/provider communication at scale, legal/financial commitments, public partnership claims, mass page publishing, or changing the human-gate policy.
+### Shared memory and task discipline
 
-AI can research and recommend an action; deterministic policy and authenticated server code must enforce it; a human must approve high-consequence or irreversible actions. Do not confuse model confidence with evidence.
+Use GitHub as the auditable source of task truth: issues for objectives, PRs for changes, explicit evidence in comments, and a canonical execution board. Reconcile #263 and #279 rather than create another competing board. Keep docs/agents/STATUS.md dated and concise; stale snapshots must be labelled historical.
 
----
+Use issue claims or equivalent leases with owner, expiry and heartbeat. One active owner per task and a declared file/path scope. Independent reviewers do not implement the same change they approve. Agents first inspect open PRs, current base/head, exact check runs, changed files, approvals and dependencies. Merge candidates with overlapping paths into one authoritative implementation rather than adding a new parallel version.
 
-## 13. First ten implementation tasks after this plan is accepted
+Proposed initial concurrency limits, pending operational evidence:
+- no more than 3 active implementation/research tasks at once;
+- no more than 5 actively worked PRs in the integration queue;
+- each agent has a bounded task and deadline/lease, per-run and daily cost ceiling, and maximum retry count;
+- no new initiative while the same shared path has an unresolved competing implementation;
+- after 3 materially similar failures, stop retries and submit a diagnosis;
+- no agent is rewarded for number of messages, lines, commits or PRs.
 
-1. **Refresh canonical reality:** verify main SHA, ruleset/required checks, Lovable sync branch, deployed hostname/backend project, secret scan and status-doc consistency. Do not touch production to accomplish this.
-2. **Create a PR dependency graph:** current-main candidates, merged UI #211/#220/#231, SEO #247/#249/#251/#252/#253/#257, map #238/#242/#261, WorkOpportunity #197/#241/#244/#259, security #260 and public API issue #111.
-3. **Run an independent security/data access audit:** issue #164 matrix; admin-client public reads; user/private route and storage policies; prove with a disposable environment.
-4. **Choose the single SEO indexability/sitemap implementation:** compare #252 with #247/#249, keep best unique tests, paginate every source scan, align `last_checked_at`, and close/supersede alternatives after preserving fixes.
-5. **Fix public-route policy parity:** Life List private; one canonical route registry; checker, static and dynamic sitemaps, structured data and internal links all derive from the same rules.
-6. **Make live SEO operational:** correct root/API/static hosting precedence; configure #251 smoke after merge/review; perform approved GET-only production checks and capture results.
-7. **Integrate map scope fixes:** verify final server viewport guard in #242; apply #261 or equivalent fail-closed >400-child and antimeridian solution; preserve #238's cached-failure, cancellation and page-limit UX without a duplicate branch.
-8. **Complete data freshness/work chain:** merge/port one reviewed #241/#244/#259 sequence; real source rights/persistence/staging gates remain closed until approvals.
-9. **Build the first complete market flow:** choose cleaning/turnover locale from evidence and connect onboarding → real eligible listing → scoped search → enquiry → provider response → report/support; do not launch payments unless explicitly approved.
-10. **Prove and pilot next vertical plus AI boundary:** select a South American Spanish/guide market by evidence, then launch one grounded read-only assistant pilot only after rights/attestations/evaluations/budget/kill switch pass; separately reconcile the durable agent control plane before any 24/7 claim.
+The limits can rise when task completion, review load, rollback rate and cost demonstrate that doing so improves throughput without degrading quality.
 
-If a task is blocked, proceed with the next safe non-overlapping item and record the blocker owner/evidence. Never compensate for blocked integration by creating another competing implementation.
+### How a real 24/7 executor must work
 
----
+Before calling this a continuous agent fleet, implement and demonstrate all of the following in an isolated non-production environment:
 
-## 14. What “global reach” means in a verifiable way
+1. **Durable scheduler and queue:** jobs survive worker restarts; a documented event or schedule starts them; timeouts and service outages do not lose tasks.
+2. **Task identity and idempotency:** every task has a stable ID, idempotency key, explicit owner, allowed tools, scope, expected output and state transition.
+3. **Lease and stale recovery:** claims expire safely; stale workers cannot continue writing; duplicate workers cannot publish duplicate results.
+4. **Least-privilege execution:** separate read-only research from branch-writing tasks; separate staging from production; credentials are short-lived, scoped and not exposed to model context or logs.
+5. **Isolated workspaces:** code tasks run in a disposable workspace/branch; dependencies, network access and file permissions are constrained; untrusted source text is treated as data, not instructions.
+6. **Deterministic checks:** lint, typecheck, tests, dependency/security scans and builds run independently of model claims. A reviewer receives the exact diff and evidence.
+7. **Budgets and rate limits:** per-task, per-agent and daily limits; retry ceilings; alert thresholds; no autonomous increase to subscription, API or advertising spend.
+8. **Human approval boundary:** sensitive actions pause on an explicit owner decision. A prompt or UI policy is not an access-control boundary.
+9. **Audit and observability:** append-only run ledger, task status, queue depth, stale leases, failures, token/API cost, PR acceptance, incidents, wake-up cause and resulting commit.
+10. **Kill switch and rollback:** the owner can immediately stop new work, revoke worker credentials, cancel active jobs and disable automation without corrupting the queue.
+11. **Recovery drill:** prove restart, duplicate delivery, cancellation, budget exhaustion, revoked credentials, malformed provider data and kill-switch behavior.
+12. **Independent acceptance:** the security/operations reviewer checks the proof in a disposable environment; the human owner authorizes any rollout beyond it.
 
-The network is globally ready when a repeatable process can:
-- represent a place using authoritative, maintained, licensed canonical geography;
-- understand the resident’s or traveller’s real intent in their chosen language;
-- retrieve only genuine eligible information within the selected locality/scope;
-- distinguish verified facts, reported facts, unknowns and stale data;
-- show an accessible, fast and localised experience on an ordinary mobile connection;
-- enable only actions the backend actually supports;
-- onboard local providers/organisations with clear consent, terms and support;
-- discover supply gaps using demand evidence without claiming missing records mean no supply exists;
-- publish SEO pages only when they are useful and grounded, with correct canonicals, language links, structured data and sitemaps;
-- run AI assistants/engineering agents with citations, least privilege, evals, budgets, durable operational proof and human gates;
-- measure successful real-life outcomes, provider participation, trust, cost and reliability;
-- recover safely from bad data, source outages, abuse, failed deploys and unsupported markets;
-- repeat the same process for the next village, town, city and country.
+First inspect existing control-plane work and migrations referenced by issues #74, #100, #116, #117 and #121. Do not assume a durable table, heartbeat or scheduler exists because a branch, plan or migration proposal mentions one. Do not create a second control plane before evaluating the canonical one.
 
-A village with little recorded data is not a failed market and must not be filled with fabricated listings. It should still get an honest place page, relevant context, a route to contribute or request something, and an explicit option to widen the area. A city with thousands of listings must get pagination, source freshness, abuse defenses and robust query budgets rather than a huge unbounded scan. Both rely on the same canonical rules; only the density and operational configuration differ.
-
-**Year-one target:** a demonstrably safe, evidence-rich global foundation; reconciled SEO and frontend/backend integration; several validated real user journeys in a small number of chosen markets; measurable search-to-real-world outcomes; and a supervised AI operating model that can be expanded responsibly. Global coverage is a continuous programme, not a one-time launch toggle.
+A GitHub scheduled workflow can be useful for periodic checks, but a cron file alone is not a durable job system or proof of continuous operation. Prefer event-triggered work plus bounded periodic reconciliation over an agent that reasons constantly. The requirement is dependable, observable progress—not continuous spend.
 
 ---
 
-## 15. Definition of Done for this programme revision
+## 7. Autonomy levels and human gates
 
-This plan is considered ready for owner/Grok execution when:
-- current repository/environment truth has been refreshed rather than copied from old status text;
-- competing PRs are reconciled into a dependency-aware sequence;
-- P0 access-control and scope risks have owners and test plans;
-- SEO route, sitemap, robots and live smoke policies agree and are tested on the real deployed host;
-- a first local-service end-to-end journey completes truthfully with real permitted data;
-- the chosen Spanish-learning/guide market is supported by research and opt-in supply;
-- international place/locale data is rights-cleared and source-maintained;
-- AI retrieval is grounded, read-only, evaluated and cost-controlled before user exposure;
-- the agent control plane is called live only after an authenticated durable non-production proof;
-- launch metrics and market dossiers support every live market/category claim;
-- every production/security/financial/legal decision still has its explicit human approval.
+| Level | Allowed automation | Human gate |
+|---|---|---|
+| 0 — Observe | Read state, run approved health checks, produce evidence reports | Approve access and destinations once |
+| 1 — Propose | Draft issues, market dossiers, copy, provider lists from permitted sources, outreach drafts, experiments and technical plans | Approve external use and priority |
+| 2 — Build for review | Edit isolated branches, run tests, open/update draft PRs, generate staging fixtures | Human review and merge |
+| 3 — Bounded staging | Perform specifically approved reversible staging tasks with scoped credentials and budget | Human approval for the task class and isolated environment |
+| 4 — Production / external action | Deployment, production data or permission changes, live feed activation, paid spend, external messaging, pricing or legal/contract changes | Explicit human approval every time, except only if a separately approved policy gives narrow, revocable delegation after a successful control-plane audit |
 
-Until each condition is evidenced, report it as **not yet verified**, **blocked**, or **not live**—not complete.
+The default policy for this phase is that agents must **not** autonomously merge to main, publish/deploy, mutate hosted production data/schema/RLS/grants, enable live provider feeds, message users/providers at scale, spend money, accept contracts, change security policies or turn on a public AI endpoint.
+
+An automation may suggest an action and prepare the artifacts; authenticated code enforces policy; an accountable human decides consequential actions. Do not use a model's confidence as proof.
+
+---
+
+## 8. Stage-gated path to global growth
+
+The programme is rolling and outcome-gated, not a calendar promise. A blocked gate must be recorded; safe non-overlapping research can continue, but later stages do not inherit a presumed pass.
+
+### Gate 0 — Establish the source of truth
+
+Required:
+- Human confirms Lovable Project Settings → Git repository, active sync branch, connection status and intended deployed hostname/backend.
+- Record main SHA, candidate project/published SHA, sync branch/head/base and all divergence.
+- Recheck branch/ruleset enforcement, required exact-head checks, reviewers, bypass actors and branch deletion/force-push rules.
+- Confirm staging/production isolation, credentials, queues and provider side effects.
+- Inventory unresolved PR overlaps and designate one canonical implementation per concern.
+
+Exit: a reviewed reconciliation plan exists; no blind sync is required to make the preview look current. Any merge occurs only through a protected PR with owner approval.
+
+### Gate 1 — Trustworthy public foundation
+
+Required:
+- Resolve the private/public route policy so user-only data and Life List content cannot leak through pages, APIs, sitemaps, exports or model context.
+- Reconcile the sitemap options in #247/#249/#252 and private-route work in #253 into one route/indexability policy. Enumeration must be complete, cursor-safe and fail closed; do not publish a partial sitemap as complete.
+- Freshly verify current status of #164 and complete an access/grant/RLS matrix in a disposable database before any hosted change.
+- Keep authentication-storage work such as #235 on its independent security review track.
+- Verify source freshness/provenance and publishability in the canonical data path.
+- Recheck the host's robots, sitemap index and child sitemaps with GET-only tests after an explicitly approved release; do not infer live behavior from source code.
+- Require exact-head CI and manual accessibility/UX checks for UI changes.
+
+Exit: a reviewed and tested foundation, with the remaining live-host and security facts recorded as verified or explicitly blocked.
+
+### Gate 2 — Choose the pilot with evidence
+
+Required:
+- Compare no more than three candidate locality/category pairs using the scorecard in section 3.
+- Gather real demand evidence and legitimate supply access; label every evidence item and its date.
+- Confirm local obligations, safety/support capacity, provider terms, data permissions, privacy and the expected unit economics.
+- Define a single end-to-end user journey and the minimum instrumentation before development.
+- Write a go/no-go decision with the human owner named.
+
+Exit: a chosen locality and category with reachable participants, a lawful supply path and a measurable problem worth solving.
+
+### Gate 3 — Seed genuine supply and deliver the first loop
+
+Required:
+- Onboard 10–20 genuine opted-in offers/providers and test with 5–10 real requesters/partners, as a proposed pilot starting point.
+- Use the existing domain contract and findSupply(); no second matcher, fake profile, synthetic pin or invented availability.
+- Confirm that the offer/request has accurate terms, locality, source, freshness, eligibility and publication status.
+- Test consented contact, provider response, cancellation, report/block/support and completion confirmation end to end.
+- Include quiet, stale, error and no-result states with a useful next step that does not imply supply exists.
+
+Exit: the system can demonstrate and document a real exchange from intent through outcome in the chosen market, with no unresolved high-severity safety or privacy incident.
+
+### Gate 4 — Prove local liquidity and repeat use
+
+Proposed initial learning thresholds, to be reviewed after baseline collection:
+- at least 20 genuine requests in the pilot;
+- at least 50% receive a provider response within 24 hours;
+- at least 10 exchanges are confirmed complete;
+- fewer than 5% of requests are reported as abusive, fraudulent or materially misleading;
+- at least 60% of participating providers say they would continue;
+- no unresolved severe safety/privacy incident;
+- the team can calculate time-to-first-useful-result, request-to-response, response-to-completion, stale-supply rate and cost per completed outcome.
+
+These thresholds are not statistical proof of product-market fit. They are a decision aid for early learning. Record sample sizes and uncertainty; adjust thresholds through owner-approved evidence, not to make a failed pilot appear successful.
+
+Exit: evidence shows that the core loop is useful, supportable and safe enough to test replication.
+
+### Gate 5 — Replicate one locality, same category
+
+- Run the same playbook in a second locality.
+- Track setup effort, eligible supply, response times, completion, user retention, incidents and cost.
+- Identify what is genuinely reusable and what requires local adaptation.
+- Do not broaden the category until the second locality reaches acceptable outcome and safety metrics.
+
+Exit: local activation is repeatable without heroic manual effort and without degrading truth, freshness or response quality.
+
+### Gate 6 — Add one adjacent category and localization wave
+
+- Choose the next category based on observed user requests and verified supply gaps.
+- Reuse canonical contracts, source rights, moderation, contact and outcome measurement; do not make a category-specific parallel discovery engine.
+- Add languages/currencies/timezones and policy review for the actual next country; locale conversion is not proof of legal or operational readiness.
+- Localize only the surfaces needed for the pilot; have a human review material cultural, legal and safety copy.
+
+Exit: one adjacent use case passes its own supply, outcome and safety gate; localization is tested by real users.
+
+### Gate 7 — Automate market onboarding
+
+Only after Gates 0–6:
+- An automated market dossier can collect permitted evidence, score candidate localities, enumerate relevant supply gaps, draft partner lists, prepare localized copy and propose source adapters.
+- Human owners select markets, approve contracts and outreach, approve provider/feed activation and authorize releases.
+- Each market is held in a state machine such as RESEARCH → EVIDENCE REVIEW → SUPPLY SEEDING → PILOT → VALIDATING → ACTIVE → PAUSED/RETIRED. A model cannot set ACTIVE without deterministic requirements and human approval.
+- Publish only eligible data and useful pages; automatically pause a market or page class when freshness, source rights, safety or quality gates fail.
+
+Exit: new localities can be prepared at scale through a controlled playbook and human review becomes a focused decision point, not a manual reconstruction of every fact.
+
+### Gate 8 — Scale and mass growth
+
+Paid acquisition, broad public campaigns, high-volume partner outreach, unattended production publishing and an autonomous executor are considered only after:
+- a reliable completed-outcome funnel is measured;
+- unit economics and service capacity are known;
+- provider supply can keep up with demand;
+- market replication has been demonstrated;
+- privacy, security, moderation and incident response are tested;
+- the continuous runtime passes the proof and kill-switch drills;
+- explicit human budgets and action permissions are approved.
+
+“Mass growth” means a proven acquisition and market-replication process that can scale within quality and unit-cost guardrails, not maximizing sign-ups or publishing the most pages.
+
+---
+
+## 9. Metrics that tell the truth
+
+### Product north star
+
+**Verified real-world outcomes per active locality per week.**
+
+Count an outcome only when supported by a documented and privacy-appropriate confirmation from a participant or a verified event/workflow. Keep separate metrics for an outcome proposed, requested, agreed and completed. Never infer completion from a page click or an AI response.
+
+### Product and marketplace metrics
+
+| Metric | Definition / use |
+|---|---|
+| Useful-result rate | Share of eligible human discovery sessions with at least one current, in-scope result judged relevant by the user or a carefully designed proxy |
+| Time to first useful result | Time from expressed intent to a trustworthy next action |
+| Request-to-response | Share of requests answered within 24 hours and median response time |
+| Response-to-completion | Share of responded requests that are confirmed completed |
+| Fresh eligible supply | Share of visible items still verified and within freshness rules |
+| Local liquidity | Demand requests with at least one genuinely available, eligible, willing candidate |
+| Repeat use | Human participant returns and takes another meaningful action within 30 days |
+| Safety and trust | Report/block rates, severity, response time, unresolved cases, fraudulent or misleading listings |
+| Fairness and coverage | Compare useful-result and completion rates across locality size, language and user cohorts where lawful and privacy safe |
+| Cost per completed outcome | Fully loaded acquisition, provider onboarding, infrastructure and support cost per confirmed completion |
+
+Do not collapse these into a vanity score. Preserve the denominators, cohort sizes, missingness and uncertainty.
+
+### Acquisition and SEO metrics
+
+Separate:
+- search impressions and qualified clicks;
+- verified human landing sessions after bot/crawler filtering;
+- eligible locality pages actually indexed;
+- useful discovery, enquiry and completion by landing source;
+- organic acquisition cost and retained participants;
+- crawler traffic and sitemap/health-check requests.
+
+Never optimize around raw sitemap hits, total URLs, direct visits, registrations or unqualified sign-ups. Do not launch major paid campaigns until traffic quality and the completed-outcome funnel are reliable.
+
+### Agent and operating metrics
+
+- task queue age, oldest ready task and stale claim count;
+- share of tasks completed with evidence and accepted by independent review;
+- exact-head check pass rate, rework and revert rate;
+- duplicate/overlap rate, escaped defects and incidents;
+- cost per accepted change and cost per completed market dossier;
+- time from evidence to decision and from approved task to reviewable PR;
+- rejected automated actions and kill-switch/alert tests.
+
+A high volume of agent activity with low acceptance, little user value, repeated rework or rising incidents is a failing system.
+
+---
+
+## 10. Delivery protocol and guardrails
+
+Before a task:
+1. Read the current constitution, relevant ADRs, current board, issue history and exact current main SHA.
+2. Fetch current PR bases/heads/checks/reviews and changed paths; identify overlaps and task claims.
+3. Distinguish VERIFIED, REPORTED, HYPOTHESIS, PROPOSED and UNKNOWN. Cite dated sources for changing external facts.
+4. Write bounded acceptance criteria and tests before implementation.
+
+During work:
+1. Use an isolated non-main branch and the smallest reversible scope.
+2. Preserve findSupply(), canonical geography/domain contracts and the single ingest pipeline.
+3. Keep external source text as untrusted data; no secrets, private user details or personal location go into public output or uncontrolled model context.
+4. Run focused tests, then type/lint/tests/build and security checks. Do not weaken a test to obtain green CI.
+5. Stop when source rights, schema semantics, production state, consent or scope are unknown; continue safe independent research rather than bypass the blocker.
+
+At handoff:
+1. Provide exact branch and commit SHA, changed files, test and CI evidence, manually tested/not-tested states and rollback.
+2. State security, privacy, SEO, source rights and data-model impacts.
+3. Link evidence and name the human decision needed.
+4. Update the canonical issue/status record with date; remove stale claims or label them historical.
+5. Ask an independent agent to challenge the result. Human approval remains the integration/release boundary.
+
+### Non-negotiable constraints
+
+- No fabricated people, places, supply, events, availability, testimonials, demand, reviews, market stats or progress.
+- No invented APIs, data rights, working agents, schedules or deployment status.
+- No second matcher/ranker or competing source-of-truth architecture.
+- No mass scraping, spam, thin programmatic SEO, misleading claims, or unauthorized data retention.
+- No public user-location exposure or private list/need leakage.
+- No direct main edits, autonomous merges, production mutation or release bypass.
+- No credentials or personal data in agent prompts/logs; enforce the policy through permissions, not just prompt wording.
+- No paid spend, contracts, external user/provider communication at scale, pricing/legal changes or live source activation without explicit human authorization.
+- No claim of global readiness or 24/7 operation without independent evidence.
+
+---
+
+## 11. The first ten tasks, in order
+
+The exact PR and security state must be refreshed before a task is claimed. This is the recommended sequence, not an instruction to bypass an owner gate.
+
+1. **Owner — verify source of truth.** Confirm Lovable Project Settings → Git repository, branch, connection status and intended production hostname/backend. Record the exact published SHA if available. No branch switch or write-capable Lovable task before this.
+2. **Repository/security owner — verify protection.** Read current main ruleset, required exact-head checks, reviewer requirements and bypass actors; verify the intended integration branch has appropriate protection. Recheck secret scanning and environment isolation.
+3. **Integration reviewer — reconcile Lovable divergence.** Review the 16 branch-only commits/changes in context; classify each as retain, port, superseded or reject. Do not bulk merge 270 commits or force history changes. Preserve reviewed unique fixes in ordinary PRs.
+4. **Coordinator — refresh the task graph.** Reconcile issues #263 and #279 with the current status document and all open PRs. Assign one canonical implementation for overlapping SEO, viewport/map, freshness, work-source and security tasks. Enforce the active work-in-progress limit.
+5. **SEO/privacy lane — converge the route contract.** Resolve current candidates among #247/#249/#252 and associated private Life List work. Ensure one policy drives metadata, internal links, public APIs, structured data, robots and complete sitemaps; test that private content never escapes.
+6. **Security lane — close or explicitly block the access findings.** Refresh #164 and authentication/storage #235 status. Build the access matrix and adversarial tests in a disposable environment; do not change hosted grants or production auth settings.
+7. **Analytics lane — establish a trustworthy baseline.** Classify crawler/sitemap traffic, verify analytics coverage and consent/privacy expectations, then define request, response, completion, report, and repeat-use events. No major acquisition spend during instrumentation uncertainty.
+8. **Market research lane — select one pilot.** Compare up to three locality/category candidates using the scorecard. Gather 20 documented demand signals/conversations where legitimately obtainable and 5–10 potential participant conversations; record source, date, gaps, risks and go/no-go recommendation. Do not represent targets as completed contacts.
+9. **Supply/product lane — seed the chosen market.** After human approval, onboard a small cohort of willing providers and requesters through the existing contracts and product surfaces. Test offer freshness, terms, locality, discovery, consented enquiry, response, completion and support. Keep the market private/staged until its publication gate is met.
+10. **Operations lane — design and prove continuous automation in staging.** First document the existing control-plane state for #74/#100/#116/#117/#121. Then propose and test a read-only scheduled worker with durable task identity, least-privilege permissions, cost limits, event logs, stale-lease recovery and a kill switch. It may produce evidence and draft issues; no merge, production write, external messaging or spend. Independent review and owner approval are required before widening permissions.
+
+If Gate 0 blocks, continue only safe non-overlapping research and review tasks. Do not work around an unknown sync destination by editing Lovable or deploying a second app.
+
+---
+
+## 12. Australia launch wedge: short-stay turnover + regular work opportunities
+
+### Strategic hypothesis
+
+Australia is a promising first commercial test because short-stay accommodation can create recurring operational needs—turnover cleaning, linen changes, restocking, inspection, maintenance coordination and backup cover—while some coastal and tourist localities also attract temporary residents and working travellers. This is a **market hypothesis to validate**, not a claim about current verified listings, host counts or local demand.
+
+The product should serve both sides of the local operating network:
+- **Demand side:** short-stay property managers, hosts and cleaning companies who need dependable turnover coverage, recurring rosters, emergency/backup cover, linen and quality-control workflows.
+- **Supply side:** established cleaning businesses, independent providers, and people who are legally entitled to undertake the advertised work and want regular, seasonal or flexible shifts.
+- **Adjacent local life:** once the service loop has supply and outcomes, show nearby real work, local services, events, experiences, transport-relevant places and opt-in community opportunities on the same locality map.
+
+Do not position the product as an official Airbnb partner, imply that Airbnb has approved a data source, or scrape/republish Airbnb listing content without a permission basis. Initially target the **short-stay accommodation turnover sector** through lawful host/property-manager/provider relationships and provider-owned listings. Provider data, service terms, worker eligibility, schedule and location must be verified before publication.
+
+### Pilot geography
+
+Create a research shortlist—not a predetermined rollout—of Australian tourist markets. A sensible initial comparison could include Byron Bay / Ballina hinterland, Gold Coast, Sunshine Coast and Cairns, with other regions allowed if the evidence is stronger. These places are candidates because they represent different local operating shapes, not because this plan asserts their supply is currently available.
+
+For each candidate, research and date:
+- lawful, reputable indicators of short-stay accommodation and property-management density;
+- seasonal occupancy patterns and turnover-demand peaks from official or licensed sources;
+- number of reachable property managers and cleaning businesses, recorded only after legitimate contact;
+- availability of qualified, work-authorized cleaners and backup workers;
+- road travel time and serviceable radius, without exposing workers' private live locations;
+- local short-stay letting registration/planning rules, employment and award coverage, insurance, WHS, tax, privacy and record-keeping obligations;
+- local competition, current alternatives and the unmet need that would justify switching;
+- expected provider acquisition and support cost versus recurring gross margin.
+
+Choose the first locality only after a human-reviewed dossier shows reachable supply, credible demand, safe fulfilment and a workable revenue hypothesis. Never infer local liquidity from tourism popularity alone. A small area with a reachable anchor operator may beat a larger city with no accessible supply.
+
+### The regular-work promise must be lawful
+
+The product can help work-authorized travellers discover regular, seasonal or flexible cleaning work. It must **not** advertise or imply that people can earn money in Australia while on a Visitor visa or Electronic Travel Authority. Australia's Department of Home Affairs states that these do not permit work; other visas can carry type, hours or occupation restrictions, which should be checked against the person's actual conditions (including through VEVO where appropriate): [Home Affairs — Work restrictions](https://immi.homeaffairs.gov.au/visas/working-in-australia/work-rights-and-exploitation/work-restrictions).
+
+Before a listing is published, determine whether the opportunity is employment, labour hire, a genuine independent business engagement, or another lawful arrangement. Do not allow a platform form to label an employee a contractor automatically. Seek current Australian employment/legal review of worker classification, Fair Work obligations, superannuation, tax, insurance, work health and safety, police/identity checks where appropriate, data handling, and applicable state or local rules.
+
+The Cleaning Services Award may cover some contract-cleaning employers and employees. The Fair Work Ombudsman describes minimum entitlements and notes, for covered employees, rules on employment types and minimum shift length; employees under the award cannot simply be paid per job where the award requires minimum paid shift hours. Coverage and obligations depend on the actual relationship and work, so obtain case-specific review rather than generalising from a marketplace template: [Cleaning Award entitlements](https://www.fairwork.gov.au/find-help-for/contract-cleaning/entitlements-for-employees-under-the-cleaning-award), [Cleaning Award summary](https://www.fairwork.gov.au/awards-and-agreements/awards/award-summary/ma000022-summary).
+
+The platform should:
+- show whether an opportunity is employment, labour hire or a service-provider offer, with clear terms and who is responsible for engagement and payment;
+- capture the employer/provider's declared eligibility requirements and only the minimum information needed to manage compliance;
+- direct users to official work-rights information and never promise that a particular visa grants permission;
+- avoid collecting passport/visa documents by default; any eligibility check or document processing needs a lawful purpose, restricted access, retention/deletion policy and security review;
+- permit employers to record their own right-to-work checks where lawful, without presenting an unverified badge as government certification;
+- display pay basis, expected hours, timing, duties, location/service radius, travel expectations, equipment, cancellation rules, safety requirements and contact process before enquiry;
+- support complaints, non-payment reports, unsafe conditions, discrimination reports and urgent escalation;
+- prohibit unpaid or underpaid productive cleaning work disguised as trial work, volunteer work or a flat per-property fee when employment law requires wage/hour treatment;
+- distinguish a recurring service contract with a legitimate cleaning business from a rostered worker engagement.
+
+No live job acquisition, employer agreement, payment collection or applicant messaging should start until the human owner approves the pilot model and local legal/compliance review is documented.
+
+### Commercial model to test
+
+Revenue should first come from a clearly valuable business workflow, not charging travellers simply to find work. Candidate models:
+1. **Provider/business subscription:** roster and property turnover calendar, recurring coverage, backup worker pool, service areas, checklists, linen inventory, issue reporting, photo/quality evidence and invoicing/export tools.
+2. **Lead or booking fee:** only if the platform genuinely enables a compliant booking and the fee structure, consumer expectations, cancellations, taxes and disputes are reviewed.
+3. **Managed-marketplace fee:** later, only after the platform is ready to handle identity, worker eligibility, booking/payment, support, disputes, cancellations, insurance expectations and applicable legal obligations.
+4. **Business-to-business partnerships:** property managers, host associations, accommodation operators, linen services, local cleaning companies and destination-management organisations may sponsor onboarding or a local supply program where terms are transparent.
+
+Prove willingness to pay through interviews and small, owner-approved tests. Record the buyer, value proposition, willingness-to-pay evidence, onboarding cost, revenue retention, support cost, chargeback/dispute exposure and contribution margin. Do not assume a revenue stream because a pricing page can be built.
+
+### Australia-specific success gate
+
+A pilot may progress only when it can demonstrate:
+- a human-verified initial cohort of providers and requesters;
+- current, serviceable offers with clear terms and no invented availability;
+- lawful work/engagement screening appropriate to the model;
+- a complete enquiry → response → agreement → completed turnover → confirmation/reporting loop;
+- provider and requester retention intent, actual response times, fill rate, cancellations, complaint rate, quality failures and cost per completed turnover;
+- a human-reviewed decision on pricing and local compliance.
+
+If the first location fails to show real supply or willingness to pay, revise the wedge or choose a new locality. Do not fabricate density, buy broad traffic, or expand to many Australian tourist areas to hide a weak pilot.
+
+---
+
+## 13. One localized global map, not a collection of disconnected microsites
+
+The long-term product should present one recognizable map-based network across countries and locality sizes. Search engines may discover useful local web pages; users should still experience the same underlying product, consistent design system, identity and discovery rules.
+
+### Canonical map model
+
+The map layers can eventually cover:
+- work and service offers;
+- events, music and venues;
+- experiences, workshops and local culture;
+- community projects and volunteering;
+- creators and collaboration opportunities;
+- nature, food and useful local places;
+- public needs and offers;
+- people only when they explicitly opt into discoverability;
+- journey / travel connections where the user chooses to share them.
+
+These are product layers over shared domain contracts, not separate discovery engines. A layer must not invent points merely to make a map feel busy. Every item has a canonical locality or verified coordinates, source/provenance, freshness, publication state, eligibility and privacy policy. Private needs, private memories, exact home addresses and live individual coordinates do not become public map supply.
+
+The map and list share a single selection state. Viewport reads are bounded and cancelled when obsolete. Map viewport is not the same thing as selected locality; panning cannot silently broaden the business result scope. Preserve date-line correctness, parent/descendant locality filtering, capped/cursor-safe queries, safe caching and explicit states for loading, empty, sparse, stale, partial, failed and unpinned items. Never place an unlocated record at a locality centroid merely to create a pin.
+
+### One global app; regional discovery pages only when useful
+
+Do not create separate app binaries or visually cloned mini-sites for every city. Apple App Review guidance specifically warns against multiple bundle IDs for the same application by location and favors a single worldwide app with locality variation: [App Store Review Guidelines, 4.3](https://developer.apple.com/app-store/review/guidelines/).
+
+Use a canonical public URL scheme driven by the real country/place hierarchy and one route-policy registry. Each public locality/service page must offer distinct practical value—not just a city name swapped into a template. Indexability should require an evidence-backed quality and supply threshold, current eligible content, correct canonical metadata, useful internal links, and a complete sitemap policy. Otherwise return an honest no-index/quiet state or do not generate a public landing page.
+
+Google's current spam guidance explicitly names large numbers of low-value AI-generated pages and near-duplicate regional doorway pages as scaled-content/doorway abuse. AI may help draft a useful regional explanation, but a human-meaningful local fact, real eligible inventory, evidence, differentiation and user utility must exist before publication: [Google Search spam policies](https://developers.google.com/search/docs/essentials/spam-policies).
+
+### SEO and AI-search distribution
+
+The foundation is normal technical SEO and excellent local utility:
+- real crawlable page content, correct status codes, stable canonical URLs and accurate structured data;
+- one indexability policy reused by route metadata, internal links, sitemaps, robots configuration and public API enumeration;
+- complete and bounded pagination; if enumeration fails, fail closed rather than emit plausible incomplete coverage;
+- private paths protected by authorization/RLS and excluded from sitemaps. robots.txt is not access control; crawlers blocked from a URL cannot read that page's noindex directive;
+- correct production route/host tests and Search Console/Bing Webmaster monitoring;
+- honest freshness and source attribution, plus real, licensed photographs where available and graceful placeholders otherwise;
+- internationalized URLs, language alternates and locale metadata only when translations and local obligations are genuinely supported.
+
+Google's official AI search guidance says the established SEO fundamentals still apply to AI features; there is no secret AI ranking schema or guarantee of inclusion: [Google — AI features and your website](https://developers.google.com/search/docs/appearance/ai-features). For ChatGPT Search, decide crawler permissions separately by purpose; OpenAI documents OAI-SearchBot for search inclusion and GPTBot for possible training use: [OpenAI — crawler overview](https://developers.openai.com/api/docs/bots). Choose that policy explicitly and check it against robots, CDN and hosting configuration.
+
+### Reddit, community and news distribution
+
+Marketing content should grow out of useful work in a locality, not mass-generated claims.
+
+**Reddit and forums**
+- First listen to local subreddits, read each community's rules and ask moderators where commercial posts are allowed.
+- Use a real, transparent identity and disclose the project connection.
+- Contribute useful local research or answers without requiring a click to the product.
+- Share a case study only when the participants consent and the outcomes are real; link sparingly where allowed.
+- Never automate promotional mass-posting, repeat variants across subreddits, fake community accounts, solicit artificial votes, or send unsolicited mass DMs. Reddit defines spam to include repeated unwanted actions and promotional bots: [Reddit Spam guidance](https://support.reddithelp.com/hc/en-us/articles/360043504051-Spam).
+
+**News and editorial**
+- Build a local data story from verified pilot evidence: for example, measured turnover-response gaps and how local operators coordinate work—only where numbers are real and disclosure/privacy permissions are in place.
+- Offer journalists a clear local angle, source methodology, anonymised evidence where appropriate, and access to people who have consented to speak.
+- Draft a press brief and journalist list; humans approve pitches and any outbound contact. No fake press releases, purchased editorial masquerading as independent reporting, fabricated testimonials or invented participant quotes.
+- Repurpose a genuine insight into an owner-approved guide, provider checklist, locality landing page, case study and social post. Localize through original facts and human review, not automatic city-name substitution.
+- Measure qualified visits → real enquiries → completed outcomes, not press-release impressions or raw backlinks.
+
+---
+
+## 14. Capacity engineering: a verifiable path from pilot to very large traffic
+
+“Ready for millions to billions of daily users” is a strategic capacity ambition, not a property that can be guaranteed by code review or a year plan. The engineering target has to be translated into explicit traffic assumptions and then proved at each stage.
+
+### Distinguish daily users from requests
+
+A billion requests per day averages approximately **11,574 requests per second** over 24 hours. If a hypothetical billion daily active users each generated ten requests per day, that would be ten billion requests per day, or about **115,741 requests per second on average**, before peak concentration, retries, bot traffic or fan-out. These are arithmetic illustrations, not product traffic forecasts. The actual design depends on requests per user, cache hit rate, map interactions, payload size, read/write mix, geography and peak-to-average ratio.
+
+Capacity statements must name the load being claimed:
+- registered accounts, monthly active users and daily active users;
+- page loads and API requests per second;
+- read/write ratio and top expensive queries;
+- geographic distribution and latency objectives;
+- peak bursts, retry behavior and provider/API quotas;
+- map pin density, viewport query rate and map tile delivery;
+- concurrent users, background ingestion, queue backlog and notification volume;
+- failure mode, error budget, cost per request and cost per completed outcome.
+
+“Can serve one million users” is not an acceptance criterion until the traffic model is explicit and an isolated environment demonstrates agreed latency/error/resource budgets under that workload.
+
+### Reference architecture principles
+
+Preserve the present architecture until profiling proves a change is needed. Evaluate, do not automatically adopt:
+- **CDN and edge caching** for static assets and public, non-personalized, cache-safe pages; never cache private user responses as public content.
+- **Stateless horizontally scaled application/API workers** with bounded concurrency, timeouts, rate limits and graceful degradation.
+- **Database protection:** query-plan review, indexes, connection pooling, pagination, narrow projections, limits, appropriate transactions and write idempotency. Consider read replicas, partitioning or sharding only after measured bottlenecks and correctness analysis.
+- **Bounded geographic discovery:** server-enforced viewport and locality scope; date-line handling; result caps that do not hide incompleteness; cache keys that include visibility, locale, freshness and scope; stale-response cancellation.
+- **Asynchronous queues** for ingestion, crawling/sitemap refresh, analytics, notifications, reindexing and other non-critical tasks. Requests should not block on avoidable external-provider calls.
+- **Provider isolation:** per-source budgets, backoff, circuit breakers, quotas and graceful degradation. One failing external API must not take down the core discovery flow.
+- **Search acceleration without a second truth system:** any index/cache is a retrieval optimization only; canonical contracts and findSupply() remain authoritative for eligibility and discovery semantics.
+- **Observability:** traces, metrics and structured logs with request IDs; service-level indicators for latency, errors, queue lag, freshness, and unit cost; alerts tied to action and an on-call/escalation owner.
+- **Security and abuse resilience:** authentication boundaries, RLS/authorization, rate limiting, spam and fraud controls, privacy/data deletion, backup/restore drills and incident response.
+- **Regional readiness:** data residency and cross-border privacy obligations, locale/timezone/currency formats, disaster recovery and practical support coverage. Multi-region active-active is not a default requirement; model consistency, replication lag and failover first.
+- **Map/media delivery:** CDN-backed map tiles and licensed imagery; aggregated/clustered viewport responses rather than sending a world dataset to the browser.
+
+AWS reliability guidance recommends adapting capacity to changing demand and testing scalability/performance with representative workloads; a smoke test or low-volume k6 run cannot certify billion-user capacity: [AWS Well-Architected — demand and scaling](https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/design-your-workload-to-adapt-to-changes-in-demand.html), [AWS — scalability testing](https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/rel_testing_resiliency_test_non_functional.html).
+
+### Capacity validation ladder
+
+The load numbers below are **proposed test stages**, not claims about current capacity. The owner and infrastructure lead must approve isolated targets, provider quotas, spend and staging/production separation before any run.
+
+| Stage | Test objective | Required evidence before moving on |
+|---|---|---|
+| C0 — baseline | Profile key routes and queries with realistic synthetic records | Endpoint inventory, p50/p95/p99, error rate, CPU/memory/DB pool/query cost, cache behavior, trace samples |
+| C1 — low steady load | Reproduce the verified pilot workload at 1× and 2× | SLOs met; no unbounded queries, private-data leaks or queue growth |
+| C2 — launch burst | Test an approved burst model (e.g. tens to hundreds RPS where that is justified) | Autoscaling, rate limits, cache behavior, graceful degradation and budget alerts verified |
+| C3 — growth tier | Test 1k sustained RPS and burst multiples on representative data | Query plans, DB capacity, error budgets, cost per request and recovery recorded |
+| C4 — large-scale tier | Test 10k sustained RPS, then 100k only after lower tiers pass | Production-like isolated environment, quotas confirmed, distributed tracing, soak/spike/failure recovery and cost model |
+| C5 — extreme-scale research | Model 100k–1M+ RPS and billion-request/day scenarios in dedicated capacity testing | Architecture review, partition/replication design, realistic data and traffic simulation, tested recovery, budget and multi-region policy |
+| C6 — proven operating capacity | Publish the measured capacity envelope and limitations | Independent verification, SLOs, alerts/on-call, disaster-recovery proof, quota approvals, cost ceilings and rollout/rollback plan |
+
+Do not skip stages because a test passed. A test must include representative locality sizes, map viewport pans, high-cardinality searches, auth, writes, queue/worker delays, source outages, slow queries, rate limiting, malicious input, crawler surges and realistic caching. Run load tests only against a confirmed isolated target with synthetic data and an approved maximum cost.
+
+No one should describe the production system as ready for a million or billion daily users until the exact build, workload, environment, results, bottlenecks and operating cost are published and independently reviewed.
+
+---
+
+## 15. Rolling year: October 2026–October 2027
+
+This is a dependency-gated sequence. Month windows are planning targets; they do not override a failed exit gate. Do not parallelize tasks whose files, schemas, branches or release dependencies conflict.
+
+| Window | Product / engineering objective | Growth / market objective | Exit gate |
+|---|---|---|---|
+| **M1: late Oct–Nov 2026** | Resolve source of truth; correct the k6 Verify inspection issue through the existing PR path; reconcile high-priority PR overlaps; fix locality-scope/date-line behavior; prove the private-route and sitemap policy; triage migration/RPC/ACL findings | No mass acquisition. Prepare the Australian market research brief | Canonical Git target and build baseline known; scoped discovery and privacy are release-safe or explicitly blocked; CI exact-head status is understood |
+| **M2: Nov–Dec 2026** | Make live SEO routes, sitemap enumeration, indexability and analytics measurable; finish disposable DB/access-control proof; verify hosting behavior after authorized release | Compare Australian tourist-area candidates, interview property managers and cleaning operators, examine local regulations and worker eligibility, test willingness to pay | One Australia locality/category selected from evidence, with reachable supply, demand evidence, risk review and named support owner |
+| **M3: Dec 2026–Jan 2027** | Deliver the smallest provider onboarding, recurring availability/coverage, honest listing detail and enquiry/response status using existing canonical contracts | Recruit a small, opted-in cohort of lawful providers and anchor property-manager customers; prepare transparent landing pages and onboarding assets | Accurate supply with terms/provenance/freshness; authorised users can maintain records; no unapproved provider imports |
+| **M4: Jan–Feb 2027** | Complete enquiry → response → agreement → service completion/report workflow; audit cancellation, abuse, safety and contact privacy | Pilot with a small group of hosts/managers and work-authorized providers; no broad paid launch | Real user journeys complete end to end; response and fulfillment are measured; no unresolved severe safety/privacy issues |
+| **M5: Feb–Mar 2027** | Improve the largest measured conversion/support bottleneck; add privacy-safe product analytics and provider freshness operations | Run owner-approved pricing/retention interviews; evaluate subscription, booking/lead fee or B2B partner funding | Verified completions, repeat intent, clear unit-cost model, support burden and commercial evidence |
+| **M6: Mar–Apr 2027** | Turn repeatable manual tasks into deterministic workflows; improve calendar, service-area and quality evidence where proven necessary | Replicate same category in a second Australian locality only after the first meets outcome gates | Second locality succeeds using the same playbook without a new matcher or fabricated inventory |
+| **M7: Apr–May 2027** | Build high-quality locality/service pages under one route registry; add human-reviewed real pilot evidence and trustworthy source freshness | Structured local search, press/community partnerships, useful original guides and moderator-compliant Reddit presence | Crawl/index/traffic measured; local pages produce qualified actions, not just impressions; no doorway/scaled-content abuse |
+| **M8: May–Jun 2027** | Improve map layers connecting work to adjacent events, services and community only where real data exists; localization infrastructure tested | Extend the eligible worker pathway and test regular/seasonal work support for legally authorized travellers; research adjacent Australian category | Each new surface has real supply, separate eligibility terms, clear duties and current legal review |
+| **M9: Jun–Jul 2027** | Prepare a reusable market onboarding state machine and evidence dossier; define locale/legal/safety adapters | Select one international candidate market based on local demand, supply access, language, rights and support—not country list ambition | Written market go/no-go with real partner path and operational support |
+| **M10: Jul–Aug 2027** | Run a read-only/sandbox AI companion only if issue #209 requirements pass; build the continuous agent worker proof in isolated staging | Agents may produce market dossiers, provider candidates and campaign drafts for review | Assistant citations/eligibility, budget, rate limits and kill switch pass; scheduler/queue recovery/audit tests prove operational behavior |
+| **M11: Aug–Sep 2027** | Run progressive scalability, resilience, restore, security and accessibility testing; implement bottleneck-driven improvements | Prepare single-app store readiness and retention feedback; no separate app binaries per locality | Measured SLO/capacity envelope, on-call/incident plan, real mobile utility and store compliance review |
+| **M12: Sep–Oct 2027** | Independently review the whole product, operating model and measured capacity; prepare release/rollback criteria | Decide whether to deepen Australia, launch the second-country pilot, expand categories or pause and fix the funnel | Owner-approved expansion decision backed by outcomes, unit economics, supply quality, privacy/security and measured reliability |
+
+### What one year does and does not promise
+
+This plan commits the team to a rigorous year of research, development, tests, experiments and decision gates. It does **not** promise global availability in every village, guaranteed App Store approval, top ranking, billions of real users, or billion-request performance before the system has been tested. If any gate fails, the correct outcome is a recorded diagnosis and the next safe action—not a claim of completion.
+
+---
+
+## 16. 24/7 master handoff: one task system, 24 concrete work packages
+
+The following 24 work packages form the initial shared handoff queue. They are not permission to launch all tasks in parallel. Each agent must re-fetch current state, claim a task and inspect dependencies. Start with the gating work; implementation of later items waits until its prerequisites clear. The queue has a hard proposed limit of three active tasks and five actively worked PRs until actual review throughput supports more.
+
+### Package 01 — Canonical repository and deployment truth
+**Lane:** Human owner + coordinator.  
+Confirm Lovable Project Settings → Git repository and non-main branch, canonical main SHA, deployed hostname/build SHA and backend project. Capture evidence on issue #263. No write-capable Lovable turn until verified.
+
+### Package 02 — Branch protection and CI gate
+**Lane:** Repository administrator + security.  
+Verify current ruleset state, strict exact-head verify, CodeQL/dependency checks, review requirements, latest-push approval, resolved threads and bypass actors. Branch-protection checks reported as blocked/unknown remain UNKNOWN until an authorized admin reads them.
+
+### Package 03 — Verify/k6 workflow repair
+**Lane:** CI implementation agent + independent reviewer.  
+The #285 parser/action-pin change is merged. Current-main Verify is green, and k6 inspection parses the script without sending traffic. Next, independently review the workflow action sources and run low-intensity tests only against a confirmed isolated staging origin. Parser success is not load-test evidence.
+
+### Package 04 — PR and dependency convergence
+**Lane:** Orchestrator + independent reviewer.  
+Refresh each open PR head/base, changed paths, review state and exact-head CI before assignment. The previous 88-open-PR inventory is historical, not current truth. Classify candidates as integrate, port unique fix, superseded, blocked or preserve for owner. Current main-based drafts #291–#293 require independent review; do not add parallel fixes for the same concern.
+
+### Package 05 — Map locality-scope correctness
+**Lane:** Map implementation agent + QA.  
+Fix the issue where a locality with more than 400 descendants can lose the selected-place boundary. Enforce explicit descendant/query scope, server caps, date-line behavior and stale request cancellation. Never broaden results silently. Add adversarial tests for a parent with >400 descendants, antimeridian, empty bounds and a failed/partial scan.
+
+### Package 06 — Map/list interaction and performance
+**Lane:** Lovable UI agent only after Git gate; otherwise branch-based implementation agent.  
+Test map/list shared selection, mobile panels, keyboard and reduced-motion, unpinned results, sparse/empty/error states and viewport pagination. Keep the world dataset server-side; do not load all pins into the browser. Deliver screenshots/trace and exact tested viewport sizes.
+
+### Package 07 — SEO route policy and sitemap convergence
+**Lane:** SEO engineer + independent reviewer.  
+Reconcile the current SEO PR alternatives into one registry controlling metadata, canonical URLs, internal links, public APIs, structured data and sitemap inclusion. Pagination must be complete; incomplete enumeration fails closed. Avoid a parallel sitemap strategy.
+
+### Package 08 — Live host robots/sitemap verification
+**Lane:** Release/SEO operations + human owner.  
+Use GET-only tests against the confirmed production host to check robots, sitemap index, every declared child sitemap and indexable/private metadata. Repeat after an authorized deployment only. The current web verifier could not retrieve these endpoints; source code alone does not count as live evidence.
+
+### Package 09 — Life List/private data guard
+**Lane:** Security + backend reviewer.  
+Verify noindex handling plus actual authorization/RLS across page, APIs, sitemaps, logs, exports, caches and model context. noindex is not a data access control. Robots blocking is not a privacy control. Test anonymous and cross-user access in an isolated environment.
+
+### Package 10 — Migration lineage and heartbeat RPC
+**Lane:** Backend/database specialist + owner.  
+Compare the canonical migration chain with issue #121 and current Supabase Preview findings. Restore missing migration/RPC prerequisites only through a reviewed migration in a disposable environment. Check fresh-database replay, upgrade path, role grants, failure rollback and environment parity. No hosted migration or permissions change without explicit authorization.
+
+### Package 11 — Default ACL/RLS access matrix
+**Lane:** Security specialist + independent reviewer.  
+Reconcile issue #164. Record owner, RLS/FORCE RLS, table/view/RPC grants, anonymous/authenticated privileges and every policy. Prove intended allow and deny cases through disposable DB/PostgREST tests. Production catalog results remain observations; do not apply a least-privilege patch without owner-confirmed project identity and tested plan.
+
+### Package 12 — Analytics trust baseline
+**Lane:** Analytics + privacy.  
+Reconcile the 862/869 and 927/934 analytics snapshots by exact time window/source. Separate bots/crawlers and sitemap health checks from human paths. Define minimal events for useful result, enquiry, provider response, completion, report and return. Respect consent and retention. No big acquisition spend before the baseline is trustworthy.
+
+### Package 13 — Australia market dossier
+**Lane:** Market research, read-only initially.  
+Compare up to four candidate Australian tourist-area markets (including the proposed Byron Bay/Ballina, Gold Coast, Sunshine Coast and Cairns shortlist). Use dated official or licensed sources, provider access, seasonality, competition, local rules and cost assumptions. Do not label any market live. Deliver a ranked evidence table with UNKNOWN fields and a go/no-go recommendation.
+
+### Package 14 — Host/property-manager demand validation
+**Lane:** Supply research + human owner.  
+Prepare interview questions for hosts, property managers, accommodation operators and cleaning businesses. Validate turnover frequency, same-day failures, quality disputes, backup demand, current costs, recurring commitments and willingness to pay. AI drafts scripts; a human contacts participants and records consented findings.
+
+### Package 15 — Worker eligibility and Fair Work review
+**Lane:** Australia legal/compliance reviewer + product.  
+Determine what listings are employment, labour hire, subcontracted business services or other engagements. Verify visa/work-right requirements and likely Award coverage case by case. State clearly that Visitor visas/ETAs do not permit work. Review minimum pay/shift rules, worker classification, super/tax, insurance, WHS, discrimination, complaint and record-keeping duties before publishing any regular-work proposition.
+
+### Package 16 — Short-stay turnover contract
+**Lane:** Product/marketplace + backend reviewer.  
+Define canonical fields for service area, property/room scope, timing window, expected duration, price or pay basis, required skills/cleaning checklist, linen/restock responsibilities, equipment/travel, cancellation, contact status, provider type, source, freshness and publication review. Use existing listing/work contracts where fit; propose schema changes separately with evidence.
+
+### Package 17 — Provider onboarding and verified coverage
+**Lane:** Product implementation agent after gates; supply ops.  
+Build the smallest path for a provider or eligible cleaning business to offer services, define verified service radius, set availability truthfully, maintain freshness and respond to enquiries. Do not conflate a general capability with confirmed availability. No scraped listings, fabricated providers or autonomous publication.
+
+### Package 18 — Completed turnover workflow
+**Lane:** Full-stack implementation + QA.  
+Test requester → eligible result → consented enquiry → provider reply → terms/agreement → completion signal → issue/report/support → feedback. Provide explicit failure, cancellation and dispute states. Measure fill rate, response time, completion and quality incident. A message draft does not count as sent, and a booking enquiry does not count as completed work.
+
+### Package 19 — Localized map layer strategy
+**Lane:** Product/domain + map agent.  
+Specify a common map taxonomy for work, services, events, experiences, venues, community, creators and opt-in people. Implement only layers backed by real eligible data and distinct user value. Keep user privacy and the single findSupply() authority. No fake density, synthesized pins or second matcher.
+
+### Package 20 — Global locality content and app-store strategy
+**Lane:** SEO + localization + mobile product.  
+Document canonical place/locale URL policy, noindex states, translations, language alternates, app links, accessibility and page quality. Prepare one global app with locality search rather than cloned city apps. Validate store utility, moderation/report/block, privacy disclosures, accurate metadata and native-like value. Store submission, public launch and app-store metadata require owner approval.
+
+### Package 21 — Reddit, press and community distribution
+**Lane:** Growth research + human communications owner.  
+Create a community-by-community policy list, local newsroom targets, an evidence-led press angle, and a content calendar derived from actual pilot outcomes. No unattended Reddit promotion, mass same-content posting, fake identities, cold mass DMs or invented statistics. Human approval before posting/pitching. Track qualified actions and completions, not link count.
+
+### Package 22 — Traffic model and architecture review
+**Lane:** Performance engineer + security reviewer.  
+Build a workload model from actual traces and product assumptions: DAU, requests per action, cache hit, peak-to-average, reads/writes, geo spread, map viewport requests, ingestion, quotas and cost. Profile the current stack before proposing read replicas, partitioning, sharding, service decomposition or provider change. Translate scenarios to tested RPS and concurrency targets.
+
+### Package 23 — Staging scale/reliability proof
+**Lane:** Platform/QA engineer + independent reviewer.  
+After staging isolation and spend cap are approved, run stepped smoke, load, spike, soak, dependency failure and recovery tests. Record commit, region, environment, dataset shape, p50/p95/p99, errors, resource saturation, queue lag, database plans, rate limits, cost and recovery. Keep every test away from production by default. No scale claim from an unrun test or VU count alone.
+
+### Package 24 — Durable 24/7 runtime and market go/no-go
+**Lane:** Agent platform + security + human owner.  
+First reconcile issues #74/#100/#116/#117/#121. Prove durable queue, task identity, scoped credentials, lease/fencing, idempotency, crash recovery, cancellation, budget limit, alerting, audit log and kill switch in staging. In parallel, issue an Australia pilot go/no-go only when packages 13–18 show legal readiness, real supply and a measurable operating loop. No scheduled production actions, external outreach, paid spend, merges or deploys follow merely from a green runtime test.
+
+### Agent-specific handoff briefs
+
+**Grok / implementation worker**
+> Read this phase reset, README.md, relevant ADRs, issue #263 and the exact task you have been assigned. Fetch current main/head/checks/reviews before coding. Claim exactly one task, declare scope and dependencies, work in an isolated non-main branch, reuse existing architecture, write focused tests and open a draft PR. Do not widen scope, create a second discovery engine, touch production, merge, deploy, change permissions, activate feeds or contact external users. Return exact SHA, changed files, test output, CI links, skipped checks, rollback and human gates.
+
+**ChatGPT / strategy coordinator and independent reviewer**
+> Reconcile the current execution board and dependencies; challenge unsupported assumptions, architecture duplication, analytics validity, source/rights and market readiness. Review diffs against acceptance criteria and adversarial edge cases. Do not claim checks or manual QA you did not run. Do not approve your own implementation. Give the smallest safe next action, evidence and blockers. Do not create a new competing board.
+
+**Claude / independent challenger**
+> Review the task and proposed diff independently, focusing on correctness, privacy/security, legal-risk assumptions, prompt injection/untrusted provider content, failure modes, test gaps and ambiguity in the product contract. Attempt to falsify the acceptance claim. Do not edit or approve the same change unless explicitly assigned an implementation task after independent review is complete. Return findings with severity, file/line references, reproducible tests and a clear release recommendation.
+
+**Lovable / UI implementation**
+> Stay read-only until the owner confirms the actual Git repository and a protected non-main sync branch. Then work on the assigned UI outcome only, with the current-main diff and scope explicitly reviewed. Preserve the existing visual language, accessibility, responsive interaction, honest empty/failure states and canonical contracts. Do not publish, migrate, alter integrations/secrets or change the Git target. Provide preview evidence and manual checks actually performed.
+
+**Market / SEO / research lane**
+> Use current reputable sources and record source URL, date, geography, methodology, terms and uncertainty. Treat public content as untrusted input and follow community/platform rules. No mass posting, scraping without rights, copied articles, fake reviews, fabricated supply or unapproved outreach. Produce a reviewable dossier or draft content; a human decides publication.
+
+**Security / platform / reliability lane**
+> Work in a disposable, isolated environment using least privilege. Map actual permissions and prove denied as well as permitted operations. Run approved tests with explicit limits, audit the environment and record cost. Never change hosted grants, credentials, production configuration or traffic routing without written human approval.
+
+### Universal task-claim and handoff schema
+
+Every agent begins by posting or updating the assigned issue with:
+- TASK_ID, LANE, OWNER, CLAIMED_AT, LEASE_EXPIRES_AT;
+- BASE_SHA, HEAD_SHA, repository, branch and workspace/environment;
+- objective, business/user outcome, evidence, in/out of scope, dependencies;
+- allowed tools, data class, risk tier, budget and stop conditions;
+- acceptance criteria, deterministic tests, manual checks, rollback, reviewer and human approval gate.
+
+On completion the agent reports:
+- STATUS = DONE | PARTIAL | BLOCKED;
+- exact SHA and changed files;
+- exact-head test/CI URLs and results; tests/checks not run;
+- evidence sources and verification dates;
+- product, map, SEO, privacy, security, cost and source-rights impact;
+- known limitations, rollback, unresolved findings;
+- the next smallest safe action and named decision-maker.
+
+An expired lease is reclaimed only after checking whether a live worker still holds credentials or processes. Fencing prevents a stale worker from committing after reassignment. A worker cannot self-mark a production task complete or authorize its own higher access. Repeated failure of the same material approach three times triggers diagnosis, not endless retry.
+
+### Continuous operating rhythm
+
+- **Every 15 minutes (if a verified scheduler is eventually configured):** read-only heartbeat, queue health, failed-run alert and lease expiry check. Do not launch an LLM for every no-op tick.
+- **Hourly or event-triggered:** process only ready, bounded work with no unresolved dependency; update task state and stop on budget or policy guard.
+- **Daily:** coordinator reconciles main/PRs/checks, de-duplicates tasks, checks blockers and publishes a short evidence-based status note.
+- **Weekly:** independent architecture/security/market review, stale task cleanup, outcome dashboard, spend review and priority selection.
+- **Monthly:** human owner reviews pilot outcomes, safety, unit economics, actual throughput, failed work, system cost and whether to continue/stop/expand.
+- **After any incident:** stop the affected lane, preserve evidence, revoke relevant credentials as needed, inform the owner and resume only after a documented review.
+
+This cadence is a proposed configuration for a future executor, not evidence that an actual timed worker currently exists. No automation should be scheduled to call costly model APIs until provider credentials, cost caps, alerting, kill switch and owner approval are verified.
+
+---
+
+## 17. Proposed owner decisions
+
+The owner should explicitly approve or change these decisions before implementation expands:
+
+1. **Beachhead principle:** one locality and one use case, supply-first. Accept the principle even if the final locality/category is selected after research.
+2. **Candidate market:** authorize comparison of practical options (including the existing cleaning/turnover candidate) without assuming any category or country is already chosen.
+3. **Measurement:** approve minimal, privacy-conscious outcome events and bot/crawler analysis before growth spend.
+4. **Execution policy:** keep main protected, use isolated branches/PRs, maintain independent review, and forbid autonomous production actions.
+5. **Agent runtime:** allow a staging-only proof project; do not switch on an unverified executor or call the fleet 24/7 yet.
+6. **Growth delegation:** authorize research and drafts; require human approval for outbound campaigns, partner commitments, public mass publication and budgets.
+
+These decisions give agents enough clarity to work without implicitly transferring authority over money, data, law, trust or deployment.
+
+---
+
+## 18. Definition of done for this phase
+
+The phase is not complete merely because this plan is merged, an assistant is connected, a sitemap exists or a scheduled workflow has run. It is complete when evidence shows that:
+
+- one canonical repository and safe Lovable sync path are known;
+- core privacy, source-rights and access concerns are resolved or explicitly block release;
+- a real participant can complete a full exchange using truthful supply and the canonical discovery path;
+- real participants confirm enough outcomes and willingness to repeat to justify replication;
+- the same market playbook works in a second locality;
+- the funnel distinguishes meaningful human outcomes from bots and activity metrics;
+- market expansion is driven by evidence and governed stages;
+- the continuous worker runs reliably in an isolated environment, survives recovery tests, respects budgets and stops on the kill switch;
+- all changes are traceable to exact commits, tests and reviews;
+- the owner has approved each production, commercial, security and external-action gate.
+
+The enduring question for every feature, automation or market is:
+
+**What new, verified real-world outcome becomes possible for a person—and what evidence proves that it works safely, fairly and repeatedly?**
+
+---
+
+## 19. References and live work records
+
+- Canonical product vision and invariants: README.md and docs/adr/001-canonical-supply-engine.md.
+- Integration and pilot execution board: [Issue #263](https://github.com/mattleask373-rgb/life-lived-network/issues/263).
+- Release-safe integration, analytics and scale readiness: [Issue #279](https://github.com/mattleask373-rgb/life-lived-network/issues/279).
+- Governed AI platform and assistant prerequisites: [Issue #209](https://github.com/mattleask373-rgb/life-lived-network/issues/209).
+- Database access/default-privilege review: [Issue #164](https://github.com/mattleask373-rgb/life-lived-network/issues/164).
+- Existing control-plane history: [Issues #74, #100, #116, #117, #121](https://github.com/mattleask373-rgb/life-lived-network/issues).
+- Official Lovable Git sync behavior: [Lovable Git sync docs](https://docs.lovable.dev/integrations/git-sync-overview).
+- Analytics/Search Console interpretation: [Google Search Central](https://developers.google.com/search/docs/monitor-debug/google-analytics-search-console).
+- Australia work-rights rules: [Department of Home Affairs — work restrictions](https://immi.homeaffairs.gov.au/visas/working-in-australia/work-rights-and-exploitation/work-restrictions).
+- Australian Cleaning Award: [Fair Work Ombudsman — employee entitlements](https://www.fairwork.gov.au/find-help-for/contract-cleaning/entitlements-for-employees-under-the-cleaning-award) and [Award summary](https://www.fairwork.gov.au/awards-and-agreements/awards/award-summary/ma000022-summary).
+- Reddit promotion policy: [Reddit Spam guidance](https://support.reddithelp.com/hc/en-us/articles/360043504051-Spam).
+- Google scaled/doorway content policy: [Google Search spam policies](https://developers.google.com/search/docs/essentials/spam-policies).
+- Global app strategy: [Apple App Store Review Guidelines](https://developer.apple.com/app-store/review/guidelines/).
+- OpenAI search vs training crawlers: [OpenAI crawler overview](https://developers.openai.com/api/docs/bots).
+- Capacity and reliability: [AWS Well-Architected — adapt to changing demand](https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/design-your-workload-to-adapt-to-changes-in-demand.html), [scalability testing](https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/rel_testing_resiliency_test_non_functional.html).
+- Staged marketplace growth reference: [Two-sided marketplace playbook](https://twosided.io/blog/marketplace-growth-strategy), 4 July 2026. Treat it as directional industry commentary, not evidence about this product's demand.
+
+**Last rule:** a green check verifies only the thing it actually checked. A research dossier is not supply, a drafted outreach message is not a conversation, a PR is not a release, a preview is not production, and a scheduled agent is not a reliable 24/7 operating system until the entire loop has been demonstrated.
+
+
+---
+
+## 20. Current-main integration order — refreshed 22 October 2026
+
+The old PR integration register drafted in PR #288 is not a canonical file on main. Use Issue #263 as the current execution board. The detailed PR inventory earlier in this document is historical where not re-verified.
+
+### Required order
+
+1. **Governance and identity first:** the main ruleset is active but required approving reviews are set to zero and deletion protection is absent from the fetched rules array. Admin re-fetch required. Lovable Project Settings Git target and deployed backend identity remain UNKNOWN.
+2. **CI foundation is integrated:** #285 and #286 are merged to main. Exact-main Verify passed [#39768462635](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39768462635), CodeQL passed [#39768462699](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39768462699). k6 parsing did not send traffic; no load test is proven.
+3. **Connection/database security remains open:** review the merged #286 SQL in light of #162 and issue #164 in a disposable database. Prove pending-only transitions, open/unexpired need checks, compare-and-set, client-role denial, default privileges and rollback. No hosted permission/schema change.
+4. **Private route, locality and map corrections:** review #291 for Life List noindex/sitemap exclusion, fail-closed >400 descendant scope and date-line projection. The new PR is draft and requires independent/manual review.
+5. **Source freshness and provenance paging:** review #292's unverified freshness override and #293's bounded source-record paging. Latest trusted withdrawal must win; failed/capped provenance reads must not promote imported rows.
+6. **Consolidate legacy candidates:** re-fetch #154/#272 locality, #271 SEO, #276 sitemap paging and #235 auth storage. Port only unique fixes after exact current-main review; avoid duplicate implementations and stale-stack merging.
+7. **Durable control plane:** reconcile #116's canonical migrations and #117's hostile-input proof; verify identity/scope, leases/fencing, idempotency, recovery, costs, alerting and kill switch in a confirmed isolated backend before describing 24/7 operation.
+8. **Market and growth:** research candidate markets read-only; provider contact, feed activation, campaign spend and launch remain gated until legal/supply evidence, the complete outcome loop and a written owner go/no-go exist.
+
+### Current verified execution evidence
+
+- Main SHA: a99d09f1517523a7a388245ca6b3d5c1245816cb. Latest exact-main Verify and CodeQL links are above.
+- #291 head 3238f15d34b6d9c58097063ef2c030192ffeaccc: Verify [#39811100438](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39811100438) and CodeQL [#39811100488](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39811100488) passed. Draft; independent review not yet recorded.
+- #292 head 7b5444ca4b802174b2ee29717a94773500f0ad82: Verify [#39811129107](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39811129107) and CodeQL [#39811129063](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39811129063) passed. Draft; independent review not yet recorded.
+- #293 head ad076f3ce2efd526744a4d498512f80e2509efb0: the newest Verify run is [#39812127296](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39812127296); refresh its final conclusion and CodeQL [#39812127240](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39812127240) before upgrading this status. An earlier head's lint failure was corrected by a style-only fixup.
+- Live published GETs returned robots.txt HTTP 200 with blanket Allow rules, /sitemap.xml HTTP 404 HTML, and /life-list HTTP 200 without extracted noindex metadata. No deployment was made from these draft PRs.
+- No PR in this list has been merged by this coordination pass. CI verifies source code, not hosted RLS, live source rights, a real market outcome, deployed route precedence or a durable 24/7 worker.
+
+### Acceptance and anti-claims
+
+No autonomous merge/deploy, hosted database/grant/RLS mutation, public AI activation, provider feed activation, paid spend or external outreach is authorized by this plan. A plan, branch, PR, scheduled workflow or successful coding turn does not prove production deployment or 24/7 operation.
+
+## 21. Immediate execution backlog after PR reconciliation
+
+This backlog converts the year plan into the next dependency-ordered outcomes. It is not a commitment that human-gated reviews, staging access, interviews or production actions have already happened. Each item has a tangible artifact and a stop condition.
+
+### B0 — Establish release authority and environment truth
+**Owner:** repository/product owner and repository admin.  
+**Output:** record the required branch protection, reviewer/check rules, bypass roles, authoritative Lovable repository/sync branch, intended live hostname, published build SHA, and connected Supabase project.  
+**Accept when:** GitHub settings and official project dashboards are checked by an authorized human and the findings are linked from issue #263/#279.  
+**Stop condition:** until confirmed, no main bypass, Lovable bulk sync, hosted database write, permission change, deploy or production-target load test.
+
+### B1 — Maintain a trustworthy CI baseline
+**Owner:** independent reviewer + repository maintainer.  
+**Status:** the #285 k6 parser/action-pin change is merged, and current-main Verify/CodeQL pass.  
+**Output:** keep the safety guard that k6 inspection sends no traffic; verify action SHAs against authoritative upstream references and run any actual load profile only on a named, isolated staging origin.  
+**Accept when:** exact current main remains green, an independent review covers integrated changes, and a separately approved staging test records latency, errors, resources and cost. Parser success alone does not pass a capacity gate.
+
+### B2 — Remove tracked environment configuration safely
+**Owner:** security reviewer + repository maintainer.  
+**Candidate source:** minimal patch from #120, reconciled with #122/#286.  
+**Output:** delete the tracked real .env from Git, preserve a placeholder-only .env.example, retain correct ignore rules, and add a guard that rejects future tracked real environment files. Keep unrelated earning/agent files out of this patch.  
+**Accept when:** a repository index scan proves no real .env files are tracked; secret scanning and code review pass; the environment template includes only names and dummy placeholders; CI passes after the change. Do not print or copy any variable values into comments/reports.
+
+### B3 — Close connection authorization and migration findings
+**Owner:** database/security specialist + independent reviewer + owner for any hosted project decision.  
+**Candidates:** #162/#286/#161 and issue #164.  
+**Output:** one canonical authorization matrix and one reviewed migration/implementation path. Test request participant roles, pending-only accept/decline/withdraw transitions, compare-and-set concurrency, need exists/open/not expired, block relationships, sender/recipient isolation, anonymous access and message/report controls.  
+**Accept when:** fresh-database replay, upgrade path, rollback, direct PostgREST access, and both allowed and denied cases pass in a disposable isolated DB; no ambiguous duplicate triggers remain; any remaining privilege findings are resolved or explicitly release-blocking.  
+**Stop condition:** no hosted migration, RLS/grant mutation, or environment with shared production data until the owner authorizes it.
+
+### B4 — Stabilize the canonical discovery and locality contract
+**Owner:** product/domain owner + full-stack reviewer + QA.  
+**Candidates:** #4/#8 tests, #169 input/place validation, #172/#154 exact counts, #272 locality/date-line, #160/#166 context continuity, #59 stale Journey behavior, #158 honest empty state.  
+**Output:** one behavior matrix for query subject/intent, service area vs current/temporary presence, selected locality, date-line geometry, ancestor/radius bounds, pagination, stale data, no results and errors. Preserve findSupply() as the sole discovery authority.  
+**Accept when:** the matrix is approved (including issue #281 semantics), focused tests prove that a selected locality never silently broadens, invalid inputs fail closed, and the exact main build passes. Port one coherent implementation; close duplicates only after checking their unique tests.
+
+### B5 — Establish public/private SEO and route truth
+**Owner:** SEO engineer + security reviewer.  
+**Candidates:** #271 route registry, #257 structured data, #168 privacy-safe measurement.  
+**Output:** a single route-policy contract that controls canonical URLs, indexability, internal links, robots, sitemap, public APIs, structured data and private Life List data. Define a minimal, privacy-conscious funnel contract before wiring events.  
+**Accept when:** unit/route tests cover public, private, stale, incomplete and empty data; private content is blocked through authorization/RLS/API/cache/model context, not merely noindex/robots; sitemap enumeration fails closed when incomplete. Live GET-only checks use a human-confirmed host after authorized publication.
+
+### B6 — Separate search growth from telemetry and source ingestion
+**Owner:** product analytics + privacy reviewer + adapter owner.  
+**Candidates:** #34/#43 and #168.  
+**Output:** independent bounded patches: (a) useful local search/front-door quality and (b) fixture/provider adapter contracts. Keep event fields enumerated and purpose-limited; don't transmit/store raw query or person/recipient/connection identifiers without an approved need, access, retention and consent story.  
+**Accept when:** tests show event schema validation and redaction, the source adapter fails closed on invalid bounds and missing provenance/rights, and no provider feed is activated by the code change itself. The analytics baseline distinguishes human outcomes from crawler/sitemap activity.
+
+### B7 — Make the Australia beachhead a verified decision, not a presumption
+**Owner:** market research + Australian legal/work-rights reviewer + human operator.  
+**Output:** a ranked, dated dossier for up to four candidate localities; host/property-manager interview guide; explicit work classification and Award/visa review; verified opt-in cleaning-business supply; operating support/dispute plan and unit-economics assumptions.  
+**Accept when:** evidence supports one locality and use case, real providers agree to participate, lawful engagement and pay/insurance/safety requirements are reviewed, and the owner makes a written go/no-go decision. Visitor visas/ETAs are not a work authorization route. Research notes, provider names found online, or drafted outreach are not equivalent to opt-in supply or an interview.
+
+### B8 — Implement and measure one complete real-world loop
+**Owner:** full-stack implementation + product operations + QA.  
+**Output:** provider onboarding → eligible listing → scoped discovery → clear terms/availability → consented enquiry → provider reply → agreement/cancellation → completion/feedback/report/support.  
+**Accept when:** at least one real permitted service path completes end-to-end with participant consent, no fabricated listings or availability, durable status and support escalation. Measure time to useful match, response/completion, cancellation/dispute, freshness, retention and per-completion cost. Don't expand geographies before repeatability is demonstrated.
+
+### B9 — Prove staging capacity and resilience
+**Owner:** performance engineer + platform/security reviewer + owner of the environment.  
+**Output:** workload assumptions, SLOs/rollback thresholds, an isolated staging target and a stepwise smoke/load/spike/soak/failure-recovery report with latency percentiles, error rate, resources, saturation, queue lag and cost.  
+**Accept when:** target identity, data isolation and budget are explicitly approved; each test passes the previous stage; capacity is reported as measured requests/concurrency, not inferred DAU or an aspirational billion-user figure. No production load testing by default.
+
+### B10 — Prove governed continuous operations, then consider expansion
+**Owner:** platform/security owner + independent reviewer.  
+**Output:** one selected control-plane architecture after reconciling #61/#64/#101–#109/#115/#122 with issues #74/#100/#116/#117/#121. Prove task identity/scope, leases and fencing, idempotency, cancellation, crash recovery, rate/cost limits, observability, audit receipts, human approvals and kill switch in staging.  
+**Accept when:** a durable task survives restart/failure tests and unauthorized/cross-project actions are denied. A scheduled GitHub workflow or daily review automation does not qualify as a continuous production executor. No autonomous merge/deploy, external contact, paid spend or production mutation.
+
+### How the master plan advances
+B0–B3 are prerequisites for safe integration; B4–B6 establish trustworthy discovery, public data and measurement; B7–B8 decide and prove the first market loop; B9–B10 govern scaling and autonomy. If a gate blocks, continue with independent research and docs work, but do not claim the blocked capability is complete. Every close-out note must include current SHA, exact test links, skipped checks, risk/rollback and human decision still needed.

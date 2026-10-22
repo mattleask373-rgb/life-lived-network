@@ -1,6 +1,26 @@
-# Agent System Status — 2026-10-21 (Grok redesign integration / global integration phase)
+# Agent System Status — 2026-10-22 (current-main coordination snapshot)
 
-## Canonical baseline
+## Agent System Status — 2026-10-22 (current-main coordination snapshot)
+
+## Authoritative snapshot — refreshed 22 October 2026
+
+- **Canonical repository/main:** mattleask373-rgb/life-lived-network at a99d09f1517523a7a388245ca6b3d5c1245816cb. Exact-main Verify passed [#39768462635](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39768462635); CodeQL passed [#39768462699](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39768462699).
+- **CI foundation:** #285 and #286 are merged. Green source checks are not hosted database/security proof; the k6 parser check sent no traffic.
+- **Current draft fixes:** #291 head 3238f15d34b6d9c58097063ef2c030192ffeaccc (Verify/CodeQL pass); #292 head 7b5444ca4b802174b2ee29717a94773500f0ad82 (Verify/CodeQL pass); #293 head ad076f3ce2efd526744a4d498512f80e2509efb0 (latest Verify/CodeQL conclusions need rechecking at time of acceptance). None is merged or independently reviewed.
+- **Ruleset #24946178:** active; strict verify, latest-push approval and thread resolution. Raw required_approving_review_count is 0; the fetched rules lack a deletion rule. Admin must fix and re-fetch; do not claim one approval is enforced.
+- **Lovable:** project revision 7ca12a5900d708014d63b03847f2c922965ea1be; connected Git target/deployed backend identity UNKNOWN. Loveable/work/safely is 18 ahead / 348 behind main (merge base ccbcc6acdbc3dcdf6895c0f624b301418257a6e3). No write-capable Lovable prompt/bulk sync until owner proves intended isolated non-main target.
+- **Live SEO probe:** robots.txt HTTP 200 with broad Allow rules/no sitemap directive; /sitemap.xml HTTP 404 HTML; /life-list HTTP 200 without extracted noindex. Private route indexability mismatch is confirmed; saved-data exposure is not proven. No deployment was made by this coordination pass.
+- **24/7 runtime:** issues #116/#117/#121 remain open. No complete durable worker, hosted lease/fencing adversarial proof or end-to-end scheduled heartbeat/task completion has been verified.
+- **Database and AI:** issue #164 remains a release-blocking access-control audit; no hosted ACL/RLS/grant changes. Public AI issue #209 remains disabled. findSupply() remains the single discovery authority; no synthetic supply or inferred availability.
+- **Next tasks in order:** (1) admin/owner gates; (2) independent review of #291–#293 and integration-conflict resolution; (3) disposable-DB matrix for #162/#164; (4) #116/#117 control-plane reconciliation/proof; (5) evidence-selected pilot and full exchange outcome; (6) durable worker proof in isolated non-production.
+
+---
+
+## Historical notes (do not treat snapshots below as current PR/main truth)
+
+The following records preserve prior audit history. Their dates, SHAs, review states and candidate lists are historical unless reverified against live GitHub. Use the authoritative snapshot above for current coordination.
+
+# Canonical baseline
 
 - Repository: mattleask373-rgb/life-lived-network
 - Current main SHA at the latest integration update: `ccbcc6acdbc3dcdf6895c0f624b301418257a6e3` (verified as the base of current-main draft branches on 2026-10-21 at approximately 19:30 UTC). The earlier phase-3 queue below is a historical snapshot; use the latest update appended below for current candidate states.
