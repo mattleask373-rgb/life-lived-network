@@ -104,11 +104,16 @@ export const listReports = createServerFn({ method: "GET" })
               .in("id", requestIds)
           : Promise.resolve({ data: [] as { id: string }[] }),
         listingIds.length
-          ? context.supabase.from("listings").select("id, title, place, neighbourhood").in("id", listingIds)
-          : Promise.resolve({ data: [] as { id: string }[] }),
+          ? context.supabase
+              .from("listings")
+              .select("id, title, place, neighbourhood")
+              .in("id", listingIds)
+          : Promise.resolve({
+              data: [] as { id: string; title: string; place: string; neighbourhood: string }[],
+            }),
         needIds.length
           ? context.supabase.from("needs").select("id, title, place_text").in("id", needIds)
-          : Promise.resolve({ data: [] as { id: string }[] }),
+          : Promise.resolve({ data: [] as { id: string; title: string; place_text: string }[] }),
       ]);
 
     const names = new Map((profiles ?? []).map((p) => [p.id, p.display_name as string]));
