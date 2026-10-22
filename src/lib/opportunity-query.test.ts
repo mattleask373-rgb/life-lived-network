@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   chunkOpportunityPlaceIds,
   MAX_OPPORTUNITY_PLACE_IDS,
+  OPPORTUNITY_PLACE_CHUNK_SIZE,
+  OPPORTUNITY_CANDIDATES_PER_CHUNK,
   mergeNewestNeedRows,
   OpportunityScopeTooWideError,
 } from "./opportunity-query";
@@ -15,6 +17,27 @@ describe("chunkOpportunityPlaceIds", () => {
     expect(chunks.flat()).toHaveLength(805);
     expect(new Set(chunks.flat()).size).toBe(805);
     expect(chunks.flat()).toEqual(ids.slice(0, 805));
+  });
+
+  it("covers the 400/401 and 5,000/5,001 scope boundaries", () => {
+    expect(chunkOpportunityPlaceIds(["p-0"])).toHaveLength(1);
+
+    const atFilterCap = Array.from({ length: OPPORTUNITY_PLACE_CHUNK_SIZE }, (_, i) => `p-${i}`);
+    expect(chunkOpportunityPlaceIds(atFilterCap)).toHaveLength(1);
+
+    const overFilterCap = [...atFilterCap, "p-400"];
+    expect(chunkOpportunityPlaceIds(overFilterCap).map((chunk) => chunk.length)).toEqual([400, 1]);
+
+    const atTotalCap = Array.from({ length: MAX_OPPORTUNITY_PLACE_IDS }, (_, i) => `scope-${i}`);
+    const chunks = chunkOpportunityPlaceIds(atTotalCap);
+    expect(chunks).toHaveLength(Math.ceil(MAX_OPPORTUNITY_PLACE_IDS / OPPORTUNITY_PLACE_CHUNK_SIZE));
+    expect(chunks.flat()).toHaveLength(MAX_OPPORTUNITY_PLACE_IDS);
+    expect(chunks.every((chunk) => chunk.length <= OPPORTUNITY_PLACE_CHUNK_SIZE)).toBe(true);
+    expect(chunks.length * OPPORTUNITY_CANDIDATES_PER_CHUNK).toBeLessThanOrEqual(780);
+
+    expect(() =>
+      chunkOpportunityPlaceIds([...atTotalCap, "scope-over-cap"]),
+    ).toThrow(OpportunityScopeTooWideError);
   });
 
   it("fails closed instead of dropping the locality predicate over the total cap", () => {
