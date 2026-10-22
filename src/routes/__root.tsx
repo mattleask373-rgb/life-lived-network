@@ -266,7 +266,9 @@ function RootComponent() {
     if (import.meta.env.DEV || !("serviceWorker" in navigator)) return;
     // Install only the privacy-safe shell worker; registration failure must not
     // interfere with the online application.
-    void navigator.serviceWorker.register("/service-worker.js", { scope: "/" }).catch(() => undefined);
+    void navigator.serviceWorker
+      .register("/service-worker.js", { scope: "/" })
+      .catch(() => undefined);
   }, []);
 
   return (
