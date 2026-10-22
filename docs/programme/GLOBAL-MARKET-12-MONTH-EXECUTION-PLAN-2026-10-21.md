@@ -1198,3 +1198,54 @@ Status: current-doc research is complete for this narrow evaluation; adapter imp
 
 Safe research, review, tests and isolated branch work should continue while approvals are pending. Do not mark the year plan or phase complete until each applicable gate has its evidence.
 
+
+
+### Execution order refresh — 22 October 2026, 19:00 UTC
+
+This section supersedes any earlier snapshot in this document for the PRs and main SHA stated below. Re-fetch before every merge; the agents are editing review branches concurrently.
+
+**Canonical main:** `a99d09f1517523a7a388245ca6b3d5c1245816cb`. Main has not been changed by this pass.
+
+#### Merge gates and order
+
+**Gate 0 — release authority (human/admin-owned; blocks production writes and all merges until corrected).**
+- Reconfigure ruleset #24946178 to require at least one approving review; the live raw ruleset currently says `required_approving_review_count: 0`. Verify deletion protection separately; it is not present in the returned rules list.
+- Confirm Lovable Project Settings Git repository and isolated non-main sync branch, intended deployed host/build SHA, and Supabase project ref/runtime isolation. The latest Lovable revision alone does not prove any of those settings. Keep write-capable Lovable turns off.
+- Confirm the authoritative environment for the historical #164 default-ACL/RLS finding and the migration-history target before any database test or change.
+
+**1. PR #291 — first code integration candidate.**
+- URL: https://github.com/mattleask373-rgb/life-lived-network/pull/291
+- Latest observed head: `70831fc20603afa2c88fef4c9c9456f00f8f415c`; base main `a99d09f...`.
+- Scope converged here: shared public/private/noindex route registry and live SEO-smoke policy tests; private Life List metadata; fail-closed locality scope for listings/open needs; canonical place-index keyset scan with a 50,000-row hard cap and fail-closed overflow/read errors; date-line view fixes; deterministic bounded viewport pagination; freshness/source lifecycle changes previously carried by #293/#295.
+- Exact-head successful Verify: https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39835902770/job/120024176957 — recorded 78 test files passed, 1 skipped. CodeQL, TypeScript analysis and locked-dependency audit passed at this head. A second Verify attempt at the same head was cancelled, so use the successful completed run, not the cancelled attempt. Supabase Preview is skipped, not passed.
+- **Do not merge yet:** still draft, no submitted independent review, no manual screen-reader/mobile/date-line evidence, and no hosted or live-host verification. Required next: independent review of the combined diff; exact-head run refresh after any changes; test locality cap boundaries, page errors/insertion races, unknown-vs-zero, crawlable noindex policy, and complete vs overflow place scans.
+
+**2. PR #298 — stacked UI truthfulness follow-up; after #291.**
+- URL: https://github.com/mattleask373-rgb/life-lived-network/pull/298
+- Head at creation: `e3c18e5722e77087e191c042c784c1566364f4d0`; base is the #291 branch, not main.
+- It renders pending/error open-needs reads as unknown (dash / “couldn't check just now”), never zero, and tests that contract. It is draft and unreviewed; only a skipped Supabase Preview check had appeared on the first check read. Re-fetch its exact-head Verify, CodeQL, TypeScript and dependency results.
+- After #291 is merged, retarget/rebase #298 on current main, rerun exact-head CI and independent review, then merge. Do not merge it against an old stacked commit.
+
+**3. PR #294 — this plan/status reconciliation (documentation).**
+- URL: https://github.com/mattleask373-rgb/life-lived-network/pull/294
+- Head `8e18433fbc8cce7202a886642cadad293418dd3f`, base main. Verify, CodeQL, TypeScript and locked dependency audit passed at this head; Supabase Preview skipped. Still draft with no submitted independent review. Verify plan/status facts and source links, review as docs, then merge only after Gate 0 review rule is effective.
+
+**4. PR #297 — least-privilege ACL proposal (documentation only).**
+- URL: https://github.com/mattleask373-rgb/life-lived-network/pull/297
+- Head `2ed1c5bc71a41b5a8e9e71bae16224b0aefe8fd7`, directly based on current main. Verify, CodeQL, TypeScript and locked dependency audit passed; Supabase Preview skipped. Still draft/unreviewed.
+- Review the access-class matrix against current-main queries and preserve its explicit target identity/dated metadata warning. It is a proposal, **not** an executable migration and does not authorize any hosted ACL/RLS/default-privilege changes. Stale-base #194 is closed as superseded, unmerged.
+
+**5. PR #289 — strict AI draft input validation.**
+- URL: https://github.com/mattleask373-rgb/life-lived-network/pull/289
+- Exact checks recorded green on `ee7937da4b3600b1fbac0ff637fa657778a710ad`; no independent review was recorded. Keep separate from public AI launch. Re-fetch head/checks/reviews, review then merge when Gate 0 is effective. This is request-shape validation only, not a rate-limit or cost-abuse solution.
+
+**6. Next new security/control work — not a production authorization.**
+- Finish #164/#194 with an environment-confirmed, sanitized table/column/routine/Storage/GraphQL/default-ACL/RLS matrix, disposable database tests under anon/two authenticated roles, exact migration replay, and rollback. No host changes before owner approval.
+- Close the #289/#290 gap with server-side per-user/IP limits, concurrency caps, budget accounting/alerts, cancellation and a hard kill switch before any public model endpoint. Keep “Ask this place” disabled until rights/provenance/freshness/approval, same-place isolation, citations, prompt-injection evals and per-request/provider budget tests pass.
+- Reconcile current-main agent migration history vs candidate lineage (#100/#116); never bulk-merge the 108-ahead/639-behind control-plane branch. Prove replay and durable leases/fencing/idempotency/heartbeat in a confirmed disposable environment before any 24/7 claim.
+- After owner confirms canonical host/build, fix route/hosting precedence, deploy only via approved release flow, then run GET-only smoke for robots, sitemap index and all children plus Life List noindex/sitemap-exclusion checks. Source files and CI do not prove the live host is fixed.
+- Select a pilot market/category only through dated demand, rights, opt-in supply, local law/support and cost evidence. Then complete onboarding → eligible supply → scoped discovery → consented request → provider response → completion/feedback. Instrument bot-filtered outcomes/retention before paid acquisition or geographic scale-out.
+
+#### Human gates remain last, but block unsafe production work now
+
+Human review is needed now for the ruleset, sync source-of-truth and environment identity; final product/legal/worker classification, provider terms and data rights; any RLS/grant/schema/migration, provider activation, spend, outreach, launch/marketing and deployment decisions. Agents can continue read-only audit, isolated branch work, deterministic unit/adversarial testing and documentation while these are pending. No auto-merge, auto-deploy or unrestricted external action is permitted by the one-year plan.
