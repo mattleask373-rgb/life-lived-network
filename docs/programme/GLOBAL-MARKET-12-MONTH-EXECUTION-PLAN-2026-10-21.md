@@ -15,7 +15,7 @@ This snapshot supersedes older notes below wherever they conflict about the curr
 - Live ruleset #24946178 is active and requires exact strict verify, latest-push approval and review-thread resolution, but raw required_approving_review_count is 0 and the returned rules omit deletion protection. Admin correction and re-fetch remain required.
 - Lovable metadata reports revision 7ca12a5900d708014d63b03847f2c922965ea1be. The Loveable/work/safely branch is 18 ahead / 348 behind main from merge base ccbcc6acdbc3dcdf6895c0f624b301418257a6e3. The actual Project Settings Git target and deployed backend/build identity remain unverified.
 - Fresh GET probes show robots.txt HTTP 200 with blanket Allow rules and no sitemap directive, /sitemap.xml HTTP 404 HTML, and /life-list HTTP 200 without extracted noindex metadata. This is a publication/indexability mismatch, not proof that private saved data has leaked.
-- Current main-based draft fixes #291, #292 and #293 address Life List/locality/map correctness, stale source-freshness labels and bounded source-record paging. They remain unmerged; exact-head tests, independent review and integration decisions are required.
+- Current main-based draft fixes #291, #292 and #293 address Life List/locality/map correctness, stale source-freshness labels and bounded source-record paging; #295 adds viewport cursor pagination and a page cap. These remain unmerged; exact-head tests, independent review and integration decisions are required.
 
 
 > **Strategic decision:** Build a globally repeatable system for creating real-world value, one verified local market at a time. Do not attempt to launch every category in every country at once. Automate research, verification, delivery, learning and preparation wherever safe; retain human control of production, money, legal commitments, private data and consequential external actions.
@@ -98,7 +98,7 @@ The current verified mode should be treated as **on-demand agent work with share
 
 ### Current AI work and integration review — 22 October 2026
 
-The previous PR inventory in this section is a dated snapshot and is no longer current. PR #285 and #286 have since merged into main; #288 closed after merging into the #285 feature branch, not main. The old 88-open-PR count and “three current-main PRs” statement must not be reused. Re-fetch each PR's exact head/base/review/check state before action. Current main-based draft fixes #291–#293 are summarized at the end of this document.
+The previous PR inventory in this section is a dated snapshot and is no longer current. PR #285 and #286 have since merged into main; #288 closed after merging into the #285 feature branch, not main. The old 88-open-PR count and “three current-main PRs” statement must not be reused. Re-fetch each PR's exact head/base/review/check state before action. Current main-based draft fixes #291–#293 and #295 are summarized at the end of this document.
 
 This is a convergence problem. Do not create more feature PRs simply because the year plan has many packages. Reduce duplicate and stale work, then promote one verified implementation per concern.
 
@@ -798,7 +798,7 @@ The #285 parser/action-pin change is merged. Current-main Verify is green, and k
 
 ### Package 04 — PR and dependency convergence
 **Lane:** Orchestrator + independent reviewer.  
-Refresh each open PR head/base, changed paths, review state and exact-head CI before assignment. The previous 88-open-PR inventory is historical, not current truth. Classify candidates as integrate, port unique fix, superseded, blocked or preserve for owner. Current main-based drafts #291–#293 require independent review; do not add parallel fixes for the same concern.
+Refresh each open PR head/base, changed paths, review state and exact-head CI before assignment. The previous 88-open-PR inventory is historical, not current truth. Classify candidates as integrate, port unique fix, superseded, blocked or preserve for owner. Current main-based drafts #291–#293 and #295 require independent review; keep pagination and source-record paging as separate bounded concerns and do not add parallel fixes.
 
 ### Package 05 — Map locality-scope correctness
 **Lane:** Map implementation agent + QA.  
@@ -1013,7 +1013,8 @@ The old PR integration register drafted in PR #288 is not a canonical file on ma
 - Main SHA: a99d09f1517523a7a388245ca6b3d5c1245816cb. Latest exact-main Verify and CodeQL links are above.
 - #291 head 3238f15d34b6d9c58097063ef2c030192ffeaccc: Verify [#39811100438](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39811100438) and CodeQL [#39811100488](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39811100488) passed. Draft; independent review not yet recorded.
 - #292 head 7b5444ca4b802174b2ee29717a94773500f0ad82: Verify [#39811129107](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39811129107) and CodeQL [#39811129063](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39811129063) passed. Draft; independent review not yet recorded.
-- #293 head ad076f3ce2efd526744a4d498512f80e2509efb0: the newest Verify run is [#39812127296](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39812127296); refresh its final conclusion and CodeQL [#39812127240](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39812127240) before upgrading this status. An earlier head's lint failure was corrected by a style-only fixup.
+- #293 head ad076f3ce2efd526744a4d498512f80e2509efb0: Verify [#39812127296](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39812127296), CodeQL [#39812127240](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39812127240) and dependency audit passed. The earlier head's lint failure was corrected by a style-only fixup.
+- #295 viewport pagination is a new draft based on current main; its current head is 33b24ed715ff6156ab7e0db62423039cdd410ae2. Verify is pending/running; don't treat it as green until the exact head completes.
 - Live published GETs returned robots.txt HTTP 200 with blanket Allow rules, /sitemap.xml HTTP 404 HTML, and /life-list HTTP 200 without extracted noindex metadata. No deployment was made from these draft PRs.
 - No PR in this list has been merged by this coordination pass. CI verifies source code, not hosted RLS, live source rights, a real market outcome, deployed route precedence or a durable 24/7 worker.
 
