@@ -39,9 +39,7 @@ export const draftFromText = createServerFn({ method: "POST" })
     // quota to auth.uid() from this signed-in Supabase request. Missing or invalid
     // quota evidence fails closed, before importing the paid provider path.
     const quotaClient = context.supabase as unknown as {
-      rpc: (
-        name: "consume_ai_draft_quota",
-      ) => Promise<{ data: unknown; error: unknown | null }>;
+      rpc: (name: "consume_ai_draft_quota") => Promise<{ data: unknown; error: unknown | null }>;
     };
     let quotaResponse: { data: unknown; error: unknown | null };
     try {
