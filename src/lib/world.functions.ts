@@ -70,10 +70,16 @@ async function readWorld(
     // the request itself the bottleneck; the browser only says where it is.
     let insideIds = context.placeIds ?? [];
     let insideSlugs = context.placeSlugs ?? [];
-    if (!context.bounds && context.placeId && !insideIds.length) {
+    if (!context.bounds && context.placeId) {
+      // Client descendant IDs are display/cache hints, not authoritative query scope.
+      // Always rebuild scope from the complete server index so a truncated client index
+      // cannot make a globally-wide locality appear to fit beneath the 400-ID filter cap.
       const { loadPlaceIndex } = await import("./place-index.server");
       const { descendantIdsOf } = await import("./places");
       const index = await loadPlaceIndex(supabase);
+      if (!index.byId.has(context.placeId)) {
+        throw new DataError("NOT_FOUND", "Selected place ID is not present in the canonical hierarchy");
+      }
       insideIds = descendantIdsOf(index, context.placeId);
       insideSlugs = insideIds
         .map((id) => index.byId.get(id)?.slug)

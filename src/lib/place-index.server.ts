@@ -1,21 +1,34 @@
 /**
- * The geography, loaded once per request behind the server.
- *
- * Places are public, small and slow-changing, so the hierarchy is walked in
- * memory. Activity is never loaded this way — that stays bounded and filtered.
+ * Canonical geography, loaded behind the server boundary.
+ * A partial index is never accepted as a complete hierarchy.
  */
-
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
+import {
+  PLACE_SCAN_LIMIT,
+  PLACE_SCAN_PAGE_SIZE,
+  readBoundedPlacePages,
+} from "./bounded-place-scan";
 import { buildPlaceIndex, type Place, type PlaceIndex } from "./places";
 
-const SELECT = "id, parent_id, kind, name, slug, country_code, timezone, currency, lat, lng, blurb";
+const SELECT =
+  "id, parent_id, kind, name, slug, country_code, timezone, currency, lat, lng, blurb";
 
-export async function loadPlaceIndex(client: {
-  from: (table: "places") => {
-    select: (columns: string) => {
-      limit: (count: number) => PromiseLike<{ data: unknown[] | null }>;
-    };
-  };
-}): Promise<PlaceIndex> {
-  const { data } = await client.from("places").select(SELECT).limit(5000);
-  return buildPlaceIndex((data ?? []) as unknown as Place[]);
+export async function loadPlaceIndex(client: SupabaseClient<Database>): Promise<PlaceIndex> {
+  const places = await readBoundedPlacePages(
+    PLACE_SCAN_LIMIT,
+    PLACE_SCAN_PAGE_SIZE,
+    async (afterId, limit) => {
+      let query = client
+        .from("places")
+        .select(SELECT)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []) as unknown as Place[];
+    },
+  );
+  return buildPlaceIndex(places);
 }

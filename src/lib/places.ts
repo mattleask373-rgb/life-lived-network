@@ -15,6 +15,11 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import {
+  PLACE_SCAN_LIMIT,
+  PLACE_SCAN_PAGE_SIZE,
+  readBoundedPlacePages,
+} from "./bounded-place-scan";
 
 export type PlaceKind =
   "country" | "region" | "area" | "city" | "town" | "village" | "neighbourhood";
@@ -158,13 +163,27 @@ export function fetchDefaultPlace(): Promise<ResolvedPlace | null> {
   return fetchPlaceBySlug(DEFAULT_PLACE_SLUG);
 }
 
-/** Every place someone can currently attach something to. */
+/** Every canonical place; never turn a truncated index into a selectable hierarchy. */
 export async function fetchPlaces(kinds?: PlaceKind[]): Promise<Place[]> {
-  let query = supabase.from("places").select(SELECT).order("name");
-  if (kinds?.length) query = query.in("kind", kinds);
-  const { data, error } = await query.limit(2000);
-  if (error) throw error;
-  return ((data ?? []) as unknown as PlaceRow[]).map(toPlace);
+  const rows = await readBoundedPlacePages(
+    PLACE_SCAN_LIMIT,
+    PLACE_SCAN_PAGE_SIZE,
+    async (afterId, limit) => {
+      let query = supabase
+        .from("places")
+        .select(SELECT)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      if (kinds?.length) query = query.in("kind", kinds);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []) as unknown as PlaceRow[];
+    },
+  );
+  return rows
+    .map(toPlace)
+    .sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
 }
 
 /**
