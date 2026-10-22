@@ -313,8 +313,12 @@ export const ticketmasterAdapter: SourceAdapter = {
       const externalId = plainText(event["id"], 120);
       const title = plainText(event["name"], 140);
       const dates = asRecord(event["dates"]);
-      const timezone = plainText(dates["timezone"], 60) || "Europe/London";
-      const startsAt = startFor(dates, timezone);
+      const sourceTimezone = plainText(dates["timezone"], 60);
+      // An exact source instant is still meaningful without a display zone, so
+      // display it in UTC. A local wall time without its own zone is not safe
+      // to convert and is rejected by startFor rather than guessed as London.
+      const timezone = sourceTimezone || "UTC";
+      const startsAt = startFor(dates, sourceTimezone);
 
       if (!externalId || !title || !startsAt) {
         skipped.push(`Incomplete record${externalId ? ` ${externalId}` : ""}`);
