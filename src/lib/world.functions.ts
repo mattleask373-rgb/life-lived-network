@@ -187,7 +187,6 @@ async function readWorld(
     const sourceLifecycleReadFailed = sourceLifecycle.failed;
     const sourceLifecycleDecisions = sourceLifecycle.decisions;
 
-    const lifecycleNow = Date.now();
     const worldItems: WorldEntry[] = [];
 
     for (const row of listings) {
@@ -195,7 +194,7 @@ async function readWorld(
         if (sourceLifecycleReadFailed) continue;
 
         const decision = sourceLifecycleDecisions.get(row.id);
-        if (!decision.eligible || !decision.sourceName || !decision.sourceUrl) continue;
+        if (!decision?.eligible || !decision.sourceName || !decision.sourceUrl) continue;
 
         // The listing-level cancellation and last-checked values can reflect a
         // different linked source. Use the freshest eligible source observation.
