@@ -68,6 +68,7 @@ export function indexableServicePaths(
     if ((placeCount.get(place.id) ?? 1) > LOCALITY_FILTER_CAP) continue;
     const pageRows = rowsByPlace.get(place.id) ?? [];
     const entries = pageRows
+      .filter((row) => row.publiclyEligible !== false)
       .map((row) => entriesById.get(row.id))
       .filter((entry): entry is WorldEntry => entry !== undefined);
 
