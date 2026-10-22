@@ -90,9 +90,9 @@ describe("bounded source-record pagination", () => {
     await expect(readBoundedSourceRecordPages(10, 2, async () => [{ id: "" }])).rejects.toThrow(
       /missing cursor ID/i,
     );
-    await expect(readBoundedSourceRecordPages(10, 2, async () => [{ id: "b" }, { id: "a" }])).rejects.toThrow(
-      /strictly increasing/i,
-    );
+    await expect(
+      readBoundedSourceRecordPages(10, 2, async () => [{ id: "b" }, { id: "a" }]),
+    ).rejects.toThrow(/strictly increasing/i);
     await expect(readBoundedSourceRecordPages(10, 1, async () => [{ id: "a" }])).rejects.toThrow(
       /strictly increasing/i,
     );
