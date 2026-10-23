@@ -193,8 +193,7 @@ async function expectZeroPlaceCount(name, placeId, token) {
     const rows = Array.isArray(response.json) ? response.json : null;
     add(
       name,
-      response.status === 200 &&
-        Array.isArray(rows) && rows.length === 0 && total === "0",
+      response.status === 200 && Array.isArray(rows) && rows.length === 0 && total === "0",
       `HTTP ${response.status}; Content-Range total=${total ?? "unavailable"}; expected zero`,
     );
   } catch {
