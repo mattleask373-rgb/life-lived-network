@@ -17,18 +17,22 @@ const jwtSecret = env["SUPABASE_JWT_SECRET"]?.trim();
 
 function isLoopbackHost(host) {
   const normalized = host.toLowerCase();
-  return normalized === "localhost" ||
+  return (
+    normalized === "localhost" ||
     normalized === "127.0.0.1" ||
     normalized === "::1" ||
-    normalized === "[::1]";
+    normalized === "[::1]"
+  );
 }
 
 function isLoopbackPostgresUrl(value) {
   if (!value) return false;
   try {
     const url = new URL(value);
-    return (url.protocol === "postgres:" || url.protocol === "postgresql:") &&
-      isLoopbackHost(url.hostname);
+    return (
+      (url.protocol === "postgres:" || url.protocol === "postgresql:") &&
+      isLoopbackHost(url.hostname)
+    );
   } catch {
     return false;
   }
@@ -38,14 +42,21 @@ function isLoopbackApiUrl(value) {
   if (!value) return false;
   try {
     const url = new URL(value);
-    return (url.protocol === "http:" || url.protocol === "https:") &&
-      isLoopbackHost(url.hostname);
+    return (
+      (url.protocol === "http:" || url.protocol === "https:") &&
+      isLoopbackHost(url.hostname)
+    );
   } catch {
     return false;
   }
 }
 
-if (!isLoopbackPostgresUrl(databaseUrl) || !isLoopbackApiUrl(supabaseUrl) || !anonKey || !jwtSecret) {
+if (
+  !isLoopbackPostgresUrl(databaseUrl) ||
+  !isLoopbackApiUrl(supabaseUrl) ||
+  !anonKey ||
+  !jwtSecret
+) {
   console.error(
     "Refusing PostgREST security test: DB/API URLs must both use loopback hosts and local anon/JWT credentials must be present.",
   );
@@ -53,7 +64,12 @@ if (!isLoopbackPostgresUrl(databaseUrl) || !isLoopbackApiUrl(supabaseUrl) || !an
 }
 
 const apiBase = supabaseUrl.replace(/\/+$/, "");
-const sql = postgres(databaseUrl, { max: 4, connect_timeout: 5, idle_timeout: 5, onnotice: () => undefined });
+const sql = postgres(databaseUrl, {
+  max: 4,
+  connect_timeout: 5,
+  idle_timeout: 5,
+  onnotice: () => undefined,
+});
 const testTag = randomUUID().slice(0, 8);
 const users = {
   owner: { id: randomUUID(), email: `local-discovery-owner-${testTag}@example.test` },
@@ -118,7 +134,11 @@ async function apiRequest(path, token, extraHeaders = {}, method = "GET", body) 
   });
   const text = await response.text();
   let json = null;
-  try { json = text ? JSON.parse(text) : null; } catch { /* preserve status-only evidence */ }
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch {
+    /* preserve status-only evidence */
+  }
   return { status: response.status, headers: response.headers, json };
 }
 
@@ -147,8 +167,11 @@ async function expectZero(name, id, token) {
   try {
     const response = await apiRequest(needPath(id), token);
     const rows = Array.isArray(response.json) ? response.json : null;
-    add(name, response.status === 200 && Array.isArray(rows) && rows.length === 0,
-      `HTTP ${response.status}; expected HTTP 200 with zero visible rows`);
+    add(
+      name,
+      response.status === 200 && Array.isArray(rows) && rows.length === 0,
+      `HTTP ${response.status}; expected HTTP 200 with zero visible rows`,
+    );
   } catch {
     add(name, false, "request failed; details withheld");
   }
@@ -161,17 +184,21 @@ async function expectZeroPlaceCount(name, placeId, token) {
       visibility: "eq.local_discovery",
       place_id: `eq.${placeId}`,
     });
-    const response = await apiRequest(
-      `/rest/v1/needs?${query.toString()}`,
-      token,
-      { Prefer: "count=exact", Range: "0-0" },
-    );
+    const response = await apiRequest(`/rest/v1/needs?${query.toString()}`, token, {
+      Prefer: "count=exact",
+      Range: "0-0",
+    });
     const contentRange = response.headers.get("content-range") ?? "";
     const total = contentRange.match(/\/(\d+|\*)$/)?.[1];
     const rows = Array.isArray(response.json) ? response.json : null;
-    add(name, response.status === 200 && Array.isArray(rows) &&
-      rows.length === 0 && total === "0",
-    `HTTP ${response.status}; Content-Range total=${total ?? "unavailable"}; expected zero`);
+    add(
+      name,
+      response.status === 200 &&
+        Array.isArray(rows) &&
+        rows.length === 0 &&
+        total === "0",
+      `HTTP ${response.status}; Content-Range total=${total ?? "unavailable"}; expected zero`,
+    );
   } catch {
     add(name, false, "request failed; details withheld");
   }
@@ -185,8 +212,11 @@ async function expectDenied(name, path, token, schema = "private", method = "GET
     };
     const response = await apiRequest(path, token, headers, method, body);
     // Only a client/API 4xx counts as a denial. A 5xx must never mask exposure.
-    add(name, response.status >= 400 && response.status < 500,
-      `HTTP ${response.status}; expected an explicit client/API denial (4xx)`);
+    add(
+      name,
+      response.status >= 400 && response.status < 500,
+      `HTTP ${response.status}; expected an explicit client/API denial (4xx)`,
+    );
   } catch {
     add(name, false, "request failed; details withheld");
   }
@@ -278,15 +308,37 @@ async function main() {
     const userA = jwtFor(users.a.id);
     const userB = jwtFor(users.b.id);
 
-    await expectOne("anon sees one synthetic public need", needs.publicA, anon, places.a.id, "public");
+    await expectOne(
+      "anon sees one synthetic public need",
+      needs.publicA,
+      anon,
+      places.a.id,
+      "public",
+    );
     await expectZero("anon cannot read synthetic local A need by ID", needs.localA, anon);
     await expectZero("anon cannot read synthetic local B need by ID", needs.localB, anon);
-    await expectOne("verified A reads exact-place A need", needs.localA, userA, places.a.id, "local_discovery");
+    await expectOne(
+      "verified A reads exact-place A need",
+      needs.localA,
+      userA,
+      places.a.id,
+      "local_discovery",
+    );
     await expectZero("verified A cannot read B need", needs.localB, userA);
-    await expectOne("verified B reads exact-place B need", needs.localB, userB, places.b.id, "local_discovery");
+    await expectOne(
+      "verified B reads exact-place B need",
+      needs.localB,
+      userB,
+      places.b.id,
+      "local_discovery",
+    );
     await expectZero("verified B cannot read A need", needs.localA, userB);
     await expectZero("A cannot read stale need even at its verified place", needs.staleA, userA);
-    await expectZero("A cannot read expired need even at its verified place", needs.expiredA, userA);
+    await expectZero(
+      "A cannot read expired need even at its verified place",
+      needs.expiredA,
+      userA,
+    );
     await expectZeroPlaceCount("anon count does not reveal A local rows", places.a.id, anon);
     await expectZeroPlaceCount("anon count does not reveal B local rows", places.b.id, anon);
 
