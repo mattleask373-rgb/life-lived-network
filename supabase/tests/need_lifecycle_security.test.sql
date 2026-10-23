@@ -25,6 +25,12 @@ insert into public.needs (
   ('66666666-6666-4666-8666-666666666666', 'aaaa0000-0000-4000-8000-000000000001',
    'practical', 'Closed public need', 'met', 'public', now(), null, null, 'Bristol');
 
+CREATE TEMP TABLE lifecycle_probe_results (
+  name text PRIMARY KEY,
+  affected_rows bigint NOT NULL
+) ON COMMIT DROP;
+GRANT INSERT ON TABLE pg_temp.lifecycle_probe_results TO authenticated, anon;
+
 select ok(
   (
     select c.relrowsecurity
@@ -100,54 +106,74 @@ select ok(
   'public freshness filter has a supporting partial index'
 );
 
-
-
--- Run direct RLS/trigger exercises as real database roles with JWT claim context.
+-- Execute as real client roles. Top-level data-modifying CTEs capture the
+-- affected-row count into a transaction-local table for assertions after RESET ROLE.
 set local role authenticated;
 set local request.jwt.claim.sub = 'aaaa0000-0000-4000-8000-000000000001';
 
+with changed as (
+  update public.needs
+     set last_confirmed_at = statement_timestamp()
+   where id = '11111111-1111-4111-8111-111111111111'
+   returning id
+)
+insert into pg_temp.lifecycle_probe_results(name, affected_rows)
+select 'owner_reconfirm', count(*) from changed;
+
+set local request.jwt.claim.sub = 'bbbb0000-0000-4000-8000-000000000002';
+
+with changed as (
+  update public.needs
+     set status = 'met'
+   where id = '11111111-1111-4111-8111-111111111111'
+   returning id
+)
+insert into pg_temp.lifecycle_probe_results(name, affected_rows)
+select 'non_owner_change', count(*) from changed;
+
+set local request.jwt.claim.sub = 'aaaa0000-0000-4000-8000-000000000001';
+
+with changed as (
+  update public.needs
+     set status = 'met'
+   where id = '22222222-2222-4222-8222-222222222222'
+   returning id
+)
+insert into pg_temp.lifecycle_probe_results(name, affected_rows)
+select 'owner_close', count(*) from changed;
+
+reset role;
+
 select is(
-  (with changed as (
-    update public.needs
-       set last_confirmed_at = statement_timestamp()
-     where id = '11111111-1111-4111-8111-111111111111'
-     returning id
-  ) select count(*) from changed),
+  (select affected_rows from pg_temp.lifecycle_probe_results where name = 'owner_reconfirm'),
   1::bigint,
   'owner can reconfirm an open, unexpired need'
 );
 
-set local request.jwt.claim.sub = 'bbbb0000-0000-4000-8000-000000000002';
 select is(
-  (with changed as (
-    update public.needs set status = 'met'
-     where id = '11111111-1111-4111-8111-111111111111'
-     returning id
-  ) select count(*) from changed),
+  (select affected_rows from pg_temp.lifecycle_probe_results where name = 'non_owner_change'),
   0::bigint,
   'non-owner cannot change the need lifecycle'
 );
 
-set local request.jwt.claim.sub = 'aaaa0000-0000-4000-8000-000000000001';
 select is(
-  (with changed as (
-    update public.needs set status = 'met'
-     where id = '22222222-2222-4222-8222-222222222222'
-     returning id
-  ) select count(*) from changed),
+  (select affected_rows from pg_temp.lifecycle_probe_results where name = 'owner_close'),
   1::bigint,
   'owner can mark an open need as met'
 );
 
+set local role authenticated;
+set local request.jwt.claim.sub = 'aaaa0000-0000-4000-8000-000000000001';
+
 select throws_ok(
-  $update public.needs set status = 'open' where id = '22222222-2222-4222-8222-222222222222'$,
+  $test$update public.needs set status = 'open' where id = '22222222-2222-4222-8222-222222222222'$test$,
   '42501',
   'A closed need cannot be reopened',
   'closed needs cannot be reopened by direct authenticated updates'
 );
 
 select throws_ok(
-  $update public.needs set last_confirmed_at = statement_timestamp() where id = '44444444-4444-4444-8444-444444444444'$,
+  $test$update public.needs set last_confirmed_at = statement_timestamp() where id = '44444444-4444-4444-8444-444444444444'$test$,
   '42501',
   'A need whose stated time window has ended cannot be reconfirmed',
   'an expired need cannot be refreshed to become discoverable again'
@@ -155,27 +181,35 @@ select throws_ok(
 
 reset role;
 set local role anon;
+
+insert into pg_temp.lifecycle_probe_results(name, affected_rows)
+select 'anonymous_visible', count(*)
+from public.needs
+where id in (
+  '11111111-1111-4111-8111-111111111111',
+  '22222222-2222-4222-8222-222222222222',
+  '33333333-3333-4333-8333-333333333333',
+  '44444444-4444-4444-8444-444444444444',
+  '55555555-5555-4555-8555-555555555555',
+  '66666666-6666-4666-8666-666666666666'
+);
+
+reset role;
+
 select is(
-  (select count(*) from public.needs where id in (
-    '11111111-1111-4111-8111-111111111111',
-    '22222222-2222-4222-8222-222222222222',
-    '33333333-3333-4333-8333-333333333333',
-    '44444444-4444-4444-8444-444444444444',
-    '55555555-5555-4555-8555-555555555555',
-    '66666666-6666-4666-8666-666666666666'
-  )),
+  (select affected_rows from pg_temp.lifecycle_probe_results where name = 'anonymous_visible'),
   1::bigint,
   'anonymous discovery returns only the fresh, open, public test need'
 );
 
-reset role;
 set local role authenticated;
 set local request.jwt.claim.sub = 'bbbb0000-0000-4000-8000-000000000002';
+
 select throws_ok(
-  $insert into public.connection_requests (need_id, sender_id, recipient_id, direction, note)
+  $test$insert into public.connection_requests (need_id, sender_id, recipient_id, direction, note)
     values ('33333333-3333-4333-8333-333333333333',
             'bbbb0000-0000-4000-8000-000000000002',
-            'aaaa0000-0000-4000-8000-000000000001', 'offer', 'Stale request probe')$,
+            'aaaa0000-0000-4000-8000-000000000001', 'offer', 'Stale request probe')$test$,
   '42501',
   'That need is not available for a connection request',
   'stale demand cannot receive a direct connection request'
