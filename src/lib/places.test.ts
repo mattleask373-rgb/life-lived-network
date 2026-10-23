@@ -14,6 +14,7 @@ import {
   placeBySlug,
   placePath,
   resolvePlaceFromIndex,
+  PlaceHierarchyError,
   searchPlaces,
   splitPlaceFromQuery,
   type Place,
@@ -113,6 +114,69 @@ describe("configurable default locality", () => {
       "portugal",
     );
     expect(resolvePlaceFromIndex(index, "unsupported-saved-slug", "sydney")).toBeNull();
+  });
+});
+
+describe("place hierarchy integrity", () => {
+  it("rejects duplicate IDs instead of silently overwriting the canonical row", () => {
+    expect(() =>
+      buildPlaceIndex([
+        place({ id: "duplicate", name: "First", slug: "first", kind: "city" }),
+        place({ id: "duplicate", name: "Second", slug: "second", kind: "city" }),
+      ]),
+    ).toThrow(PlaceHierarchyError);
+    try {
+      buildPlaceIndex([
+        place({ id: "duplicate", name: "First", slug: "first", kind: "city" }),
+        place({ id: "duplicate", name: "Second", slug: "second", kind: "city" }),
+      ]);
+    } catch (error) {
+      expect(error).toMatchObject({ code: "DUPLICATE_ID" });
+    }
+  });
+
+  it("rejects a missing parent rather than silently treating the child as a root", () => {
+    expect(() =>
+      buildPlaceIndex([
+        place({
+          id: "child",
+          name: "Child",
+          slug: "child",
+          kind: "town",
+          parent_id: "missing-parent",
+        }),
+      ]),
+    ).toThrow(PlaceHierarchyError);
+    try {
+      buildPlaceIndex([
+        place({
+          id: "child",
+          name: "Child",
+          slug: "child",
+          kind: "town",
+          parent_id: "missing-parent",
+        }),
+      ]);
+    } catch (error) {
+      expect(error).toMatchObject({ code: "MISSING_PARENT" });
+    }
+  });
+
+  it("rejects parent cycles so ancestor and descendant walks cannot loop forever", () => {
+    expect(() =>
+      buildPlaceIndex([
+        place({ id: "one", name: "One", slug: "one", kind: "city", parent_id: "two" }),
+        place({ id: "two", name: "Two", slug: "two", kind: "area", parent_id: "one" }),
+      ]),
+    ).toThrow(PlaceHierarchyError);
+    try {
+      buildPlaceIndex([
+        place({ id: "one", name: "One", slug: "one", kind: "city", parent_id: "two" }),
+        place({ id: "two", name: "Two", slug: "two", kind: "area", parent_id: "one" }),
+      ]);
+    } catch (error) {
+      expect(error).toMatchObject({ code: "CYCLE" });
+    }
   });
 });
 
