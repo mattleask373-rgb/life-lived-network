@@ -109,7 +109,9 @@ BEGIN
     v_evidence := btrim(COALESCE(_evidence_reference, ''));
     IF v_evidence = ''
        OR length(v_evidence) > 160
-       OR v_evidence !~ '^[A-Za-z0-9._:/-]+
+       OR v_evidence ~ '[^A-Za-z0-9._:/-]'
+       OR pg_catalog.position('http://' IN pg_catalog.lower(v_evidence)) > 0
+       OR pg_catalog.position('https://' IN pg_catalog.lower(v_evidence)) > 0 THEN
       RAISE EXCEPTION 'a short opaque evidence reference is required' USING ERRCODE = '22023';
     END IF;
 
