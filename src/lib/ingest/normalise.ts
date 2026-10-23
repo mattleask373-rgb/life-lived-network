@@ -171,6 +171,18 @@ export function usableImages(
     .slice(0, 6);
 }
 
+/** Validate a timezone with the runtime's IANA timezone database. */
+function isValidTimeZone(value: string): boolean {
+  const timezone = value.trim();
+  if (!timezone) return false;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: timezone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * The same event, in our shape, with everything checked. Returns null when the
  * source did not give us enough to be honest about — no invention here.
@@ -183,7 +195,7 @@ export function normaliseEvent(raw: SourceEvent): SourceEvent | null {
   if (!title || !startsAt || !externalId) return null;
 
   const endsAt = instant(raw.endsAt);
-  const timezone = /^[A-Za-z_]+\/[A-Za-z_+-]+$/.test(raw.timezone) ? raw.timezone : "Europe/London";
+  const timezone = isValidTimeZone(raw.timezone) ? raw.timezone.trim() : "Europe/London";
 
   return {
     externalId,

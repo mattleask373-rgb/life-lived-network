@@ -1,4 +1,4 @@
-import { publicPage } from "@/lib/seo";
+import { privatePage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { EntryCard } from "@/components/entry-card";
@@ -15,12 +15,12 @@ const description =
   "The things you said why not to: places to go, people to meet, skills to learn and projects to help with. A private list, not a public performance.";
 
 export const Route = createFileRoute("/life-list")({
-  head: () => publicPage({ path: "/life-list", title, description }),
+  head: () => privatePage({ path: "/life-list", title, description }),
   component: LifeListPage,
 });
 
 function LifeListPage() {
-  const { ids, ready, has, toggle } = useLifeList();
+  const { ids, ready, loadError, retryLoad, has, toggle } = useLifeList();
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const {
     data: world,
@@ -42,6 +42,8 @@ function LifeListPage() {
 
         {!ready || isLoading ? (
           <DataLoadingState />
+        ) : loadError ? (
+          <DataErrorState retry={() => retryLoad()} />
         ) : isError ? (
           <DataErrorState retry={() => void refetch()} />
         ) : saved.length ? (

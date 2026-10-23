@@ -7,7 +7,8 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
-import { needIdInput } from "./server-inputs";
+import { DataError } from "./data/errors";
+import { canonicalizeNeedPlace, createNeedInput, needIdInput } from "./server-inputs";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 import {
@@ -26,6 +27,14 @@ import { rowToEntry, type ListingRow } from "./listings";
 import { findSupply, type PersonCandidate, type SupplyAnswer } from "./supply-engine";
 import { freshness } from "./capability-freshness";
 import { needGeography } from "./geo-scope";
+import {
+  boundOpportunityPage,
+  chunkOpportunityPlaceIds,
+  unresolvedOpportunityPlaceIds,
+  mergeNewestNeedRows,
+  OPPORTUNITY_CANDIDATES_PER_CHUNK,
+  OpportunityScopeTooWideError,
+} from "./opportunity-query";
 import type { JourneyContext, JourneyVisibility, JourneyStatus } from "./journey-context";
 
 export interface NeedDraft {
@@ -54,11 +63,30 @@ export interface NeedDraft {
 
 export const createNeed = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: NeedDraft) => input)
+  .inputValidator((input: NeedDraft) => createNeedInput.parse(input))
   .handler(async ({ data, context }) => {
+    let canonicalPlace = null;
+    if (data.place_id !== null) {
+      const { data: placeRow, error: placeError } = await context.supabase
+        .from("places")
+        .select("id, name, lat, lng, timezone, currency")
+        .eq("id", data.place_id)
+        .maybeSingle();
+      if (placeError) throw placeError;
+      if (!placeRow) throw new Error("Choose a valid locality before posting a need.");
+      canonicalPlace = {
+        id: placeRow.id,
+        name: placeRow.name,
+        lat: placeRow.lat === null ? null : Number(placeRow.lat),
+        lng: placeRow.lng === null ? null : Number(placeRow.lng),
+        timezone: placeRow.timezone,
+        currency: placeRow.currency,
+      };
+    }
+    const safeData = canonicalizeNeedPlace(data, canonicalPlace);
     const { data: row, error } = await context.supabase
       .from("needs")
-      .insert({ ...data, creator_id: context.userId })
+      .insert({ ...safeData, creator_id: context.userId })
       .select("id")
       .single();
     if (error) throw error;
@@ -87,6 +115,7 @@ export const getOpenNeeds = createServerFn({ method: "GET" })
       .from("needs")
       .select("*")
       .eq("status", "open")
+      .in("visibility", ["public", "local_discovery"])
       .order("created_at", { ascending: false })
       .limit(50);
     if (data.placeId) {
@@ -96,9 +125,15 @@ export const getOpenNeeds = createServerFn({ method: "GET" })
       const { loadPlaceIndex } = await import("./place-index.server");
       const { descendantIdsOf } = await import("./places");
       const index = await loadPlaceIndex(supabase);
+      if (!index.byId.has(data.placeId)) throw new DataError("NOT_FOUND");
       const inside = descendantIdsOf(index, data.placeId);
-      if (inside.length > 1 && inside.length <= 400) query = query.in("place_id", inside);
-      else if (inside.length <= 1) query = query.eq("place_id", data.placeId);
+      if (inside.length > 400) {
+        throw new DataError(
+          "SCOPE_TOO_WIDE",
+          `Open-need locality has ${inside.length} descendant places.`,
+        );
+      }
+      query = query.in("place_id", inside);
     }
     const { data: rows, error } = await query;
     if (error) throw error;
@@ -134,21 +169,37 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
     const { loadPlaceIndex } = await import("./place-index.server");
     const geo = needGeography(await loadPlaceIndex(supabase), need.placeId);
 
-    // People whose home place is in or under the need's place, or whose stated
-    // service area covers it. Bounded on both sides.
-    const localIds = geo.localPlaceIds.slice(0, 400);
-    const scopeIds = geo.serviceScopeIds.slice(0, 400);
+    // Never pretend the first 400 IDs represent a complete global locality.
+    const candidateCap = 400;
+    if (geo.localPlaceIds.length > candidateCap || geo.serviceScopeIds.length > candidateCap) {
+      throw new DataError("SCOPE_TOO_WIDE", "Need locality exceeds the safe matching scope.");
+    }
+    const localIds = geo.localPlaceIds;
+    const scopeIds = geo.serviceScopeIds;
     const userIds = new Set<string>();
     if (localIds.length) {
-      const [{ data: locals }, { data: areas }] = await Promise.all([
-        supabase.from("profiles").select("id").eq("discoverable", true).in("place_id", localIds),
-        supabase
-          .from("service_areas")
-          .select("user_id")
-          .neq("relation", "travelling_through")
-          .in("place_id", scopeIds)
-          .limit(400),
-      ]);
+      const [{ data: locals, error: localsError }, { data: areas, error: areasError }] =
+        await Promise.all([
+          supabase
+            .from("profiles")
+            .select("id")
+            .eq("discoverable", true)
+            .in("place_id", localIds)
+            .limit(candidateCap + 1),
+          supabase
+            .from("service_areas")
+            .select("user_id")
+            .neq("relation", "travelling_through")
+            .in("place_id", scopeIds)
+            .limit(candidateCap + 1),
+        ]);
+      if (localsError || areasError) throw new DataError("DATA_UNAVAILABLE");
+      if ((locals?.length ?? 0) > candidateCap || (areas?.length ?? 0) > candidateCap) {
+        throw new DataError(
+          "SCOPE_TOO_WIDE",
+          "Too many possible people for a complete bounded match.",
+        );
+      }
       for (const p of locals ?? []) userIds.add(p.id);
       for (const a of areas ?? []) userIds.add(a.user_id);
     }
@@ -167,9 +218,15 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
       for (const id of kept) userIds.add(id);
     }
 
+    if (userIds.size > 200) {
+      throw new DataError(
+        "SCOPE_TOO_WIDE",
+        "More than 200 unique candidates require a narrower locality.",
+      );
+    }
     const people: PersonCandidate[] = [];
     if (userIds.size) {
-      const ids = [...userIds].slice(0, 200);
+      const ids = [...userIds];
       const [
         { data: profiles },
         { data: caps },
@@ -368,22 +425,49 @@ async function signPhotos(
  * Owner-scoped, because it is built entirely out of what this person has said
  * about themselves. It is deliberately short, and it is not a feed.
  */
+export interface MyOpportunitiesResult {
+  status: "needs_places" | "complete" | "partial";
+  opportunities: PersonOpportunity[];
+  /** Number of locality chunks where at least one older ask may be outside the checked window. */
+  cappedChunks: number;
+}
+
 export const getMyOpportunities = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<PersonOpportunity[]> => {
+  .handler(async ({ context }): Promise<MyOpportunitiesResult> => {
     const { supabase, userId } = context;
-    const [{ data: profile }, { data: caps }, { data: areas }, { data: windows }, { data: prefs }] =
-      await Promise.all([
-        supabase
-          .from("profiles")
-          .select("display_name, photo_url, location, place_id, wants_to_learn")
-          .eq("id", userId)
-          .maybeSingle(),
-        supabase.from("person_capabilities").select("*").eq("user_id", userId),
-        supabase.from("service_areas").select("place_id, relation").eq("user_id", userId),
-        supabase.from("availability_windows").select("starts_at, ends_at").eq("user_id", userId),
-        supabase.from("opportunity_preferences").select("preference").eq("user_id", userId),
-      ]);
+    const [profileResult, capsResult, areasResult, windowsResult, prefsResult] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("display_name, photo_url, location, place_id, wants_to_learn")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase.from("person_capabilities").select("*").eq("user_id", userId),
+      supabase.from("service_areas").select("place_id, relation").eq("user_id", userId),
+      supabase.from("availability_windows").select("starts_at, ends_at").eq("user_id", userId),
+      supabase.from("opportunity_preferences").select("preference").eq("user_id", userId),
+    ]);
+    if (profileResult.error) throw profileResult.error;
+    if (capsResult.error) throw capsResult.error;
+    if (areasResult.error) throw areasResult.error;
+    if (windowsResult.error) throw windowsResult.error;
+    if (prefsResult.error) throw prefsResult.error;
+
+    const profile = profileResult.data;
+    const caps = capsResult.data;
+    const areas = areasResult.data;
+    const windows = windowsResult.data;
+    const prefs = prefsResult.data;
+    // A successful query must return a collection. Missing payloads are not
+    // evidence that the person has no capabilities, areas or availability.
+    if (
+      !Array.isArray(caps) ||
+      !Array.isArray(areas) ||
+      !Array.isArray(windows) ||
+      !Array.isArray(prefs)
+    ) {
+      throw new DataError("DATA_UNAVAILABLE", "A required profile collection was missing.");
+    }
 
     const serviceAreaPlaceIds = (areas ?? [])
       .filter((a) => a.relation !== "travelling_through")
@@ -397,50 +481,85 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
         [profile?.place_id, ...serviceAreaPlaceIds, ...travellingThroughPlaceIds].filter(Boolean),
       ),
     ] as string[];
-    if (!stated.length) return [];
+    if (!stated.length) {
+      return { status: "needs_places", opportunities: [], cappedChunks: 0 };
+    }
 
     // Somewhere you said you are or cover includes everywhere inside it, so a
     // need in a village inside your county is still yours to see.
     const { loadPlaceIndex } = await import("./place-index.server");
     const { descendantIdsOf } = await import("./places");
     const index = await loadPlaceIndex(supabase);
+    const unresolvedPlaceIds = unresolvedOpportunityPlaceIds(stated, index.byId);
+    if (unresolvedPlaceIds.length) {
+      throw new DataError(
+        "DATA_UNAVAILABLE",
+        "One or more saved localities could not be resolved. Update your home or service areas and retry.",
+      );
+    }
     const placeIds = [...new Set(stated.flatMap((id) => descendantIdsOf(index, id)))];
-    // Somebody who covers a whole nation names more localities than belong in
-    // one filter. Filtering by a slice of them would hide real needs inside the
-    // area they said they cover, so at that width the locality filter is
-    // dropped instead — the row limit below still bounds the read.
-    const wideArea = placeIds.length > 400;
+    let placeChunks: string[][];
+    try {
+      placeChunks = chunkOpportunityPlaceIds(placeIds);
+    } catch (error) {
+      if (error instanceof OpportunityScopeTooWideError) {
+        throw new DataError("SCOPE_TOO_WIDE", error.message);
+      }
+      throw error;
+    }
 
     const geographies = new Map<string, ReturnType<typeof needGeography>>();
 
     // A block works both ways, whoever set it.
-    const { data: blockRows } = await supabase
+    const { data: blockRows, error: blocksError } = await supabase
       .from("user_blocks")
       .select("blocker_id, blocked_id")
       .or(`blocker_id.eq.${userId},blocked_id.eq.${userId}`);
+    if (blocksError) throw blocksError;
+    if (!Array.isArray(blockRows)) throw new DataError("DATA_UNAVAILABLE");
     const blockedIds = new Set(
-      (blockRows ?? []).map((row) => (row.blocker_id === userId ? row.blocked_id : row.blocker_id)),
+      blockRows.map((row) => (row.blocker_id === userId ? row.blocked_id : row.blocker_id)),
     );
 
-    let needQuery = supabase
-      .from("needs")
-      .select("*")
-      .eq("status", "open")
-      .in("visibility", ["public", "local_discovery"])
-      .neq("creator_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(60);
-    if (!wideArea) needQuery = needQuery.in("place_id", placeIds);
-    const { data: needRows, error } = await needQuery;
-    if (error) throw error;
+    // Keep every query locality-scoped. Broad areas use one bounded newest-first
+    // window per chunk, which is merged before the canonical evaluator runs.
+    const needPages = await Promise.all(
+      placeChunks.map(async (chunk) => {
+        const { data: rows, error: needsError } = await supabase
+          .from("needs")
+          .select("*")
+          .eq("status", "open")
+          .in("visibility", ["public", "local_discovery"])
+          .neq("creator_id", userId)
+          .in("place_id", chunk)
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: true })
+          // One extra row is a sentinel: a full 60-row page may be complete,
+          // or it may hide older asks. The next row tells us which is true.
+          .limit(OPPORTUNITY_CANDIDATES_PER_CHUNK + 1);
+        if (needsError) throw needsError;
+        if (!Array.isArray(rows)) throw new DataError("DATA_UNAVAILABLE");
+        return boundOpportunityPage(rows, OPPORTUNITY_CANDIDATES_PER_CHUNK);
+      }),
+    );
+    // Do not truncate candidates to a single global window: that would let
+    // high-volume places crowd out smaller places before matching. Preserve
+    // the per-chunk cap, but tell the UI when any chunk exceeded its safe window.
+    const cappedChunks = needPages.filter((page) => page.truncated).length;
+    const needRows = mergeNewestNeedRows(
+      needPages.map((page) => page.rows),
+      placeChunks.length * OPPORTUNITY_CANDIDATES_PER_CHUNK,
+    );
 
-    const { data: journeyRows } = await supabase
+    const { data: journeyRows, error: journeysError } = await supabase
       .from("journeys")
       .select("*, journey_places(*)")
       .eq("owner_id", userId)
       .eq("status", "active")
       .limit(20);
-    const journeys: JourneyContext[] = (journeyRows ?? []).map((journey) => ({
+    if (journeysError) throw journeysError;
+    if (!Array.isArray(journeyRows)) throw new DataError("DATA_UNAVAILABLE");
+    const journeys: JourneyContext[] = journeyRows.map((journey) => ({
       id: journey.id,
       ownerId: journey.owner_id,
       title: journey.title,
@@ -466,7 +585,7 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
       })),
     }));
 
-    return findOpportunitiesForPerson({
+    const opportunities = findOpportunitiesForPerson({
       geographyFor: (need) => {
         const key = need.placeId ?? "";
         const existing = geographies.get(key);
@@ -494,4 +613,9 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
         .filter((need) => !blockedIds.has(need.creatorId)),
       now: new Date().toISOString(),
     });
+    return {
+      status: cappedChunks > 0 ? "partial" : "complete",
+      opportunities,
+      cappedChunks,
+    };
   });

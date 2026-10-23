@@ -7,6 +7,7 @@ import { getMyOpportunities } from "@/lib/needs.functions";
 import { getMyCapabilityProfile } from "@/lib/capability.functions";
 import { describePay, isPaidNeed, skillGaps } from "@/lib/earning";
 import { DataErrorState } from "@/components/data-state";
+import { isDataErrorCode } from "@/lib/data/errors";
 import { eventDate } from "@/components/layer-colour";
 
 const title = "Ways to earn — Real World Atlas";
@@ -33,7 +34,8 @@ function EarnPage() {
     enabled: Boolean(user),
   });
 
-  const paid = (opps.data ?? []).filter((o) => isPaidNeed(o.need));
+  const opportunities = opps.data?.opportunities ?? [];
+  const paid = opportunities.filter((o) => isPaidNeed(o.need));
   const gaps = skillGaps(
     paid.map((o) => o.need),
     (profile.data?.capabilities ?? []).map((c) => c.label),
@@ -59,21 +61,83 @@ function EarnPage() {
       {user && opps.isLoading ? (
         <p className="mt-6 text-sm text-muted-foreground">Looking…</p>
       ) : null}
-      {user && opps.isError ? <DataErrorState retry={() => void opps.refetch()} /> : null}
+      {user && opps.isError ? (
+        isDataErrorCode(opps.error, "SCOPE_TOO_WIDE") ? (
+          <div className="card-paper mt-6 p-4 text-sm" role="alert">
+            <p>This search covers more places than can be checked in one request.</p>
+            <p className="mt-1 text-muted-foreground">
+              Narrow the places on your profile, then try again.
+            </p>
+            <Link to="/profile" className="focus-ink mt-2 inline-block underline">
+              Review your places
+            </Link>
+          </div>
+        ) : (
+          <DataErrorState retry={() => void opps.refetch()} />
+        )
+      ) : null}
 
-      {user && opps.data ? (
+      {user && opps.data?.status === "needs_places" ? (
+        <div className="card-paper mt-6 p-5 text-sm" role="status">
+          <p>We need a place to start from before we can check for paid asks.</p>
+          <p className="mt-2 text-muted-foreground">
+            Add a home locality or service area to your{" "}
+            <Link to="/profile" className="focus-ink underline">
+              profile
+            </Link>
+            . A missing place is not evidence that no work exists.
+          </p>
+        </div>
+      ) : null}
+
+      {user && opps.data?.status === "partial" ? (
+        <div className="card-paper mt-6 p-4 text-sm" role="status">
+          <p className="font-medium">
+            {opportunities.length === 0
+              ? "We couldn't confirm that no paid ask exists."
+              : "These are possible paid matches from a bounded recent search."}
+          </p>
+          <p className="mt-1 text-muted-foreground">
+            At least {opps.data.cappedChunks} part{opps.data.cappedChunks === 1 ? "" : "s"} of this
+            search reached the candidate limit, so older asks may exist beyond the results checked.
+            Narrow your home or service areas in your{" "}
+            <Link to="/profile" className="focus-ink underline">
+              profile
+            </Link>{" "}
+            to search a smaller scope.
+          </p>
+        </div>
+      ) : null}
+
+      {user && opps.data && opps.data.status !== "needs_places" ? (
         <section className="mt-8">
           <h2 className="text-xl">Paid work you could do</h2>
           {paid.length === 0 ? (
-            <div className="card-paper mt-3 p-5 text-sm">
-              <p>No paid asks near you fit what you've said, right now. That's a real answer.</p>
-              <p className="mt-2 text-muted-foreground">
-                <Link to="/profile" className="focus-ink underline">
-                  Add what you can do, where you'll go and when you're free
-                </Link>{" "}
-                and this will change when real asks appear.
-              </p>
-            </div>
+            opps.data.status === "partial" ? (
+              <div className="card-paper mt-3 p-5 text-sm">
+                <p>
+                  No paid match appeared in the bounded recent results checked; older asks may still
+                  exist.
+                </p>
+                <p className="mt-2 text-muted-foreground">
+                  Narrow your home or service areas on your{" "}
+                  <Link to="/profile" className="focus-ink underline">
+                    profile
+                  </Link>{" "}
+                  or try again later.
+                </p>
+              </div>
+            ) : (
+              <div className="card-paper mt-3 p-5 text-sm">
+                <p>No paid asks near you fit what you've said, right now. That's a real answer.</p>
+                <p className="mt-2 text-muted-foreground">
+                  <Link to="/profile" className="focus-ink underline">
+                    Add what you can do, where you'll go and when you're free
+                  </Link>{" "}
+                  and this will change when real asks appear.
+                </p>
+              </div>
+            )
           ) : (
             <ul className="mt-3 space-y-3">
               {paid.map((o) => (
@@ -110,7 +174,7 @@ function EarnPage() {
         </section>
       ) : null}
 
-      {user && opps.data && profile.data ? (
+      {user && opps.data && opps.data.status !== "needs_places" && profile.data ? (
         <section className="mt-10">
           <h2 className="text-xl">Skills these asks name that you haven't added</h2>
           {gaps.length === 0 ? (

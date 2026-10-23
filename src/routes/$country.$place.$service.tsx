@@ -25,6 +25,7 @@ import { fetchWorldEntries } from "@/lib/listings";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
 import { KIND_LABEL } from "@/lib/places";
 import { evaluateServicePageIndexability } from "@/lib/service-page-indexability";
+import { breadcrumbListJsonLd, jsonLdScript } from "@/lib/structured-data";
 import { privatePage, publicPage } from "@/lib/seo";
 import { servicePageCopy, servicePageListings, servicePagePath } from "@/lib/service-page";
 import { categoriesPresent } from "@/lib/service-taxonomy";
@@ -57,9 +58,26 @@ export const Route = createFileRoute("/$country/$place/$service")({
       place: geography.place,
       listings,
     });
-    return indexability.status === "INDEXABLE"
-      ? publicPage({ path, ...copy })
-      : privatePage({ path, ...copy });
+    if (indexability.status !== "INDEXABLE") {
+      return privatePage({ path, ...copy });
+    }
+
+    return {
+      ...publicPage({ path, ...copy }),
+      scripts: [
+        jsonLdScript(
+          breadcrumbListJsonLd([
+            { name: "Real World Atlas", path: "/" },
+            ...[...geography.ancestors].reverse().map((step) => ({
+              name: step.name,
+              path: localityPath(step),
+            })),
+            { name: geography.place.name, path: localityPath(geography.place) },
+            { name: listings.category.label, path },
+          ]),
+        ),
+      ],
+    };
   },
   component: ServicePage,
   errorComponent: ServiceError,

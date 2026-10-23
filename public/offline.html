@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0c6b56">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Offline for now — Real World Atlas</title>
+    <style>
+      :root { color-scheme: light; font-family: Manrope, system-ui, sans-serif; background: #f3f0e8; color: #1b1916; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; }
+      main { width: 100%; max-width: 32rem; padding: clamp(1.5rem, 5vw, 3rem); border: 1px solid #e4ded3; border-radius: 1.5rem; background: #fffcf7; }
+      p { color: #6e675e; line-height: 1.65; }
+      a, button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; border-radius: 999px; padding: .7rem 1.1rem; font: inherit; text-decoration: none; }
+      a { background: #0c6b56; color: #f3fbf8; }
+      button { border: 1px solid #e4ded3; background: transparent; color: inherit; cursor: pointer; }
+      .actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.5rem; }
+      :focus-visible { outline: 3px solid #0c6b56; outline-offset: 3px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p>REAL WORLD ATLAS</p>
+      <h1>Offline for now.</h1>
+      <p>Your connection has gone quiet. The map and account data haven't been saved for offline use on this device, so we won't show an old or incomplete copy as though it were current.</p>
+      <p>When you're back online, try again to see what's actually happening here.</p>
+      <div class="actions">
+        <button type="button" onclick="window.location.reload()">Try again</button>
+        <a href="/">Back to Atlas</a>
+      </div>
+    </main>
+  </body>
+</html>

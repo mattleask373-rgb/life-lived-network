@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 
 import {
   absoluteUrl,
@@ -6,8 +7,10 @@ import {
   publicPage,
   PUBLIC_PATHS,
   PRIVATE_PATHS,
+  NOINDEX_PATHS,
   sitemapIndexXml,
   sitemapXml,
+  robotsTxt,
   SITE_ORIGIN,
 } from "./seo";
 
@@ -52,6 +55,42 @@ describe("what a page says about itself", () => {
 
   it("keeps public and private screens apart", () => {
     for (const path of PRIVATE_PATHS) expect(PUBLIC_PATHS).not.toContain(path);
+  });
+
+  it("keeps the personal life list out of public indexability", () => {
+    expect(NOINDEX_PATHS).toContain("/life-list");
+    expect(PRIVATE_PATHS).not.toContain("/life-list");
+    expect(PUBLIC_PATHS).not.toContain("/life-list");
+    const head = privatePage({
+      path: "/life-list",
+      title: "Your life list",
+      description: "A private list.",
+    });
+    expect(head.meta).toContainEqual({ name: "robots", content: "noindex, nofollow" });
+    expect(head.links).toEqual([]);
+    expect(robotsTxt()).not.toContain("Disallow: /life-list");
+  });
+});
+
+describe("crawler policy", () => {
+  it("explicitly allows ChatGPT Search while preserving private-route exclusions in its own group", () => {
+    const policy = robotsTxt();
+    const oaiStart = policy.indexOf("User-agent: OAI-SearchBot");
+    const wildcardStart = policy.indexOf("User-agent: *", oaiStart);
+    expect(oaiStart).toBeGreaterThanOrEqual(0);
+    expect(wildcardStart).toBeGreaterThan(oaiStart);
+    const oaiGroup = policy.slice(oaiStart, wildcardStart);
+    expect(oaiGroup).toContain("Allow: /");
+    for (const path of PRIVATE_PATHS) expect(oaiGroup).toContain(`Disallow: ${path}`);
+    for (const path of NOINDEX_PATHS) expect(oaiGroup).not.toContain(`Disallow: ${path}`);
+    expect(policy).toContain(`Sitemap: ${SITE_ORIGIN}/sitemap.xml`);
+  });
+
+  it("keeps static and server-generated crawler rules aligned", () => {
+    const staticPolicy = readFileSync(new URL("../../public/robots.txt", import.meta.url), "utf8");
+    const normaliseOrigin = (value: string) =>
+      value.replace(/^Sitemap:\s*.*$/m, "Sitemap: <canonical-origin>");
+    expect(normaliseOrigin(staticPolicy)).toBe(normaliseOrigin(robotsTxt()));
   });
 });
 

@@ -97,20 +97,53 @@ export function fitView(
   const lngs = points.map((p) => p.lng);
   const minLat = Math.min(...lats);
   const maxLat = Math.max(...lats);
-  const minLng = Math.min(...lngs);
-  const maxLng = Math.max(...lngs);
+  const longitudeArc = smallestLongitudeArc(lngs);
   const spanLat = clampSpan(Math.max((maxLat - minLat) * 1.6, 0.04));
   return {
     lat: (minLat + maxLat) / 2,
-    lng: (minLng + maxLng) / 2,
+    lng: longitudeArc.center,
     spanLat,
-    spanLng: clampSpan(Math.max(spanLat * aspect, (maxLng - minLng) * 1.4)),
+    spanLng: clampSpan(Math.max(spanLat * aspect, longitudeArc.span * 1.4)),
   };
 }
 
 function clampSpan(span: number): number {
   if (!Number.isFinite(span)) return 1;
   return Math.min(MAX_SPAN, Math.max(MIN_SPAN, span));
+}
+
+/** Normalise a longitude or longitude delta to the shortest signed arc. */
+function normaliseLongitude(longitude: number): number {
+  const shifted = longitude + 180;
+  const wrapped = ((shifted % 360) + 360) % 360;
+  return wrapped - 180;
+}
+
+/** Find the smallest circular longitude arc covering the supplied points. */
+function smallestLongitudeArc(longitudes: number[]): { center: number; span: number } {
+  if (longitudes.length === 0) return { center: 0, span: 360 };
+  if (longitudes.length === 1) {
+    return { center: normaliseLongitude(longitudes[0]!), span: 0 };
+  }
+
+  const sorted = longitudes.map((lng) => ((lng % 360) + 360) % 360).sort((a, b) => a - b);
+  let largestGap = -1;
+  let gapAfter = sorted.length - 1;
+  for (let index = 0; index < sorted.length; index += 1) {
+    const current = sorted[index]!;
+    const next = index === sorted.length - 1 ? sorted[0]! + 360 : sorted[index + 1]!;
+    const gap = next - current;
+    if (gap > largestGap) {
+      largestGap = gap;
+      gapAfter = index;
+    }
+  }
+
+  const start = sorted[(gapAfter + 1) % sorted.length]!;
+  let end = sorted[gapAfter]!;
+  if (end < start) end += 360;
+  const span = end - start;
+  return { center: normaliseLongitude(start + span / 2), span };
 }
 
 /** Zoom about the centre. factor < 1 zooms in. */
@@ -123,18 +156,16 @@ export function zoomView(view: MapView, factor: number): MapView {
 /** Drag, expressed as a fraction of the visible width and height. */
 export function panView(view: MapView, dxFraction: number, dyFraction: number): MapView {
   const lat = Math.min(85, Math.max(-85, view.lat + dyFraction * view.spanLat));
-  let lng = view.lng + dxFraction * view.spanLng;
-  while (lng > 180) lng -= 360;
-  while (lng < -180) lng += 360;
+  const lng = normaliseLongitude(view.lng + dxFraction * view.spanLng);
   return { ...view, lat, lng };
 }
 
 export function boundsOf(view: MapView): Bounds {
   return {
-    minLat: view.lat - view.spanLat / 2,
-    maxLat: view.lat + view.spanLat / 2,
-    minLng: view.lng - view.spanLng / 2,
-    maxLng: view.lng + view.spanLng / 2,
+    minLat: Math.max(-90, view.lat - view.spanLat / 2),
+    maxLat: Math.min(90, view.lat + view.spanLat / 2),
+    minLng: normaliseLongitude(view.lng - view.spanLng / 2),
+    maxLng: normaliseLongitude(view.lng + view.spanLng / 2),
   };
 }
 
@@ -152,7 +183,7 @@ export function toScreen(
 ): { left: number; top: number } {
   const b = boundsOf(view);
   return {
-    left: ((point.lng - b.minLng) / (b.maxLng - b.minLng)) * 100,
+    left: (normaliseLongitude(point.lng - view.lng) / view.spanLng + 0.5) * 100,
     // Latitude increases northwards; the screen increases downwards.
     top: ((b.maxLat - point.lat) / (b.maxLat - b.minLat)) * 100,
   };
@@ -162,7 +193,17 @@ export function toScreen(
 export function placeEntries(entries: WorldEntry[], view: MapView, limit = 300): Placed[] {
   const placed: Placed[] = [];
   for (const entry of entries) {
-    if (typeof entry.lat !== "number" || typeof entry.lng !== "number") continue;
+    if (
+      typeof entry.lat !== "number" ||
+      !Number.isFinite(entry.lat) ||
+      entry.lat < -90 ||
+      entry.lat > 90 ||
+      typeof entry.lng !== "number" ||
+      !Number.isFinite(entry.lng) ||
+      entry.lng < -180 ||
+      entry.lng > 180
+    )
+      continue;
     const { left, top } = toScreen({ lat: entry.lat, lng: entry.lng }, view);
     if (left < -4 || left > 104 || top < -4 || top > 104) continue;
     placed.push({ entry, left, top });
@@ -269,9 +310,23 @@ export function placeInView(
   let best: { place: Place; distance: number } | null = null;
   for (const place of index.byId.values()) {
     if (place.id === exclude) continue;
-    if (typeof place.lat !== "number" || typeof place.lng !== "number") continue;
+    if (
+      typeof place.lat !== "number" ||
+      !Number.isFinite(place.lat) ||
+      place.lat < -90 ||
+      place.lat > 90 ||
+      typeof place.lng !== "number" ||
+      !Number.isFinite(place.lng) ||
+      place.lng < -180 ||
+      place.lng > 180
+    )
+      continue;
     if (place.lat < b.minLat || place.lat > b.maxLat) continue;
-    if (place.lng < b.minLng || place.lng > b.maxLng) continue;
+    const longitudeInside =
+      b.minLng <= b.maxLng
+        ? place.lng >= b.minLng && place.lng <= b.maxLng
+        : place.lng >= b.minLng || place.lng <= b.maxLng;
+    if (!longitudeInside) continue;
     const distance =
       distanceKm({ lat: view.lat, lng: view.lng }, { lat: place.lat, lng: place.lng }) ?? Infinity;
     // A place whose own size suits the current span reads best: a county when

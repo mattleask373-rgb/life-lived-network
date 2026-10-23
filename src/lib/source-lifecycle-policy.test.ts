@@ -116,6 +116,28 @@ describe("public source lifecycle policy", () => {
     });
   });
 
+  it("overrides a stale recently-updated label when source-update evidence is absent or old", () => {
+    expect(decide([record({ sourceUpdatedAt: null })])).toMatchObject({
+      eligible: true,
+      dataQualityOverride: "unverified",
+    });
+    expect(decide([record({ sourceUpdatedAt: "2026-10-20T11:00:00.000Z" })])).toMatchObject({
+      eligible: true,
+      dataQualityOverride: "unverified",
+    });
+  });
+
+  it("only reports recently updated when both source modification and check are recent", () => {
+    expect(
+      decide([
+        record({
+          lastSeenAt: "2026-10-21T11:50:00.000Z",
+          sourceUpdatedAt: "2026-10-21T11:45:00.000Z",
+        }),
+      ]),
+    ).toMatchObject({ eligible: true, dataQualityOverride: "recently updated" });
+  });
+
   it("does not describe paused or credential-blocked sources as freshly checked", () => {
     expect(decide([record()], [source({ enabled: false })]).dataQualityOverride).toBe(
       "may have changed",

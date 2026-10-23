@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { ticketmasterAdapter, ticketmasterQuery } from "./ticketmaster";
+import {
+  ticketmasterAdapter,
+  ticketmasterGeoHash,
+  ticketmasterQuery,
+  TICKETMASTER_GEOHASH_PRECISION,
+} from "./ticketmaster";
 import { adapterFor } from "./registry";
 import { normaliseEvent, plainText, safeUrl, usableImages } from "./normalise";
 import { cancellationFor, discoverable, eventFreshness, qualityFor } from "./freshness";
@@ -74,6 +79,17 @@ describe("the provider adapter", () => {
     expect(ticketmasterAdapter.parse(payload({ ...GOOD, dates: {} })).events).toHaveLength(0);
   });
 
+  it("preserves valid multi-segment IANA timezones through normalization", () => {
+    const timezone = "America/Argentina/Buenos_Aires";
+    const { events } = ticketmasterAdapter.parse(
+      payload({
+        ...GOOD,
+        dates: { ...GOOD.dates, timezone },
+      }),
+    );
+    expect(normaliseEvent(events[0]!)?.timezone).toBe(timezone);
+  });
+
   it("keeps an event whose venue or coordinates are missing", () => {
     const { events } = ticketmasterAdapter.parse(payload({ ...GOOD, _embedded: {} }));
     expect(events).toHaveLength(1);
@@ -96,14 +112,79 @@ describe("the provider adapter", () => {
     expect(events[0]!.lng).toBeNull();
   });
 
-  it("handles a date with no time as that day where the event is", () => {
+  it("converts a source-local date/time using its IANA timezone", () => {
     const { events } = ticketmasterAdapter.parse(
       payload({
         ...GOOD,
-        dates: { start: { localDate: "2099-06-01" }, timezone: "Europe/Dublin" },
+        dates: {
+          start: { localDate: "2030-06-01", localTime: "19:30:00" },
+          timezone: "Europe/Dublin",
+        },
       }),
     );
-    expect(events[0]!.startsAt).toBe("2099-06-01T00:00:00.000Z");
+    // Dublin uses UTC+1 in June; the provider's 19:30 local event is 18:30Z.
+    expect(events[0]!.startsAt).toBe("2030-06-01T18:30:00.000Z");
+  });
+
+  it("handles a date with no time as local midnight, not UTC midnight", () => {
+    const { events } = ticketmasterAdapter.parse(
+      payload({
+        ...GOOD,
+        dates: { start: { localDate: "2030-06-01" }, timezone: "Europe/Dublin" },
+      }),
+    );
+    expect(events[0]!.startsAt).toBe("2030-05-31T23:00:00.000Z");
+  });
+
+  it("uses non-European timezone offsets without assuming London", () => {
+    const { events } = ticketmasterAdapter.parse(
+      payload({
+        ...GOOD,
+        dates: {
+          start: { localDate: "2030-06-01", localTime: "19:30:00" },
+          timezone: "America/New_York",
+        },
+      }),
+    );
+    expect(events[0]!.startsAt).toBe("2030-06-01T23:30:00.000Z");
+  });
+
+  it("rejects nonexistent and ambiguous wall times at daylight-saving transitions", () => {
+    const transitions = [
+      { localDate: "2030-03-31", localTime: "01:30:00" },
+      { localDate: "2030-10-27", localTime: "01:30:00" },
+    ];
+    for (const start of transitions) {
+      const { events } = ticketmasterAdapter.parse(
+        payload({
+          ...GOOD,
+          dates: { start, timezone: "Europe/Dublin" },
+        }),
+      );
+      expect(events).toHaveLength(0);
+    }
+  });
+
+  it("refuses local wall time when the provider omits its timezone", () => {
+    const { events } = ticketmasterAdapter.parse(
+      payload({
+        ...GOOD,
+        dates: { start: { localDate: "2030-06-01", localTime: "19:30:00" } },
+      }),
+    );
+    expect(events).toHaveLength(0);
+  });
+
+  it("keeps an explicit instant when no display timezone is supplied", () => {
+    const { events } = ticketmasterAdapter.parse(
+      payload({
+        ...GOOD,
+        dates: { start: { dateTime: "2030-06-01T18:30:00Z" } },
+      }),
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0]!.startsAt).toBe("2030-06-01T18:30:00.000Z");
+    expect(events[0]!.timezone).toBe("UTC");
   });
 
   it("carries a cancellation and a postponement through", () => {
@@ -146,7 +227,8 @@ describe("the same adapter for every locality", () => {
       endsBefore: "2099-01-15T00:00:00Z",
     });
     expect(params.get("countryCode")).toBe(locality.countryCode);
-    expect(params.get("latlong")).toBe(`${locality.lat.toFixed(4)},${locality.lng.toFixed(4)}`);
+    expect(params.get("geoPoint")).toBe(ticketmasterGeoHash(locality.lat, locality.lng));
+    expect(params.get("latlong")).toBeNull();
     expect(params.get("radius")).toBe("20");
     expect(params.get("unit")).toBe("km");
   });
@@ -165,6 +247,118 @@ describe("the same adapter for every locality", () => {
       endsBefore: "2099-01-02T00:00:00Z",
     });
     expect(params.get("apikey")).toBeNull();
+    expect(params.get("geoPoint")).toBeNull();
+    expect(params.get("radius")).toBeNull();
+    expect(params.get("unit")).toBeNull();
+  });
+});
+
+describe("Ticketmaster query time bounds", () => {
+  const validWindow = {
+    countryCode: "GB",
+    startsAfter: "2099-01-01T00:00:00Z",
+    endsBefore: "2099-01-02T00:00:00Z",
+  };
+
+  it("rejects an invalid start instead of silently substituting the current time", () => {
+    expect(() => ticketmasterQuery({ ...validWindow, startsAfter: "not-a-date" })).toThrow(
+      "startsAfter must be a valid date/time",
+    );
+  });
+
+  it("rejects an invalid end instead of silently substituting the current time", () => {
+    expect(() => ticketmasterQuery({ ...validWindow, endsBefore: "not-a-date" })).toThrow(
+      "endsBefore must be a valid date/time",
+    );
+  });
+
+  it("requires a strictly increasing time window", () => {
+    expect(() =>
+      ticketmasterQuery({ ...validWindow, endsBefore: validWindow.startsAfter }),
+    ).toThrow("endsBefore must be after startsAfter");
+    expect(() =>
+      ticketmasterQuery({
+        ...validWindow,
+        startsAfter: "2099-01-03T00:00:00Z",
+        endsBefore: "2099-01-02T00:00:00Z",
+      }),
+    ).toThrow("endsBefore must be after startsAfter");
+  });
+
+  it("normalizes explicit offsets to UTC without inventing precision", () => {
+    const params = ticketmasterQuery({
+      ...validWindow,
+      startsAfter: "2099-01-01T01:00:00+01:00",
+      endsBefore: "2099-01-02T01:00:00+01:00",
+    });
+    expect(params.get("startDateTime")).toBe("2099-01-01T00:00:00Z");
+    expect(params.get("endDateTime")).toBe("2099-01-02T00:00:00Z");
+  });
+});
+
+describe("Ticketmaster query numeric bounds", () => {
+  const validWindow = {
+    countryCode: "GB",
+    startsAfter: "2099-01-01T00:00:00Z",
+    endsBefore: "2099-01-02T00:00:00Z",
+  };
+
+  it("encodes the standard known geohash vector at the chosen precision", () => {
+    expect(TICKETMASTER_GEOHASH_PRECISION).toBe(5);
+    expect(ticketmasterGeoHash(42.6, -5.6)).toBe("ezs42");
+  });
+
+  it("uses deterministic five-character cells for the representative localities and high latitudes", () => {
+    expect(ticketmasterGeoHash(52.48, -1.9)).toBe("gcqds");
+    expect(ticketmasterGeoHash(53.35, -6.26)).toBe("gc7x9");
+    expect(ticketmasterGeoHash(-33.8688, 151.2093)).toBe("r3gx2");
+    expect(ticketmasterGeoHash(69.6492, 18.9553)).toBe("ukmkp");
+    expect(ticketmasterGeoHash(48, 7.5)).toBe("u0t34");
+  });
+
+  it("rejects an invalid geohash precision without silently changing it", () => {
+    expect(() => ticketmasterGeoHash(0, 0, 0)).toThrow(RangeError);
+    expect(() => ticketmasterGeoHash(0, 0, 13)).toThrow(RangeError);
+    expect(() => ticketmasterGeoHash(0, 0, 1.5)).toThrow(RangeError);
+  });
+
+  it("keeps pagination finite, integral, and within bounds", () => {
+    expect(
+      ticketmasterQuery({
+        ...validWindow,
+        size: Number.NaN,
+        page: Number.POSITIVE_INFINITY,
+      }).get("size"),
+    ).toBe("50");
+    expect(ticketmasterQuery({ ...validWindow, size: 4.9, page: 2.8 }).get("size")).toBe("4");
+    expect(ticketmasterQuery({ ...validWindow, size: 1000, page: -8 }).get("size")).toBe("100");
+    expect(ticketmasterQuery({ ...validWindow, size: 0, page: Number.NaN }).get("page")).toBe("0");
+    expect(ticketmasterQuery({ ...validWindow, size: 0 }).get("size")).toBe("1");
+  });
+
+  it("omits invalid coordinates rather than serializing invalid geography", () => {
+    for (const [lat, lng] of [
+      [Number.NaN, 0],
+      [91, 0],
+      [0, 181],
+      [Number.POSITIVE_INFINITY, 0],
+    ]) {
+      const params = ticketmasterQuery({ ...validWindow, lat, lng });
+      expect(params.get("geoPoint")).toBeNull();
+      expect(params.get("radius")).toBeNull();
+      expect(params.get("unit")).toBeNull();
+    }
+  });
+
+  it("defaults non-finite radius values and keeps radius at least one kilometre", () => {
+    const coords = { lat: 52.48, lng: -1.9 };
+    expect(
+      ticketmasterQuery({ ...validWindow, ...coords, radiusKm: Number.NaN }).get("radius"),
+    ).toBe("15");
+    expect(ticketmasterQuery({ ...validWindow, ...coords, radiusKm: 0.2 }).get("radius")).toBe("1");
+    expect(ticketmasterQuery({ ...validWindow, ...coords, radiusKm: 22.6 }).get("radius")).toBe(
+      "23",
+    );
   });
 });
 

@@ -94,7 +94,7 @@ export function intentTarget(
   href: IntentHref,
   text: string,
 ): { to: IntentHref; search?: QuerySearch } {
-  if (href !== "/need") return { to: href };
+  if (href === "/") return { to: href };
   const search = parseQuerySearch({ q: text, from: text });
   return Object.keys(search).length ? { to: href, search } : { to: href };
 }

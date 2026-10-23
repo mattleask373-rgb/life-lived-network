@@ -14,6 +14,7 @@ import {
 import { usableSourcePhotos } from "@/lib/entry-card-view";
 import { SourceLastChecked } from "@/components/source-last-checked";
 import { WorkOpportunityFacts } from "@/components/work-opportunity-facts";
+import { ReportPublicContent } from "@/components/report-public-content";
 import { duration, eventDate, layerText, money } from "./layer-colour";
 import { LayerIcon } from "./layer-icon";
 
@@ -36,6 +37,9 @@ export function EntrySheet({
   const layer = LAYERS.find((l) => l.id === entry.layer);
   const related = relatedEntries(world, entry);
   const photos = usableSourcePhotos(entry.photos);
+  const canReport =
+    !entry.demonstration &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(entry.id);
   const service = isService(entry);
   const step = nextStepFor(entry);
   // Remember what had focus when the sheet first opened, so closing it puts
@@ -296,6 +300,10 @@ export function EntrySheet({
               Put the phone away and go
             </button>
           </div>
+
+          {canReport ? (
+            <ReportPublicContent subjectType="listing" subjectId={entry.id} label="listing" />
+          ) : null}
 
           {related.length ? (
             <div className="mt-6 border-t border-border pt-4">
