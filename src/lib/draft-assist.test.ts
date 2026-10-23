@@ -1,11 +1,17 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   cleanInput,
   draftInputSchema,
   isDraftAssistDisabled,
   MAX_INPUT,
+  DRAFT_MAX_DURATION_MS,
+  DRAFT_MAX_OUTPUT_TOKENS,
+  DRAFT_MAX_RETRIES,
   tidyDraft,
 } from "./draft-assist";
+
+const providerSource = readFileSync(new URL("./draft-assist.server.ts", import.meta.url), "utf8");
 
 describe("draft assist", () => {
   it("uses an explicit truthy environment value as an emergency stop", () => {
@@ -14,6 +20,15 @@ describe("draft assist", () => {
     expect(isDraftAssistDisabled(undefined)).toBe(false);
     expect(isDraftAssistDisabled("false")).toBe(false);
     expect(isDraftAssistDisabled("1")).toBe(false);
+  });
+
+  it("bounds each paid provider attempt by output tokens, retries and total duration", () => {
+    expect(DRAFT_MAX_OUTPUT_TOKENS).toBe(800);
+    expect(DRAFT_MAX_RETRIES).toBe(0);
+    expect(DRAFT_MAX_DURATION_MS).toBe(30_000);
+    expect(providerSource).toContain("maxOutputTokens: DRAFT_MAX_OUTPUT_TOKENS");
+    expect(providerSource).toContain("maxRetries: DRAFT_MAX_RETRIES");
+    expect(providerSource).toContain("timeout: { totalMs: DRAFT_MAX_DURATION_MS }");
   });
 
   it("normalises whitespace and caps input length", () => {
