@@ -23,6 +23,9 @@ describe("local_discovery locality security boundary", () => {
     );
     expect(migration).toContain("TO authenticated");
     expect(migration).toContain("visibility = 'local_discovery'");
+    expect(migration).toContain("last_confirmed_at > now() - interval '30 days'");
+    expect(migration).toContain("(expires_at IS NULL OR expires_at > now())");
+    expect(migration).toContain("(ends_at IS NULL OR ends_at > now())");
     expect(migration).toContain("private.is_verified_locality_member(place_id)");
   });
 
