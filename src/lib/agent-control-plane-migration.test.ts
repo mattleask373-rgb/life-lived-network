@@ -77,6 +77,15 @@ describe("agent control-plane migration lineage (static contract)", () => {
     expect(final).toContain("SET search_path = pg_catalog, public");
   });
 
+  it("does not put unsupported RESTRICT clauses after ALTER FUNCTION statements", () => {
+    for (const name of [
+      "20261007133000_agent_claim_leases.sql",
+      "20261007172000_fence_release.sql",
+    ]) {
+      expect(migration(name)).not.toMatch(/ALTER FUNCTION[\\s\\S]*?\\bRESTRICT\\s*;/i);
+    }
+  });
+
   it("does not fail with a regclass-cast exception if hosted proof tables are absent", () => {
     const proof = migration("20261008100000_agent_control_plane_hosted_proof.sql");
     expect(proof).toContain("to_regclass('public.agent_tasks')");
