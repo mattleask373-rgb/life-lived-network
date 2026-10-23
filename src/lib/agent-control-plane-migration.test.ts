@@ -23,6 +23,7 @@ describe("agent control-plane migration lineage (static contract)", () => {
       "20261008100000_agent_control_plane_hosted_proof.sql",
       "20261022190000_harden_agent_control_plane_overloads.sql",
       "20261023130000_agent_dispatch_idempotency_scope.sql",
+      "20261023140000_agent_worker_fenced_outcome.sql",
     ];
     expect(names).toEqual([...names].sort());
     for (const name of names) expect(migration(name).length).toBeGreaterThan(100);
@@ -53,6 +54,10 @@ describe("agent control-plane migration lineage (static contract)", () => {
     expect(idempotency).toContain(
       "task_row.lease_generation IS DISTINCT FROM attempt_row.lease_generation",
     );
+    const outcome = migration("20261023140000_agent_worker_fenced_outcome.sql");
+    expect(outcome).toContain("CREATE OR REPLACE FUNCTION public.record_agent_attempt_outcome");
+    expect(outcome).toContain("lease fencing token mismatch");
+    expect(outcome).toContain("REVOKE ALL ON FUNCTION public.record_agent_attempt_outcome");
   });
 
   it("keeps client table access denied and execution RPCs service-role only", () => {
