@@ -70,7 +70,6 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION public.mark_stale_agent_tasks(INTEGER) RESTRICT;
 REVOKE ALL ON FUNCTION public.mark_stale_agent_tasks(INTEGER) FROM PUBLIC;
 
 DO $$
