@@ -41,33 +41,35 @@ describe("current public need lifecycle", () => {
   it("rejects private, closed, expired, ended and malformed freshness evidence", () => {
     expect(isCurrentlyDiscoverableNeed({ ...freshNeed, visibility: "private" }, now)).toBe(false);
     expect(isCurrentlyDiscoverableNeed({ ...freshNeed, status: "met" }, now)).toBe(false);
-    expect(
-      isCurrentlyDiscoverableNeed(
-        { ...freshNeed, expiresAt: "2026-10-22T23:59:59.000Z" },
-        now,
-      ),
-    ).toBe(false);
-    expect(
-      isCurrentlyDiscoverableNeed(
-        { ...freshNeed, endsAt: "2026-10-22T23:59:59.000Z" },
-        now,
-      ),
-    ).toBe(false);
-    expect(
-      isCurrentlyDiscoverableNeed({ ...freshNeed, expiresAt: "not-a-timestamp" }, now),
-    ).toBe(false);
-    expect(
-      needTimeWindowEnded({ expiresAt: "not-a-timestamp", endsAt: null }, now),
-    ).toBe(true);
+    expect(isCurrentlyDiscoverableNeed({ ...freshNeed, expiresAt: "2026-10-22T23:59:59.000Z" }, now))
+      .toBe(false);
+    expect(isCurrentlyDiscoverableNeed({ ...freshNeed, endsAt: "2026-10-22T23:59:59.000Z" }, now))
+      .toBe(false);
+    expect(isCurrentlyDiscoverableNeed({ ...freshNeed, expiresAt: "not-a-timestamp" }, now)).toBe(
+      false,
+    );
+    expect(needTimeWindowEnded({ expiresAt: "not-a-timestamp", endsAt: null }, now)).toBe(true);
   });
 
   it("accepts only the owner lifecycle actions and rejects extra caller fields", () => {
-    expect(needLifecycleInput.parse({ id: "7d1f0b8e-3c1a-4c55-9b0e-2a6f3e1d9c10", action: "confirm" }))
-      .toMatchObject({ action: "confirm" });
-    expect(needLifecycleInput.parse({ id: "7d1f0b8e-3c1a-4c55-9b0e-2a6f3e1d9c10", action: "met" }))
-      .toMatchObject({ action: "met" });
-    expect(needLifecycleInput.parse({ id: "7d1f0b8e-3c1a-4c55-9b0e-2a6f3e1d9c10", action: "withdrawn" }))
-      .toMatchObject({ action: "withdrawn" });
+    expect(
+      needLifecycleInput.parse({
+        id: "7d1f0b8e-3c1a-4c55-9b0e-2a6f3e1d9c10",
+        action: "confirm",
+      }),
+    ).toMatchObject({ action: "confirm" });
+    expect(
+      needLifecycleInput.parse({
+        id: "7d1f0b8e-3c1a-4c55-9b0e-2a6f3e1d9c10",
+        action: "met",
+      }),
+    ).toMatchObject({ action: "met" });
+    expect(
+      needLifecycleInput.parse({
+        id: "7d1f0b8e-3c1a-4c55-9b0e-2a6f3e1d9c10",
+        action: "withdrawn",
+      }),
+    ).toMatchObject({ action: "withdrawn" });
     expect(() =>
       needLifecycleInput.parse({ id: "not-a-uuid", action: "confirm" }),
     ).toThrow();
@@ -91,16 +93,16 @@ describe("need lifecycle authorization and discovery parity", () => {
   it("filters server-side public needs by visibility, freshness, expiry and end time", () => {
     expect(serverFunctions).toContain('.in("visibility", ["public", "local_discovery"])');
     expect(serverFunctions).toContain('.gt("last_confirmed_at", needFreshnessCutoff');
-    expect(serverFunctions).toContain('expires_at.is.null,expires_at.gt.');
-    expect(serverFunctions).toContain('ends_at.is.null,ends_at.gt.');
+    expect(serverFunctions).toContain("expires_at.is.null,expires_at.gt.");
+    expect(serverFunctions).toContain("ends_at.is.null,ends_at.gt.");
   });
 
   it("lets the owner close only open needs and reconfirm without trusting a caller owner ID", () => {
-    expect(serverFunctions).toContain('middleware([requireSupabaseAuth])');
+    expect(serverFunctions).toContain("middleware([requireSupabaseAuth])");
     expect(serverFunctions).toContain('.eq("creator_id", context.userId)');
     expect(serverFunctions).toContain('.eq("status", "open")');
-    expect(serverFunctions).toContain('update({ status: data.action })');
-    expect(serverFunctions).toContain('update({ last_confirmed_at: nowIso })');
+    expect(serverFunctions).toContain("update({ status: data.action })");
+    expect(serverFunctions).toContain("update({ last_confirmed_at: nowIso })");
   });
 
   it("keeps RLS and the database trigger as the final guard against stale reads and reopening", () => {
