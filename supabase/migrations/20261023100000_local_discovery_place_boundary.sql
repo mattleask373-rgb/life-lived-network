@@ -77,6 +77,9 @@ CREATE POLICY "Public needs are readable by anyone"
   USING (
     visibility = 'public'
     AND status = 'open'
+    AND (expires_at IS NULL OR expires_at > now())
+    AND (ends_at IS NULL OR ends_at > now())
+    AND last_confirmed_at > now() - interval '30 days'
   );
 
 CREATE POLICY "Verified locality members can read local discovery needs"
@@ -86,5 +89,8 @@ CREATE POLICY "Verified locality members can read local discovery needs"
   USING (
     visibility = 'local_discovery'
     AND status = 'open'
+    AND (expires_at IS NULL OR expires_at > now())
+    AND (ends_at IS NULL OR ends_at > now())
+    AND last_confirmed_at > now() - interval '30 days'
     AND private.is_verified_locality_member(place_id)
   );
