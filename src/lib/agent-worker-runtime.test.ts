@@ -313,10 +313,13 @@ describe("bounded agent worker runtime", () => {
   it("refuses to invoke the provider unless atomic dispatch returns DISPATCHED", async () => {
     const model = provider();
     const db = adapters({
-      dispatchAtomically: vi.fn(async (request) => ({
-        ...lease(request),
-        status: "CLAIMED",
-      }) as unknown as WorkerLease),
+      dispatchAtomically: vi.fn(
+        async (request) =>
+          ({
+            ...lease(request),
+            status: "CLAIMED",
+          }) as unknown as WorkerLease,
+      ),
     });
 
     const result = await runAgentWorkerCycle(input({ adapters: db, provider: model }));
