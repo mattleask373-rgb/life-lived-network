@@ -55,6 +55,21 @@ describe("draft-assist quota response boundary", () => {
 });
 
 describe("AI draft quota database security contract", () => {
+  it("has an executable SQL integration test for real quota decisions", () => {
+    const sqlTest = readFileSync(
+      new URL(
+        "../../supabase/tests/ai_draft_quota_security.test.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    expect(sqlTest).toContain("public.consume_ai_draft_quota()");
+    expect(sqlTest).toContain("attempts six through twenty are denied by the hourly limit");
+    expect(sqlTest).toContain("the twenty-first attempt is denied by the daily limit");
+    expect(sqlTest).toContain("independent quota row");
+  });
+
+ 
   it("binds the limit to auth.uid and serializes concurrent callers per account", () => {
     expect(migration).toContain("v_user_id := auth.uid();");
     expect(migration).toContain(

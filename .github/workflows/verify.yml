@@ -55,7 +55,7 @@ jobs:
             echo "Base commit unavailable; conservatively running migration replay."
             exit 0
           fi
-          if git diff --name-only "$base" "$GITHUB_SHA" -- supabase/migrations supabase/config.toml | grep -q .; then
+          if git diff --name-only "$base" "$GITHUB_SHA" -- supabase/migrations supabase/config.toml supabase/tests | grep -q .; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
             echo "Database migration/config changes detected."
           else
