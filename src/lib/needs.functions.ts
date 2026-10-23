@@ -30,6 +30,7 @@ import { needGeography } from "./geo-scope";
 import {
   boundOpportunityPage,
   chunkOpportunityPlaceIds,
+  unresolvedOpportunityPlaceIds,
   mergeNewestNeedRows,
   OPPORTUNITY_CANDIDATES_PER_CHUNK,
   OpportunityScopeTooWideError,
@@ -488,6 +489,13 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
     const { loadPlaceIndex } = await import("./place-index.server");
     const { descendantIdsOf } = await import("./places");
     const index = await loadPlaceIndex(supabase);
+    const unresolvedPlaceIds = unresolvedOpportunityPlaceIds(stated, index.byId);
+    if (unresolvedPlaceIds.length) {
+      throw new DataError(
+        "DATA_UNAVAILABLE",
+        "One or more saved localities could not be resolved. Update your home or service areas and retry.",
+      );
+    }
     const placeIds = [...new Set(stated.flatMap((id) => descendantIdsOf(index, id)))];
     let placeChunks: string[][];
     try {
