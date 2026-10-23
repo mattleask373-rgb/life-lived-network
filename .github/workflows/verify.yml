@@ -61,12 +61,12 @@ jobs:
             echo "Base commit unavailable; conservatively running migration replay."
             exit 0
           fi
-          if git diff --name-only "$base" "$GITHUB_SHA" -- supabase/migrations supabase/config.toml supabase/tests | grep -q .; then
+          if git diff --name-only "$base" "$GITHUB_SHA" -- supabase/migrations supabase/config.toml supabase/tests scripts/test-local-discovery-postgrest.mjs | grep -q .; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "Database migration/config changes detected."
+            echo "Database migration/config/test inputs changed."
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No database migration/config changes detected."
+            echo "No database migration/config/test input changes detected."
           fi
 
       - name: Set up Supabase CLI for local migration replay
@@ -86,6 +86,18 @@ jobs:
       - name: Run local agent control-plane SQL security tests
         if: ${{ steps.migration-changes.outputs.changed == 'true' }}
         run: supabase test db --local
+
+      - name: Run local-discovery RLS through PostgREST
+        if: ${{ steps.migration-changes.outputs.changed == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          eval "$(supabase status --output env)"
+          SUPABASE_URL="$API_URL" \
+            SUPABASE_DB_URL="$DB_URL" \
+            SUPABASE_ANON_KEY="$ANON_KEY" \
+            SUPABASE_JWT_SECRET="$JWT_SECRET" \
+            bun scripts/test-local-discovery-postgrest.mjs
 
       - name: Lint local database functions
         if: ${{ steps.migration-changes.outputs.changed == 'true' }}
