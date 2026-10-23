@@ -53,12 +53,15 @@ describe("local_discovery locality security boundary", () => {
   });
 
   it("covers anonymous, two-locality, child-locality, and profile-spoof cases in disposable SQL", () => {
-    expect(sqlTest).toContain("SELECT plan(12)");
+    expect(sqlTest).toContain("SELECT plan(15)");
     for (const label of [
       "anon_all_local",
+      "anon_public",
       "user_a_all_local",
       "user_a_cross_locality_b",
       "user_a_cross_locality_child",
+      "user_a_stale_locality_a",
+      "user_a_expired_locality_a",
       "user_a_after_profile_spoof",
       "user_b_all_local",
       "user_b_cross_locality_a",
