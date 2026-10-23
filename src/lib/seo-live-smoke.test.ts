@@ -131,8 +131,8 @@ describe("public SEO live smoke contract", () => {
   it("detects a broader robots prefix that would also block a noindex route", () => {
     const documents = healthyDocuments();
     documents.robots.body = documents.robots.body.replace(
-      "User-agent: OAI-SearchBot\\n",
-      "User-agent: OAI-SearchBot\\nDisallow: /life\\n",
+      "User-agent: OAI-SearchBot\n",
+      "User-agent: OAI-SearchBot\nDisallow: /life\n",
     );
     expect(evaluateSeoSmoke(documents)).toContain(
       "robots.txt: OAI-SearchBot must be able to read noindex metadata for /life-list",
