@@ -525,21 +525,21 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
     // window per chunk, which is merged before the canonical evaluator runs.
     const needPages = await Promise.all(
       placeChunks.map(async (chunk) => {
-        const { data: rows, error: needsError } = await supabase
+        const { data: rows, error: needsError, count: exactCount } = await supabase
           .from("needs")
-          .select("*")
+          .select("*", { count: "exact" })
           .eq("status", "open")
           .in("visibility", ["public", "local_discovery"])
           .neq("creator_id", userId)
           .in("place_id", chunk)
           .order("created_at", { ascending: false })
           .order("id", { ascending: true })
-          // One extra row is a sentinel: a full 60-row page may be complete,
-          // or it may hide older asks. The next row tells us which is true.
+          // Keep the sentinel, but do not trust it alone: exactCount below
+          // detects an upstream response cap that hides the sentinel itself.
           .limit(OPPORTUNITY_CANDIDATES_PER_CHUNK + 1);
         if (needsError) throw needsError;
         if (!Array.isArray(rows)) throw new DataError("DATA_UNAVAILABLE");
-        return boundOpportunityPage(rows, OPPORTUNITY_CANDIDATES_PER_CHUNK);
+        return boundOpportunityPage(rows, exactCount, OPPORTUNITY_CANDIDATES_PER_CHUNK);
       }),
     );
     // Do not truncate candidates to a single global window: that would let
