@@ -79,20 +79,36 @@ describe("boundOpportunityPage", () => {
     const exact = Array.from({ length: OPPORTUNITY_CANDIDATES_PER_CHUNK }, (_, i) => i);
     const over = [...exact, OPPORTUNITY_CANDIDATES_PER_CHUNK];
 
-    expect(boundOpportunityPage(exact)).toEqual({ rows: exact, truncated: false });
-    expect(boundOpportunityPage(over)).toEqual({ rows: exact, truncated: true });
-    expect(boundOpportunityPage(over).rows).toHaveLength(OPPORTUNITY_CANDIDATES_PER_CHUNK);
+    expect(boundOpportunityPage(exact, exact.length)).toEqual({ rows: exact, truncated: false });
+    expect(boundOpportunityPage(over, over.length)).toEqual({ rows: exact, truncated: true });
+    expect(boundOpportunityPage(over, over.length).rows).toHaveLength(
+      OPPORTUNITY_CANDIDATES_PER_CHUNK,
+    );
+  });
+
+  it("detects a response cap below the sentinel when exact count proves more rows exist", () => {
+    const capped = Array.from({ length: 50 }, (_, i) => i);
+    expect(boundOpportunityPage(capped, 75)).toEqual({ rows: capped, truncated: true });
+  });
+
+  it("does not call a short response complete when its exact count disagrees", () => {
+    expect(boundOpportunityPage([1, 2, 3], 3)).toEqual({
+      rows: [1, 2, 3],
+      truncated: false,
+    });
+    expect(() => boundOpportunityPage([1, 2], 1)).toThrow(/exceeds its exact row count/i);
+    expect(() => boundOpportunityPage([], null)).toThrow(/valid exact row count/i);
   });
 
   it("treats a missing row collection as a failed read, not an empty result", () => {
-    expect(() => boundOpportunityPage(null)).toThrow(/no row collection/i);
-    expect(() => boundOpportunityPage(undefined)).toThrow(/no row collection/i);
-    expect(boundOpportunityPage([])).toEqual({ rows: [], truncated: false });
+    expect(() => boundOpportunityPage(null, 0)).toThrow(/no row collection/i);
+    expect(() => boundOpportunityPage(undefined, 0)).toThrow(/no row collection/i);
+    expect(boundOpportunityPage([], 0)).toEqual({ rows: [], truncated: false });
   });
 
   it("validates the per-query bound", () => {
-    expect(() => boundOpportunityPage([1], 0)).toThrow(RangeError);
-    expect(() => boundOpportunityPage([1], Number.NaN)).toThrow(RangeError);
+    expect(() => boundOpportunityPage([1], 1, 0)).toThrow(RangeError);
+    expect(() => boundOpportunityPage([1], 1, Number.NaN)).toThrow(RangeError);
   });
 });
 
