@@ -57,10 +57,7 @@ describe("draft-assist quota response boundary", () => {
 describe("AI draft quota database security contract", () => {
   it("has an executable SQL integration test for real quota decisions", () => {
     const sqlTest = readFileSync(
-      new URL(
-        "../../supabase/tests/ai_draft_quota_security.test.sql",
-        import.meta.url,
-      ),
+      new URL("../../supabase/tests/ai_draft_quota_security.test.sql", import.meta.url),
       "utf8",
     );
     expect(sqlTest).toContain("public.consume_ai_draft_quota()");
