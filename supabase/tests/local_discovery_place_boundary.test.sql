@@ -216,9 +216,11 @@ SELECT ok(
   'membership and verification records are not directly readable by client roles'
 );
 SELECT ok(
-  has_table_privilege('service_role', 'private.locality_memberships', 'SELECT')
-  AND has_table_privilege('service_role', 'private.locality_memberships', 'INSERT'),
-  'service role retains controlled membership administration access'
+  NOT has_table_privilege('service_role', 'private.locality_memberships', 'SELECT')
+  AND NOT has_table_privilege('service_role', 'private.locality_memberships', 'INSERT')
+  AND NOT has_table_privilege('service_role', 'private.locality_memberships', 'UPDATE')
+  AND NOT has_table_privilege('service_role', 'private.locality_memberships', 'DELETE'),
+  'service role must use the narrow SECURITY DEFINER RPC, not direct membership-table access'
 );
 
 -- Deleting the account that verified membership revokes those grants instead
