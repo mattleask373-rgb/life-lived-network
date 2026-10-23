@@ -60,8 +60,7 @@ CREATE TRIGGER revoke_membership_when_verifier_removed
 ALTER TABLE private.locality_memberships ENABLE ROW LEVEL SECURITY;
 
 -- Never expose membership records or verification metadata directly to client roles.
-REVOKE ALL ON TABLE private.locality_memberships FROM PUBLIC, anon, authenticated;
-GRANT ALL ON TABLE private.locality_memberships TO service_role;
+REVOKE ALL ON TABLE private.locality_memberships FROM PUBLIC, anon, authenticated, service_role;
 
 CREATE INDEX IF NOT EXISTS locality_memberships_verified_user_place_idx
   ON private.locality_memberships (user_id, place_id)
