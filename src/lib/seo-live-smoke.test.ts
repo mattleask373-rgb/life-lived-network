@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -101,7 +102,17 @@ function healthyIndexDocuments(): SeoSmokeDocuments {
   return docs;
 }
 
+const liveSmokeWorkflow = readFileSync(
+  new URL("../../.github/workflows/seo-live-smoke.yml", import.meta.url),
+  "utf8",
+);
+
 describe("public SEO live smoke contract", () => {
+  it("passes the optional owner-configured canonical origin into the scheduled live probe", () => {
+    expect(liveSmokeWorkflow).toContain("SEO_SMOKE_ORIGIN: ${{ vars.SEO_SMOKE_ORIGIN }}");
+    expect(liveSmokeWorkflow).toContain("run: bun scripts/seo-live-smoke.ts");
+  });
+
   it("accepts a correct public robots file, URL-set sitemap, rendered homepage and crawlable noindex page", () => {
     expect(evaluateSeoSmoke(healthyDocuments())).toEqual([]);
   });
