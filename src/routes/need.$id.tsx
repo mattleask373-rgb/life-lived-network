@@ -9,7 +9,7 @@ import { PersonAvatar } from "@/components/person-avatar";
 import { sendConnectionRequest } from "@/lib/connection.functions";
 import { ReportPublicContent } from "@/components/report-public-content";
 
-import { findSupplyForNeed } from "@/lib/needs.functions";
+import { findSupplyForNeed, findSupplyForNeedForMember } from "@/lib/needs.functions";
 import { getWorld } from "@/lib/world.functions";
 import { nextStepFor, providerLine, servicePossibilities } from "@/lib/services";
 import { BAND_HEADING, BAND_ORDER, type SupplyBand, type SupplyResult } from "@/lib/supply-engine";
@@ -55,9 +55,11 @@ function NeedAnswer() {
   const { id } = Route.useParams();
   const { user } = useSession();
   const find = useServerFn(findSupplyForNeed);
+  const findForMember = useServerFn(findSupplyForNeedForMember);
   const { data, isLoading } = useQuery({
-    queryKey: ["supply", id],
-    queryFn: () => find({ data: { needId: id } }),
+    queryKey: ["supply", id, user?.id ?? null],
+    queryFn: () =>
+      user ? findForMember({ data: { needId: id } }) : find({ data: { needId: id } }),
   });
 
   if (isLoading) {

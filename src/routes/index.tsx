@@ -22,7 +22,8 @@ import { MAX_LIMIT } from "@/lib/data/contract";
 import { canLoadMoreViewportPages, combineViewportPages } from "@/lib/viewport-pagination";
 import { geoBoundsForViewport, isViewportQueryable, type GeoBounds } from "@/lib/geo-bounds";
 import { densityOf } from "@/lib/trust";
-import { getOpenNeeds } from "@/lib/needs.functions";
+import { getOpenNeeds, getOpenNeedsForMember } from "@/lib/needs.functions";
+import { useSession } from "@/hooks/use-session";
 import { PLACE_FALLBACK } from "@/lib/places";
 import { placeInView, type MapView } from "@/lib/map-view";
 import { entriesForMapList, mergeViewportEntries, partitionMapList } from "@/lib/map-list-sync";
@@ -54,6 +55,7 @@ function Home() {
   const [showNeedsLayer, setShowNeedsLayer] = useState(true);
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle, ids } = useLifeList();
+  const { user } = useSession();
 
   const queryClient = useQueryClient();
   const { place, ancestors, setPlaceSlug, loading, index } = useWorldContext();
@@ -125,15 +127,19 @@ function Home() {
   );
 
   const openNeedsFn = useServerFn(getOpenNeeds);
+  const openNeedsForMemberFn = useServerFn(getOpenNeedsForMember);
   const {
     data: openNeeds,
     isError: openNeedsError,
     isPending: openNeedsPending,
     refetch: refetchOpenNeeds,
   } = useQuery({
-    queryKey: ["open-needs", place?.id ?? null],
+    queryKey: ["open-needs", place?.id ?? null, user?.id ?? null],
     enabled: Boolean(place),
-    queryFn: () => openNeedsFn({ data: { placeId: place?.id ?? null } }),
+    queryFn: () =>
+      user
+        ? openNeedsForMemberFn({ data: { placeId: place?.id ?? null } })
+        : openNeedsFn({ data: { placeId: place?.id ?? null } }),
   });
 
   const all = useMemo(() => world ?? [], [world]);
