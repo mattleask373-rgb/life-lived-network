@@ -82,7 +82,7 @@ describe("agent control-plane migration lineage (static contract)", () => {
       "20261007133000_agent_claim_leases.sql",
       "20261007172000_fence_release.sql",
     ]) {
-      expect(migration(name)).not.toMatch(/ALTER FUNCTION[\\s\\S]*?\\bRESTRICT\\s*;/i);
+      expect(migration(name)).not.toMatch(/ALTER FUNCTION[\s\S]*?\bRESTRICT\s*;/i);
     }
   });
 
