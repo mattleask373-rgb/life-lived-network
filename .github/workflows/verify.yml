@@ -32,6 +32,12 @@ jobs:
         run: bash scripts/check-tracked-env-files.sh
 
       - run: bun install --frozen-lockfile
+
+      # The exact `verify` status is required by the main ruleset. Keep the
+      # high/critical locked-dependency audit inside this required gate too;
+      # a separate CodeQL workflow can otherwise fail without blocking merge.
+      - name: Audit locked dependencies (high and critical)
+        run: bun audit --audit-level=high
       - run: bun run lint
       - run: bun run test
       - run: bun run build
@@ -55,7 +61,7 @@ jobs:
             echo "Base commit unavailable; conservatively running migration replay."
             exit 0
           fi
-          if git diff --name-only "$base" "$GITHUB_SHA" -- supabase/migrations supabase/config.toml | grep -q .; then
+          if git diff --name-only "$base" "$GITHUB_SHA" -- supabase/migrations supabase/config.toml supabase/tests | grep -q .; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
             echo "Database migration/config changes detected."
           else

@@ -7,6 +7,13 @@ const migration = readFileSync(
   new URL("../../supabase/migrations/20261022121000_ai_draft_atomic_quota.sql", import.meta.url),
   "utf8",
 );
+const searchPathHardeningMigration = readFileSync(
+  new URL(
+    "../../supabase/migrations/20261023030000_harden_ai_draft_quota_search_path.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 const serverFunction = readFileSync(
   new URL("./draft-assist.functions.ts", import.meta.url),
   "utf8",
@@ -55,6 +62,17 @@ describe("draft-assist quota response boundary", () => {
 });
 
 describe("AI draft quota database security contract", () => {
+  it("has an executable SQL integration test for real quota decisions", () => {
+    const sqlTest = readFileSync(
+      new URL("../../supabase/tests/ai_draft_quota_security.test.sql", import.meta.url),
+      "utf8",
+    );
+    expect(sqlTest).toContain("public.consume_ai_draft_quota()");
+    expect(sqlTest).toContain("attempts six through twenty are denied by the hourly limit");
+    expect(sqlTest).toContain("the twenty-first attempt is denied by the daily limit");
+    expect(sqlTest).toContain("independent quota row");
+  });
+
   it("binds the limit to auth.uid and serializes concurrent callers per account", () => {
     expect(migration).toContain("v_user_id := auth.uid();");
     expect(migration).toContain(
@@ -89,6 +107,12 @@ describe("AI draft quota database security contract", () => {
       "GRANT EXECUTE ON FUNCTION public.consume_ai_draft_quota() TO authenticated;",
     );
     expect(migration).not.toMatch(/^\s*(?:prompt|prompt_text|completion_text)\s+\w+/im);
+  });
+
+  it("removes the public schema from the effective quota-function search path", () => {
+    expect(searchPathHardeningMigration).toMatch(
+      /ALTER FUNCTION public\.consume_ai_draft_quota\(\)\s+SET search_path = pg_catalog;/,
+    );
   });
 
   it("checks the emergency stop and quota before the paid provider path", () => {
