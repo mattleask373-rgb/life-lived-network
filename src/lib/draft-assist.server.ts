@@ -1,7 +1,15 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { Output, streamText } from "ai";
 import { createLovableAiGatewayRunIdFetch } from "./ai/run-id";
-import { DRAFT_INSTRUCTIONS, draftSchema, isDraftAssistDisabled, tidyDraft } from "./draft-assist";
+import {
+  DRAFT_INSTRUCTIONS,
+  DRAFT_MAX_DURATION_MS,
+  DRAFT_MAX_OUTPUT_TOKENS,
+  DRAFT_MAX_RETRIES,
+  draftSchema,
+  isDraftAssistDisabled,
+  tidyDraft,
+} from "./draft-assist";
 import type { DraftResult } from "./draft-assist.functions";
 
 const MODEL = "openai/gpt-6-astra";
@@ -32,6 +40,10 @@ export async function generateDraft(text: string, hint: string | null): Promise<
   try {
     const result = streamText({
       model: provider.responses(MODEL),
+      // Bound spend and retry amplification for each already-quota-checked attempt.
+      maxOutputTokens: DRAFT_MAX_OUTPUT_TOKENS,
+      maxRetries: DRAFT_MAX_RETRIES,
+      timeout: { totalMs: DRAFT_MAX_DURATION_MS },
       instructions: DRAFT_INSTRUCTIONS,
       output: Output.object({ schema: draftSchema }),
       messages: [
