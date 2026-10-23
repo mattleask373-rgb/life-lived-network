@@ -5,6 +5,7 @@ import { LAYERS, type WorldEntry } from "@/lib/world-data";
 import { asBookingState, BOOKING_LABEL, isService, providerLine } from "@/lib/services";
 import { cardPhoto, NO_PHOTO_LABEL } from "@/lib/entry-card-view";
 import { duration, eventDate, layerText, money } from "./layer-colour";
+import { useLocale } from "@/lib/locale";
 import { LayerIcon } from "./layer-icon";
 import { TrustChip } from "./trust-chip";
 
@@ -24,6 +25,7 @@ export function EntryCard({
   onOpen?: (entry: WorldEntry) => void;
   note?: string;
 }) {
+  const { locale } = useLocale();
   const layer = LAYERS.find((l) => l.id === entry.layer);
   const service = isService(entry);
   const photo = cardPhoto(entry);
@@ -71,7 +73,7 @@ export function EntryCard({
         {/* An event's date is the first thing that matters about it. */}
         {entry.startsAt ? (
           <p className="mt-1.5 text-sm font-medium text-foreground">
-            {eventDate(entry.startsAt, entry.timezone)}
+            {eventDate(entry.startsAt, entry.timezone, locale)}
           </p>
         ) : null}
         <h3 id={titleId} className="mt-1 font-display text-lg leading-snug">
@@ -87,7 +89,7 @@ export function EntryCard({
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             {entry.startsAt ? "" : `${entry.when} · `}
-            {duration(entry.minutes)} · {money(entry.cost, entry.currency)}
+            {duration(entry.minutes, locale)} · {money(entry.cost, entry.currency, locale)}
           </p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {service ? (
