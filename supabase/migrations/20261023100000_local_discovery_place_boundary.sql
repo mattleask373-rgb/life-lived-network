@@ -1,8 +1,8 @@
 -- Enforce the locality boundary for local_discovery needs at the database boundary.
 --
 -- local_discovery is not anonymous-public. It is readable only by an authenticated
--- user with an administrator-verified membership in the need's place or an ancestor
--- place. Profile.place_id is user-editable and is deliberately not an authorization
+-- user with an administrator-verified membership for the exact need place.
+-- Parent/child inheritance is not implicit. Profile.place_id is deliberately not an authorization
 -- signal. Membership administration is intentionally not exposed through PostgREST.
 --
 -- Do not apply this migration to any hosted project before owner-confirmed identity
