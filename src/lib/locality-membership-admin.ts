@@ -7,7 +7,7 @@ const evidenceReference = z
   .trim()
   .min(3)
   .max(160)
-  .regex(/^[A-Za-z0-9._:/-]+$/);
+  .regex(/^(?!.*https?:\/\/)[A-Za-z0-9._:/-]+$/i);
 
 export const reviewLocalityMembershipInput = z.discriminatedUnion("action", [
   z
