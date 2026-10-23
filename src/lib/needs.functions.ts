@@ -115,7 +115,7 @@ export const getOpenNeeds = createServerFn({ method: "GET" })
       .from("needs")
       .select("*")
       .eq("status", "open")
-      .in("visibility", ["public", "local_discovery"])
+      .eq("visibility", "public")
       .order("created_at", { ascending: false })
       .limit(50);
     if (data.placeId) {
