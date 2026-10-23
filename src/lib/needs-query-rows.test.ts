@@ -24,7 +24,8 @@ describe("complete need-query row collections", () => {
 
   it("fails closed on query errors, missing row collections, or absent exact counts", () => {
     expectErrorCode(
-      () => requireCompleteQueryRows({ data: null, error: new Error("network"), count: null }, "test"),
+      () =>
+        requireCompleteQueryRows({ data: null, error: new Error("network"), count: null }, "test"),
       "DATA_UNAVAILABLE",
     );
     expectErrorCode(
