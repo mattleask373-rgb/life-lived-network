@@ -111,8 +111,8 @@ export function DoSomethingToday({
         <div className="mt-4 rounded-lg border border-border bg-muted p-4 text-sm" role="status">
           <p className="font-medium">There's nothing here to surprise you with right now.</p>
           <p className="mt-1 text-muted-foreground">
-            It's quiet here for the things you have saved and shown us you like. Try another shape
-            — or make something happen yourself.
+            It's quiet here for the things you have saved and shown us you like. Try another shape —
+            or make something happen yourself.
           </p>
         </div>
       ) : null}
