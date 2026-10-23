@@ -87,8 +87,8 @@ export function needTimeWindowEnded(
   const expires = need.expiresAt === null ? null : Date.parse(need.expiresAt);
   const ends = need.endsAt === null ? null : Date.parse(need.endsAt);
   return (
-    (expires !== null && Number.isFinite(expires) && expires <= instant) ||
-    (ends !== null && Number.isFinite(ends) && ends <= instant)
+    (expires !== null && (!Number.isFinite(expires) || expires <= instant)) ||
+    (ends !== null && (!Number.isFinite(ends) || ends <= instant))
   );
 }
 
