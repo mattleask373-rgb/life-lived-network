@@ -138,9 +138,9 @@ BEGIN
   UPDATE public.agent_tasks t
   SET status = to_status,
       updated_at = now(),
-      reviewer = CASE WHEN actor_role = 'reviewer' THEN COALESCE(reviewer, actor) ELSE t.reviewer END,
+      reviewer = CASE WHEN actor_role = 'reviewer' THEN COALESCE(transition_agent_task.reviewer, actor) ELSE t.reviewer END,
       evidence = CASE
-        WHEN evidence IS NOT NULL THEN COALESCE(t.evidence, '[]'::jsonb) || jsonb_build_array(evidence)
+        WHEN transition_agent_task.evidence IS NOT NULL THEN COALESCE(t.evidence, '[]'::jsonb) || jsonb_build_array(transition_agent_task.evidence)
         ELSE t.evidence
       END,
       owner = CASE
