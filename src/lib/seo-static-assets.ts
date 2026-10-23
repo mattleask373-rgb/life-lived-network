@@ -25,7 +25,9 @@ export function validatePublicSiteOrigin(value?: string): string {
     parsed.search ||
     parsed.hash
   ) {
-    throw new Error("VITE_SITE_ORIGIN must be an HTTPS origin without credentials, path, query or fragment.");
+    throw new Error(
+      "VITE_SITE_ORIGIN must be an HTTPS origin without credentials, path, query or fragment.",
+    );
   }
   return parsed.origin;
 }
@@ -43,12 +45,17 @@ export function renderSeoStaticAssets(originValue?: string): SeoStaticAssets {
     }
   }
   if (robots.includes("Disallow: /life-list")) {
-    throw new Error("The noindex life list must remain crawlable so crawlers can read its metadata.");
+    throw new Error(
+      "The noindex life list must remain crawlable so crawlers can read its metadata.",
+    );
   }
   if (!robots.includes("Sitemap: " + origin + "/sitemap.xml")) {
     throw new Error("Generated robots policy is missing its canonical sitemap directive.");
   }
-  if (!sitemap.startsWith('<?xml version="1.0" encoding="UTF-8"?>') || !sitemap.includes("<sitemapindex")) {
+  if (
+    !sitemap.startsWith('<?xml version="1.0" encoding="UTF-8"?>') ||
+    !sitemap.includes("<sitemapindex")
+  ) {
     throw new Error("Generated sitemap index is not valid sitemap XML.");
   }
   for (const path of PUBLIC_SITEMAP_CHILD_PATHS) {
