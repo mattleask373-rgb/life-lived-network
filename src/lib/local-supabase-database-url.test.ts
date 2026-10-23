@@ -9,9 +9,9 @@ describe("local Supabase integration-test database guard", () => {
     expect(
       isLocalSupabaseDatabaseUrl("postgres://postgres:postgres@localhost:54322/postgres"),
     ).toBe(true);
-    expect(
-      isLocalSupabaseDatabaseUrl("postgres://postgres:postgres@[::1]:54322/postgres"),
-    ).toBe(true);
+    expect(isLocalSupabaseDatabaseUrl("postgres://postgres:postgres@[::1]:54322/postgres")).toBe(
+      true,
+    );
   });
 
   it("rejects hosted Supabase, arbitrary remote hosts, non-Postgres schemes, and malformed values", () => {
