@@ -89,4 +89,15 @@ describe("whyNot", () => {
     const pick = whyNot(world, []);
     expect(pick?.id).toBe("ok");
   });
+
+  it("returns no surprise when every entry is ineligible or already saved", () => {
+    const world = [
+      base({ id: "demo", demonstration: true, cost: 0 }),
+      base({ id: "old", quality: "expired", cost: 0 }),
+      base({ id: "too-expensive", cost: 21 }),
+      base({ id: "saved", cost: 5, layer: "music" }),
+    ];
+
+    expect(whyNot(world, ["saved"])).toBeUndefined();
+  });
 });
