@@ -68,22 +68,32 @@ export interface BoundedOpportunityPage<T> {
 
 /**
  * Keep a bounded page while preserving whether the query hit its cap.
- * Callers must ask the database for limit + 1 rows so exact-cap and over-cap
- * results can be distinguished. Missing data is a failed read, never empty.
+ *
+ * The sentinel row is useful, but cannot prove completeness on its own: an
+ * upstream response cap may return fewer than maximumRows + 1 rows even when
+ * the database has more matches. Pair the row window with the database's exact
+ * filtered count and fail closed when those signals disagree.
  */
 export function boundOpportunityPage<T>(
   rows: readonly T[] | null | undefined,
+  exactCount: number | null,
   maximumRows = OPPORTUNITY_CANDIDATES_PER_CHUNK,
 ): BoundedOpportunityPage<T> {
   if (!Array.isArray(rows)) {
     throw new Error("Opportunity candidate read returned no row collection");
   }
+  if (typeof exactCount !== "number" || !Number.isSafeInteger(exactCount) || exactCount < 0) {
+    throw new Error("Opportunity candidate read returned no valid exact row count");
+  }
   if (!Number.isSafeInteger(maximumRows) || maximumRows < 1) {
     throw new RangeError("Opportunity candidate window must be a positive safe integer");
   }
+  if (rows.length > exactCount) {
+    throw new Error("Opportunity candidate row collection exceeds its exact row count");
+  }
   return {
     rows: rows.slice(0, maximumRows),
-    truncated: rows.length > maximumRows,
+    truncated: exactCount > rows.length || exactCount > maximumRows || rows.length > maximumRows,
   };
 }
 
