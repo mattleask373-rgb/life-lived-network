@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(15);
+SELECT plan(18);
 
 -- Synthetic admin and subject accounts only; the transaction rolls back.
 INSERT INTO auth.users (
@@ -112,7 +112,7 @@ SELECT throws_ok(
   'service role cannot grant for a non-admin actor'
 );
 SELECT throws_ok(
-  $$ SELECT * FROM public.review_locality_membership(
+  $ SELECT * FROM public.review_locality_membership(
     'grant',
     'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
     'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -120,10 +120,43 @@ SELECT throws_ok(
     'local_steward',
     'case:self-approval',
     'local_steward_attestation'
-  ); $$,
+  ); $,
   '42501',
   'administrators cannot approve or revoke their own locality membership',
   'admin cannot self-approve locality membership'
+);
+SELECT throws_ok(
+  $ SELECT * FROM public.review_locality_membership(
+    'grant',
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    '10000000-0000-4000-8000-000000000001',
+    NULL,
+    'case:missing-method',
+    'local_steward_attestation'
+  ); $,
+  '22023',
+  'verification method is required',
+  'grant without a verification method is rejected before writing'
+);
+SELECT throws_ok(
+  $ SELECT * FROM public.review_locality_membership(
+    'grant',
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    '10000000-0000-4000-8000-000000000001',
+    'local_steward',
+    'case:https://example.test/evidence',
+    'local_steward_attestation'
+  ); $,
+  '22023',
+  'a short opaque evidence reference is required',
+  'URL-based evidence references are rejected before writing'
+);
+SELECT is(
+  (SELECT count(*) FROM private.locality_membership_events WHERE action = 'grant'),
+  1::bigint,
+  'rejected malformed grants do not create audit events'
 );
 
 SELECT is(
