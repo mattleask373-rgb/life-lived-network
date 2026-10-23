@@ -45,8 +45,8 @@ function NeedPage() {
     isError: needsError,
     refetch: refetchNeeds,
   } = useQuery({
-    queryKey: ["needs", "open"],
-    queryFn: () => openNeeds({ data: {} }),
+    queryKey: ["needs", "open", place?.place.id ?? "public"],
+    queryFn: () => openNeeds({ data: { placeId: place?.place.id ?? null } }),
   });
   const { data: mine } = useQuery({
     queryKey: ["needs", "mine", user?.id],
