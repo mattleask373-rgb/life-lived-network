@@ -8,7 +8,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { DataError } from "./data/errors";
-import { canonicalizeNeedPlace, createNeedInput, needIdInput } from "./server-inputs";
+import { canonicalizeNeedPlace, createNeedInput, needIdInput, needLifecycleInput } from "./server-inputs";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 import {
@@ -22,7 +22,7 @@ import {
   type Visibility,
 } from "./capability";
 import { findOpportunitiesForPerson, type PersonOpportunity } from "./reciprocal";
-import { rowToNeed, type Need, type NeedRow } from "./needs";
+import { needFreshnessCutoff, rowToNeed, type Need, type NeedRow } from "./needs";
 import { rowToEntry, type ListingRow } from "./listings";
 import { findSupply, type PersonCandidate, type SupplyAnswer } from "./supply-engine";
 import { freshness } from "./capability-freshness";
@@ -106,16 +106,88 @@ export const getMyNeeds = createServerFn({ method: "GET" })
     return ((data ?? []) as unknown as NeedRow[]).map(rowToNeed);
   });
 
+type NeedLifecycleResult = { status: Need["status"]; lastConfirmedAt: string };
+
+export const updateMyNeedLifecycle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => needLifecycleInput.parse(input))
+  .handler(async ({ data, context }): Promise<NeedLifecycleResult> => {
+    const now = new Date();
+    const nowIso = now.toISOString();
+
+    if (data.action === "confirm") {
+      const { data: current, error: readError } = await context.supabase
+        .from("needs")
+        .select("id, status, expires_at, ends_at")
+        .eq("id", data.id)
+        .eq("creator_id", context.userId)
+        .maybeSingle();
+      if (readError) throw readError;
+      if (!current || current.status !== "open") {
+        throw new Error("That need is no longer open.");
+      }
+      const windowEnded = [current.expires_at, current.ends_at].some((value) => {
+        if (value === null) return false;
+        const parsed = Date.parse(value);
+        return !Number.isFinite(parsed) || parsed <= now.getTime();
+      });
+      if (windowEnded) {
+        throw new Error(
+          "The stated time window has ended. Edit the dates before confirming this need again.",
+        );
+      }
+      const { data: updated, error } = await context.supabase
+        .from("needs")
+        .update({ last_confirmed_at: nowIso })
+        .eq("id", data.id)
+        .eq("creator_id", context.userId)
+        .eq("status", "open")
+        .select("status, last_confirmed_at")
+        .maybeSingle();
+      if (error) throw error;
+      if (!updated) {
+        throw new Error("That need changed before it could be confirmed. Refresh and try again.");
+      }
+      return {
+        status: updated.status as Need["status"],
+        lastConfirmedAt: updated.last_confirmed_at,
+      };
+    }
+
+    const { data: updated, error } = await context.supabase
+      .from("needs")
+      .update({ status: data.action })
+      .eq("id", data.id)
+      .eq("creator_id", context.userId)
+      .eq("status", "open")
+      .select("status, last_confirmed_at")
+      .maybeSingle();
+    if (error) throw error;
+    if (!updated) {
+      throw new Error("That need is no longer open or has already changed.");
+    }
+    return {
+      status: updated.status as Need["status"],
+      lastConfirmedAt: updated.last_confirmed_at,
+    };
+  });
+
 export const getOpenNeeds = createServerFn({ method: "GET" })
   .inputValidator((input: { placeId?: string | null } | undefined) => input ?? {})
   .handler(async ({ data }): Promise<Need[]> => {
     const { publicServerClient } = await import("./supabase-public.server");
     const supabase = publicServerClient();
+    const now = new Date();
+    const nowIso = now.toISOString();
     let query = supabase
       .from("needs")
       .select("*")
       .eq("status", "open")
-      .in("visibility", ["public", "local_discovery"])
+      .in("visibility", data.placeId ? ["public", "local_discovery"] : ["public"])
+      .gt("last_confirmed_at", needFreshnessCutoff(now))
+      .or(
+        `and(or(expires_at.is.null,expires_at.gt.${nowIso}),or(ends_at.is.null,ends_at.gt.${nowIso}))`,
+      )
       .order("created_at", { ascending: false })
       .limit(50);
     if (data.placeId) {
@@ -153,11 +225,19 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
     if (!data) return null;
     const { publicServerClient } = await import("./supabase-public.server");
     const supabase = publicServerClient();
+    const now = new Date();
+    const nowIso = now.toISOString();
 
     const { data: needRow, error } = await supabase
       .from("needs")
       .select("*")
       .eq("id", data.needId)
+      .eq("status", "open")
+      .in("visibility", ["public", "local_discovery"])
+      .gt("last_confirmed_at", needFreshnessCutoff(now))
+      .or(
+        `and(or(expires_at.is.null,expires_at.gt.${nowIso}),or(ends_at.is.null,ends_at.gt.${nowIso}))`,
+      )
       .maybeSingle();
     if (error) throw error;
     if (!needRow) return null;
@@ -508,6 +588,8 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
       throw error;
     }
 
+    const nowIso = new Date().toISOString();
+    const freshSince = needFreshnessCutoff(new Date(nowIso));
     const geographies = new Map<string, ReturnType<typeof needGeography>>();
 
     // A block works both ways, whoever set it.
@@ -534,6 +616,10 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
           .select("*", { count: "exact" })
           .eq("status", "open")
           .in("visibility", ["public", "local_discovery"])
+          .gt("last_confirmed_at", freshSince)
+          .or(
+            `and(or(expires_at.is.null,expires_at.gt.${nowIso}),or(ends_at.is.null,ends_at.gt.${nowIso}))`,
+          )
           .neq("creator_id", userId)
           .in("place_id", chunk)
           .order("created_at", { ascending: false })
@@ -615,7 +701,7 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
       needs: ((needRows ?? []) as unknown as NeedRow[])
         .map(rowToNeed)
         .filter((need) => !blockedIds.has(need.creatorId)),
-      now: new Date().toISOString(),
+      now: nowIso,
     });
     return {
       status: cappedChunks > 0 ? "partial" : "complete",
