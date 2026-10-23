@@ -9,7 +9,8 @@ export function isLocalSupabaseDatabaseUrl(value: string | undefined): value is 
   try {
     const url = new URL(candidate);
     const host = url.hostname.toLowerCase();
-    const isLoopback = host === "localhost" || host === "127.0.0.1" || host === "::1" || host === "[::1]";
+    const isLoopback =
+      host === "localhost" || host === "127.0.0.1" || host === "::1" || host === "[::1]";
     return (url.protocol === "postgres:" || url.protocol === "postgresql:") && isLoopback;
   } catch {
     return false;
