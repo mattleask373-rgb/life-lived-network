@@ -59,9 +59,7 @@ function NeedAnswer() {
   const { data, isLoading } = useQuery({
     queryKey: ["supply", id, user?.id ?? null],
     queryFn: () =>
-      user
-        ? findForMember({ data: { needId: id } })
-        : find({ data: { needId: id } }),
+      user ? findForMember({ data: { needId: id } }) : find({ data: { needId: id } }),
   });
 
   if (isLoading) {

@@ -142,7 +142,6 @@ export const getOpenNeeds = createServerFn({ method: "GET" })
     return ((rows ?? []) as unknown as NeedRow[]).map(rowToNeed);
   });
 
-
 /**
  * Signed-in discovery reads through the request-bound Supabase client, allowing
  * row-level security to enforce exact verified locality membership. The place
@@ -196,10 +195,7 @@ async function findSupplyForNeedWithClient(
   supabase: SupabaseClient<Database>,
   publicOnly: boolean,
 ): Promise<SupplyAnswer | null> {
-  let needQuery = supabase
-    .from("needs")
-    .select("*")
-    .eq("id", needId);
+  let needQuery = supabase.from("needs").select("*").eq("id", needId);
   if (publicOnly) needQuery = needQuery.eq("visibility", "public");
   const { data: needRow, error } = await needQuery.maybeSingle();
   if (error) throw error;

@@ -39,7 +39,6 @@ describe("public needs map source contract", () => {
     expect(read).not.toContain("publicServerClient");
     expect(needsFunctions).toContain("export const findSupplyForNeedForMember");
   });
-
 });
 
 describe("placeNeedsForMap", () => {
