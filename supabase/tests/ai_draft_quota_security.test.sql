@@ -119,7 +119,7 @@ SELECT ok(
       AND EXISTS (
         SELECT 1
         FROM unnest(p.proconfig) AS cfg
-        WHERE cfg LIKE 'search_path=%'
+        WHERE cfg = 'search_path=pg_catalog'
       )
     FROM pg_proc AS p
     WHERE p.oid = 'public.consume_ai_draft_quota()'::regprocedure
