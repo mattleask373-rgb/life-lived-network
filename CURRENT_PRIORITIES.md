@@ -1,6 +1,6 @@
 # Current Priorities — Evidence-Gated Execution
 
-**Snapshot:** 2026-10-23 22:08 UTC  
+**Snapshot:** 2026-10-23 22:14 UTC  
 **Current main:** 182fe7f05c9efbee9ac17ccbca4d420cc0f1b24f  
 **Operating mode:** security-first, no public surface expansion while Gates 0 and 4 remain open.
 
