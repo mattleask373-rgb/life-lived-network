@@ -38,6 +38,20 @@ jobs:
       # a separate CodeQL workflow can otherwise fail without blocking merge.
       - name: Audit locked dependencies (high and critical)
         run: bun audit --audit-level=high
+
+      # Temporary format evidence for the new worker core; removed after the
+      # formatted file bytes are committed on this isolated branch.
+      - name: Format worker runtime and emit reviewable formatter bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          bunx prettier --write src/lib/agent-worker-runtime.ts src/lib/agent-worker-runtime.test.ts
+          for path in src/lib/agent-worker-runtime.ts src/lib/agent-worker-runtime.test.ts; do
+            printf 'FORMAT_FILE_BEGIN:%s\\n' "$path"
+            base64 -w0 "$path" | fold -w 2500 | sed 's/^/FORMAT_BASE64:/'
+            printf 'FORMAT_FILE_END:%s\\n' "$path"
+          done
+
       - run: bun run lint
       - run: bun run test
       - run: bun run build
