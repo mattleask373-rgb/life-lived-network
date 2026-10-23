@@ -49,22 +49,10 @@ AS $function$
     auth.uid() IS NOT NULL
     AND _need_place_id IS NOT NULL
     AND EXISTS (
-      WITH RECURSIVE place_chain(id, parent_id, path) AS (
-        SELECT p.id, p.parent_id, ARRAY[p.id]::uuid[]
-        FROM public.places AS p
-        WHERE p.id = _need_place_id
-
-        UNION ALL
-
-        SELECT p.id, p.parent_id, chain.path || p.id
-        FROM public.places AS p
-        JOIN place_chain AS chain ON p.id = chain.parent_id
-        WHERE NOT (p.id = ANY(chain.path))
-      )
       SELECT 1
       FROM private.locality_memberships AS membership
-      JOIN place_chain AS chain ON chain.id = membership.place_id
       WHERE membership.user_id = auth.uid()
+        AND membership.place_id = _need_place_id
         AND membership.status = 'verified'
         AND membership.verified_by IS NOT NULL
         AND membership.verified_at IS NOT NULL
