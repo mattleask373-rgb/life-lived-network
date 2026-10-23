@@ -77,6 +77,7 @@ export type ReportedContentKind =
 export type ReportCategory =
   "spam" | "impersonation" | "unsafe" | "incorrect" | "harassment" | "other";
 export type ProviderResponse = "responded" | "declined" | "no_response" | "unknown";
+export type NeedLifecycleState = "open_confirmed" | "met" | "withdrawn" | "expired";
 
 interface MeasurementBase {
   schemaVersion: typeof MEASUREMENT_SCHEMA_VERSION;
@@ -120,12 +121,16 @@ export interface QuietResultMeasurement extends MeasurementBase {
 
 export interface ActionSelectedMeasurement extends MeasurementBase {
   type: "action_selected";
+  countryCode: string;
+  intentFamily: IntentFamily;
   action: SelectedAction;
   targetKind: TargetKind;
 }
 
 export interface ConnectionOutcomeMeasurement extends MeasurementBase {
   type: "connection_outcome";
+  countryCode: string;
+  intentFamily: IntentFamily;
   outcome: ConnectionOutcome;
 }
 
@@ -138,13 +143,28 @@ export interface ContributionCreatedMeasurement extends MeasurementBase {
 export interface ProviderResponseMeasurement extends MeasurementBase {
   type: "provider_response";
   countryCode: string;
+  intentFamily: IntentFamily;
   response: ProviderResponse;
 }
 
 export interface UsefulOutcomeMeasurement extends MeasurementBase {
   type: "useful_outcome_completed";
   countryCode: string;
+  intentFamily: IntentFamily;
   outcome: UsefulOutcome;
+}
+
+export interface NeedSubmittedMeasurement extends MeasurementBase {
+  type: "need_submitted";
+  countryCode: string;
+  intentFamily: IntentFamily;
+}
+
+export interface NeedStatusChangedMeasurement extends MeasurementBase {
+  type: "need_status_changed";
+  countryCode: string;
+  intentFamily: IntentFamily;
+  state: NeedLifecycleState;
 }
 
 export interface ReportSubmittedMeasurement extends MeasurementBase {
@@ -170,6 +190,8 @@ export type MeasurementEvent =
   | ContributionCreatedMeasurement
   | ProviderResponseMeasurement
   | UsefulOutcomeMeasurement
+  | NeedSubmittedMeasurement
+  | NeedStatusChangedMeasurement
   | ReportSubmittedMeasurement
   | ReturnDiscoveryMeasurement;
 
@@ -248,6 +270,7 @@ const VALUES = {
   contentKind: ["profile", "listing", "need", "message", "external_link", "other"],
   reportCategory: ["spam", "impersonation", "unsafe", "incorrect", "harassment", "other"],
   providerResponse: ["responded", "declined", "no_response", "unknown"],
+  needState: ["open_confirmed", "met", "withdrawn", "expired"],
 } as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -368,23 +391,31 @@ export function parseMeasurementEvent(input: unknown): MeasurementEvent {
         reason: input.reason,
       };
     case "action_selected":
-      assertExactKeys(input, [...base, "action", "targetKind"]);
+      assertExactKeys(input, [...base, "countryCode", "intentFamily", "action", "targetKind"]);
+      assertCountryCode(input.countryCode);
+      assertEnum(input.intentFamily, VALUES.intentFamily, "intentFamily");
       assertEnum(input.action, VALUES.action, "action");
       assertEnum(input.targetKind, VALUES.targetKind, "targetKind");
       return {
         schemaVersion: 1,
         dayUTC: input.dayUTC,
         type: input.type,
+        countryCode: input.countryCode,
+        intentFamily: input.intentFamily,
         action: input.action,
         targetKind: input.targetKind,
       };
     case "connection_outcome":
-      assertExactKeys(input, [...base, "outcome"]);
+      assertExactKeys(input, [...base, "countryCode", "intentFamily", "outcome"]);
+      assertCountryCode(input.countryCode);
+      assertEnum(input.intentFamily, VALUES.intentFamily, "intentFamily");
       assertEnum(input.outcome, VALUES.connectionOutcome, "outcome");
       return {
         schemaVersion: 1,
         dayUTC: input.dayUTC,
         type: input.type,
+        countryCode: input.countryCode,
+        intentFamily: input.intentFamily,
         outcome: input.outcome,
       };
     case "contribution_created":
@@ -399,26 +430,54 @@ export function parseMeasurementEvent(input: unknown): MeasurementEvent {
         contributionKind: input.contributionKind,
       };
     case "provider_response":
-      assertExactKeys(input, [...base, "countryCode", "response"]);
+      assertExactKeys(input, [...base, "countryCode", "intentFamily", "response"]);
       assertCountryCode(input.countryCode);
+      assertEnum(input.intentFamily, VALUES.intentFamily, "intentFamily");
       assertEnum(input.response, VALUES.providerResponse, "response");
       return {
         schemaVersion: 1,
         dayUTC: input.dayUTC,
         type: input.type,
         countryCode: input.countryCode,
+        intentFamily: input.intentFamily,
         response: input.response,
       };
     case "useful_outcome_completed":
-      assertExactKeys(input, [...base, "countryCode", "outcome"]);
+      assertExactKeys(input, [...base, "countryCode", "intentFamily", "outcome"]);
       assertCountryCode(input.countryCode);
+      assertEnum(input.intentFamily, VALUES.intentFamily, "intentFamily");
       assertEnum(input.outcome, VALUES.usefulOutcome, "outcome");
       return {
         schemaVersion: 1,
         dayUTC: input.dayUTC,
         type: input.type,
         countryCode: input.countryCode,
+        intentFamily: input.intentFamily,
         outcome: input.outcome,
+      };
+    case "need_submitted":
+      assertExactKeys(input, [...base, "countryCode", "intentFamily"]);
+      assertCountryCode(input.countryCode);
+      assertEnum(input.intentFamily, VALUES.intentFamily, "intentFamily");
+      return {
+        schemaVersion: 1,
+        dayUTC: input.dayUTC,
+        type: input.type,
+        countryCode: input.countryCode,
+        intentFamily: input.intentFamily,
+      };
+    case "need_status_changed":
+      assertExactKeys(input, [...base, "countryCode", "intentFamily", "state"]);
+      assertCountryCode(input.countryCode);
+      assertEnum(input.intentFamily, VALUES.intentFamily, "intentFamily");
+      assertEnum(input.state, VALUES.needState, "state");
+      return {
+        schemaVersion: 1,
+        dayUTC: input.dayUTC,
+        type: input.type,
+        countryCode: input.countryCode,
+        intentFamily: input.intentFamily,
+        state: input.state,
       };
     case "report_submitted":
       assertExactKeys(input, [...base, "contentKind", "category"]);
