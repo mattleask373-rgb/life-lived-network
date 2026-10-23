@@ -78,11 +78,19 @@ describe("agent control-plane migration lineage (static contract)", () => {
   });
 
   it("does not put unsupported RESTRICT clauses after ALTER FUNCTION statements", () => {
-    for (const name of [
+    const names = [
       "20261007133000_agent_claim_leases.sql",
+      "20261007140000_agent_claim_lease_hardening.sql",
+      "20261007150000_agent_status_transitions.sql",
+      "20261007151000_agent_transition_lease_renew.sql",
+      "20261007160000_agent_security_grants_and_cancelled.sql",
+      "20261007170000_agent_lease_fencing.sql",
       "20261007172000_fence_release.sql",
-    ]) {
-      expect(migration(name)).not.toMatch(/ALTER FUNCTION[\s\S]*?\bRESTRICT\s*;/i);
+      "20261008020000_agent_dispatch_boundary.sql",
+      "20261008030000_agent_stale_recovery_rpc.sql",
+    ];
+    for (const name of names) {
+      expect(migration(name)).not.toMatch(/ALTER FUNCTION[^;]*\bRESTRICT\s*;/i);
     }
   });
 
