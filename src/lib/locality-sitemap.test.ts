@@ -105,14 +105,12 @@ describe("locality sitemap indexability", () => {
     expect(indexableLocalityPaths(invalid, rowsFor("bad", 3))).toEqual([]);
   });
 
-  it("does not emit duplicate paths for colliding slugs", () => {
-    const colliding = buildPlaceIndex([
-      place({ id: "first", name: "First", slug: "same", kind: "city" }),
-      place({ id: "second", name: "Second", slug: "same", kind: "town" }),
+  it("does not emit duplicate paths when several public records share a locality", () => {
+    const repeatedListings = [...rowsFor("city", 3), ...rowsFor("city", 3)];
+    expect(indexableLocalityPaths(geography, repeatedListings)).toEqual([
+      "/gb/birmingham",
+      "/gb/west-midlands",
     ]);
-    expect(
-      indexableLocalityPaths(colliding, [...rowsFor("first", 3), ...rowsFor("second", 3)]),
-    ).toEqual(["/gb/same"]);
   });
 
   it("does not index localities if the place hierarchy hits its hard cap", () => {
