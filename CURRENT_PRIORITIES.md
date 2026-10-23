@@ -1,6 +1,6 @@
 # Current Priorities — Evidence-Gated Execution
 
-**Snapshot:** 2026-10-23 22:14 UTC  
+**Snapshot:** 2026-10-23 22:15 UTC  
 **Current main:** 182fe7f05c9efbee9ac17ccbca4d420cc0f1b24f  
 **Operating mode:** security-first, no public surface expansion while Gates 0 and 4 remain open.
 
@@ -27,6 +27,7 @@ Do not merge a partial slice that makes local_discovery disappear into an unexpl
 ### P0-D — SEO parity and public/private route policy
 - [#335 — sitemap completeness and live verification](https://github.com/mattleask373-rgb/life-lived-network/pull/335), current base main, head 2ce6e030162f04592c734054cba1b1d06706e04d. Last exact Verify failed at dependency audit before its application tests; CodeQL/TypeScript passed on the recorded head. It remains proposed.
 - Do not weaken smoke assertions. First confirm canonical host/build and authorize republish, then test the exact host with GET-only checks.
+- [#355 — live SEO gap evidence](https://github.com/mattleask373-rgb/life-lived-network/pull/355) is a new docs-only draft based on current main. The report records its own ~22:12 UTC probe: `GET /robots.txt` returned 200 with generic Allow-only rules and no Sitemap directive; `GET /sitemap.xml` returned 404. Treat that as agent-reported, source-linked evidence, not independent verification by this session. It does not authorize a republish. Review it alongside #335 after Gate 0 host/build identity is confirmed.
 - Keep Life List and other private surfaces out of public sitemaps and indexable metadata.
 
 ### P0-E — Governance evidence
@@ -44,4 +45,4 @@ Owner/admin must prove deletion protection and current bypass configuration. Rul
 
 ## Merge queue policy
 
-Current GitHub snapshot: 93 open PRs (86 drafts, 7 non-drafts); 15 target main at current main SHA, 64 target main at a stale base, and 14 target other branches. Freeze new feature branches while this queue is converged. Refresh base/head, changed paths, reviews, threads, mergeability, and exact-head checks before each decision. Close or consolidate only after preserving unique fixes. No automated merge.
+Current GitHub snapshot at 22:15 UTC: 94 open PRs (88 drafts, 6 non-drafts); 16 target main at current main SHA, 64 target main at an older base, and 14 target non-main branches. Freeze new feature branches while this queue is converged. Refresh base/head, changed paths, reviews, threads, mergeability, and exact-head checks before each decision. Close or consolidate only after preserving unique fixes. No automated merge.
