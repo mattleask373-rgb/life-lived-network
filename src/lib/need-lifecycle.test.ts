@@ -41,10 +41,12 @@ describe("current public need lifecycle", () => {
   it("rejects private, closed, expired, ended and malformed freshness evidence", () => {
     expect(isCurrentlyDiscoverableNeed({ ...freshNeed, visibility: "private" }, now)).toBe(false);
     expect(isCurrentlyDiscoverableNeed({ ...freshNeed, status: "met" }, now)).toBe(false);
-    expect(isCurrentlyDiscoverableNeed({ ...freshNeed, expiresAt: "2026-10-22T23:59:59.000Z" }, now))
-      .toBe(false);
-    expect(isCurrentlyDiscoverableNeed({ ...freshNeed, endsAt: "2026-10-22T23:59:59.000Z" }, now))
-      .toBe(false);
+    expect(
+      isCurrentlyDiscoverableNeed({ ...freshNeed, expiresAt: "2026-10-22T23:59:59.000Z" }, now),
+    ).toBe(false);
+    expect(
+      isCurrentlyDiscoverableNeed({ ...freshNeed, endsAt: "2026-10-22T23:59:59.000Z" }, now),
+    ).toBe(false);
     expect(isCurrentlyDiscoverableNeed({ ...freshNeed, expiresAt: "not-a-timestamp" }, now)).toBe(
       false,
     );
@@ -70,9 +72,7 @@ describe("current public need lifecycle", () => {
         action: "withdrawn",
       }),
     ).toMatchObject({ action: "withdrawn" });
-    expect(() =>
-      needLifecycleInput.parse({ id: "not-a-uuid", action: "confirm" }),
-    ).toThrow();
+    expect(() => needLifecycleInput.parse({ id: "not-a-uuid", action: "confirm" })).toThrow();
     expect(() =>
       needLifecycleInput.parse({
         id: "7d1f0b8e-3c1a-4c55-9b0e-2a6f3e1d9c10",
