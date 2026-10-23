@@ -91,7 +91,9 @@ describe("current public need lifecycle", () => {
 
 describe("need lifecycle authorization and discovery parity", () => {
   it("filters server-side public needs by visibility, freshness, expiry and end time", () => {
-    expect(serverFunctions).toContain('.in("visibility", ["public", "local_discovery"])');
+    expect(serverFunctions).toContain(
+      '.in("visibility", data.placeId ? ["public", "local_discovery"] : ["public"])',
+    );
     expect(serverFunctions).toContain('.gt("last_confirmed_at", needFreshnessCutoff');
     expect(serverFunctions).toContain("expires_at.is.null,expires_at.gt.");
     expect(serverFunctions).toContain("ends_at.is.null,ends_at.gt.");
@@ -113,6 +115,12 @@ describe("need lifecycle authorization and discovery parity", () => {
     expect(migration).toContain("A closed need cannot be reopened");
     expect(migration).toContain("A need whose stated time window has ended cannot be reconfirmed");
     expect(migration).toContain("need_last_confirmed_at <= now() - interval '30 days'");
+  });
+
+  it("scopes the nearby Need list to the selected locality and falls back to public-only", () => {
+    expect(page).toContain('queryKey: ["needs", "open", place?.place.id ?? "public"]');
+    expect(page).toContain('openNeeds({ data: { placeId: place?.place.id ?? null } })');
+    expect(serverFunctions).toContain('.in("visibility", data.placeId ? ["public", "local_discovery"] : ["public"])');
   });
 
   it("renders owner controls and avoids linking closed or stale needs to a public matching page", () => {
