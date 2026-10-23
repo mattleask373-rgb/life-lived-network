@@ -103,6 +103,31 @@ The following PR records are closed as merged; their code/doc presence on curren
 8. Only then add/expand localization, events/tours/work provider integrations and community/social surfaces. Every feed needs rights, provenance, freshness, opt-in/publication gates and clear terms.
 9. Load/soak, backup/restore, accessibility, security and regional resilience testing before any scale claim.
 
+## Cross-repository audit — connected portfolio
+
+The connected GitHub account exposes ten repositories relevant by name or purpose. This pass checked each repository's default branch, recent commits, open PRs and recursive file tree; detailed code review is limited to the canonical app repository and the one substantive orchestration PR.
+
+| Repository | Live finding | Disposition |
+|---|---|---|
+| [life-lived-network](https://github.com/mattleask373-rgb/life-lived-network) | Current active app, 82 open PRs at audit start; only #335/#336/#338 were exact-current-main candidates. | **Canonical app for this audit**, pending owner confirmation of the deployed Git sync target. |
+| [life-lived-network2](https://github.com/mattleask373-rgb/life-lived-network2) | Public, 291 tree entries and a full older app/documentation snapshot, but only one initial commit on 9 Oct 2026, no open PRs and no subsequent updates found. | Treat as a **stale parallel copy/reference**, not a second development target, until owner confirms otherwise. Compare unique data/code before archiving or making read-only; do not copy new changes there by default. |
+| [mattleask373-rgb-life-lived-network](https://github.com/mattleask373-rgb/mattleask373-rgb-life-lived-network) | Public repository with only a README, zero-size source tree, one initial commit and no open PRs. | Empty placeholder; not a deployable app. |
+| [real-world-atlas-agent-orchestration](https://github.com/mattleask373-rgb/real-world-atlas-agent-orchestration) | Main contains only README; one open draft PR #1 adds 15 documentation/research files, no CI/checks and no application runtime. | Research/operating-model proposal only. It is **not** a working autonomous factory. Review duplicate/conflicting operating docs and calendar-based rollout language before any merge or installation. |
+| [real-world-atlas-marketing](https://github.com/mattleask373-rgb/real-world-atlas-marketing) | Main contains only README; no open PRs or implementation files. | Empty strategy placeholder; no functioning marketing automation or campaign system. |
+| [real-world-atlas-monetization](https://github.com/mattleask373-rgb/real-world-atlas-monetization) | Main contains only README; no open PRs or implementation files. | Empty strategy placeholder; no implemented billing, entitlements, pricing experiments or payment integration. |
+| [real-world-atlas-compliance](https://github.com/mattleask373-rgb/real-world-atlas-compliance) | Main contains only README; no open PRs or implementation files. | Empty strategy placeholder; no implemented compliance, moderation, privacy or safety service. |
+| [world-s-finder](https://github.com/mattleask373-rgb/world-s-finder) | Public, one README and one initial commit, no app files or open PRs. | Empty placeholder. |
+| [World-Finder](https://github.com/mattleask373-rgb/World-Finder) | Private repository; GitHub reports the repository is empty and no commits can be listed. | Empty private placeholder; no implementation audited. |
+| [Grok-redesign-app](https://github.com/mattleask373-rgb/Grok-redesign-app) | GitHub reports an empty repository/no commits; no application tree available. | Empty placeholder; no implementation audited. |
+
+### Orchestration PR #1 — do not confuse strategy with runtime
+
+[PR #1 in the orchestration repository](https://github.com/mattleask373-rgb/real-world-atlas-agent-orchestration/pull/1) proposes an AI-factory operating model, revenue experiments, open-source tool registry and research documents. Its 15 changed files are documentation/research only; the PR explicitly says no tests or CI were run. It is draft, has no check runs, and has no executable scheduler/provider/agent code on its target branch. It should not be counted as a delivered 24/7 system, revenue stream, installed toolbox or validated marketing channel. Before merging, reconcile its 30-day rollout/business portfolio documents with the canonical app's dependency-gated, no-calendar-deadline plan and obtain explicit owner approval for any installation, budget or external outreach.
+
+### Portfolio-wide conclusion
+
+Only `life-lived-network` currently has the live app source and required CI/review mechanics. The related repositories are a stale copy, empty placeholders or documentation-only proposals. The next useful action is to consolidate their unique research into the canonical programme after review, not to spread application code across empty repositories. Owner confirmation is required before archiving, privatizing, deleting or changing the intended authority of any repository.
+
 ## Human-only gates to leave until implementation is ready
 
 - Confirm repository sync target, production hostname, deployed SHA and Supabase project/environment.
