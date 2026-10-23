@@ -1,27 +1,21 @@
--- Narrow default privileges for future public objects.
+-- Narrow default privileges for future public objects created by postgres.
 --
--- This intentionally does not change grants on existing tables, sequences or
--- functions. Those require a separate reviewed inventory of app queries/RLS.
--- Apply and test through normal migrations in a disposable database first.
+-- The migration role can alter postgres-owned defaults in this local replay.
+-- It cannot alter supabase_admin's default ACL: that role remains a separate
+-- administrator-owned gate documented alongside issue #164.
+--
+-- This intentionally does not change grants on existing objects or RLS.
 
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
-  REVOKE ALL ON TABLES FROM anon, authenticated;
-ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public
   REVOKE ALL ON TABLES FROM anon, authenticated;
 
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
   REVOKE ALL ON SEQUENCES FROM anon, authenticated;
-ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public
-  REVOKE ALL ON SEQUENCES FROM anon, authenticated;
 
--- PostgreSQL's default EXECUTE grant to PUBLIC is global per creating role;
--- revoke that default globally, then remove any schema-scoped client defaults.
+-- PostgreSQL grants EXECUTE to PUBLIC on functions by default; revoke that
+-- global default for future functions created by postgres.
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres
   REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
-ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin
-  REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
 
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
-  REVOKE EXECUTE ON FUNCTIONS FROM anon, authenticated;
-ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public
   REVOKE EXECUTE ON FUNCTIONS FROM anon, authenticated;
