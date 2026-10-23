@@ -154,7 +154,13 @@ SELECT ok(
 );
 SELECT ok(
   NOT has_table_privilege('anon', 'private.locality_memberships', 'SELECT')
-  AND NOT has_table_privilege('authenticated', 'private.locality_memberships', 'SELECT'),
+  AND NOT has_table_privilege('anon', 'private.locality_memberships', 'INSERT')
+  AND NOT has_table_privilege('anon', 'private.locality_memberships', 'UPDATE')
+  AND NOT has_table_privilege('anon', 'private.locality_memberships', 'DELETE')
+  AND NOT has_table_privilege('authenticated', 'private.locality_memberships', 'SELECT')
+  AND NOT has_table_privilege('authenticated', 'private.locality_memberships', 'INSERT')
+  AND NOT has_table_privilege('authenticated', 'private.locality_memberships', 'UPDATE')
+  AND NOT has_table_privilege('authenticated', 'private.locality_memberships', 'DELETE'),
   'membership and verification records are not directly readable by client roles'
 );
 SELECT ok(
