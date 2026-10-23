@@ -10,8 +10,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 
-import { decodeCursor, pageLimit, toPage, type DiscoveryContext, type Page } from "./data/contract";
-import { asDataError } from "./data/errors";
+import {
+  decodeCursor,
+  encodeCursor,
+  pageLimit,
+  splitPageWithLookahead,
+  type DiscoveryContext,
+  type Page,
+} from "./data/contract";
+import { asDataError, DataError } from "./data/errors";
+import { localityQueryScope } from "./locality-query-scope";
+import { resolvePublicListingLifecycles } from "./public-listing-lifecycle.server";
 import { rowToEntry, type ListingRow } from "./listings";
 import { assertQueryableGeoBounds } from "./geo-bounds";
 import type { SourcePhoto, WorldEntry } from "./world-data";
@@ -52,14 +61,31 @@ async function readWorld(
     // the request itself the bottleneck; the browser only says where it is.
     let insideIds = context.placeIds ?? [];
     let insideSlugs = context.placeSlugs ?? [];
-    if (!context.bounds && context.placeId && !insideIds.length) {
+    if (!context.bounds && context.placeId) {
+      // Client descendant IDs are display/cache hints, not authoritative query scope.
+      // Always rebuild scope from the complete server index so a truncated client index
+      // cannot make a globally-wide locality appear to fit beneath the 400-ID filter cap.
       const { loadPlaceIndex } = await import("./place-index.server");
       const { descendantIdsOf } = await import("./places");
       const index = await loadPlaceIndex(supabase);
+      if (!index.byId.has(context.placeId)) {
+        throw new DataError(
+          "NOT_FOUND",
+          "Selected place ID is not present in the canonical hierarchy",
+        );
+      }
       insideIds = descendantIdsOf(index, context.placeId);
       insideSlugs = insideIds
         .map((id) => index.byId.get(id)?.slug)
         .filter((slug): slug is string => Boolean(slug));
+    }
+
+    const localityScope = context.bounds ? null : localityQueryScope(context.placeId, insideIds);
+    if (localityScope?.kind === "too-wide") {
+      throw new DataError(
+        "SCOPE_TOO_WIDE",
+        `Selected locality has ${localityScope.count} descendant IDs; the safe filter cap is ${localityScope.cap}.`,
+      );
     }
 
     let query = supabase
@@ -67,14 +93,12 @@ async function readWorld(
       .select("*")
       .eq("status", "published")
       .neq("data_quality", "expired")
-      // Something cancelled or postponed is not something to go to. The record
-      // and its provenance stay; it simply stops being an answer.
-      .eq("cancellation", "")
       // Things with a real start time come first, soonest first; everything
       // else keeps its existing most-recent-first order.
       .order("starts_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1)
+      .order("id", { ascending: true })
+      .range(offset, offset + limit)
       .abortSignal(signal);
     // The selected locality and visible map rectangle are different scopes.
     // A viewport takes precedence over place filters so panning can retrieve new
@@ -89,16 +113,10 @@ async function readWorld(
         // validated before reaching this query, so only finite numbers enter OR.
         query = query.or(`lng.gte.${bounds.minLng},lng.lte.${bounds.maxLng}`);
       }
-    } else {
-      // A very wide locality selection can name more IDs than a sensible filter.
-      // Drop the filter instead of hiding activity from an arbitrary ID slice;
-      // the bounded page limit still applies.
-      const LOCALITY_FILTER_CAP = 400;
-      if (insideIds.length && insideIds.length <= LOCALITY_FILTER_CAP) {
-        query = query.in("place_id", insideIds);
-      } else if (!insideIds.length && context.placeId) {
-        query = query.eq("place_id", context.placeId);
-      }
+    } else if (localityScope?.kind === "place-ids") {
+      query = query.in("place_id", localityScope.placeIds);
+    } else if (localityScope?.kind === "exact-place") {
+      query = query.eq("place_id", localityScope.placeId);
     }
 
     // An event that has finished is never upcoming. Anything without a start
@@ -111,7 +129,11 @@ async function readWorld(
     if (error) throw error;
     throwIfAborted(signal);
 
-    const listings = (rows ?? []) as unknown as ListingRow[];
+    // Use one sentinel row to distinguish an exactly-full final page from a page with more data.
+    // The sentinel is not processed; it becomes the first row of the next offset page.
+    const boundedRows = splitPageWithLookahead(rows ?? [], limit);
+    const listings = boundedRows.items as unknown as ListingRow[];
+    const hasMore = boundedRows.hasMore;
     // One extra query for all creators, never one per listing.
     const names = new Map<string, string>();
     const creatorIds = [
@@ -155,56 +177,66 @@ async function readWorld(
       }
     }
 
-    // Where source-derived activity came from: one query for the page, never
-    // one per card, and only the fields needed to credit and link back.
-    const provenance = new Map<string, { sourceName: string; sourceUrl: string }>();
-    const imported = listings.filter((r) => r.origin === "source" || r.origin === "confirmed");
-    if (imported.length) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: records } = await supabaseAdmin
-        .from("source_records")
-        .select("listing_id, source_id, source_url")
-        .in(
-          "listing_id",
-          imported.map((r) => r.id),
-        )
-        .abortSignal(signal);
-      throwIfAborted(signal);
-      const sourceIds = [...new Set((records ?? []).map((r) => r.source_id))];
-      const sourceNames = new Map<string, string>();
-      if (sourceIds.length) {
-        const { data: sources } = await supabaseAdmin
-          .from("sources")
-          .select("id, name, attribution")
-          .in("id", sourceIds)
-          .abortSignal(signal);
-        throwIfAborted(signal);
-        for (const source of sources ?? []) {
-          sourceNames.set(source.id, source.attribution || source.name);
-        }
+    // Use the shared bounded provenance resolver. A failed/incomplete lookup
+    // excludes imported rows while resident rows remain independently eligible.
+    const imported = listings.filter(
+      (row) => row.origin === "source" || row.origin === "confirmed",
+    );
+    const sourceLifecycle = await resolvePublicListingLifecycles(
+      imported.map((row) => row.id),
+      signal,
+    );
+    const sourceLifecycleReadFailed = sourceLifecycle.failed;
+    const sourceLifecycleDecisions = sourceLifecycle.decisions;
+
+    const worldItems: WorldEntry[] = [];
+
+    for (const row of listings) {
+      if (row.origin === "source" || row.origin === "confirmed") {
+        if (sourceLifecycleReadFailed) continue;
+
+        const decision = sourceLifecycleDecisions.get(row.id);
+        if (!decision?.eligible || !decision.sourceName || !decision.sourceUrl) continue;
+
+        // The listing-level cancellation and last-checked values can reflect a
+        // different linked source. Use the freshest eligible source observation.
+        worldItems.push(
+          rowToEntry(
+            {
+              ...row,
+              cancellation: "",
+              last_checked_at: decision.lastCheckedAt ?? null,
+              data_quality: decision.dataQualityOverride ?? row.data_quality,
+            },
+            row.creator_id ? names.get(row.creator_id) : undefined,
+            photos.get(row.id) ?? [],
+            { sourceName: decision.sourceName, sourceUrl: decision.sourceUrl },
+          ),
+        );
+        continue;
       }
-      for (const record of records ?? []) {
-        if (!record.listing_id) continue;
-        provenance.set(record.listing_id, {
-          sourceName: sourceNames.get(record.source_id) ?? "An outside source",
-          sourceUrl: record.source_url ?? "",
-        });
-      }
+
+      // Unknown origins are never silently reclassified as resident/community posts.
+      if (row.origin != null && row.origin !== "" && row.origin !== "resident") continue;
+      // Match the former query contract: only explicitly uncancelled resident rows are shown.
+      if (row.cancellation !== "") continue;
+
+      worldItems.push(
+        rowToEntry(
+          row,
+          row.creator_id ? names.get(row.creator_id) : undefined,
+          photos.get(row.id) ?? [],
+        ),
+      );
     }
 
-    throwIfAborted(signal);
-    const page = toPage(
-      listings.map((r) =>
-        rowToEntry(
-          r,
-          r.creator_id ? names.get(r.creator_id) : undefined,
-          photos.get(r.id) ?? [],
-          provenance.get(r.id),
-        ),
-      ),
-      offset,
-      limit,
-    );
+    // Cursor/pagination follows the raw bounded database window, not filtered item
+    // count. Otherwise a page with hidden/withdrawn source rows could stop early.
+    const page: Page<WorldEntry> = {
+      items: worldItems,
+      hasMore,
+      nextCursor: hasMore ? encodeCursor(offset + limit) : null,
+    };
 
     // The trial layer, only on the first page, only for the locality being
     // looked at, and only ever labelled as a demonstration. A locality with no

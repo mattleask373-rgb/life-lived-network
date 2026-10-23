@@ -22,6 +22,27 @@ export type Draft = z.infer<typeof draftSchema>;
 
 export const MAX_INPUT = 2000;
 
+/**
+ * Server-side emergency stop for paid draft generation. The kill switch is
+ * opt-in by environment value so existing deployments keep their current
+ * behaviour until an operator deliberately disables the feature.
+ */
+export function isDraftAssistDisabled(value: string | undefined): boolean {
+  return value?.trim().toLowerCase() === "true";
+}
+
+/**
+ * Validate the raw RPC payload before normalisation or AI use.
+ * The server function accepts unknown at runtime; TypeScript types alone do
+ * not stop oversized strings or unexpected fields crossing that boundary.
+ */
+export const draftInputSchema = z
+  .object({
+    text: z.string().max(MAX_INPUT),
+    hint: z.enum(DRAFT_KINDS).nullable().optional(),
+  })
+  .strict();
+
 export function cleanInput(text: string): string {
   return text.replace(/\s+/g, " ").trim().slice(0, MAX_INPUT);
 }

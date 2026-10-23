@@ -12,7 +12,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 import {
   canMove,
-  contextFromNeed,
   isOpen,
   roleFor,
   rowToMessage,
@@ -71,7 +70,6 @@ export const sendConnectionRequest = createServerFn({ method: "POST" })
       throw new Error("An offer of help goes to the person who asked.");
     }
 
-    const snapshot = contextFromNeed(need);
     const { data: row, error } = await context.supabase
       .from("connection_requests")
       .insert({
@@ -80,9 +78,6 @@ export const sendConnectionRequest = createServerFn({ method: "POST" })
         recipient_id: data.recipientId,
         direction: data.direction,
         note: (data.note ?? "").slice(0, MAX_NOTE),
-        context_title: snapshot.title,
-        context_place: snapshot.place,
-        context_when: snapshot.when,
       })
       .select("*")
       .single();
@@ -116,9 +111,17 @@ export const moveConnectionRequest = createServerFn({ method: "POST" })
       .from("connection_requests")
       .update({ status: data.status })
       .eq("id", data.id)
+      // Compare-and-set against the state we authorized above so concurrent
+      // accepts/declines/withdrawals cannot overwrite a transition that won first.
+      .eq("status", request.status)
       .select("*")
-      .single();
+      .maybeSingle();
     if (error) throw error;
+    if (!row) {
+      throw new Error(
+        "This request changed before your update could be saved. Refresh and try again.",
+      );
+    }
     return rowToRequest(row as unknown as ConnectionRequestRow);
   });
 
@@ -275,7 +278,7 @@ export const blockConnectionPerson = createServerFn({ method: "POST" })
       .from("user_blocks")
       .upsert(
         { blocker_id: context.userId, blocked_id: blockedId },
-        { onConflict: "blocker_id,blocked_id" },
+        { onConflict: "blocker_id,blocked_id", ignoreDuplicates: true },
       );
     if (blockError) throw blockError;
     return { blocked: true };

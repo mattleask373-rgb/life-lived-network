@@ -1,7 +1,8 @@
 import { publicPage } from "@/lib/seo";
+import { isDataErrorCode } from "@/lib/data/errors";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, HeartHandshake } from "lucide-react";
 import { LivingMap } from "@/components/living-map";
 import { LayerFilter } from "@/components/layer-filter";
 import { EntrySheet } from "@/components/entry-sheet";
@@ -14,10 +15,11 @@ import { ThreeHours } from "@/components/three-hours";
 import { DoSomethingToday } from "@/components/do-something-today";
 import { LayerIcon } from "@/components/layer-icon";
 import { useLifeList } from "@/hooks/use-life-list";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { fetchWorld, fetchWorldEntries } from "@/lib/listings";
 import { MAX_LIMIT } from "@/lib/data/contract";
+import { canLoadMoreViewportPages, combineViewportPages } from "@/lib/viewport-pagination";
 import { geoBoundsForViewport, isViewportQueryable, type GeoBounds } from "@/lib/geo-bounds";
 import { densityOf } from "@/lib/trust";
 import { getOpenNeeds } from "@/lib/needs.functions";
@@ -49,6 +51,7 @@ function Home() {
   const [layers, setLayers] = useState<LayerId[]>([]);
   const [mobileListOpen, setMobileListOpen] = useState(false);
   const [showAllLoaded, setShowAllLoaded] = useState(false);
+  const [showNeedsLayer, setShowNeedsLayer] = useState(true);
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle, ids } = useLifeList();
 
@@ -84,6 +87,7 @@ function Home() {
     data: world,
     isLoading: worldLoading,
     isError: worldError,
+    error: worldErrorDetails,
     refetch: refetchWorld,
   } = useQuery({
     queryKey: ["world", discoveryPlace?.id ?? null],
@@ -91,23 +95,42 @@ function Home() {
     queryFn: () => fetchWorldEntries({ placeId: discoveryPlace?.id ?? null }),
   });
   const {
-    data: viewportPage,
+    data: viewportPageData,
     isFetching: viewportFetching,
     isError: viewportError,
+    error: viewportErrorDetails,
     isRefetchError: viewportRefreshError,
+    isFetchNextPageError: viewportNextPageError,
+    isFetchingNextPage: viewportFetchingNextPage,
+    fetchNextPage: fetchNextViewportPage,
     refetch: refetchViewport,
-  } = useQuery({
+  } = useInfiniteQuery({
     queryKey: ["world-viewport", viewportBounds],
     enabled: Boolean(place && viewportBounds),
     staleTime: 15_000,
-    queryFn: ({ signal }) => {
+    initialPageParam: null as string | null,
+    queryFn: ({ signal, pageParam }) => {
       if (!viewportBounds) throw new Error("Map viewport bounds are required.");
-      return fetchWorld({ bounds: viewportBounds, limit: MAX_LIMIT }, signal);
+      return fetchWorld({ bounds: viewportBounds, limit: MAX_LIMIT, cursor: pageParam }, signal);
     },
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });
+  const viewportPage = useMemo(
+    () => (viewportPageData ? combineViewportPages(viewportPageData.pages) : undefined),
+    [viewportPageData],
+  );
+  const canLoadMoreViewport = Boolean(
+    viewportPage &&
+    canLoadMoreViewportPages(viewportPageData?.pages.length ?? 0, viewportPage.hasMore),
+  );
 
   const openNeedsFn = useServerFn(getOpenNeeds);
-  const { data: openNeeds } = useQuery({
+  const {
+    data: openNeeds,
+    isError: openNeedsError,
+    isPending: openNeedsPending,
+    refetch: refetchOpenNeeds,
+  } = useQuery({
     queryKey: ["open-needs", place?.id ?? null],
     enabled: Boolean(place),
     queryFn: () => openNeedsFn({ data: { placeId: place?.id ?? null } }),
@@ -141,7 +164,24 @@ function Home() {
   const events = useMemo(() => upcomingEvents(all), [all]);
   const groups = useMemo(() => providerGroups(all), [all]);
   const given = useMemo(() => contributions(all), [all]);
-  const needCount = openNeeds?.length ?? 0;
+  // The public read is bounded to 50 rows. At the cap, 50 is a lower bound,
+  // not an exact count; keep the UI honest rather than report a false zero/total.
+  const openNeedsAtLimit = !openNeedsError && !openNeedsPending && (openNeeds?.length ?? 0) >= 50;
+  const needCount =
+    openNeedsError || openNeedsPending || openNeedsAtLimit ? null : (openNeeds?.length ?? 0);
+  const needsStatus = openNeedsPending ? "loading" : openNeedsError ? "error" : "ready";
+  const openNeedsSummary = openNeedsPending
+    ? "checking open needs"
+    : openNeedsError
+      ? "open-needs count unavailable"
+      : openNeedsAtLimit
+        ? "50 or more open needs (bounded read)"
+        : `${needCount} ${needCount === 1 ? "open need" : "open needs"}`;
+  const needsLayerLabel = openNeedsError
+    ? "Needs unavailable"
+    : openNeedsPending
+      ? "Needs · checking"
+      : `Needs · ${openNeedsAtLimit ? "50+" : (openNeeds?.length ?? 0)}`;
   const questions = useMemo(() => localityQuestions(all, needCount), [all, needCount]);
   const quiet = Boolean(place) && !worldLoading && !loading && !worldError && all.length === 0;
   const mapPartition = useMemo(() => partitionMapList(mapEntries, view), [mapEntries, view]);
@@ -166,7 +206,7 @@ function Home() {
         " located records in view · " +
         mapPartition.unpinned.length +
         " unpinned" +
-        (viewportLoaded && viewportPage?.hasMore ? " · page full; more may exist" : "")
+        (viewportLoaded && viewportPage?.hasMore ? " · more records available" : "")
       : mapPartition.unpinned.length + " unpinned · map view preparing";
   const viewportPending = Boolean(expectedViewportBounds && !viewportMatchesView);
   const viewportRequestIsCurrent = Boolean(viewportBounds && viewportMatchesView);
@@ -174,6 +214,9 @@ function Home() {
     viewportPending ||
     (viewportRequestIsCurrent ? !viewportPage && viewportFetching : worldLoading);
   const mapError = viewportRequestIsCurrent ? viewportError && !viewportPage : worldError;
+  const worldScopeTooWide = isDataErrorCode(worldErrorDetails, "SCOPE_TOO_WIDE");
+  const viewportScopeTooWide = isDataErrorCode(viewportErrorDetails, "SCOPE_TOO_WIDE");
+  const mapScopeTooWide = viewportRequestIsCurrent ? viewportScopeTooWide : worldScopeTooWide;
   const mapRefreshError = Boolean(viewportRequestIsCurrent && viewportPage && viewportRefreshError);
   const viewportTooBroad = Boolean(view && !isViewportQueryable(view));
   const refetchMap = viewportRequestIsCurrent ? refetchViewport : refetchWorld;
@@ -195,14 +238,18 @@ function Home() {
         </p>
       ) : mapError ? (
         <p role="alert" className="text-sm text-muted-foreground">
-          We couldn't load {viewportBounds ? "records for this map view" : "what's here"}.{" "}
-          <button
-            type="button"
-            onClick={() => void refetchMap()}
-            className="focus-ink min-h-11 underline underline-offset-4"
-          >
-            Try again
-          </button>
+          {mapScopeTooWide
+            ? "This locality is too large to search at once. Choose a smaller locality to see verified records."
+            : `We couldn't load ${viewportBounds ? "records for this map view" : "what's here"}.`}
+          {!mapScopeTooWide ? (
+            <button
+              type="button"
+              onClick={() => void refetchMap()}
+              className="focus-ink min-h-11 underline underline-offset-4"
+            >
+              Try again
+            </button>
+          ) : null}
         </p>
       ) : mapEntries.length === 0 ? (
         emptyListState(mapBaseFilteredEntries.length, layers.length > 0) === "filtered-out" ? (
@@ -264,6 +311,35 @@ function Home() {
           })}
         </ul>
       )}
+      {viewportLoaded && viewportPage?.hasMore ? (
+        <div className="mt-3 space-y-2">
+          {viewportNextPageError ? (
+            <p role="alert" className="text-sm text-muted-foreground">
+              We couldn't load the next page. The records already loaded are still available.
+            </p>
+          ) : null}
+          {canLoadMoreViewport ? (
+            <button
+              type="button"
+              disabled={viewportFetchingNextPage}
+              aria-busy={viewportFetchingNextPage}
+              onClick={() => void fetchNextViewportPage()}
+              className="focus-ink min-h-11 w-full rounded-full border border-border px-4 text-sm disabled:opacity-60"
+            >
+              {viewportFetchingNextPage
+                ? "Loading more records…"
+                : viewportNextPageError
+                  ? "Retry loading more records"
+                  : "Load more records in this view"}
+            </button>
+          ) : (
+            <p role="status" className="text-sm text-muted-foreground">
+              This view has more records than the safe page limit. Zoom in to narrow the area and
+              discover more.
+            </p>
+          )}
+        </div>
+      ) : null}
     </>
   );
 
@@ -288,9 +364,11 @@ function Home() {
               ? "Checking what's recorded here…"
               : !place
                 ? "Choose a supported place to see what's recorded here."
-                : worldError
-                  ? "We couldn't check what's recorded here."
-                  : `${all.length} ${all.length === 1 ? "thing" : "things"} recorded here · ${needCount} ${needCount === 1 ? "open need" : "open needs"}`}
+                : worldScopeTooWide
+                  ? "This locality is too large to search at once. Choose a smaller locality to see verified records."
+                  : worldError
+                    ? "We couldn't check what's recorded here."
+                    : `${all.length} ${all.length === 1 ? "thing" : "things"} recorded here · ${openNeedsSummary}`}
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             {quiet ? (
@@ -333,7 +411,14 @@ function Home() {
           </Link>
         ) : null}
 
-        {place ? <LocalityQuestions questions={questions} placeName={placeName} /> : null}
+        {place ? (
+          <LocalityQuestions
+            questions={questions}
+            placeName={placeName}
+            needsStatus={needsStatus}
+            onRetryNeeds={() => void refetchOpenNeeds()}
+          />
+        ) : null}
 
         {snapshot.length ? (
           <section aria-labelledby="happening-heading" className="card-paper mt-6 p-5">
@@ -383,14 +468,42 @@ function Home() {
                       : `${mapEntries.length} things`}
             </p>
           </div>
-          <div className="mt-3">
+          <div className="mt-3 space-y-2">
             <LayerFilter active={layers} onChange={setLayers} />
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                aria-pressed={showNeedsLayer}
+                onClick={() => setShowNeedsLayer((current) => !current)}
+                className={`focus-ink inline-flex min-h-11 items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                  showNeedsLayer
+                    ? "border-transparent bg-primary text-primary-foreground"
+                    : "border-border bg-card text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <HeartHandshake aria-hidden="true" size={15} />
+                {needsLayerLabel}
+              </button>
+              {showNeedsLayer && openNeedsAtLimit ? (
+                <p role="status" className="max-w-prose text-xs text-muted-foreground">
+                  This layer is bounded to the first 50 open requests. More may exist; only requests
+                  with safe place-level coordinates can be pinned.
+                </p>
+              ) : null}
+              {showNeedsLayer && openNeedsError ? (
+                <p role="status" className="text-xs text-muted-foreground">
+                  Open requests couldn't be checked, so their pins are unavailable.
+                </p>
+              ) : null}
+            </div>
           </div>
           <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1.12fr)_minmax(20rem,0.88fr)]">
             <div className="relative min-w-0">
               <div className="h-[62vh] min-h-80 sm:h-[30rem] lg:h-[calc(100vh-17rem)] lg:min-h-[34rem] lg:max-h-[48rem]">
                 <LivingMap
                   entries={mapEntries}
+                  needs={openNeeds ?? []}
+                  showNeeds={showNeedsLayer && !openNeedsError}
                   viewBasisEntries={all}
                   activeId={open?.id}
                   onSelect={setOpen}
@@ -538,9 +651,13 @@ function Home() {
               to="/need"
               className="focus-ink rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground"
             >
-              {needCount
-                ? `${needCount} ${needCount === 1 ? "thing" : "things"} people have asked for`
-                : "Ask for something yourself"}
+              {needCount === null
+                ? needsStatus === "loading"
+                  ? "Checking open needs…"
+                  : "Couldn't verify open needs"
+                : needCount
+                  ? `${needCount} ${needCount === 1 ? "thing" : "things"} people have asked for`
+                  : "Ask for something yourself"}
             </Link>
             <Link
               to="/give"

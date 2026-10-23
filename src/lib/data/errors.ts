@@ -12,7 +12,8 @@ export type DataErrorCode =
   | "NOT_FOUND"
   | "STALE_DATA"
   | "PROVIDER_DEGRADED"
-  | "INVALID_CONTEXT";
+  | "INVALID_CONTEXT"
+  | "SCOPE_TOO_WIDE";
 
 export const DATA_ERROR_MESSAGE: Record<DataErrorCode, string> = {
   DATA_UNAVAILABLE: "We couldn't reach this just now. Try again in a moment.",
@@ -22,6 +23,7 @@ export const DATA_ERROR_MESSAGE: Record<DataErrorCode, string> = {
   STALE_DATA: "This information may be out of date.",
   PROVIDER_DEGRADED: "One of our sources is quiet right now, so this may be incomplete.",
   INVALID_CONTEXT: "Something about that request didn't make sense.",
+  SCOPE_TOO_WIDE: "This area is too large to search all at once. Choose a smaller area or zoom in.",
 };
 
 export class DataError extends Error {
@@ -49,5 +51,12 @@ export function asDataError(
 }
 
 export function isDataErrorCode(error: unknown, code: DataErrorCode): boolean {
-  return error instanceof DataError && error.code === code;
+  if (error instanceof DataError) return error.code === code;
+  if (typeof error !== "object" || error === null) return false;
+
+  const candidate = error as { code?: unknown; name?: unknown; message?: unknown };
+  return (
+    candidate.code === code ||
+    (candidate.name === "DataError" && candidate.message === DATA_ERROR_MESSAGE[code])
+  );
 }

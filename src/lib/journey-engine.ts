@@ -74,7 +74,7 @@ function pick(
   used: Set<string>,
   world: WorldEntry[],
 ): WorldEntry | undefined {
-  const pool = world.filter((e) => e.band === band && !used.has(e.id));
+  const pool = world.filter((entry) => isJourneyCandidate(entry, band, used));
   const scored = pool
     .map((e) => {
       let score = 0;
@@ -134,6 +134,13 @@ function reason(entry: WorldEntry, brief: JourneyBrief): string {
  * no demo constants: real listings, fixtures, cached or future provider records
  * all work here unchanged. An empty world honestly yields no journeys.
  */
+export function isJourneyCandidate(
+  entry: WorldEntry,
+  band: TimeBand,
+  used: ReadonlySet<string>,
+): boolean {
+  return entry.band === band && !used.has(entry.id) && entry.kind !== "service";
+}
 export function planJourney(brief: JourneyBrief, world: WorldEntry[]): Journey[] {
   const pool = world;
   return SHAPES.map((shape) => buildShape(shape, brief, pool))
@@ -155,19 +162,24 @@ export interface HoursBrief {
 
 /** "I have three hours." Returns a small handful from the supplied world. */
 export function whatIsPossible(brief: HoursBrief, world: WorldEntry[]): WorldEntry[] {
-  return world
-    .filter((e) => e.minutes > 0)
-    .filter((e) => e.minutes <= brief.minutes + 30)
-    .filter((e) => Math.max(0, e.cost) <= brief.spend)
-    .filter((e) => (brief.outdoors ? e.outdoors : true))
-    .map((e) => {
-      let score = 0;
-      if (brief.interests.length && !brief.interests.includes(e.layer)) score += 10;
-      if (e.social !== brief.social) score += 3;
-      score += Math.abs(brief.minutes - e.minutes) / 60;
-      return { e, score };
-    })
-    .sort((a, b) => a.score - b.score)
-    .slice(0, 3)
-    .map((r) => r.e);
+  return (
+    world
+      // A service listing is an offer to a potential customer, not an activity
+      // to insert into the person's own three-hour plan.
+      .filter((e) => e.kind !== "service")
+      .filter((e) => e.minutes > 0)
+      .filter((e) => e.minutes <= brief.minutes + 30)
+      .filter((e) => Math.max(0, e.cost) <= brief.spend)
+      .filter((e) => (brief.outdoors ? e.outdoors : true))
+      .map((e) => {
+        let score = 0;
+        if (brief.interests.length && !brief.interests.includes(e.layer)) score += 10;
+        if (e.social !== brief.social) score += 3;
+        score += Math.abs(brief.minutes - e.minutes) / 60;
+        return { e, score };
+      })
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 3)
+      .map((r) => r.e)
+  );
 }

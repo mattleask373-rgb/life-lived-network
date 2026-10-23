@@ -20,22 +20,29 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 
 import { AskThisPlace } from "@/components/ask-this-place";
 import { EntrySheet } from "@/components/entry-sheet";
-import { EmptyPlace } from "@/components/data-state";
+import { DataErrorState, DataLoadingState, EmptyPlace } from "@/components/data-state";
 import { LocalityQuestions } from "@/components/locality-questions";
 import { WhatsHappening } from "@/components/whats-happening";
 import { WhatsHere } from "@/components/whats-here";
+import { WorkOpportunityFacts } from "@/components/work-opportunity-facts";
 import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
+import { loadLocalityEntries } from "@/lib/locality-page-data";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
+import { getOpenNeeds } from "@/lib/needs.functions";
 import { localityPath } from "@/lib/locality-path";
 import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
 import { KIND_LABEL } from "@/lib/places";
 import { evaluateLocalityIndexability } from "@/lib/locality-indexability";
+import { breadcrumbListJsonLd, jsonLdScript } from "@/lib/structured-data";
 import { privatePage, publicPage } from "@/lib/seo";
 import { categoriesPresent } from "@/lib/service-taxonomy";
+import { hasPublicWorkOpportunity } from "@/lib/work-opportunity-presentation";
 import { filterEntriesByText, parseQuerySearch } from "@/lib/search-context";
 import {
   applyTravellerFilters,
@@ -54,27 +61,48 @@ export const Route = createFileRoute("/$country/$place/")({
     const canonical = localityPath(geography.place);
     if (canonical !== `/${params.country}/${params.place}`) throw redirect({ to: canonical });
 
-    const entries = await fetchWorldEntries({ placeId: geography.place.id, limit: 60 });
-    return { geography, entries };
+    const { entries, scopeTooWide } = await loadLocalityEntries(() =>
+      fetchWorldEntries({ placeId: geography.place.id, limit: 60 }),
+    );
+    return { geography, entries, scopeTooWide };
   },
   head: ({ loaderData }) => {
     if (!loaderData) return privatePage({ path: "", title: "Somewhere", description: "" });
-    const { geography, entries } = loaderData;
+    const { geography, entries, scopeTooWide } = loaderData;
     const name = geography.place.name;
     const wider = geography.ancestors[0]?.name;
     const label = wider ? `${name}, ${wider}` : name;
     const path = localityPath(geography.place);
     const current = entries.filter((entry) => !entry.demonstration);
     const title = `${label} — what's happening and what's here | Real World Atlas`;
-    const description = current.length
-      ? `Real things happening in ${name}, the services and practices recorded there, and what people nearby have offered or asked for.`
-      : `${name} in Real World Atlas. Nothing has been recorded here yet — add the first thing.`;
+    const description = scopeTooWide
+      ? `${name} is a larger area than can be queried in one request. Choose a smaller place to explore its records.`
+      : current.length
+        ? `Real things happening in ${name}, the services and practices recorded there, and what people nearby have offered or asked for.`
+        : `${name} in Real World Atlas. Nothing has been recorded here yet — add the first thing.`;
     // Share one fail-closed evidence policy with future sitemap generation.
-    // The page remains reachable to people even when its content is not ready for search.
+    // Over-wide areas stay navigable but must never be described as empty or indexed.
+    if (scopeTooWide) return privatePage({ path, title, description });
     const indexability = evaluateLocalityIndexability({ place: geography.place, entries });
-    return indexability.status === "INDEXABLE"
-      ? publicPage({ path, title, description })
-      : privatePage({ path, title, description });
+    if (indexability.status !== "INDEXABLE") {
+      return privatePage({ path, title, description });
+    }
+
+    return {
+      ...publicPage({ path, title, description }),
+      scripts: [
+        jsonLdScript(
+          breadcrumbListJsonLd([
+            { name: "Real World Atlas", path: "/" },
+            ...[...geography.ancestors].reverse().map((step) => ({
+              name: step.name,
+              path: localityPath(step),
+            })),
+            { name, path },
+          ]),
+        ),
+      ],
+    };
   },
   component: LocalityPage,
   errorComponent: LocalityError,
@@ -181,10 +209,21 @@ function PlaceLinks({ title, places }: { title: string; places: PlaceBrief[] }) 
 
 function LocalityPage() {
   const navigate = useNavigate();
-  const { geography, entries } = Route.useLoaderData();
+  const { geography, entries, scopeTooWide } = Route.useLoaderData();
   const { place, ancestors, children, siblings } = geography;
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle } = useLifeList();
+  const openNeedsFn = useServerFn(getOpenNeeds);
+  const openNeedsQuery = useQuery({
+    queryKey: ["open-needs", place.id],
+    queryFn: () => openNeedsFn({ data: { placeId: place.id } }),
+  });
+  const needCount = openNeedsQuery.data === undefined ? null : openNeedsQuery.data.length;
+  const needsStatus = openNeedsQuery.isError
+    ? "error"
+    : openNeedsQuery.data === undefined
+      ? "loading"
+      : "ready";
   const { q } = Route.useSearch();
   const textMatches = useMemo(() => filterEntriesByText(entries, q), [entries, q]);
   const [quickFilters, setQuickFilters] = useState<TravellerFilterId[]>([]);
@@ -197,7 +236,8 @@ function LocalityPage() {
   const groups = useMemo(() => providerGroups(filtered), [filtered]);
   const offers = useMemo(() => contributions(filtered), [filtered]);
   const categories = useMemo(() => categoriesPresent(entries), [entries]);
-  const questions = useMemo(() => localityQuestions(entries, 0), [entries]);
+  const workOpportunities = useMemo(() => entries.filter(hasPublicWorkOpportunity), [entries]);
+  const questions = useMemo(() => localityQuestions(entries, needCount), [entries, needCount]);
   const demonstrations = entries.filter((entry) => entry.demonstration).length;
 
   return (
@@ -216,7 +256,12 @@ function LocalityPage() {
           <p>
             You searched for <strong>&ldquo;{q}&rdquo;</strong> in {place.name}.
           </p>
-          {textMatches.length ? (
+          {scopeTooWide ? (
+            <p role="status" className="mt-1 text-muted-foreground">
+              Search results are hidden for this broad area to keep the results within the selected
+              place. Choose a smaller place below, then repeat your search there.
+            </p>
+          ) : textMatches.length ? (
             <>
               <p className="mt-1 text-muted-foreground">
                 {textMatches.length === 1
@@ -250,24 +295,45 @@ function LocalityPage() {
         </section>
       ) : null}
 
-      {entries.length === 0 ? (
-        <EmptyPlace
-          placeName={place.name}
-          needCount={0}
-          ancestors={ancestors.slice(0, 3)}
-          onStepOut={(slug) => {
-            const target = ancestors.find((a) => a.slug === slug);
-            if (target) {
-              void navigate({
-                to: "/$country/$place",
-                params: { country: target.countrySegment || "gb", place: target.slug },
-              });
-            }
-          }}
-        />
+      {scopeTooWide ? (
+        <section role="status" className="card-paper mt-6 p-5">
+          <h2 className="text-xl">Choose a smaller place</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            This area contains more places than one discovery request can safely cover. To avoid
+            showing results from outside this area, listings are hidden here. Choose one of the
+            smaller places below to explore its recorded activity.
+          </p>
+        </section>
+      ) : entries.length === 0 ? (
+        <>
+          {openNeedsQuery.isError && openNeedsQuery.data === undefined ? (
+            <DataErrorState className="mt-3" retry={() => void openNeedsQuery.refetch()} />
+          ) : openNeedsQuery.data === undefined ? (
+            <DataLoadingState className="mt-3" label="Checking open needs…" />
+          ) : null}
+          <EmptyPlace
+            placeName={place.name}
+            needCount={needCount}
+            ancestors={ancestors.slice(0, 3)}
+            onStepOut={(slug) => {
+              const target = ancestors.find((a) => a.slug === slug);
+              if (target) {
+                void navigate({
+                  to: "/$country/$place",
+                  params: { country: target.countrySegment || "gb", place: target.slug },
+                });
+              }
+            }}
+          />
+        </>
       ) : (
         <div className="mt-6">
-          <LocalityQuestions placeName={place.name} questions={questions} />
+          <LocalityQuestions
+            placeName={place.name}
+            questions={questions}
+            needsStatus={needsStatus}
+            onRetryNeeds={() => void openNeedsQuery.refetch()}
+          />
           <AskThisPlace placeName={place.name} />
 
           <div className="mt-6">
@@ -364,6 +430,31 @@ function LocalityPage() {
               </li>
             ))}
           </ul>
+        </section>
+      ) : null}
+
+      {workOpportunities.length ? (
+        <section className="mt-10" aria-label={`Published work opportunities in ${place.name}`}>
+          <h2 className="text-2xl">Work opportunities recorded here</h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            Only explicitly reviewed, rights-cleared records with published terms appear here. This
+            does not guarantee a place, pay, or availability.
+          </p>
+          <ul className="mt-3 grid gap-3 md:grid-cols-2">
+            {workOpportunities.slice(0, 12).map((entry) => (
+              <li className="card-paper p-4" key={entry.id}>
+                <h3 className="text-lg">{entry.title}</h3>
+                {entry.summary.trim() ? <p className="mt-1 text-sm">{entry.summary}</p> : null}
+                <WorkOpportunityFacts entry={entry} />
+              </li>
+            ))}
+          </ul>
+          {workOpportunities.length > 12 || entries.length >= 60 ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Showing up to 12 opportunities from the records currently loaded for this place; more
+              may exist.
+            </p>
+          ) : null}
         </section>
       ) : null}
 

@@ -4,6 +4,8 @@ import { buildPlaceIndex, type Place } from "./places";
 import {
   indexableLocalityPaths,
   LOCALITY_SITEMAP_LISTING_SCAN_LIMIT,
+  readBoundedSitemapPages,
+  SitemapSourceLimitError,
   type PublicListingSitemapRow,
 } from "./locality-sitemap";
 
@@ -56,8 +58,44 @@ describe("locality sitemap indexability", () => {
     expect(indexableLocalityPaths(geography, rows)).not.toContain("/gb/birmingham");
   });
 
+  it("does not backfill an ineligible raw row from after the first 60 page slots", () => {
+    const hidden = rowsFor("city", 60).map((row) => ({ ...row, publiclyEligible: false }));
+    const laterEligible = rowsFor("city", 3);
+    expect(indexableLocalityPaths(geography, [...hidden, ...laterEligible])).not.toContain(
+      "/gb/birmingham",
+    );
+  });
+
   it("fails closed when a bounded source scan may be incomplete", () => {
     expect(indexableLocalityPaths(geography, rowsFor("city", 3), { complete: false })).toEqual([]);
+  });
+
+  it("fails closed for over-wide subtrees instead of using unrelated global rows", () => {
+    const wideIndex = buildPlaceIndex([
+      place({ id: "wide", name: "Wide area", slug: "wide-area", kind: "region" }),
+      ...Array.from({ length: 400 }, (_, index) =>
+        place({
+          id: `wide-child-${index}`,
+          name: `Wide child ${index}`,
+          slug: `wide-child-${index}`,
+          kind: "town",
+          parent_id: "wide",
+        }),
+      ),
+      place({ id: "other-root", name: "Other root", slug: "other-root", kind: "region" }),
+      place({
+        id: "other-city",
+        name: "Other city",
+        slug: "other-city",
+        kind: "city",
+        parent_id: "other-root",
+      }),
+    ]);
+    const paths = indexableLocalityPaths(wideIndex, rowsFor("other-city", 3));
+
+    expect(paths).toContain("/gb/other-city");
+    expect(paths).toContain("/gb/other-root");
+    expect(paths).not.toContain("/gb/wide-area");
   });
 
   it("never builds a path from an invalid slug", () => {
@@ -67,14 +105,12 @@ describe("locality sitemap indexability", () => {
     expect(indexableLocalityPaths(invalid, rowsFor("bad", 3))).toEqual([]);
   });
 
-  it("does not emit duplicate paths for colliding slugs", () => {
-    const colliding = buildPlaceIndex([
-      place({ id: "first", name: "First", slug: "same", kind: "city" }),
-      place({ id: "second", name: "Second", slug: "same", kind: "town" }),
+  it("does not emit duplicate paths when several public records share a locality", () => {
+    const repeatedListings = [...rowsFor("city", 3), ...rowsFor("city", 3)];
+    expect(indexableLocalityPaths(geography, repeatedListings)).toEqual([
+      "/gb/birmingham",
+      "/gb/west-midlands",
     ]);
-    expect(
-      indexableLocalityPaths(colliding, [...rowsFor("first", 3), ...rowsFor("second", 3)]),
-    ).toEqual(["/gb/same"]);
   });
 
   it("does not index localities if the place hierarchy hits its hard cap", () => {
@@ -88,5 +124,59 @@ describe("locality sitemap indexability", () => {
 
   it("exports a bounded listing scan so the endpoint cannot grow without limit", () => {
     expect(LOCALITY_SITEMAP_LISTING_SCAN_LIMIT).toBe(20_000);
+  });
+});
+
+describe("bounded sitemap source paging", () => {
+  it("reads stable adjacent ranges until a short page proves the scan is complete", async () => {
+    const source = Array.from({ length: 2501 }, (_, index) => index);
+    const calls: Array<[number, number]> = [];
+    const rows = await readBoundedSitemapPages(3000, 1000, async (from, to) => {
+      calls.push([from, to]);
+      return source.slice(from, to + 1);
+    });
+
+    expect(rows).toEqual(source);
+    expect(calls).toEqual([
+      [0, 999],
+      [1000, 1999],
+      [2000, 2999],
+    ]);
+  });
+
+  it("fails closed when the scan reaches its hard cap", async () => {
+    const source = [0, 1, 2, 3, 4];
+    const calls: Array<[number, number]> = [];
+    await expect(
+      readBoundedSitemapPages(5, 2, async (from, to) => {
+        calls.push([from, to]);
+        return source.slice(from, to + 1);
+      }),
+    ).rejects.toBeInstanceOf(SitemapSourceLimitError);
+    expect(calls).toEqual([
+      [0, 1],
+      [2, 3],
+      [4, 4],
+    ]);
+  });
+
+  it("accepts a complete scan below the hard cap, including the final empty page", async () => {
+    const source = [0, 1, 2, 3];
+    const calls: Array<[number, number]> = [];
+    const rows = await readBoundedSitemapPages(5, 2, async (from, to) => {
+      calls.push([from, to]);
+      return source.slice(from, to + 1);
+    });
+    expect(rows).toEqual(source);
+    expect(calls).toEqual([
+      [0, 1],
+      [2, 3],
+      [4, 4],
+    ]);
+  });
+
+  it("rejects invalid scan bounds", async () => {
+    await expect(readBoundedSitemapPages(0, 10, async () => [])).rejects.toThrow(RangeError);
+    await expect(readBoundedSitemapPages(10, 0, async () => [])).rejects.toThrow(RangeError);
   });
 });

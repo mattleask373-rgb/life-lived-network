@@ -15,6 +15,11 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import {
+  PLACE_SCAN_LIMIT,
+  PLACE_SCAN_PAGE_SIZE,
+  readBoundedPlacePages,
+} from "./bounded-place-scan";
 
 export type PlaceKind =
   "country" | "region" | "area" | "city" | "town" | "village" | "neighbourhood";
@@ -158,13 +163,25 @@ export function fetchDefaultPlace(): Promise<ResolvedPlace | null> {
   return fetchPlaceBySlug(DEFAULT_PLACE_SLUG);
 }
 
-/** Every place someone can currently attach something to. */
+/** Every canonical place; never turn a truncated index into a selectable hierarchy. */
 export async function fetchPlaces(kinds?: PlaceKind[]): Promise<Place[]> {
-  let query = supabase.from("places").select(SELECT).order("name");
-  if (kinds?.length) query = query.in("kind", kinds);
-  const { data, error } = await query.limit(2000);
-  if (error) throw error;
-  return ((data ?? []) as unknown as PlaceRow[]).map(toPlace);
+  const rows = await readBoundedPlacePages(
+    PLACE_SCAN_LIMIT,
+    PLACE_SCAN_PAGE_SIZE,
+    async (afterId, limit) => {
+      let query = supabase
+        .from("places")
+        .select(SELECT)
+        .order("id", { ascending: true })
+        .limit(limit);
+      if (afterId !== null) query = query.gt("id", afterId);
+      if (kinds?.length) query = query.in("kind", kinds);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []) as unknown as PlaceRow[];
+    },
+  );
+  return rows.map(toPlace).sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
 }
 
 /**
@@ -191,6 +208,22 @@ export interface PlaceIndex {
   roots: Place[];
 }
 
+export type PlaceHierarchyErrorCode =
+  "DUPLICATE_ID" | "DUPLICATE_SLUG" | "MISSING_PARENT" | "CYCLE";
+
+export class PlaceHierarchyError extends Error {
+  constructor(readonly code: PlaceHierarchyErrorCode) {
+    const messages: Record<PlaceHierarchyErrorCode, string> = {
+      DUPLICATE_ID: "The canonical place hierarchy contains a duplicate place ID.",
+      DUPLICATE_SLUG: "The canonical place hierarchy contains a duplicate place slug.",
+      MISSING_PARENT: "The canonical place hierarchy contains a missing parent reference.",
+      CYCLE: "The canonical place hierarchy contains a parent cycle.",
+    };
+    super(messages[code]);
+    this.name = "PlaceHierarchyError";
+  }
+}
+
 export function buildPlaceIndex(places: Place[]): PlaceIndex {
   const byId = new Map<string, Place>();
   const bySlug = new Map<string, Place>();
@@ -198,11 +231,41 @@ export function buildPlaceIndex(places: Place[]): PlaceIndex {
   const roots: Place[] = [];
 
   for (const place of places) {
+    if (byId.has(place.id)) throw new PlaceHierarchyError("DUPLICATE_ID");
+    // The database has a unique index on slug too; never silently overwrite it.
+    if (bySlug.has(place.slug)) throw new PlaceHierarchyError("DUPLICATE_SLUG");
     byId.set(place.id, place);
     bySlug.set(place.slug, place);
   }
+
+  // A broken hierarchy must not be normalised into a plausible but incorrect
+  // set of roots: locality expansion, breadcrumbs and matching all depend on it.
   for (const place of places) {
-    if (place.parent_id && byId.has(place.parent_id)) {
+    if (place.parent_id !== null && !byId.has(place.parent_id)) {
+      throw new PlaceHierarchyError("MISSING_PARENT");
+    }
+  }
+
+  // Follow parent pointers iteratively to avoid recursion limits on deep trees.
+  // Each completed path is marked so a valid chain is only examined once.
+  const state = new Map<string, "visiting" | "done">();
+  for (const place of places) {
+    if (state.get(place.id) === "done") continue;
+    const trail: string[] = [];
+    let currentId: string | null = place.id;
+    while (currentId !== null) {
+      const currentState = state.get(currentId);
+      if (currentState === "visiting") throw new PlaceHierarchyError("CYCLE");
+      if (currentState === "done") break;
+      state.set(currentId, "visiting");
+      trail.push(currentId);
+      currentId = byId.get(currentId)!.parent_id;
+    }
+    for (const id of trail) state.set(id, "done");
+  }
+
+  for (const place of places) {
+    if (place.parent_id !== null) {
       const siblings = children.get(place.parent_id) ?? [];
       siblings.push(place);
       children.set(place.parent_id, siblings);

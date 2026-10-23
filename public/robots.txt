@@ -1,9 +1,7 @@
-User-agent: *
+# ChatGPT Search may discover eligible public Atlas content.
+# Repeat private-route rules in this specific crawler group.
+User-agent: OAI-SearchBot
 Allow: /
-
-# Personal, private and internal screens. Nothing useful for a search engine,
-# and nothing anyone else should be shown. These must stay in sync with
-# PRIVATE_PATHS in src/lib/seo.ts. robots.txt is crawler policy, not access control.
 Disallow: /auth
 Disallow: /profile
 Disallow: /conversations
@@ -16,6 +14,20 @@ Disallow: /partners
 Disallow: /partner-tracker
 Disallow: /earn
 
-# /sitemap.xml is a sitemap index. Its child sitemaps list public screens
-# locality/service pages that pass their current public-content indexability gates.
+User-agent: *
+Allow: /
+Disallow: /auth
+Disallow: /profile
+Disallow: /conversations
+Disallow: /need
+Disallow: /help
+Disallow: /moderation
+Disallow: /sources
+Disallow: /memories
+Disallow: /partners
+Disallow: /partner-tracker
+Disallow: /earn
+
+# /life-list intentionally stays crawlable so crawlers can observe its noindex metadata.
+# The sitemap index lists only pages that pass the shared public-content indexability gates.
 Sitemap: https://life-lived-network.lovable.app/sitemap.xml

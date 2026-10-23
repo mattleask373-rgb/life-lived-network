@@ -87,27 +87,55 @@ export const listReports = createServerFn({ method: "GET" })
         reports.filter((r) => r.subjectType === "connection_request").map((r) => r.subjectId),
       ),
     ];
+    const listingIds = [
+      ...new Set(reports.filter((r) => r.subjectType === "listing").map((r) => r.subjectId)),
+    ];
+    const needIds = [
+      ...new Set(reports.filter((r) => r.subjectType === "need").map((r) => r.subjectId)),
+    ];
 
-    const [{ data: profiles }, { data: requests }] = await Promise.all([
-      context.supabase.from("profiles").select("id, display_name").in("id", people),
-      requestIds.length
-        ? context.supabase
-            .from("connection_requests")
-            .select("id, context_title, context_place")
-            .in("id", requestIds)
-        : Promise.resolve({ data: [] as { id: string }[] }),
-    ]);
+    const [{ data: profiles }, { data: requests }, { data: listings }, { data: needs }] =
+      await Promise.all([
+        context.supabase.from("profiles").select("id, display_name").in("id", people),
+        requestIds.length
+          ? context.supabase
+              .from("connection_requests")
+              .select("id, context_title, context_place")
+              .in("id", requestIds)
+          : Promise.resolve({ data: [] as { id: string }[] }),
+        listingIds.length
+          ? context.supabase
+              .from("listings")
+              .select("id, title, place, neighbourhood")
+              .in("id", listingIds)
+          : Promise.resolve({
+              data: [] as { id: string; title: string; place: string; neighbourhood: string }[],
+            }),
+        needIds.length
+          ? context.supabase.from("needs").select("id, title, place_text").in("id", needIds)
+          : Promise.resolve({ data: [] as { id: string; title: string; place_text: string }[] }),
+      ]);
 
     const names = new Map((profiles ?? []).map((p) => [p.id, p.display_name as string]));
-    const contexts = new Map(
-      (requests ?? []).map((r: Record<string, unknown>) => [
-        r["id"] as string,
-        {
-          title: (r["context_title"] as string) ?? "",
-          place: (r["context_place"] as string) ?? "",
-        },
-      ]),
-    );
+    const contexts = new Map<string, { title: string; place: string }>();
+    for (const r of requests ?? []) {
+      contexts.set(r.id, {
+        title: r.context_title ?? "",
+        place: r.context_place ?? "",
+      });
+    }
+    for (const listing of listings ?? []) {
+      contexts.set(listing.id, {
+        title: listing.title ?? "",
+        place: [listing.place, listing.neighbourhood].filter(Boolean).join(" · "),
+      });
+    }
+    for (const need of needs ?? []) {
+      contexts.set(need.id, {
+        title: need.title ?? "",
+        place: need.place_text ?? "",
+      });
+    }
 
     return reports.map((report) => {
       const snapshot = contexts.get(report.subjectId);

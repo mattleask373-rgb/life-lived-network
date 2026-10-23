@@ -78,6 +78,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "theme-color", content: "#0c6b56" },
+      { name: "mobile-web-app-capable", content: "yes" },
       { title: "Real World Atlas — a real-life network" },
       {
         name: "description",
@@ -98,6 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -258,6 +261,15 @@ function MobileTabs() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    if (import.meta.env.DEV || !("serviceWorker" in navigator)) return;
+    // Install only the privacy-safe shell worker; registration failure must not
+    // interfere with the online application.
+    void navigator.serviceWorker
+      .register("/service-worker.js", { scope: "/" })
+      .catch(() => undefined);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

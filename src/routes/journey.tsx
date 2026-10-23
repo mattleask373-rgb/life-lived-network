@@ -1,4 +1,6 @@
 import { publicPage } from "@/lib/seo";
+import { FrontDoorContext } from "@/components/front-door-context";
+import { parseQuerySearch } from "@/lib/search-context";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { planJourney, type Journey } from "@/lib/journey-engine";
@@ -17,10 +19,12 @@ const description =
 
 export const Route = createFileRoute("/journey")({
   head: () => publicPage({ path: "/journey", title, description }),
+  validateSearch: parseQuerySearch,
   component: JourneyPage,
 });
 
 function JourneyPage() {
+  const { from } = Route.useSearch();
   const [days, setDays] = useState(3);
   const [budget, setBudget] = useState(30);
   const [interests, setInterests] = useState<LayerId[]>(["music", "community", "nature"]);
@@ -49,6 +53,11 @@ function JourneyPage() {
           Nothing here is invented. Every step below is something someone has actually offered where
           you are, anything unchecked is marked as such, and demonstration records say so.
         </p>
+
+        <FrontDoorContext
+          from={from}
+          guidance="Your words have not set days, budget, interests, or availability. Choose those options yourself before asking for a journey."
+        />
 
         <section className="card-paper mt-6 p-5">
           <Field label="How long">

@@ -84,6 +84,39 @@ describe("map viewport", () => {
     expect(placed.map((p) => p.entry.id)).toEqual(["in"]);
   });
 
+  it("projects both sides of the date line correctly around +180 and -180", () => {
+    const entries = [entry("east", 0, 175), entry("west", 0, -175)];
+    const eastCentred = placeEntries(entries, { lat: 0, lng: 179, spanLat: 20, spanLng: 20 });
+    expect(eastCentred.map((item) => item.entry.id)).toEqual(["east", "west"]);
+    expect(eastCentred[0]?.left).toBeCloseTo(30);
+    expect(eastCentred[1]?.left).toBeCloseTo(80);
+
+    const westCentred = placeEntries(entries, { lat: 0, lng: -179, spanLat: 20, spanLng: 20 });
+    expect(westCentred.map((item) => item.entry.id)).toEqual(["east", "west"]);
+    expect(westCentred[0]?.left).toBeCloseTo(20);
+    expect(westCentred[1]?.left).toBeCloseTo(70);
+  });
+
+  it("fits date-line points on their short arc instead of centring the map away from them", () => {
+    const fitted = fitView([entry("east", 0, 175), entry("west", 0, -175)], { lat: 0, lng: 179 });
+    expect(Math.abs(Math.abs(fitted.lng) - 180)).toBeCloseTo(0);
+    expect(fitted.spanLng).toBeLessThan(20);
+  });
+
+  it("does not render non-finite or out-of-range coordinates as pins", () => {
+    const placed = placeEntries(
+      [
+        entry("valid", 0, 0),
+        entry("nan-lat", Number.NaN, 0),
+        entry("infinite-lng", 0, Number.POSITIVE_INFINITY),
+        entry("bad-lat", 91, 0),
+        entry("bad-lng", 0, 181),
+      ],
+      { lat: 0, lng: 0, spanLat: 10, spanLng: 10 },
+    );
+    expect(placed.map((item) => item.entry.id)).toEqual(["valid"]);
+  });
+
   it("clusters overlapping pins deterministically", () => {
     const placed = placeEntries(
       [entry("a", 52.43, -1.89), entry("b", 52.4302, -1.8902), entry("c", 52.46, -1.86)],
