@@ -75,10 +75,12 @@ const users = {
 };
 const places = {
   a: { id: randomUUID(), slug: `rwa-test-a-${testTag}`, name: "Synthetic Locality A" },
+  child: { id: randomUUID(), slug: `rwa-test-child-${testTag}`, name: "Synthetic Child A1" },
   b: { id: randomUUID(), slug: `rwa-test-b-${testTag}`, name: "Synthetic Locality B" },
 };
 const needs = {
   localA: randomUUID(),
+  child: randomUUID(),
   localB: randomUUID(),
   staleA: randomUUID(),
   expiredA: randomUUID(),
@@ -245,6 +247,13 @@ async function seedFixtures() {
     await tx`
       INSERT INTO public.places (id, kind, name, slug, country_code, parent_id)
       VALUES (
+        ${places.child.id}::uuid, 'village', ${places.child.name}, ${places.child.slug}, 'GB',
+        ${places.a.id}::uuid
+      )
+    `;
+    await tx`
+      INSERT INTO public.places (id, kind, name, slug, country_code, parent_id)
+      VALUES (
         ${places.b.id}::uuid, 'city', ${places.b.name}, ${places.b.slug}, 'GB', NULL
       )
     `;
@@ -258,6 +267,8 @@ async function seedFixtures() {
          'open', 'local_discovery', ${places.a.id}::uuid, ${places.a.name}, now(), NULL, NULL),
         (${needs.localB}::uuid, ${users.owner.id}::uuid, 'practical', 'Synthetic Local B',
          'open', 'local_discovery', ${places.b.id}::uuid, ${places.b.name}, now(), NULL, NULL),
+        (${needs.child}::uuid, ${users.owner.id}::uuid, 'practical', 'Synthetic Child A1',
+         'open', 'local_discovery', ${places.child.id}::uuid, ${places.child.name}, now(), NULL, NULL),
         (${needs.staleA}::uuid, ${users.owner.id}::uuid, 'practical', 'Synthetic Stale A',
          'open', 'local_discovery', ${places.a.id}::uuid, ${places.a.name},
          now() - interval '31 days', NULL, NULL),
@@ -338,6 +349,87 @@ async function main() {
     );
     await expectZeroPlaceCount("anon count does not reveal A local rows", places.a.id, anon);
     await expectZeroPlaceCount("anon count does not reveal B local rows", places.b.id, anon);
+    await expectZeroPlaceCount("A member cannot count B locality rows", places.b.id, userA);
+
+    // Probe unfiltered collection endpoints, not only known-ID reads.
+    const anonCollection = await apiRequest("/rest/v1/needs?select=id,visibility", anon);
+    const anonRows = Array.isArray(anonCollection.json) ? anonCollection.json : [];
+    const localFixtureIds = [needs.localA, needs.child, needs.localB, needs.staleA, needs.expiredA];
+    add(
+      "anonymous unfiltered collection does not expose local fixtures",
+      anonCollection.status === 200 && localFixtureIds.every((id) => !anonRows.some((row) => row.id === id)),
+      "expected all synthetic local_discovery fixtures to be absent",
+    );
+    const aCollection = await apiRequest("/rest/v1/needs?select=id,visibility", userA);
+    const aRows = Array.isArray(aCollection.json) ? aCollection.json : [];
+    add(
+      "A unfiltered collection returns exact A place only",
+      aCollection.status === 200 &&
+        aRows.some((row) => row.id === needs.localA) &&
+        ![needs.child, needs.localB].some((id) => aRows.some((row) => row.id === id)),
+      "expected only the exact authorized place from synthetic local rows",
+    );
+
+    // PostgREST IN and OR filters must never widen the RLS decision.
+    const inQuery = new URLSearchParams({
+      select: "id,place_id,visibility",
+      place_id: "in.(" + places.a.id + "," + places.child.id + "," + places.b.id + ")",
+    });
+    const inResponse = await apiRequest("/rest/v1/needs?" + inQuery.toString(), userA);
+    const inRows = Array.isArray(inResponse.json) ? inResponse.json : [];
+    add(
+      "place_id=in cannot cross the RLS locality boundary",
+      inResponse.status === 200 &&
+        inRows.some((row) => row.id === needs.localA) &&
+        ![needs.child, needs.localB].some((id) => inRows.some((row) => row.id === id)),
+      "expected only locality A among the synthetic place-filtered rows",
+    );
+    const orQuery = new URLSearchParams({
+      select: "id,visibility",
+      or: "(visibility.eq.public,visibility.eq.local_discovery)",
+    });
+    const orResponse = await apiRequest("/rest/v1/needs?" + orQuery.toString(), userA);
+    const orRows = Array.isArray(orResponse.json) ? orResponse.json : [];
+    add(
+      "OR visibility filters cannot cross the RLS locality boundary",
+      orResponse.status === 200 &&
+        orRows.some((row) => row.id === needs.publicA) &&
+        orRows.some((row) => row.id === needs.localA) &&
+        ![needs.child, needs.localB].some((id) => orRows.some((row) => row.id === id)),
+      "expected public plus exact-place local rows only",
+    );
+
+    const headResponse = await apiRequest(needPath(needs.localB), userA, { Prefer: "count=exact" }, "HEAD");
+    const headRange = headResponse.headers.get("content-range") ?? "";
+    const slashIndex = headRange.lastIndexOf("/");
+    const headTotal = slashIndex >= 0 ? headRange.slice(slashIndex + 1) : "";
+    add(
+      "HEAD with exact count cannot reveal cross-locality row existence",
+      headResponse.status === 200 && headTotal === "0",
+      "expected a zero Content-Range total for locality B when queried by member A",
+    );
+
+    // RLS may return 204 for a filtered no-op. Read the row using the privileged
+    // local DB connection afterward to prove the attempted write changed nothing.
+    const patchResponse = await apiRequest(
+      needPath(needs.localB),
+      userA,
+      { Prefer: "return=minimal" },
+      "PATCH",
+      { title: "Unauthorized synthetic mutation" },
+    );
+    const unchanged = await sql`
+      SELECT title FROM public.needs WHERE id = ${needs.localB}::uuid
+    `;
+    add(
+      "cross-locality PATCH is a no-op",
+      patchResponse.status >= 200 &&
+        patchResponse.status < 300 &&
+        unchanged.length === 1 &&
+        unchanged[0].title === "Synthetic Local B",
+      "expected no change to locality B from a locality A member",
+    );
+    await expectZero("A parent-place membership does not grant child-place access", needs.child, userA);
 
     await expectDenied(
       "anon cannot query private membership table",
