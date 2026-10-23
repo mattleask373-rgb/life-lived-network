@@ -119,6 +119,15 @@ BEGIN
 END;
 $function$;
 
+-- Enforce report validation for direct table inserts, including PostgREST.
+DROP TRIGGER IF EXISTS guard_content_report_insert
+  ON public.content_reports;
+
+CREATE TRIGGER guard_content_report_insert
+  BEFORE INSERT ON public.content_reports
+  FOR EACH ROW
+  EXECUTE FUNCTION private.guard_content_report_insert();
+
 REVOKE ALL ON FUNCTION private.guard_content_report_insert()
   FROM PUBLIC, anon, authenticated;
 
