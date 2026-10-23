@@ -28,6 +28,35 @@ CREATE TABLE IF NOT EXISTS private.locality_memberships (
   )
 );
 
+-- If the account that verified a membership is deleted, revoke that membership
+-- in the same referential action. This keeps account deletion possible without
+-- leaving a verified row that has lost its verifier or blocking deletion through
+-- the existing verified-row CHECK constraint.
+CREATE OR REPLACE FUNCTION private.revoke_locality_membership_when_verifier_removed()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $function$
+BEGIN
+  IF OLD.status = 'verified'
+     AND OLD.verified_by IS NOT NULL
+     AND NEW.verified_by IS NULL THEN
+    NEW.status := 'revoked';
+    NEW.verified_at := NULL;
+    NEW.updated_at := pg_catalog.clock_timestamp();
+  END IF;
+  RETURN NEW;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION private.revoke_locality_membership_when_verifier_removed()
+  FROM PUBLIC, anon, authenticated, service_role;
+
+CREATE TRIGGER revoke_membership_when_verifier_removed
+  BEFORE UPDATE OF verified_by ON private.locality_memberships
+  FOR EACH ROW
+  EXECUTE FUNCTION private.revoke_locality_membership_when_verifier_removed();
+
 ALTER TABLE private.locality_memberships ENABLE ROW LEVEL SECURITY;
 
 -- Never expose membership records or verification metadata directly to client roles.
