@@ -27,8 +27,12 @@ VALUES
    '10000000-0000-4000-8000-000000000001'),
   ('10000000-0000-4000-8000-000000000003', 'city', 'Test Locality B', 'test-locality-b', 'GB', NULL);
 
-INSERT INTO public.profiles (id, place_id, discoverable)
-VALUES ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', '10000000-0000-4000-8000-000000000001', true);
+-- auth.users' on_auth_user_created trigger inserts profile rows in this migration lineage.
+-- Set the synthetic user's initial locality without colliding with that trigger-created row.
+UPDATE public.profiles
+SET place_id = '10000000-0000-4000-8000-000000000001',
+    discoverable = true
+WHERE id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 
 INSERT INTO public.needs (id, creator_id, category, title, status, visibility, place_id, place_text)
 VALUES
