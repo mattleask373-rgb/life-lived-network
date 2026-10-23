@@ -122,7 +122,12 @@ describe("service sitemap indexability", () => {
     ]);
     const cleaner = entry({ id: "other-cleaner", placeId: "other-city" });
     const rows: PublicListingSitemapRow[] = [
-      { id: cleaner.id, place_id: "other-city", demonstration: false },
+      {
+        id: cleaner.id,
+        place_id: "other-city",
+        demonstration: false,
+        publiclyEligible: true,
+      },
     ];
     const paths = indexableServicePaths(wideIndex, rows, new Map([[cleaner.id, cleaner]]));
 
