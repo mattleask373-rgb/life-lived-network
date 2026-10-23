@@ -46,6 +46,62 @@ describe("privacy-minimised measurement event contract", () => {
     ).toMatchObject({ type: "quiet_result", reason: "no_verified_results" });
   });
 
+  it("accepts need creation and lifecycle events with only coarse dimensions", () => {
+    expect(
+      parseMeasurementEvent({
+        schemaVersion: 1,
+        dayUTC,
+        type: "need_submitted",
+        countryCode: "GB",
+        intentFamily: "local_service",
+      }),
+    ).toEqual({
+      schemaVersion: 1,
+      dayUTC,
+      type: "need_submitted",
+      countryCode: "GB",
+      intentFamily: "local_service",
+    });
+
+    expect(
+      parseMeasurementEvent({
+        schemaVersion: 1,
+        dayUTC,
+        type: "need_status_changed",
+        countryCode: "AU",
+        intentFamily: "work",
+        state: "met",
+      }),
+    ).toMatchObject({ type: "need_status_changed", state: "met" });
+  });
+
+  it("rejects raw need content, visibility state and identifiers from need events", () => {
+    const base = {
+      schemaVersion: 1,
+      dayUTC,
+      type: "need_submitted",
+      countryCode: "GB",
+      intentFamily: "local_service",
+    };
+
+    for (const field of ["needId", "title", "description", "placeText", "coordinates", "userId", "visibility"]) {
+      expect(() => parseMeasurementEvent({ ...base, [field]: "not permitted" })).toThrow(
+        /unsupported fields/i,
+      );
+    }
+
+    expect(() =>
+      parseMeasurementEvent({
+        schemaVersion: 1,
+        dayUTC,
+        type: "need_status_changed",
+        countryCode: "GB",
+        intentFamily: "local_service",
+        state: "closed_by_user",
+      }),
+    ).toThrow(/invalid state/i);
+  });
+
   it("rejects raw query, account, session, target and contact fields", () => {
     const base = {
       schemaVersion: 1,
