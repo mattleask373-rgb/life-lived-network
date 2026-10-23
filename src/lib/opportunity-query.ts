@@ -11,6 +11,17 @@ export const OPPORTUNITY_PLACE_CHUNK_SIZE = 400;
 export const MAX_OPPORTUNITY_PLACE_IDS = 5_000;
 export const OPPORTUNITY_CANDIDATES_PER_CHUNK = 60;
 
+/**
+ * Return saved locality IDs that are absent from the canonical place index.
+ * A stale reference must not silently become a successful empty search.
+ */
+export function unresolvedOpportunityPlaceIds(
+  placeIds: readonly string[],
+  placesById: ReadonlyMap<string, unknown>,
+): string[] {
+  return [...new Set(placeIds)].filter((id) => !placesById.has(id));
+}
+
 export class OpportunityScopeTooWideError extends Error {
   constructor(
     readonly placeCount: number,
