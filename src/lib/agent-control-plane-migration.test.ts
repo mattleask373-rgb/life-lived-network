@@ -53,7 +53,6 @@ describe("agent control-plane migration lineage (static contract)", () => {
     expect(idempotency).toContain(
       "task_row.lease_generation IS DISTINCT FROM attempt_row.lease_generation",
     );
-
   });
 
   it("keeps client table access denied and execution RPCs service-role only", () => {
