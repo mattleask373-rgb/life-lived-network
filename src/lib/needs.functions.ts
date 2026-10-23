@@ -10,6 +10,7 @@ import { createServerFn } from "@tanstack/react-start";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { DataError } from "./data/errors";
+import { requireCompleteQueryRows } from "./needs-query-rows";
 import { canonicalizeNeedPlace, createNeedInput, needIdInput } from "./server-inputs";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -217,42 +218,58 @@ async function findSupplyForNeedWithClient(
   const scopeIds = geo.serviceScopeIds;
   const userIds = new Set<string>();
   if (localIds.length) {
-    const [{ data: locals, error: localsError }, { data: areas, error: areasError }] =
+    const [
+      { data: locals, error: localsError, count: localsCount },
+      { data: areas, error: areasError, count: areasCount },
+    ] =
       await Promise.all([
         supabase
           .from("profiles")
-          .select("id")
+          .select("id", { count: "exact" })
           .eq("discoverable", true)
           .in("place_id", localIds)
           .limit(candidateCap + 1),
         supabase
           .from("service_areas")
-          .select("user_id")
+          .select("user_id", { count: "exact" })
           .neq("relation", "travelling_through")
           .in("place_id", scopeIds)
           .limit(candidateCap + 1),
       ]);
-    if (localsError || areasError) throw new DataError("DATA_UNAVAILABLE");
-    if ((locals?.length ?? 0) > candidateCap || (areas?.length ?? 0) > candidateCap) {
-      throw new DataError(
-        "SCOPE_TOO_WIDE",
-        "Too many possible people for a complete bounded match.",
-      );
-    }
-    for (const p of locals ?? []) userIds.add(p.id);
-    for (const a of areas ?? []) userIds.add(a.user_id);
+    const localRows = requireCompleteQueryRows(
+      { data: locals, error: localsError, count: localsCount },
+      "local profile candidates",
+      candidateCap,
+    );
+    const areaRows = requireCompleteQueryRows(
+      { data: areas, error: areasError, count: areasCount },
+      "service-area candidates",
+      candidateCap,
+    );
+    for (const p of localRows) userIds.add(p.id);
+    for (const a of areaRows) userIds.add(a.user_id);
   }
 
   // Anyone either side of a block never appears to the other. If the block
   // list can't be read, show no people rather than risk showing a blocked one.
   if (userIds.size) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: blocks, error: blockError } = await supabaseAdmin
+    const {
+      data: blocks,
+      error: blockError,
+      count: blocksCount,
+    } = await supabaseAdmin
       .from("user_blocks")
-      .select("blocker_id, blocked_id")
-      .or(`blocker_id.eq.${need.creatorId},blocked_id.eq.${need.creatorId}`);
+      .select("blocker_id, blocked_id", { count: "exact" })
+      .or(`blocker_id.eq.${need.creatorId},blocked_id.eq.${need.creatorId}`)
+      .limit(1001);
+    const blockRows = requireCompleteQueryRows(
+      { data: blocks, error: blockError, count: blocksCount },
+      "blocking relationships",
+      1000,
+    );
     const { excludeBlocked } = await import("./block-filter");
-    const kept = excludeBlocked(userIds, need.creatorId, blocks, Boolean(blockError));
+    const kept = excludeBlocked(userIds, need.creatorId, blockRows, false);
     userIds.clear();
     for (const id of kept) userIds.add(id);
   }
@@ -267,54 +284,95 @@ async function findSupplyForNeedWithClient(
   if (userIds.size) {
     const ids = [...userIds];
     const [
-      { data: profiles },
-      { data: caps },
-      { data: areas },
-      { data: windows },
-      { data: prefs },
-      { data: contributions },
-      { data: journeys },
+      { data: profiles, error: profilesError, count: profilesCount },
+      { data: caps, error: capsError, count: capsCount },
+      { data: areas, error: areasError, count: areasCount },
+      { data: windows, error: windowsError, count: windowsCount },
+      { data: prefs, error: prefsError, count: prefsCount },
+      { data: contributions, error: contributionsError, count: contributionsCount },
+      { data: journeys, error: journeysError, count: journeysCount },
     ] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id, display_name, photo_url, location, place_id, wants_to_learn")
+        .select("id, display_name, photo_url, location, place_id, wants_to_learn", { count: "exact" })
         .in("id", ids)
-        .eq("discoverable", true),
-      supabase.from("person_capabilities").select("*").in("user_id", ids),
-      supabase.from("service_areas").select("*").in("user_id", ids),
-      supabase.from("availability_windows").select("*").in("user_id", ids),
+        .eq("discoverable", true)
+        .limit(1001),
+      supabase.from("person_capabilities").select("*", { count: "exact" }).in("user_id", ids).limit(1001),
+      supabase.from("service_areas").select("*", { count: "exact" }).in("user_id", ids).limit(1001),
+      supabase.from("availability_windows").select("*", { count: "exact" }).in("user_id", ids).limit(1001),
       supabase
         .from("opportunity_preferences")
-        .select("user_id, preference, earning_preference")
-        .in("user_id", ids),
+        .select("user_id, preference, earning_preference", { count: "exact" })
+        .in("user_id", ids)
+        .limit(1001),
       supabase
         .from("contribution_preferences")
-        .select("user_id, contribution, visibility")
-        .in("user_id", ids),
+        .select("user_id, contribution, visibility", { count: "exact" })
+        .in("user_id", ids)
+        .limit(1001),
       supabase
         .from("journeys")
-        .select("*, journey_places(*)")
+        .select("*, journey_places(*)", { count: "exact" })
         .in("owner_id", ids)
         .eq("visibility", "public")
         .eq("opportunity_opt_in", true)
-        .eq("status", "active"),
+        .eq("status", "active")
+        .order("id", { ascending: true })
+        .limit(1001),
     ]);
 
-    for (const profile of profiles ?? []) {
+    const profileRows = requireCompleteQueryRows(
+      { data: profiles, error: profilesError, count: profilesCount },
+      "candidate profiles",
+      1000,
+    );
+    const capabilityRows = requireCompleteQueryRows(
+      { data: caps, error: capsError, count: capsCount },
+      "candidate capabilities",
+      1000,
+    );
+    const areaRows = requireCompleteQueryRows(
+      { data: areas, error: areasError, count: areasCount },
+      "candidate service areas",
+      1000,
+    );
+    const availabilityRows = requireCompleteQueryRows(
+      { data: windows, error: windowsError, count: windowsCount },
+      "candidate availability",
+      1000,
+    );
+    const preferenceRows = requireCompleteQueryRows(
+      { data: prefs, error: prefsError, count: prefsCount },
+      "candidate preferences",
+      1000,
+    );
+    const contributionRows = requireCompleteQueryRows(
+      { data: contributions, error: contributionsError, count: contributionsCount },
+      "candidate contribution preferences",
+      1000,
+    );
+    const journeyRows = requireCompleteQueryRows(
+      { data: journeys, error: journeysError, count: journeysCount },
+      "candidate journeys",
+      1000,
+    );
+
+    for (const profile of profileRows) {
       people.push({
         id: profile.id,
         displayName: profile.display_name || "Someone here",
         placeId: profile.place_id,
         placeName: profile.location || "Nearby",
-        capabilities: ((caps ?? []) as unknown as CapabilityRow[])
+        capabilities: (capabilityRows as unknown as CapabilityRow[])
           .filter((c) => c.user_id === profile.id)
           // A capability marked private is nobody else's business.
           .filter((c) => (c.visibility || "local_discovery") !== "private")
           .map(rowToCapability),
-        serviceAreaPlaceIds: (areas ?? [])
+        serviceAreaPlaceIds: areaRows
           .filter((a) => a.user_id === profile.id && a.relation !== "travelling_through")
           .map((a) => a.place_id),
-        serviceAreas: (areas ?? [])
+        serviceAreas: areaRows
           .filter((a) => a.user_id === profile.id && a.relation !== "travelling_through")
           .map((a) => ({
             id: a.id,
@@ -326,13 +384,13 @@ async function findSupplyForNeedWithClient(
             travelWillingness: a.travel_willingness as TravelWillingness,
             visibility: a.visibility as Visibility,
           })),
-        travellingThroughPlaceIds: (areas ?? [])
+        travellingThroughPlaceIds: areaRows
           .filter((a) => a.user_id === profile.id && a.relation === "travelling_through")
           .map((a) => a.place_id),
-        availability: (windows ?? [])
+        availability: availabilityRows
           .filter((w) => w.user_id === profile.id)
           .map((w) => ({ startsAt: w.starts_at, endsAt: w.ends_at })),
-        availabilityDetails: (windows ?? [])
+        availabilityDetails: availabilityRows
           .filter((w) => w.user_id === profile.id)
           .map((w) => ({
             id: w.id,
@@ -346,17 +404,17 @@ async function findSupplyForNeedWithClient(
             expiresAt: w.expires_at,
             lastConfirmedAt: w.last_confirmed_at,
           })),
-        preferences: (prefs ?? [])
+        preferences: preferenceRows
           .filter((p) => p.user_id === profile.id)
           .map((p) => p.preference as OpportunityPreference),
         wantsToLearn: profile.wants_to_learn ?? [],
-        contributions: (contributions ?? [])
+        contributions: contributionRows
           .filter((item) => item.user_id === profile.id && item.visibility !== "private")
           .map((item) => item.contribution as ContributionKind),
-        earningPreference: ((prefs ?? []).find(
+        earningPreference: (preferenceRows.find(
           (item) => item.user_id === profile.id && item.earning_preference !== "unstated",
         )?.earning_preference ?? "unstated") as EarningPreference,
-        journeys: (journeys ?? [])
+        journeys: journeyRows
           .filter((journey) => journey.owner_id === profile.id)
           .map((journey): JourneyContext => ({
             id: journey.id,
@@ -392,20 +450,26 @@ async function findSupplyForNeedWithClient(
   // one world rather than two competing offer systems.
   let listingQuery = supabase
     .from("listings")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("status", "published")
     .neq("data_quality", "expired")
-    .limit(150);
+    .order("id", { ascending: true })
+    .limit(151);
   if (localIds.length) listingQuery = listingQuery.in("place_id", localIds);
-  const { data: listingRows } = await listingQuery;
-  const entries = ((listingRows ?? []) as unknown as ListingRow[]).map((r) => rowToEntry(r));
+  const listingResult = await listingQuery;
+  const listingRows = requireCompleteQueryRows(listingResult, "listing candidates", 150);
+  const entries = (listingRows as unknown as ListingRow[]).map((r) => rowToEntry(r));
 
-  const { data: hourRows } = await supabase
+  let hourQuery = supabase
     .from("hour_offers")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("status", "open")
-    .limit(150);
-  for (const h of hourRows ?? []) {
+    .order("id", { ascending: true })
+    .limit(151);
+  if (localIds.length) hourQuery = hourQuery.in("place_id", localIds);
+  const hourResult = await hourQuery;
+  const hourRows = requireCompleteQueryRows(hourResult, "hour-offer candidates", 150);
+  for (const h of hourRows) {
     entries.push({
       id: `hour-${h.id}`,
       placeId: h.place_id,

@@ -50,4 +50,24 @@ describe("public need-to-supply boundary", () => {
     expect(shared.includes('supabaseAdmin.from("needs")')).toBe(false);
     expect(shared.includes('supabaseAdmin.from("person_capabilities")')).toBe(false);
   });
+  it("requires exact-count bounded reads for every source used to generate a supply match", () => {
+    expect(shared).toContain("requireCompleteQueryRows");
+    expect(shared).toContain('requireCompleteQueryRows(listingResult, "listing candidates", 150)');
+    expect(shared).toContain('requireCompleteQueryRows(hourResult, "hour-offer candidates", 150)');
+    expect(shared).toContain('count: "exact"');
+    expect(shared).toContain('hourQuery = hourQuery.in("place_id", localIds)');
+    expect(shared).not.toContain("const { data: listingRows } = await listingQuery");
+    expect(shared).not.toContain("const { data: hourRows } = await supabase");
+    for (const fact of [
+      '"candidate profiles"',
+      '"candidate capabilities"',
+      '"candidate service areas"',
+      '"candidate availability"',
+      '"candidate preferences"',
+      '"candidate contribution preferences"',
+      '"candidate journeys"',
+    ]) {
+      expect(shared).toContain(fact);
+    }
+  });
 });
