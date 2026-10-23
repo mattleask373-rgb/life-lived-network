@@ -8,6 +8,8 @@ For future objects created by `postgres` in `public`, it revokes default table p
 
 The isolated local Supabase replay proved that the migration role can alter `postgres` default ACLs, but cannot alter defaults owned by `supabase_admin`. The migration therefore does **not** pretend to fix `supabase_admin` defaults. A project administrator must confirm the target project and evaluate those defaults in that project's actual ownership context. This is a separate remaining gate for issue #164.
 
+Important PostgreSQL scope detail: a schema-only revoke cannot remove a privilege inherited from a role's global default-privilege entry. Therefore, `REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC` changes the default for future functions created by `postgres` across schemas, not only `public`. Existing functions are untouched. Review this broader future-object effect alongside any migration that creates functions under a different owner before merge.
+
 ## Not changed
 
 This migration does not revoke grants on existing tables, views, columns, sequences or functions and does not change RLS. Existing-object remediation remains blocked on a verified project identity and a complete query / ACL / RLS / RPC matrix.
