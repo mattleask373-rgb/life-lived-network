@@ -60,8 +60,8 @@ The following PR records are closed as merged; their code/doc presence on curren
 ### PR #336 — bounded worker runtime core
 
 - [PR #336](https://github.com/mattleask373-rgb/life-lived-network/pull/336) adds a provider-neutral, opt-in worker-cycle core with fresh proof gates, authoritative task scope, atomic dispatch adapter contract, lease fencing, heartbeat, bounded timeout, output scrubbing and no accept/merge/deploy result states.
-- Independent review found a lease-expiry edge: the runtime previously accepted a lease that could expire before the first heartbeat. The latest head `0d954ab77b2c2539cc1eac99d5875b9f583b11e6` now requires the lease to remain valid for at least one heartbeat interval plus a 1-second margin and tests that the provider is not invoked for a too-short lease.
-- Exact-head Verify passed: [run #39951680407](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39951680407). CodeQL/dependency audit passed: [run #39951679827](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39951679827).
+- Independent review found a lease-expiry edge: the runtime previously accepted a lease that could expire before the first heartbeat. The latest head `c7f2f7ad8b1de59a3d905ffce1742ffaad8882d5` now requires the lease to remain valid for at least one heartbeat interval plus a 1-second margin, tests that the provider is not invoked for a too-short lease, and documents the adapter requirement.
+- Exact-head Verify passed: [run #39952238588](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39952238588). CodeQL/dependency audit passed: [run #39952238590](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39952238590).
 - Supabase Preview skipped. Ready for independent security review. It is not a live worker; adapter, durable scheduler/recovery, staging proof, alerts and operator pause/resume remain.
 
 ### Other PRs checked
