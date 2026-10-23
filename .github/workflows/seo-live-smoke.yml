@@ -25,4 +25,8 @@ jobs:
         with:
           bun-version: latest
       - name: Probe published origin
+        env:
+          # Optional repository variable for the owner-confirmed canonical HTTPS origin.
+          # Empty/unset keeps the script's conservative default; this does not publish or deploy.
+          SEO_SMOKE_ORIGIN: ${{ vars.SEO_SMOKE_ORIGIN }}
         run: bun scripts/seo-live-smoke.ts
