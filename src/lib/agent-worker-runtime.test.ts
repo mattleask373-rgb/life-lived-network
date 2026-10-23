@@ -310,14 +310,14 @@ describe("bounded agent worker runtime", () => {
     expect(result.reason).toContain("independent verification and human review");
   });
 
-  it("refuses to invoke the provider unless atomic dispatch returns DISPATCHED", async () => {
+  it("refuses to invoke the provider when atomic dispatch reports a replay instead of a new dispatch", async () => {
     const model = provider();
     const db = adapters({
       dispatchAtomically: vi.fn(
         async (request) =>
           ({
             ...lease(request),
-            status: "CLAIMED",
+            status: "REPLAYED",
           }) as unknown as WorkerLease,
       ),
     });
