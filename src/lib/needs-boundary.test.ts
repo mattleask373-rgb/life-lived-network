@@ -72,7 +72,9 @@ describe("public need-to-supply boundary", () => {
   });
   it("fails closed when the canonical place is missing before any supply query", () => {
     const loadIndex = shared.indexOf("const placeIndex = await loadPlaceIndex(supabase);");
-    const guard = shared.indexOf('throw new DataError("INVALID_CONTEXT", "Need has no resolvable canonical locality.");');
+    const guard = shared.indexOf(
+      'throw new DataError("INVALID_CONTEXT", "Need has no resolvable canonical locality.");',
+    );
     const firstCandidateRead = shared.indexOf('.from("profiles")');
     const listingRead = shared.indexOf('.from("listings")');
     expect(loadIndex).toBeGreaterThanOrEqual(0);
