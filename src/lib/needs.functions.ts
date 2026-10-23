@@ -27,12 +27,7 @@ import {
   type Visibility,
 } from "./capability";
 import { findOpportunitiesForPerson, type PersonOpportunity } from "./reciprocal";
-import {
-  needFreshnessCutoff,
-  rowToNeed,
-  type Need,
-  type NeedRow,
-} from "./needs";
+import { needFreshnessCutoff, rowToNeed, type Need, type NeedRow } from "./needs";
 import { rowToEntry, type ListingRow } from "./listings";
 import { findSupply, type PersonCandidate, type SupplyAnswer } from "./supply-engine";
 import { freshness } from "./capability-freshness";
@@ -118,10 +113,12 @@ export const getMyNeeds = createServerFn({ method: "GET" })
  * Let the owner reconfirm an open need or close it after the outcome is known.
  * The database update is owner-scoped and uses status=open as a compare-and-set.
  */
+type NeedLifecycleResult = { status: Need["status"]; lastConfirmedAt: string };
+
 export const updateMyNeedLifecycle = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => needLifecycleInput.parse(input))
-  .handler(async ({ data, context }): Promise<{ status: Need["status"]; lastConfirmedAt: string }> => {
+  .handler(async ({ data, context }): Promise<NeedLifecycleResult> => {
     const now = new Date();
     const nowIso = now.toISOString();
 
@@ -140,7 +137,9 @@ export const updateMyNeedLifecycle = createServerFn({ method: "POST" })
         (value) => value !== null && Date.parse(value) <= now.getTime(),
       );
       if (windowEnded) {
-        throw new Error("The stated time window has ended. Edit the dates before confirming this need again.");
+        throw new Error(
+          "The stated time window has ended. Edit the dates before confirming this need again.",
+        );
       }
 
       const { data: updated, error } = await context.supabase
@@ -152,7 +151,9 @@ export const updateMyNeedLifecycle = createServerFn({ method: "POST" })
         .select("status, last_confirmed_at")
         .maybeSingle();
       if (error) throw error;
-      if (!updated) throw new Error("That need changed before it could be confirmed. Refresh and try again.");
+      if (!updated) {
+        throw new Error("That need changed before it could be confirmed. Refresh and try again.");
+      }
       return {
         status: updated.status as Need["status"],
         lastConfirmedAt: updated.last_confirmed_at,
@@ -168,7 +169,9 @@ export const updateMyNeedLifecycle = createServerFn({ method: "POST" })
       .select("status, last_confirmed_at")
       .maybeSingle();
     if (error) throw error;
-    if (!updated) throw new Error("That need is no longer open or has already changed.");
+    if (!updated) {
+      throw new Error("That need is no longer open or has already changed.");
+    }
     return {
       status: updated.status as Need["status"],
       lastConfirmedAt: updated.last_confirmed_at,
