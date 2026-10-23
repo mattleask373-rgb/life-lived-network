@@ -7,7 +7,14 @@ import { parseNeedSearch } from "@/lib/need-prefill";
 
 import { useSession } from "@/hooks/use-session";
 import { createNeed, getMyNeeds, getOpenNeeds, updateMyNeedLifecycle } from "@/lib/needs.functions";
-import { FLEXIBILITIES, NEED_INTENTS, URGENCIES, isCurrentlyDiscoverableNeed, needTimeWindowEnded, type Need } from "@/lib/needs";
+import {
+  FLEXIBILITIES,
+  NEED_INTENTS,
+  URGENCIES,
+  isCurrentlyDiscoverableNeed,
+  needTimeWindowEnded,
+  type Need,
+} from "@/lib/needs";
 import { fetchDefaultPlace } from "@/lib/places";
 import { money } from "@/components/layer-colour";
 import { DraftHelper } from "@/components/draft-helper";
@@ -242,11 +249,14 @@ function NeedOwnerActions({ need, onChanged }: { need: Need; onChanged: () => vo
       </div>
       {mutation.isError ? (
         <p className="mt-2 text-sm text-destructive" role="alert">
-          We couldn’t update this need. It may have changed or its time window may have ended. Refresh and try again.
+          We couldn’t update this need. It may have changed or its time window may have ended.
+          Refresh and try again.
         </p>
       ) : null}
       {mutation.isPending ? (
-        <p className="mt-2 text-xs text-muted-foreground" role="status">Saving…</p>
+        <p className="mt-2 text-xs text-muted-foreground" role="status">
+          Saving…
+        </p>
       ) : null}
     </div>
   );
