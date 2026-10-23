@@ -357,7 +357,8 @@ async function main() {
     const localFixtureIds = [needs.localA, needs.child, needs.localB, needs.staleA, needs.expiredA];
     add(
       "anonymous unfiltered collection does not expose local fixtures",
-      anonCollection.status === 200 && localFixtureIds.every((id) => !anonRows.some((row) => row.id === id)),
+      anonCollection.status === 200 &&
+        localFixtureIds.every((id) => !anonRows.some((row) => row.id === id)),
       "expected all synthetic local_discovery fixtures to be absent",
     );
     const aCollection = await apiRequest("/rest/v1/needs?select=id,visibility", userA);
@@ -399,7 +400,12 @@ async function main() {
       "expected public plus exact-place local rows only",
     );
 
-    const headResponse = await apiRequest(needPath(needs.localB), userA, { Prefer: "count=exact" }, "HEAD");
+    const headResponse = await apiRequest(
+      needPath(needs.localB),
+      userA,
+      { Prefer: "count=exact" },
+      "HEAD",
+    );
     const headRange = headResponse.headers.get("content-range") ?? "";
     const slashIndex = headRange.lastIndexOf("/");
     const headTotal = slashIndex >= 0 ? headRange.slice(slashIndex + 1) : "";
@@ -429,7 +435,11 @@ async function main() {
         unchanged[0].title === "Synthetic Local B",
       "expected no change to locality B from a locality A member",
     );
-    await expectZero("A parent-place membership does not grant child-place access", needs.child, userA);
+    await expectZero(
+      "A parent-place membership does not grant child-place access",
+      needs.child,
+      userA,
+    );
 
     await expectDenied(
       "anon cannot query private membership table",
