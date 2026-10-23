@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(16);
+SELECT plan(18);
 
 -- All fixture rows are synthetic, and the transaction rolls back every change.
 INSERT INTO auth.users (
@@ -219,6 +219,39 @@ SELECT ok(
   has_table_privilege('service_role', 'private.locality_memberships', 'SELECT')
   AND has_table_privilege('service_role', 'private.locality_memberships', 'INSERT'),
   'service role retains controlled membership administration access'
+);
+
+-- Deleting the account that verified membership revokes those grants instead
+-- of blocking deletion or leaving an active membership without a verifier.
+DELETE FROM auth.users
+WHERE id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+
+SELECT is(
+  (SELECT count(*) FROM private.locality_memberships
+   WHERE user_id IN (
+     'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+     'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+     'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+   )
+     AND status = 'revoked'
+     AND verified_by IS NULL
+     AND verified_at IS NULL),
+  3::bigint,
+  'deleting a verifier revokes all memberships they verified'
+);
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', true);
+INSERT INTO pg_temp.locality_probe_results
+SELECT 'user_a_after_verifier_deletion', count(*)::integer
+FROM public.needs
+WHERE visibility = 'local_discovery';
+RESET ROLE;
+
+SELECT is(
+  (SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_a_after_verifier_deletion'),
+  0,
+  'a membership loses access as soon as its verifier account is deleted'
 );
 
 SELECT * FROM finish();
