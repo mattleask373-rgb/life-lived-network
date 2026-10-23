@@ -135,6 +135,23 @@ describe("place hierarchy integrity", () => {
     }
   });
 
+  it("rejects duplicate canonical slugs instead of silently overwriting the index", () => {
+    expect(() =>
+      buildPlaceIndex([
+        place({ id: "one", name: "First", slug: "same-slug", kind: "city" }),
+        place({ id: "two", name: "Second", slug: "same-slug", kind: "town" }),
+      ]),
+    ).toThrow(PlaceHierarchyError);
+    try {
+      buildPlaceIndex([
+        place({ id: "one", name: "First", slug: "same-slug", kind: "city" }),
+        place({ id: "two", name: "Second", slug: "same-slug", kind: "town" }),
+      ]);
+    } catch (error) {
+      expect(error).toMatchObject({ code: "DUPLICATE_SLUG" });
+    }
+  });
+
   it("rejects a missing parent rather than silently treating the child as a root", () => {
     expect(() =>
       buildPlaceIndex([
