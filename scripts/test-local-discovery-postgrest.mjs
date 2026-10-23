@@ -622,14 +622,6 @@ async function main() {
       }
     }
 
-    const factActors = [
-      { name: "anonymous", token: anon },
-      { name: "locality A member", token: userA },
-      { name: "locality B member", token: userB },
-      { name: "child locality member", token: userChild },
-      { name: "profile-only no-grant user", token: userNoGrant },
-      { name: "fact owner", token: jwtFor(users.owner.id) },
-    ];
     for (const group of factTables) {
       const facts = group.ids;
       await expectOneFact("anon reads explicit public " + group.table, group.table, facts.publicA, anon, "public");
