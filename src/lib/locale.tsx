@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 export const SUPPORTED_LOCALES = ["en", "pt", "es", "ja"] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];

@@ -14,7 +14,14 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { WorldProvider } from "../lib/world-context";
 import { useSession } from "../hooks/use-session";
-import { LocaleProvider, LOCALE_LABELS, SUPPORTED_LOCALES, isLocale, useLocale, type TranslationKey } from "../lib/locale";
+import {
+  LocaleProvider,
+  LOCALE_LABELS,
+  SUPPORTED_LOCALES,
+  isLocale,
+  useLocale,
+  type TranslationKey,
+} from "../lib/locale";
 import { CompassMark } from "../components/compass-mark";
 import { Compass, Search, Route as RouteIcon, User } from "lucide-react";
 
@@ -185,7 +192,10 @@ function SiteHeader() {
   }));
   return (
     <header className="border-b border-border bg-card/80 backdrop-blur-sm">
-      <nav aria-label={t("nav.main")} className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6">
+      <nav
+        aria-label={t("nav.main")}
+        className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6"
+      >
         <div className="flex items-baseline justify-between gap-4">
           <Link to="/" className="focus-ink flex min-w-0 items-center gap-2 rounded-md">
             <CompassMark className="h-8 w-8 shrink-0" />
@@ -197,7 +207,9 @@ function SiteHeader() {
             </span>
           </Link>
           <div className="flex shrink-0 items-center gap-2">
-            <label className="sr-only" htmlFor="atlas-language">{t("language.label")}</label>
+            <label className="sr-only" htmlFor="atlas-language">
+              {t("language.label")}
+            </label>
             <select
               id="atlas-language"
               aria-label={t("language.label")}
@@ -208,7 +220,9 @@ function SiteHeader() {
               className="focus-ink min-h-11 max-w-28 rounded-lg border border-border bg-background px-2 text-xs text-foreground"
             >
               {SUPPORTED_LOCALES.map((supported) => (
-                <option key={supported} value={supported}>{LOCALE_LABELS[supported]}</option>
+                <option key={supported} value={supported}>
+                  {LOCALE_LABELS[supported]}
+                </option>
               ))}
             </select>
             <Link
@@ -234,16 +248,18 @@ function SiteHeader() {
           ))}
         </div>
         <div className="flex items-center gap-4 overflow-x-auto whitespace-nowrap text-xs text-muted-foreground">
-          {doors.flatMap((door) => door.under).map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              activeProps={{ className: "text-foreground" }}
-              className="hover:text-foreground"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {doors
+            .flatMap((door) => door.under)
+            .map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                activeProps={{ className: "text-foreground" }}
+                className="hover:text-foreground"
+              >
+                {link.label}
+              </Link>
+            ))}
         </div>
       </nav>
     </header>
