@@ -68,7 +68,7 @@ FROM public.needs
 WHERE visibility = 'local_discovery';
 RESET ROLE;
 
--- Locality A membership includes its child village, not sibling locality B.
+-- Each membership authorizes its exact place only; parent/child inheritance is denied by default.
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', true);
 INSERT INTO pg_temp.locality_probe_results
