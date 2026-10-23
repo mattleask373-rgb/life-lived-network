@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { ticketmasterAdapter, ticketmasterQuery } from "./ticketmaster";
+import {
+  ticketmasterAdapter,
+  ticketmasterGeoHash,
+  ticketmasterQuery,
+  TICKETMASTER_GEOHASH_PRECISION,
+} from "./ticketmaster";
 import { adapterFor } from "./registry";
 import { normaliseEvent, plainText, safeUrl, usableImages } from "./normalise";
 import { cancellationFor, discoverable, eventFreshness, qualityFor } from "./freshness";
@@ -146,7 +151,8 @@ describe("the same adapter for every locality", () => {
       endsBefore: "2099-01-15T00:00:00Z",
     });
     expect(params.get("countryCode")).toBe(locality.countryCode);
-    expect(params.get("latlong")).toBe(`${locality.lat.toFixed(4)},${locality.lng.toFixed(4)}`);
+    expect(params.get("geoPoint")).toBe(ticketmasterGeoHash(locality.lat, locality.lng));
+    expect(params.get("geoPoint")).toBeNull();
     expect(params.get("radius")).toBe("20");
     expect(params.get("unit")).toBe("km");
   });
@@ -218,6 +224,25 @@ describe("Ticketmaster query numeric bounds", () => {
     endsBefore: "2099-01-02T00:00:00Z",
   };
 
+  it("encodes the standard known geohash vector at the chosen precision", () => {
+    expect(TICKETMASTER_GEOHASH_PRECISION).toBe(5);
+    expect(ticketmasterGeoHash(42.6, -5.6)).toBe("ezs42");
+  });
+
+  it("uses deterministic five-character cells for the representative localities and high latitudes", () => {
+    expect(ticketmasterGeoHash(52.48, -1.9)).toBe("gcqds");
+    expect(ticketmasterGeoHash(53.35, -6.26)).toBe("gc7x9");
+    expect(ticketmasterGeoHash(-33.8688, 151.2093)).toBe("r3gx2");
+    expect(ticketmasterGeoHash(69.6492, 18.9553)).toBe("ukmkp");
+    expect(ticketmasterGeoHash(48, 7.5)).toBe("u0t34");
+  });
+
+  it("rejects an invalid geohash precision without silently changing it", () => {
+    expect(() => ticketmasterGeoHash(0, 0, 0)).toThrow(RangeError);
+    expect(() => ticketmasterGeoHash(0, 0, 13)).toThrow(RangeError);
+    expect(() => ticketmasterGeoHash(0, 0, 1.5)).toThrow(RangeError);
+  });
+
   it("keeps pagination finite, integral, and within bounds", () => {
     expect(
       ticketmasterQuery({
@@ -240,7 +265,7 @@ describe("Ticketmaster query numeric bounds", () => {
       [Number.POSITIVE_INFINITY, 0],
     ]) {
       const params = ticketmasterQuery({ ...validWindow, lat, lng });
-      expect(params.get("latlong")).toBeNull();
+      expect(params.get("geoPoint")).toBeNull();
       expect(params.get("radius")).toBeNull();
       expect(params.get("unit")).toBeNull();
     }
