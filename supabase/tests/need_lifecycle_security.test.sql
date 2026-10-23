@@ -1,6 +1,6 @@
 begin;
 
-select plan(14);
+select plan(17);
 
 -- Runtime authorization fixtures. All rows/users are rolled back at the end.
 -- Use distinct fixed UUIDs so the test remains deterministic.
@@ -23,7 +23,9 @@ insert into public.needs (
   ('55555555-5555-4555-8555-555555555555', 'aaaa0000-0000-4000-8000-000000000001',
    'practical', 'Private need', 'open', 'private', now(), null, null, 'Bristol'),
   ('66666666-6666-4666-8666-666666666666', 'aaaa0000-0000-4000-8000-000000000001',
-   'practical', 'Closed public need', 'met', 'public', now(), null, null, 'Bristol');
+   'practical', 'Closed public need', 'met', 'public', now(), null, null, 'Bristol'),
+  ('77777777-7777-4777-8777-777777777777', 'aaaa0000-0000-4000-8000-000000000001',
+   'practical', 'Local-only discovery need', 'open', 'local_discovery', now(), null, null, 'Bristol');
 
 CREATE TEMP TABLE lifecycle_probe_results (
   name text PRIMARY KEY,
@@ -234,15 +236,27 @@ where id in (
   '33333333-3333-4333-8333-333333333333',
   '44444444-4444-4444-8444-444444444444',
   '55555555-5555-4555-8555-555555555555',
-  '66666666-6666-4666-8666-666666666666'
+  '66666666-6666-4666-8666-666666666666',
+  '77777777-7777-4777-8777-777777777777'
 );
+
+insert into pg_temp.lifecycle_probe_results(name, affected_rows)
+select 'anonymous_local_visible', count(*)
+from public.needs
+where id = '77777777-7777-4777-8777-777777777777';
 
 reset role;
 
 select is(
   (select affected_rows from pg_temp.lifecycle_probe_results where name = 'anonymous_visible'),
   1::bigint,
-  'anonymous discovery returns only the fresh, open, public test need'
+  'anonymous discovery still returns the fresh, open, globally public test need'
+);
+
+select is(
+  (select affected_rows from pg_temp.lifecycle_probe_results where name = 'anonymous_local_visible'),
+  0::bigint,
+  'anonymous role cannot enumerate a fresh local-discovery Need'
 );
 
 set local role authenticated;
@@ -281,6 +295,30 @@ select is(
      from pg_temp.lifecycle_probe_results where name = 'stale_connection'),
   '42501:That need is not available for a connection request',
   'stale demand cannot receive a direct connection request'
+);
+
+select ok(
+  (
+    select p.prosecdef
+    from pg_proc AS p
+    where p.oid = to_regprocedure('private.guard_connection_request_insert()')
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM pg_trigger t
+    WHERE t.tgrelid = 'public.connection_requests'::regclass
+      AND t.tgname = 'connection_requests_guard_insert'
+      AND NOT t.tgisinternal
+  ),
+  'connection insert validation uses the private SECURITY DEFINER trigger only'
+);
+
+select ok(
+  (
+    select p.prosecdef
+    from pg_proc AS p
+    where p.oid = to_regprocedure('private.guard_content_report_insert()')
+  ),
+  'report trigger remains able to validate scoped local-discovery rows without broad anonymous SELECT'
 );
 
 select * from finish();

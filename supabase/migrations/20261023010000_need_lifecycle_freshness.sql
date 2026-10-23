@@ -12,7 +12,7 @@ DROP POLICY IF EXISTS "Current public needs are readable by anyone" ON public.ne
 CREATE POLICY "Current public needs are readable by anyone"
   ON public.needs FOR SELECT
   USING (
-    visibility IN ('public', 'local_discovery')
+    visibility = 'public'
     AND status = 'open'
     AND (expires_at IS NULL OR expires_at > now())
     AND (ends_at IS NULL OR ends_at > now())
@@ -87,6 +87,7 @@ CREATE TRIGGER needs_lifecycle_update_guard
 CREATE OR REPLACE FUNCTION private.guard_connection_request_insert()
 RETURNS trigger
 LANGUAGE plpgsql
+SECURITY DEFINER
 SET search_path = ''
 AS $function$
 DECLARE
@@ -102,7 +103,8 @@ DECLARE
   need_last_confirmed_at timestamptz;
   need_visibility text;
 BEGIN
-  IF current_user IN ('postgres', 'service_role', 'supabase_admin') THEN
+  IF auth.role() = 'service_role'
+     OR (actor IS NULL AND session_user IN ('postgres', 'supabase_admin')) THEN
     RETURN NEW;
   END IF;
 
@@ -161,4 +163,127 @@ END;
 $function$;
 
 REVOKE ALL ON FUNCTION private.guard_connection_request_insert()
+  FROM PUBLIC, anon, authenticated;
+
+-- The later public-schema trigger queries Needs as the caller and cannot
+-- validate local-discovery rows after anonymous RLS is narrowed. Keep the
+-- private SECURITY DEFINER trigger as the one insert validator.
+DROP TRIGGER IF EXISTS connection_requests_guard_insert ON public.connection_requests;
+REVOKE ALL ON FUNCTION public.guard_connection_request_insert()
+  FROM PUBLIC, anon, authenticated;
+
+
+-- The existing report trigger validates locality-scoped Needs. It needs a
+-- restricted definer boundary rather than broad anonymous SELECT to the table.
+CREATE OR REPLACE FUNCTION private.guard_content_report_insert()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  actor uuid := auth.uid();
+  request_sender uuid;
+  request_recipient uuid;
+  expected_reported_user uuid;
+BEGIN
+  IF auth.role() = 'service_role'
+     OR (actor IS NULL AND session_user IN ('postgres', 'supabase_admin')) THEN
+    RETURN NEW;
+  END IF;
+
+  IF actor IS NULL OR NEW.reporter_id IS DISTINCT FROM actor THEN
+    RAISE EXCEPTION 'A report must be filed by the authenticated account'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF NEW.subject_type = 'connection_request' THEN
+    SELECT r.sender_id, r.recipient_id
+      INTO request_sender, request_recipient
+      FROM public.connection_requests AS r
+     WHERE r.id = NEW.subject_id;
+
+    -- A missing, hidden, blocked or unrelated request is unavailable.
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'That conversation is not available for reporting'
+        USING ERRCODE = '42501';
+    END IF;
+
+    IF actor = request_sender THEN
+      expected_reported_user := request_recipient;
+    ELSIF actor = request_recipient THEN
+      expected_reported_user := request_sender;
+    ELSE
+      RAISE EXCEPTION 'Only a conversation participant may report it'
+        USING ERRCODE = '42501';
+    END IF;
+
+  ELSIF NEW.subject_type = 'listing' THEN
+    -- Caller-visible public read policy decides if this record can be reported.
+    SELECT l.creator_id
+      INTO expected_reported_user
+      FROM public.listings AS l
+     WHERE l.id = NEW.subject_id
+       AND l.status = 'published';
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'That public listing is not available for reporting'
+        USING ERRCODE = '42501';
+    END IF;
+
+  ELSIF NEW.subject_type = 'need' THEN
+    SELECT n.creator_id
+      INTO expected_reported_user
+      FROM public.needs AS n
+     WHERE n.id = NEW.subject_id
+       AND n.status = 'open'
+       AND n.visibility IN ('public', 'local_discovery');
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'That public need is not available for reporting'
+        USING ERRCODE = '42501';
+    END IF;
+
+  ELSIF NEW.subject_type = 'profile' THEN
+    SELECT p.id
+      INTO expected_reported_user
+      FROM public.profiles AS p
+     WHERE p.id = NEW.subject_id
+       AND p.discoverable IS TRUE;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'That discoverable profile is not available for reporting'
+        USING ERRCODE = '42501';
+    END IF;
+
+  ELSE
+    RAISE EXCEPTION 'This report subject type is not available through the client API'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF expected_reported_user IS NOT NULL AND expected_reported_user = actor THEN
+    RAISE EXCEPTION 'You cannot report your own content'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF NEW.reported_user_id IS DISTINCT FROM expected_reported_user THEN
+    RAISE EXCEPTION 'The report target must match the actual public subject'
+      USING ERRCODE = '42501';
+  END IF;
+
+  -- Reporting is a request for review, never a verdict or public reputation score.
+  NEW.note := left(COALESCE(NEW.note, ''), 1000);
+  NEW.status := 'submitted';
+
+  RETURN NEW;
+END;
+$function$;
+
+-- The earlier 20261012174000_harden_connection_request_updates.sql migration
+-- already attached content_reports_insert_guard to this function. Replacing
+-- the function body above updates that existing trigger; do not add a second
+-- BEFORE INSERT trigger or every report would be validated twice.
+
+
+REVOKE ALL ON FUNCTION private.guard_content_report_insert()
   FROM PUBLIC, anon, authenticated;
