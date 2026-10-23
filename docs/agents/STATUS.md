@@ -3,7 +3,7 @@
 **Status source:** fresh read-only checks against GitHub, Lovable metadata, Supabase project listings, current-main CI and public GET responses.  
 **Canonical repository:** `mattleask373-rgb/life-lived-network`  
 **Current `main`:** `a3e57da647144fdd298590adc0e1e36269a979fd`  
-**Last checked:** 2026-10-23, approximately 08:57 UTC. Re-fetch live values before acting; this is a dated checkpoint, not a permanent source of truth.
+**Last checked:** 2026-10-23, approximately 09:02 UTC. Re-fetch live values before acting; this is a dated checkpoint, not a permanent source of truth.
 
 ## Executive summary
 
@@ -42,7 +42,7 @@ Issue [#164](https://github.com/mattleask373-rgb/life-lived-network/issues/164) 
 
 ### PHP runtime exposure
 
-The indexed current-main tree contains no PHP source, Composer manifests or PHP/Apache/PHP-FPM runtime configuration paths. Therefore no repository-local PHP runtime/dependency exposure was found. The actual hosting/container/adjacent-service runtime remains unknown. PHP announced critical RCE CVEs CVE-2026-109618 and CVE-2026-109619 on 2026-10-21; host inventory must be checked and affected PHP runtimes upgraded to fixed supported releases if present. Do not call the entire deployment PHP-safe without runtime evidence.
+The indexed current-main tree contains no PHP source, Composer manifests or PHP/Apache/PHP-FPM runtime configuration paths. Therefore no repository-local PHP runtime/dependency exposure was found. The actual hosting/container/adjacent-service runtime remains unknown. PHP announced critical RCE CVEs CVE-2026-109618 and CVE-2026-109619 on 2026-10-21 ([official PHP bulletin](https://news-web.php.net/php.announce/512)); host inventory must be checked and affected PHP runtimes upgraded to fixed supported releases if present. Do not call the entire deployment PHP-safe without runtime evidence.
 
 ### Live public-route/SEO mismatch
 
@@ -51,11 +51,11 @@ Safe GETs on the observed candidate host `https://life-lived-network.lovable.app
 - `/sitemap.xml`: HTTP 404 HTML.
 - `/life-list`: HTTP 200 and “Only you see this”, without visible noindex metadata in the fetched HTML.
 
-Current source `public/robots.txt` contains private-route rules and a sitemap directive, while route code marks Life List private/noindex. The exact canonical production hostname/build is still unverified. Record this as a deployment/source-parity blocker, not proof of private-data leakage. Robots/noindex is not access control.
+Current source `public/robots.txt` contains private-route rules and a sitemap directive, while route code marks Life List private/noindex. The scheduled [Public SEO Smoke run #1](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39774993859) failed 17 checks on 2026-10-22 at older source SHA `a99d09f1517523a7a388245ca6b3d5c1245816cb`, including the sitemap 404 and missing robots directives; fresh read-only GETs on 2026-10-23 reproduced the key mismatch on the observed candidate host. The exact canonical production hostname/build is still unverified. Record this as a deployment/source-parity blocker, not proof of private-data leakage. Robots/noindex is not access control.
 
 ### AI spend and public AI
 
-The merged #316 adds durable per-account quotas (5/hour, 20/day) and fails closed when quota evidence is unavailable. Draft PR [#331](https://github.com/mattleask373-rgb/life-lived-network/pull/331) now adds SQL boundary tests, asserts the quota SECURITY DEFINER function uses `search_path=pg_catalog`, and proposes making high/critical locked dependency audit part of required Verify. Exact-head checks for its latest commit are pending after branch serialization/cancelled earlier attempts; do not describe the current head as green until fresh checks finish.
+The merged #316 adds durable per-account quotas (5/hour, 20/day) and fails closed when quota evidence is unavailable. Draft PR [#331](https://github.com/mattleask373-rgb/life-lived-network/pull/331), current head `a117d8fef0714153b6617a2232f224c32820b6d4`, adds seven SQL security assertions, hardens the quota SECURITY DEFINER function to `search_path=pg_catalog`, and places `bun audit --audit-level=high` inside required Verify. Exact-head [Verify #39928329417](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39928329417) and [CodeQL/dependency audit #39928329589](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39928329589) passed: 722 Vitest tests passed (3 skipped), the clean migration replay and SQL tests passed, and no k6 traffic was generated. Independent review remains outstanding; keep it draft and do not apply the migration to hosted Supabase.
 
 Public “Ask this place” remains disabled. A feature-specific emergency stop and account quota are not a system-wide provider spend cap, budget-alert service, distributed kill switch or persistent worker.
 
@@ -64,7 +64,7 @@ Public “Ask this place” remains disabled. A feature-specific emergency stop 
 Last fresh PR-filter read returned 84 open PRs, all drafts, zero open non-drafts and 139 closed PRs. Re-fetch before making decisions; old branch statuses are not reliable.
 
 - [#270 — read-only hourly repository-contract probe](https://github.com/mattleask373-rgb/life-lived-network/pull/270): refreshed on current main, head `d285fe6c642228926b9aa50b47d1eef01fcd6620`, 3 commits ahead / 0 behind. Exact-head Verify and CodeQL/dependency audit passed. It validates documented contracts and records an Actions-summary timestamp/run link only; it does not access Supabase, claim tasks or prove a durable agent heartbeat. Still draft, no review.
-- [#331 — AI quota security hardening](https://github.com/mattleask373-rgb/life-lived-network/pull/331): current head `a117d8fef0714153b6617a2232f224c32820b6d4`, 5 commits ahead / 0 behind. New Verify run is queued/waiting due serialization and CodeQL analysis is running; dependency audit passed on that run. Keep blocked until exact-head checks finish and independent review is submitted.
+- [#331 — AI quota security hardening](https://github.com/mattleask373-rgb/life-lived-network/pull/331): current head `a117d8fef0714153b6617a2232f224c32820b6d4`, 5 commits ahead / 0 behind. Exact-head Verify, empty-database migration replay, the 7-assertion quota SQL test, database lint and CodeQL/dependency audit pass. Still draft with no independent review; keep it unmerged until review and the #164 ACL boundary are reconciled.
 - [#333 — adversarial supply evaluation](https://github.com/mattleask373-rgb/life-lived-network/pull/333): exact-head Verify and CodeQL passed on its observed head. The tests protect the invariant that residence/capability does not prove willingness, availability or service coverage. No independent review.
 - [#332 — opportunity-query completeness](https://github.com/mattleask373-rgb/life-lived-network/pull/332): exact-head Verify/CodeQL passed on its observed head. Review alongside #330 because both touch `src/lib/needs.functions.ts`.
 - [#329 — future public default privileges](https://github.com/mattleask373-rgb/life-lived-network/pull/329): exact-head Verify/CodeQL passed on its observed head, but scope is partial as stated above. Must be reconciled with #164.
@@ -92,7 +92,7 @@ The three enabled ChatGPT automations are daily coordination/build loops, not an
 ## Dependency-ordered next actions
 
 1. Owner/admin: confirm Lovable Git repository + protected non-main sync branch, canonical hostname/build SHA, actual Supabase project ref and disposable environment. Reconcile repo ref mismatch before hosted tests or Lovable writes.
-2. Finish exact-head checks for #331; keep it draft until green, reviewed and reconciled with #164.
+2. Obtain independent review for #331 and reconcile it with #164; all current-head checks pass, but no review is recorded and no hosted migration is authorized.
 3. Obtain independent reviews on current-main candidates #333/#332/#329/#334; resolve #330 shared-file and RLS semantics before any merge.
 4. Have a repository admin confirm deletion protection and bypass configuration in the raw ruleset. Do not change rulesets using this automation.
 5. Diagnose public SEO GET mismatch only after canonical host/build is confirmed; deployment/publish remains owner-gated.
