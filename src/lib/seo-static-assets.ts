@@ -23,7 +23,11 @@ export function validatePublicSiteOrigin(value?: string): string {
     parsed.password ||
     (parsed.pathname !== "/" && parsed.pathname !== "") ||
     parsed.search ||
-    parsed.hash
+    parsed.hash ||
+    // URL.search/hash are empty for a trailing bare "?" or "#"; reject those
+    // delimiters in the original input as well so the origin contract is strict.
+    candidate.includes("?") ||
+    candidate.includes("#")
   ) {
     throw new Error(
       "VITE_SITE_ORIGIN must be an HTTPS origin without credentials, path, query or fragment.",

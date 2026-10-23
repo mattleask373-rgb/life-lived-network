@@ -38,6 +38,8 @@ describe("generated static crawler assets", () => {
       "https://atlas.example/app",
       "https://atlas.example?campaign=1",
       "https://atlas.example#section",
+      "https://atlas.example?",
+      "https://atlas.example#",
       "not-a-url",
     ]) {
       expect(() => validatePublicSiteOrigin(invalid)).toThrow();
