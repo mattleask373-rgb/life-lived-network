@@ -19,8 +19,8 @@ export interface PublicListingSitemapRow {
   id: string;
   place_id: string | null;
   demonstration: boolean | null;
-  /** False when canonical public-discovery policy excludes this raw row. */
-  publiclyEligible?: boolean;
+  /** Must be explicitly true for a raw row to count as public sitemap evidence. */
+  publiclyEligible: boolean;
 }
 
 export interface LocalitySitemapBuildOptions {
@@ -93,7 +93,7 @@ export function indexableLocalityPaths(
     if ((placeCount.get(place.id) ?? 1) > LOCALITY_FILTER_CAP) continue;
     const firstPage = rowsByPlace.get(place.id) ?? [];
     const realCount = firstPage.filter(
-      (row) => row.publiclyEligible !== false && row.demonstration !== true,
+      (row) => row.publiclyEligible === true && row.demonstration !== true,
     ).length;
     if (realCount < 3) continue;
 
@@ -113,14 +113,25 @@ export class SitemapSourceLimitError extends Error {
 }
 
 /**
- * Read a bounded source in deterministic pages. A source that reaches the hard
- * cap is not returned as if it were complete; callers must fail closed rather
- * than publish a sitemap based on a truncated hierarchy.
+ * Page payloads deliberately exclude count data: count once before and once
+ * after a range scan instead of repeating an expensive count for every page.
+ */
+export interface BoundedSitemapPage<T> {
+  rows: readonly T[];
+}
+
+/**
+ * Read a bounded source in deterministic pages. Never treat a short payload as
+ * proof of completeness: PostgREST or an intermediary may impose a lower row
+ * cap than requested. Missing/invalid/changed counts, short pages, repeated IDs
+ * and hard-cap hits fail closed.
  */
 export async function readBoundedSitemapPages<T>(
   sourceLimit: number,
   pageSize: number,
-  readPage: (from: number, to: number) => Promise<readonly T[]>,
+  readCount: () => Promise<number | null>,
+  readPage: (from: number, to: number) => Promise<BoundedSitemapPage<T>>,
+  getId: (row: T) => string,
 ): Promise<T[]> {
   if (
     !Number.isSafeInteger(sourceLimit) ||
@@ -131,16 +142,47 @@ export async function readBoundedSitemapPages<T>(
     throw new RangeError("Sitemap page limits must be positive safe integers");
   }
 
-  const rows: T[] = [];
-  for (let from = 0; from < sourceLimit; from += pageSize) {
-    const to = Math.min(from + pageSize - 1, sourceLimit - 1);
-    const page = await readPage(from, to);
-    rows.push(...page);
-
-    if (rows.length >= sourceLimit) {
-      throw new SitemapSourceLimitError();
-    }
-    if (page.length < to - from + 1) break;
+  const exactTotal = await readCount();
+  if (exactTotal === null || !Number.isSafeInteger(exactTotal) || exactTotal < 0) {
+    throw new SitemapSourceLimitError("Sitemap source exact count is missing or invalid");
   }
+  // At the cap, the true source may exceed the configured window.
+  if (exactTotal >= sourceLimit) throw new SitemapSourceLimitError();
+
+  const rows: T[] = [];
+  const seenIds = new Set<string>();
+
+  for (let from = 0; from < exactTotal; from += pageSize) {
+    const to = Math.min(from + pageSize - 1, exactTotal - 1);
+    const page = await readPage(from, to);
+    if (!page || !Array.isArray(page.rows)) {
+      throw new SitemapSourceLimitError("Sitemap source returned an invalid page payload");
+    }
+
+    const expectedLength = to - from + 1;
+    if (page.rows.length !== expectedLength) {
+      throw new SitemapSourceLimitError(
+        "Sitemap page row count did not match its exact-count window",
+      );
+    }
+
+    for (const row of page.rows) {
+      const id = getId(row);
+      if (typeof id !== "string" || id.length === 0 || seenIds.has(id)) {
+        throw new SitemapSourceLimitError("Sitemap source returned a missing or duplicate row ID");
+      }
+      seenIds.add(id);
+    }
+    rows.push(...page.rows);
+  }
+
+  const finalTotal = await readCount();
+  if (finalTotal === null || !Number.isSafeInteger(finalTotal) || finalTotal < 0) {
+    throw new SitemapSourceLimitError("Sitemap source final exact count is missing or invalid");
+  }
+  if (finalTotal !== exactTotal || rows.length !== exactTotal) {
+    throw new SitemapSourceLimitError("Sitemap source changed or was incomplete during the scan");
+  }
+
   return rows;
 }
