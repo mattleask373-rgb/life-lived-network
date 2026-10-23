@@ -141,5 +141,3 @@ BEGIN
   RETURN;
 END;
 $$;
-
-ALTER FUNCTION public.transition_agent_task(TEXT, TEXT, TEXT, JSONB, TEXT) RESTRICT;
