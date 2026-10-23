@@ -71,6 +71,43 @@ export interface Need {
   updatedAt: string;
 }
 
+/** A need must be reconfirmed within this many days to count as current public demand. */
+export const NEED_STALE_AFTER_DAYS = 30;
+const NEED_STALE_AFTER_MS = NEED_STALE_AFTER_DAYS * 24 * 60 * 60 * 1000;
+
+export function needFreshnessCutoff(now: Date = new Date()): string {
+  return new Date(now.getTime() - NEED_STALE_AFTER_MS).toISOString();
+}
+
+export function needTimeWindowEnded(
+  need: Pick<Need, "expiresAt" | "endsAt">,
+  now: Date = new Date(),
+): boolean {
+  const instant = now.getTime();
+  const expires = need.expiresAt === null ? null : Date.parse(need.expiresAt);
+  const ends = need.endsAt === null ? null : Date.parse(need.endsAt);
+  return (
+    (expires !== null && (!Number.isFinite(expires) || expires <= instant)) ||
+    (ends !== null && (!Number.isFinite(ends) || ends <= instant))
+  );
+}
+
+/** Pure parity helper for the public-read/RLS lifecycle contract. */
+export function isCurrentlyDiscoverableNeed(
+  need: Pick<Need, "status" | "visibility" | "lastConfirmedAt" | "expiresAt" | "endsAt">,
+  now: Date = new Date(),
+): boolean {
+  const instant = now.getTime();
+  const lastConfirmed = Date.parse(need.lastConfirmedAt);
+  return (
+    need.status === "open" &&
+    (need.visibility === "public" || need.visibility === "local_discovery") &&
+    Number.isFinite(lastConfirmed) &&
+    lastConfirmed > instant - NEED_STALE_AFTER_MS &&
+    !needTimeWindowEnded(need, now)
+  );
+}
+
 export interface NeedRow {
   id: string;
   creator_id: string;
