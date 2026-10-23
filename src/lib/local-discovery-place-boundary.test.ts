@@ -86,7 +86,8 @@ describe("local_discovery locality security boundary", () => {
     const reader = needReaders.slice(start, end > start ? end : start + 1700);
     expect(reader).toContain('import("./supabase-public.server")');
     expect(reader).toContain('.from("needs")');
-    expect(reader).toContain('.in("visibility", ["public", "local_discovery"])');
+    expect(reader).toContain('.eq("visibility", "public")');
+    expect(reader).not.toContain('.in("visibility", ["public", "local_discovery"])');
     // The anonymous client can still ask for these rows, but RLS now returns
     // only public rows. A verified-member UX must use an authenticated read path.
     expect(migration).toContain(
