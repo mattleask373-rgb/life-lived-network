@@ -47,7 +47,7 @@ describe("public need-to-supply boundary", () => {
       "findSupplyForNeedWithClient(data.needId, context.supabase, false)",
     );
     expect(memberEndpoint).not.toContain("publicServerClient");
-    expect(shared).not.toContain("supabaseAdmin.from(\\"needs\\")");
-    expect(shared).not.toContain("supabaseAdmin.from(\\"person_capabilities\\")");
+    expect(shared.includes('supabaseAdmin.from("needs")')).toBe(false);
+    expect(shared.includes('supabaseAdmin.from("person_capabilities")')).toBe(false);
   });
 });
