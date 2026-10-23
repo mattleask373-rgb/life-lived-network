@@ -1,6 +1,7 @@
 import type { PlaceIndex } from "./places";
 import { categoriesOf, type ServiceCategory } from "./service-taxonomy";
 import { isService } from "./services";
+import { hasPublicWorkOpportunity } from "./work-opportunity-presentation";
 import { servicePagePath } from "./service-page";
 import type { WorldEntry } from "./world-data";
 import {
@@ -81,7 +82,7 @@ export function indexableServicePaths(
         entry.demonstration ||
         entry.quality === "expired" ||
         entry.cancellation ||
-        !isService(entry)
+        !(isService(entry) || hasPublicWorkOpportunity(entry))
       ) {
         continue;
       }
