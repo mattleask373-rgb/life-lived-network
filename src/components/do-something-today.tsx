@@ -15,11 +15,13 @@ export function DoSomethingToday({
   const [intent, setIntent] = useState<Intent | null>(null);
   const [nudge, setNudge] = useState(0);
   const [surprise, setSurprise] = useState<WorldEntry | null>(null);
+  const [surpriseQuiet, setSurpriseQuiet] = useState(false);
 
   const results = intent ? doSomethingToday(world, intent) : [];
 
   const choose = (i: Intent) => {
     setSurprise(null);
+    setSurpriseQuiet(false);
     if (i.id === "surprise") {
       setIntent(null);
       ask();
@@ -32,6 +34,7 @@ export function DoSomethingToday({
     const next = whyNot(world, savedIds, nudge);
     setNudge((n) => n + 1);
     setSurprise(next ?? null);
+    setSurpriseQuiet(next === undefined);
     setIntent(null);
   };
 
@@ -50,9 +53,11 @@ export function DoSomethingToday({
             key={i.id}
             type="button"
             onClick={() => choose(i)}
-            aria-pressed={intent?.id === i.id}
+            aria-pressed={
+              intent?.id === i.id || (i.id === "surprise" && (Boolean(surprise) || surpriseQuiet))
+            }
             className={`focus-ink rounded-full border px-3 py-1.5 text-sm transition-colors ${
-              intent?.id === i.id
+              intent?.id === i.id || (i.id === "surprise" && (Boolean(surprise) || surpriseQuiet))
                 ? "border-transparent bg-primary text-primary-foreground"
                 : "border-border bg-card text-muted-foreground hover:text-foreground"
             }`}
@@ -99,6 +104,16 @@ export function DoSomethingToday({
           >
             Something else
           </button>
+        </div>
+      ) : null}
+
+      {surpriseQuiet ? (
+        <div className="mt-4 rounded-lg border border-border bg-muted p-4 text-sm" role="status">
+          <p className="font-medium">There's nothing here to surprise you with right now.</p>
+          <p className="mt-1 text-muted-foreground">
+            It's quiet here for the things you have saved and shown us you like. Try another shape
+            — or make something happen yourself.
+          </p>
         </div>
       ) : null}
     </section>
