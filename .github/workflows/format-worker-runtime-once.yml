@@ -1,0 +1,45 @@
+name: Format worker runtime snapshot (temporary)
+
+on:
+  push:
+    branches:
+      - agent/chatgpt/LW-20261023-002-bounded-worker-runtime
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: worker-runtime-format-snapshot
+  cancel-in-progress: false
+
+jobs:
+  format-and-print:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout the exact formatter source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: latest
+
+      - name: Install the lockfile-pinned formatter
+        run: bun install --frozen-lockfile
+
+      - name: Format only the two new worker files
+        run: bunx prettier --write src/lib/agent-worker-runtime.ts src/lib/agent-worker-runtime.test.ts
+
+      - name: Emit the formatted source in bounded log chunks
+        shell: bash
+        run: |
+          set -euo pipefail
+          for path in src/lib/agent-worker-runtime.ts src/lib/agent-worker-runtime.test.ts; do
+            printf 'FORMAT_FILE_BEGIN:%s\n' "$path"
+            base64 -w0 "$path" | fold -w 2500 | sed 's/^/FORMAT_BASE64:/'
+            printf 'FORMAT_FILE_END:%s\n' "$path"
+          done
