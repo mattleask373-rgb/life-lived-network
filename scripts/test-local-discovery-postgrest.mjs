@@ -42,10 +42,7 @@ function isLoopbackApiUrl(value) {
   if (!value) return false;
   try {
     const url = new URL(value);
-    return (
-      (url.protocol === "http:" || url.protocol === "https:") &&
-      isLoopbackHost(url.hostname)
-    );
+    return (url.protocol === "http:" || url.protocol === "https:") && isLoopbackHost(url.hostname);
   } catch {
     return false;
   }
@@ -154,8 +151,11 @@ async function expectOne(name, id, token, placeId, visibility) {
   try {
     const response = await apiRequest(needPath(id), token);
     const rows = Array.isArray(response.json) ? response.json : null;
-    const ok = response.status === 200 && rows?.length === 1 &&
-      rows[0]?.id === id && rows[0]?.place_id === placeId &&
+    const ok =
+      response.status === 200 &&
+      rows?.length === 1 &&
+      rows[0]?.id === id &&
+      rows[0]?.place_id === placeId &&
       rows[0]?.visibility === visibility;
     add(name, ok, `HTTP ${response.status}; expected exactly one permitted synthetic row`);
   } catch {
@@ -194,9 +194,7 @@ async function expectZeroPlaceCount(name, placeId, token) {
     add(
       name,
       response.status === 200 &&
-        Array.isArray(rows) &&
-        rows.length === 0 &&
-        total === "0",
+        Array.isArray(rows) && rows.length === 0 && total === "0",
       `HTTP ${response.status}; Content-Range total=${total ?? "unavailable"}; expected zero`,
     );
   } catch {
