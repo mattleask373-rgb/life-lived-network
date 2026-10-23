@@ -222,19 +222,19 @@ async function findSupplyForNeedWithClient(
       { data: locals, error: localsError, count: localsCount },
       { data: areas, error: areasError, count: areasCount },
     ] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("id", { count: "exact" })
-          .eq("discoverable", true)
-          .in("place_id", localIds)
-          .limit(candidateCap + 1),
-        supabase
-          .from("service_areas")
-          .select("user_id", { count: "exact" })
-          .neq("relation", "travelling_through")
-          .in("place_id", scopeIds)
-          .limit(candidateCap + 1),
-      ]);
+      supabase
+        .from("profiles")
+        .select("id", { count: "exact" })
+        .eq("discoverable", true)
+        .in("place_id", localIds)
+        .limit(candidateCap + 1),
+      supabase
+        .from("service_areas")
+        .select("user_id", { count: "exact" })
+        .neq("relation", "travelling_through")
+        .in("place_id", scopeIds)
+        .limit(candidateCap + 1),
+    ]);
     const localRows = requireCompleteQueryRows(
       { data: locals, error: localsError, count: localsCount },
       "local profile candidates",
@@ -304,11 +304,7 @@ async function findSupplyForNeedWithClient(
         .select("*", { count: "exact" })
         .in("user_id", ids)
         .limit(1001),
-      supabase
-        .from("service_areas")
-        .select("*", { count: "exact" })
-        .in("user_id", ids)
-        .limit(1001),
+      supabase.from("service_areas").select("*", { count: "exact" }).in("user_id", ids).limit(1001),
       supabase
         .from("availability_windows")
         .select("*", { count: "exact" })
