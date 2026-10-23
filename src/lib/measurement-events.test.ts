@@ -23,6 +23,30 @@ describe("privacy-minimised measurement event contract", () => {
     });
   });
 
+  it("accepts connection outcomes and provider responses with coarse intent dimensions", () => {
+    expect(
+      parseMeasurementEvent({
+        schemaVersion: 1,
+        dayUTC,
+        type: "connection_outcome",
+        countryCode: "PT",
+        intentFamily: "community",
+        outcome: "accepted",
+      }),
+    ).toMatchObject({ type: "connection_outcome", outcome: "accepted" });
+
+    expect(
+      parseMeasurementEvent({
+        schemaVersion: 1,
+        dayUTC,
+        type: "provider_response",
+        countryCode: "AU",
+        intentFamily: "local_service",
+        response: "responded",
+      }),
+    ).toMatchObject({ type: "provider_response", response: "responded" });
+  });
+
   it("accepts useful-outcome and quiet-result categories without user or target IDs", () => {
     expect(
       parseMeasurementEvent({
@@ -30,6 +54,7 @@ describe("privacy-minimised measurement event contract", () => {
         dayUTC,
         type: "useful_outcome_completed",
         countryCode: "GB",
+        intentFamily: "local_service",
         outcome: "service_completed",
       }),
     ).toMatchObject({ type: "useful_outcome_completed", countryCode: "GB" });
@@ -84,7 +109,15 @@ describe("privacy-minimised measurement event contract", () => {
       intentFamily: "local_service",
     };
 
-    for (const field of ["needId", "title", "description", "placeText", "coordinates", "userId", "visibility"]) {
+    for (const field of [
+      "needId",
+      "title",
+      "description",
+      "placeText",
+      "coordinates",
+      "userId",
+      "visibility",
+    ]) {
       expect(() => parseMeasurementEvent({ ...base, [field]: "not permitted" })).toThrow(
         /unsupported fields/i,
       );
@@ -177,11 +210,13 @@ describe("privacy-minimised measurement event contract", () => {
       schemaVersion: 1,
       dayUTC,
       type: "action_selected",
+      countryCode: "GB",
+      intentFamily: "local_service",
       action: "start_connection",
       targetKind: "need",
     });
     expect(Object.keys(parsed).sort()).toEqual(
-      ["action", "dayUTC", "schemaVersion", "targetKind", "type"].sort(),
+      ["action", "countryCode", "dayUTC", "intentFamily", "schemaVersion", "targetKind", "type"].sort(),
     );
   });
 });
