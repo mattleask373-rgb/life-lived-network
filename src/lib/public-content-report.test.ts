@@ -87,7 +87,7 @@ describe("database-enforced public report contract", () => {
     expect(migration).toContain(
       "CREATE OR REPLACE FUNCTION private.guard_content_report_insert()",
     );
-    expect(migration).not.toMatch(/^\\s*CREATE\\s+TRIGGER\\b/im);
+    expect(migration).not.toMatch(/^\s*CREATE\s+TRIGGER\b/im);
   });
 
   it("extends the report subject constraint without removing existing conversation reporting", () => {
