@@ -84,9 +84,7 @@ describe("database-enforced public report contract", () => {
     expect(priorReportGuardMigration).toContain(
       "EXECUTE FUNCTION private.guard_content_report_insert();",
     );
-    expect(migration).toContain(
-      "CREATE OR REPLACE FUNCTION private.guard_content_report_insert()",
-    );
+    expect(migration).toContain("CREATE OR REPLACE FUNCTION private.guard_content_report_insert()");
     expect(migration).not.toMatch(/^\s*CREATE\s+TRIGGER\b/im);
   });
 
