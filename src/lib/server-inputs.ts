@@ -12,6 +12,13 @@ export const moveConnectionInput = z.object({
 
 export const needIdInput = z.object({ needId: z.string().uuid() });
 
+export const needLifecycleInput = z
+  .object({
+    id: z.string().uuid(),
+    action: z.enum(["confirm", "met", "withdrawn"]),
+  })
+  .strict();
+
 export const refreshSourceInput = z.object({
   sourceId: z.string().uuid(),
   placeSlug: z

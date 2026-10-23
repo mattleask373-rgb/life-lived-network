@@ -1,13 +1,25 @@
 import { privatePage } from "@/lib/seo";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { parseNeedSearch } from "@/lib/need-prefill";
 
 import { useSession } from "@/hooks/use-session";
-import { createNeed, getMyNeeds, getOpenNeeds } from "@/lib/needs.functions";
-import { FLEXIBILITIES, NEED_INTENTS, URGENCIES, type Need } from "@/lib/needs";
+import {
+  createNeed,
+  getMyNeeds,
+  getOpenNeeds,
+  updateMyNeedLifecycle,
+} from "@/lib/needs.functions";
+import {
+  FLEXIBILITIES,
+  NEED_INTENTS,
+  URGENCIES,
+  isCurrentlyDiscoverableNeed,
+  needTimeWindowEnded,
+  type Need,
+} from "@/lib/needs";
 import { fetchDefaultPlace } from "@/lib/places";
 import { money } from "@/components/layer-colour";
 import { DraftHelper } from "@/components/draft-helper";
@@ -38,8 +50,8 @@ function NeedPage() {
     isError: needsError,
     refetch: refetchNeeds,
   } = useQuery({
-    queryKey: ["needs", "open"],
-    queryFn: () => openNeeds({ data: {} }),
+    queryKey: ["needs", "open", place?.place.id ?? "public"],
+    queryFn: () => openNeeds({ data: { placeId: place?.place.id ?? null } }),
   });
   const { data: mine } = useQuery({
     queryKey: ["needs", "mine", user?.id],
@@ -89,7 +101,14 @@ function NeedPage() {
           </section>
         )}
 
-        {mine?.length ? <NeedList heading="Yours" needs={mine} /> : null}
+        {mine?.length ? (
+          <NeedList
+            heading="Yours"
+            needs={mine}
+            ownerActions
+            onOwnerChanged={() => void qc.invalidateQueries({ queryKey: ["needs"] })}
+          />
+        ) : null}
         {needsPending && needs === undefined ? (
           <DataLoadingState className="mt-10" label="Checking open needs…" />
         ) : null}
@@ -108,7 +127,19 @@ function NeedPage() {
   );
 }
 
-function NeedList({ heading, needs, empty }: { heading: string; needs: Need[]; empty?: string }) {
+function NeedList({
+  heading,
+  needs,
+  empty,
+  ownerActions = false,
+  onOwnerChanged,
+}: {
+  heading: string;
+  needs: Need[];
+  empty?: string;
+  ownerActions?: boolean;
+  onOwnerChanged?: () => void;
+}) {
   return (
     <section className="mt-10">
       <h2 className="text-2xl">{heading}</h2>
@@ -116,9 +147,10 @@ function NeedList({ heading, needs, empty }: { heading: string; needs: Need[]; e
         <p className="mt-2 text-sm text-muted-foreground">{empty}</p>
       ) : (
         <ul className="mt-3 space-y-3">
-          {needs.map((need) => (
-            <li key={need.id} className="card-paper p-4">
-              <Link to="/need/$id" params={{ id: need.id }} className="focus-ink block">
+          {needs.map((need) => {
+            const current = isCurrentlyDiscoverableNeed(need);
+            const summary = (
+              <>
                 <p className="text-lg leading-tight">{need.title}</p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {need.placeText || "Nearby"} ·{" "}
@@ -139,13 +171,97 @@ function NeedList({ heading, needs, empty }: { heading: string; needs: Need[]; e
                         : ""}
                 </p>
                 {need.description ? <p className="mt-2 text-sm">{need.description}</p> : null}
-                <p className="mt-2 text-xs text-muted-foreground">See who could help →</p>
-              </Link>
-            </li>
-          ))}
+                {need.status === "open" && current ? (
+                  <p className="mt-2 text-xs text-muted-foreground">See who could help →</p>
+                ) : (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {need.status === "met"
+                      ? "Marked as met"
+                      : need.status === "withdrawn"
+                        ? "Withdrawn"
+                        : need.status === "expired" || needTimeWindowEnded(need)
+                          ? "Its stated time window has ended"
+                          : "Needs reconfirmation before it appears in discovery"}
+                  </p>
+                )}
+              </>
+            );
+            return (
+              <li key={need.id} className="card-paper p-4">
+                {need.status === "open" && current ? (
+                  <Link to="/need/$id" params={{ id: need.id }} className="focus-ink block">
+                    {summary}
+                  </Link>
+                ) : (
+                  <div>{summary}</div>
+                )}
+                {ownerActions && need.status === "open" && onOwnerChanged ? (
+                  <NeedOwnerActions need={need} onChanged={onOwnerChanged} />
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>
+  );
+}
+
+function NeedOwnerActions({ need, onChanged }: { need: Need; onChanged: () => void }) {
+  const transition = useServerFn(updateMyNeedLifecycle);
+  const mutation = useMutation({
+    mutationFn: (action: "confirm" | "met" | "withdrawn") =>
+      transition({ data: { id: need.id, action } }),
+    onSuccess: onChanged,
+  });
+  const windowEnded = needTimeWindowEnded(need);
+  return (
+    <div className="mt-4 border-t border-border pt-3">
+      <p className="text-xs text-muted-foreground">
+        {windowEnded
+          ? "The stated time window has ended. Close this need or post a new one with updated dates."
+          : "Keep the local picture honest: confirm this is still needed or close it when the need is met."}
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {!windowEnded ? (
+          <button
+            type="button"
+            disabled={mutation.isPending}
+            onClick={() => mutation.mutate("confirm")}
+            className="focus-ink min-h-10 rounded-full border border-border px-4 py-2 text-sm disabled:opacity-60"
+          >
+            Confirm still needed
+          </button>
+        ) : null}
+        <button
+          type="button"
+          disabled={mutation.isPending}
+          onClick={() => mutation.mutate("met")}
+          className="focus-ink min-h-10 rounded-full border border-border px-4 py-2 text-sm disabled:opacity-60"
+        >
+          Mark as met
+        </button>
+        <button
+          type="button"
+          disabled={mutation.isPending}
+          onClick={() => mutation.mutate("withdrawn")}
+          className="focus-ink min-h-10 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground disabled:opacity-60"
+        >
+          Withdraw
+        </button>
+      </div>
+      {mutation.isError ? (
+        <p className="mt-2 text-sm text-destructive" role="alert">
+          We couldn’t update this need. It may have changed or its time window may have ended.
+          Refresh and try again.
+        </p>
+      ) : null}
+      {mutation.isPending ? (
+        <p className="mt-2 text-xs text-muted-foreground" role="status">
+          Saving…
+        </p>
+      ) : null}
+    </div>
   );
 }
 
