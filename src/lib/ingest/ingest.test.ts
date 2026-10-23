@@ -152,7 +152,7 @@ describe("the same adapter for every locality", () => {
     });
     expect(params.get("countryCode")).toBe(locality.countryCode);
     expect(params.get("geoPoint")).toBe(ticketmasterGeoHash(locality.lat, locality.lng));
-    expect(params.get("geoPoint")).toBeNull();
+    expect(params.get("latlong")).toBeNull();
     expect(params.get("radius")).toBe("20");
     expect(params.get("unit")).toBe("km");
   });
@@ -171,6 +171,9 @@ describe("the same adapter for every locality", () => {
       endsBefore: "2099-01-02T00:00:00Z",
     });
     expect(params.get("apikey")).toBeNull();
+    expect(params.get("geoPoint")).toBeNull();
+    expect(params.get("radius")).toBeNull();
+    expect(params.get("unit")).toBeNull();
   });
 });
 
