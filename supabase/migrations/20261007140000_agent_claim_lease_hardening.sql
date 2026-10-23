@@ -186,9 +186,3 @@ BEGIN
   RETURNING *;
 END;
 $$;
-
-ALTER FUNCTION public.claim_agent_task(TEXT, TEXT, INTEGER) RESTRICT;
-ALTER FUNCTION public.heartbeat_agent_task(TEXT, TEXT, INTEGER) RESTRICT;
-ALTER FUNCTION public.release_agent_task(TEXT, TEXT, TEXT) RESTRICT;
-ALTER FUNCTION public.mark_stale_agent_tasks(INTEGER) RESTRICT;
-ALTER FUNCTION public.reclaim_agent_task(TEXT, TEXT, INTEGER) RESTRICT;
