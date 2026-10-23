@@ -207,7 +207,11 @@ async function findSupplyForNeedWithClient(
   // and the larger places it sits in (which only count for someone who has
   // said they cover that area).
   const { loadPlaceIndex } = await import("./place-index.server");
-  const geo = needGeography(await loadPlaceIndex(supabase), need.placeId);
+  const placeIndex = await loadPlaceIndex(supabase);
+  const geo = needGeography(placeIndex, need.placeId);
+  if (!geo.placeId || !placeIndex.byId.has(geo.placeId) || geo.localPlaceIds.length === 0) {
+    throw new DataError("INVALID_CONTEXT", "Need has no resolvable canonical locality.");
+  }
 
   // Never pretend the first 400 IDs represent a complete global locality.
   const candidateCap = 400;

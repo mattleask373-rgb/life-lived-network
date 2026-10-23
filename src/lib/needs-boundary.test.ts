@@ -70,4 +70,15 @@ describe("public need-to-supply boundary", () => {
       expect(shared).toContain(fact);
     }
   });
+  it("fails closed when the canonical place is missing before any supply query", () => {
+    const loadIndex = shared.indexOf("const placeIndex = await loadPlaceIndex(supabase);");
+    const guard = shared.indexOf('throw new DataError("INVALID_CONTEXT", "Need has no resolvable canonical locality.");');
+    const firstCandidateRead = shared.indexOf('.from("profiles")');
+    const listingRead = shared.indexOf('.from("listings")');
+    expect(loadIndex).toBeGreaterThanOrEqual(0);
+    expect(guard).toBeGreaterThan(loadIndex);
+    expect(firstCandidateRead).toBeGreaterThan(guard);
+    expect(listingRead).toBeGreaterThan(guard);
+    expect(shared).toContain("!placeIndex.byId.has(geo.placeId)");
+  });
 });

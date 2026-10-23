@@ -27,7 +27,9 @@ export interface NeedGeography {
 }
 
 export function needGeography(index: PlaceIndex, placeId: string | null): NeedGeography {
-  if (!placeId) return { placeId: null, localPlaceIds: [], serviceScopeIds: [] };
+  if (!placeId || !index.byId.has(placeId)) {
+    return { placeId, localPlaceIds: [], serviceScopeIds: [] };
+  }
   const local = descendantIdsOf(index, placeId);
   const scope = [...new Set([...local, ...ancestorsOf(index, placeId).map((p) => p.id)])];
   return { placeId, localPlaceIds: local, serviceScopeIds: scope };

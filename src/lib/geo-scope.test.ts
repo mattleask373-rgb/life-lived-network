@@ -46,6 +46,13 @@ describe("how far a need reaches", () => {
     const geo = needGeography(INDEX, "birmingham");
     expect(geographicReach({ serviceAreaPlaceIds: ["herefordshire"] }, geo)).toBeNull();
   });
+  it("returns an empty scope for an unknown canonical place ID", () => {
+    expect(needGeography(INDEX, "not-in-the-place-index")).toEqual({
+      placeId: "not-in-the-place-index",
+      localPlaceIds: [],
+      serviceScopeIds: [],
+    });
+  });
 
   it("falls back to exactly one place when there is no hierarchy to hand", () => {
     const geo = exactGeography("birmingham");
