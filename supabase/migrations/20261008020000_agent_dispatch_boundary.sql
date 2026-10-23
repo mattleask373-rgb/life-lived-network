@@ -173,7 +173,6 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION public.dispatch_agent_attempt(TEXT, UUID, TEXT, TEXT, TEXT, TEXT, TEXT) RESTRICT;
 REVOKE ALL ON FUNCTION public.dispatch_agent_attempt(TEXT, UUID, TEXT, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC;
 
 DO $$
