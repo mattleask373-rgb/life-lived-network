@@ -75,8 +75,8 @@ BEGIN
   END IF;
 
   SELECT * INTO task_row
-  FROM public.agent_tasks
-  WHERE task_id = requested_task_id
+  FROM public.agent_tasks AS task
+  WHERE task.task_id = requested_task_id
   FOR UPDATE;
 
   IF NOT FOUND THEN
@@ -102,12 +102,12 @@ BEGIN
 
   IF EXISTS (
     SELECT 1
-    FROM public.agent_execution_attempts
-    WHERE correlation_id = requested_correlation_id
+    FROM public.agent_execution_attempts AS existing_attempt
+    WHERE existing_attempt.correlation_id = requested_correlation_id
   ) THEN
     SELECT * INTO attempt_row
-    FROM public.agent_execution_attempts
-    WHERE correlation_id = requested_correlation_id
+    FROM public.agent_execution_attempts AS existing_attempt
+    WHERE existing_attempt.correlation_id = requested_correlation_id
     LIMIT 1;
 
     RETURN QUERY SELECT
@@ -121,7 +121,7 @@ BEGIN
   task_row.lease_generation := task_row.lease_generation + 1;
   task_row.lease_token := gen_random_uuid()::text;
 
-  UPDATE public.agent_tasks
+  UPDATE public.agent_tasks AS task
   SET owner = requested_actor_id,
       lease_generation = task_row.lease_generation,
       lease_token = task_row.lease_token,
@@ -130,8 +130,8 @@ BEGIN
       lease_expiry = now() + interval '15 minutes',
       last_heartbeat = now(),
       updated_at = now()
-  WHERE task_id = requested_task_id
-    AND status = 'READY';
+  WHERE task.task_id = requested_task_id
+    AND task.status = 'READY';
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'task changed during dispatch';
