@@ -49,20 +49,12 @@ export function currencySymbol(currency = "GBP"): string {
   return SYMBOL[currency] ?? `${currency} `;
 }
 
-export function money(
-  cost: number,
-  currency = "GBP",
-  locale: Locale = "en",
-): string {
+export function money(cost: number, currency = "GBP", locale: Locale = "en"): string {
   return formatLocalizedCurrency(cost, currency, locale);
 }
 export function duration(minutes: number, locale: Locale = "en"): string {
   return formatLocalizedDuration(minutes, locale);
 }
-export function eventDate(
-  startsAt: string,
-  timezone?: string,
-  locale: Locale = "en",
-): string {
+export function eventDate(startsAt: string, timezone?: string, locale: Locale = "en"): string {
   return formatLocalizedEventDate(startsAt, timezone, locale);
 }

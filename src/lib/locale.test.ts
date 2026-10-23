@@ -37,12 +37,10 @@ describe("global locale foundation", () => {
     expect(formatLocalizedDuration(45, "en")).toBe("45 min");
     expect(formatLocalizedDuration(90, "pt")).toBe("1,5 h");
     expect(formatLocalizedDuration(0, "ja")).toBe("時間指定なし");
-    expect(
-      formatLocalizedEventDate("2026-09-19T18:00:00Z", "Europe/London", "en"),
-    ).toContain("19:00");
+    expect(formatLocalizedEventDate("2026-09-19T18:00:00Z", "Europe/London", "en")).toContain(
+      "19:00",
+    );
     expect(formatLocalizedEventDate("not-a-date", "Europe/London", "en")).toBe("");
-    expect(
-      formatLocalizedEventDate("2026-09-19T18:00:00Z", "Invalid/Zone", "en"),
-    ).toBe("");
+    expect(formatLocalizedEventDate("2026-09-19T18:00:00Z", "Invalid/Zone", "en")).toBe("");
   });
 });
