@@ -11,7 +11,7 @@ import {
   type WorkerTask,
 } from "./agent-worker-runtime";
 
-const NOW = new Date("2026-10-23T09:00:00.000Z");
+const NOW = new Date();
 const CYCLE_ID = "123e4567-e89b-42d3-a456-426614174000";
 const TASK_ID = "LW-20261023-001";
 
