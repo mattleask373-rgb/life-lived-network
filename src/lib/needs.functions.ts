@@ -221,8 +221,7 @@ async function findSupplyForNeedWithClient(
     const [
       { data: locals, error: localsError, count: localsCount },
       { data: areas, error: areasError, count: areasCount },
-    ] =
-      await Promise.all([
+    ] = await Promise.all([
         supabase
           .from("profiles")
           .select("id", { count: "exact" })
@@ -294,13 +293,27 @@ async function findSupplyForNeedWithClient(
     ] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id, display_name, photo_url, location, place_id, wants_to_learn", { count: "exact" })
+        .select("id, display_name, photo_url, location, place_id, wants_to_learn", {
+          count: "exact",
+        })
         .in("id", ids)
         .eq("discoverable", true)
         .limit(1001),
-      supabase.from("person_capabilities").select("*", { count: "exact" }).in("user_id", ids).limit(1001),
-      supabase.from("service_areas").select("*", { count: "exact" }).in("user_id", ids).limit(1001),
-      supabase.from("availability_windows").select("*", { count: "exact" }).in("user_id", ids).limit(1001),
+      supabase
+        .from("person_capabilities")
+        .select("*", { count: "exact" })
+        .in("user_id", ids)
+        .limit(1001),
+      supabase
+        .from("service_areas")
+        .select("*", { count: "exact" })
+        .in("user_id", ids)
+        .limit(1001),
+      supabase
+        .from("availability_windows")
+        .select("*", { count: "exact" })
+        .in("user_id", ids)
+        .limit(1001),
       supabase
         .from("opportunity_preferences")
         .select("user_id, preference, earning_preference", { count: "exact" })

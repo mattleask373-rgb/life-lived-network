@@ -20,7 +20,10 @@ export function requireCompleteQueryRows<T>(
     throw new DataError("DATA_UNAVAILABLE", `${resource} query failed.`);
   }
   if (!Array.isArray(result.data) || result.count === null) {
-    throw new DataError("DATA_UNAVAILABLE", `${resource} did not return a complete row collection.`);
+    throw new DataError(
+      "DATA_UNAVAILABLE",
+      `${resource} did not return a complete row collection.`,
+    );
   }
   if (cap !== undefined && result.count > cap) {
     throw new DataError("SCOPE_TOO_WIDE", `${resource} exceeded its safe cap of ${cap} rows.`);
