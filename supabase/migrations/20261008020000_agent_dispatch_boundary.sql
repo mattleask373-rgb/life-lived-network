@@ -56,8 +56,8 @@ BEGIN
   END IF;
 
   SELECT * INTO run_row
-  FROM public.agent_execution_runs
-  WHERE run_id = requested_run_id
+  FROM public.agent_execution_runs AS execution_run
+  WHERE execution_run.run_id = requested_run_id
   FOR UPDATE;
 
   IF NOT FOUND THEN
