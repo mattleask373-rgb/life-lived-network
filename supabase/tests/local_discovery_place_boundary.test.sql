@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(12);
+SELECT plan(15);
 
 -- All fixture rows are synthetic, and the transaction rolls back every change.
 INSERT INTO auth.users (
@@ -46,6 +46,22 @@ VALUES
    'practical', 'Need in locality B', 'open', 'local_discovery',
    '10000000-0000-4000-8000-000000000003', 'Test Locality B');
 
+INSERT INTO public.needs (
+  id, creator_id, category, title, status, visibility, place_id, place_text,
+  last_confirmed_at, expires_at, ends_at
+) VALUES
+  ('20000000-0000-4000-8000-000000000004', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+   'practical', 'Public need in locality A', 'open', 'public',
+   '10000000-0000-4000-8000-000000000001', 'Test Locality A', now(), NULL, NULL),
+  ('20000000-0000-4000-8000-000000000005', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+   'practical', 'Stale local need in locality A', 'open', 'local_discovery',
+   '10000000-0000-4000-8000-000000000001', 'Test Locality A',
+   now() - interval '31 days', NULL, NULL),
+  ('20000000-0000-4000-8000-000000000006', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+   'practical', 'Expired local need in locality A', 'open', 'local_discovery',
+   '10000000-0000-4000-8000-000000000001', 'Test Locality A',
+   now(), now() - interval '1 hour', NULL);
+
 INSERT INTO private.locality_memberships
   (user_id, place_id, status, verified_by, verified_at)
 VALUES
@@ -70,6 +86,10 @@ INSERT INTO pg_temp.locality_probe_results
 SELECT 'anon_all_local', count(*)::integer
 FROM public.needs
 WHERE visibility = 'local_discovery';
+INSERT INTO pg_temp.locality_probe_results
+SELECT 'anon_public', count(*)::integer
+FROM public.needs
+WHERE visibility = 'public';
 RESET ROLE;
 
 -- Each membership authorizes its exact place only; parent/child inheritance is denied by default.
@@ -89,6 +109,14 @@ SELECT 'user_a_cross_locality_child', count(*)::integer
 FROM public.needs
 WHERE visibility = 'local_discovery'
   AND place_id = '10000000-0000-4000-8000-000000000002';
+INSERT INTO pg_temp.locality_probe_results
+SELECT 'user_a_stale_locality_a', count(*)::integer
+FROM public.needs
+WHERE id = '20000000-0000-4000-8000-000000000005';
+INSERT INTO pg_temp.locality_probe_results
+SELECT 'user_a_expired_locality_a', count(*)::integer
+FROM public.needs
+WHERE id = '20000000-0000-4000-8000-000000000006';
 
 -- An editable profile locality is not a trust or membership credential.
 UPDATE public.profiles
@@ -132,10 +160,16 @@ RESET ROLE;
 
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'anon_all_local'),
   0, 'anonymous requests cannot read local_discovery needs');
+SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'anon_public'),
+  1, 'anonymous requests retain access to open fresh public needs');
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_a_all_local'),
   1, 'verified locality A member can read only the exact locality granted');
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_a_cross_locality_child'),
   0, 'parent locality membership does not implicitly grant descendant-place access');
+SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_a_stale_locality_a'),
+  0, 'stale local-discovery needs remain hidden despite matching locality');
+SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_a_expired_locality_a'),
+  0, 'expired local-discovery needs remain hidden despite matching locality');
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_a_cross_locality_b'),
   0, 'locality A member cannot read locality B needs');
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_a_after_profile_spoof'),
