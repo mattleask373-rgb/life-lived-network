@@ -50,7 +50,9 @@ describe("agent control-plane migration lineage (static contract)", () => {
     const idempotency = migration("20261023130000_agent_dispatch_idempotency_scope.sql");
     expect(idempotency).toContain("ALTER COLUMN attempt_id SET DEFAULT gen_random_uuid()");
     expect(idempotency).toContain("correlation ID already bound to a different dispatch scope");
-    expect(idempotency).toContain("task_row.lease_generation IS DISTINCT FROM attempt_row.lease_generation");
+    expect(idempotency).toContain(
+      "task_row.lease_generation IS DISTINCT FROM attempt_row.lease_generation",
+    );
 
   });
 
