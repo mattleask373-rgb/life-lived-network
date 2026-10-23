@@ -26,6 +26,20 @@ describe("public needs map source contract", () => {
     expect(read).toContain('.eq("visibility", "public")');
     expect(read).not.toContain('.in("visibility", ["public", "local_discovery"])');
   });
+
+  it("routes authenticated reads through request-scoped RLS", () => {
+    const start = needsFunctions.indexOf("export const getOpenNeedsForMember =");
+    const end = needsFunctions.indexOf("async function findSupplyForNeedWithClient", start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    const read = needsFunctions.slice(start, end);
+    expect(read).toContain(".middleware([requireSupabaseAuth])");
+    expect(read).toContain("context.supabase");
+    expect(read).toContain('.in("visibility", ["public", "local_discovery"])');
+    expect(read).not.toContain("publicServerClient");
+    expect(needsFunctions).toContain("export const findSupplyForNeedForMember");
+  });
+
 });
 
 describe("placeNeedsForMap", () => {
