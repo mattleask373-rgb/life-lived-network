@@ -415,7 +415,12 @@ export function validateWorkerProviderResult(
   };
 }
 
-function validateLease(lease: WorkerLease, request: WorkerDispatchRequest, nowMs: number): boolean {
+function validateLease(
+  lease: WorkerLease,
+  request: WorkerDispatchRequest,
+  nowMs: number,
+  minimumRemainingMs: number,
+): boolean {
   if (
     !lease ||
     lease.status !== "DISPATCHED" ||
@@ -433,7 +438,7 @@ function validateLease(lease: WorkerLease, request: WorkerDispatchRequest, nowMs
     return false;
   }
   const expiry = Date.parse(lease.leaseExpiresAt);
-  return Number.isFinite(expiry) && expiry > nowMs;
+  return Number.isFinite(expiry) && expiry > nowMs + minimumRemainingMs;
 }
 
 function outcomeForProviderResult(result: WorkerProviderResult): WorkerCycleOutcome {
@@ -716,7 +721,9 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
         "Atomic durable dispatch was rejected or could not be confirmed; provider execution was not started.",
     };
   }
-  if (!validateLease(lease, request, Date.now())) {
+  // A lease that expires before the first heartbeat cannot safely own provider execution.
+  // Require one heartbeat interval plus a small scheduling/network margin.
+  if (!validateLease(lease, request, Date.now(), input.heartbeatIntervalMs + 1_000)) {
     // Do not attempt a compensating write with an untrusted or incomplete lease.
     return held(
       taskId,
