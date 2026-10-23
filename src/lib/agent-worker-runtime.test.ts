@@ -79,9 +79,16 @@ function adapters(overrides: Partial<WorkerRuntimeAdapters> = {}): WorkerRuntime
       workspaceId: "workspace-1",
       projectId: "project-1",
     })),
-    readDurableControlPlaneProof: vi.fn(async () => proof("https://github.com/example/repo/commit/abc123")),
-    readHostedSecurityProof: vi.fn(async () => proof("https://github.com/example/repo/actions/runs/2")),
-    readProviderHealth: vi.fn(async () => ({ status: "available", checkedAt: new Date().toISOString() })),
+    readDurableControlPlaneProof: vi.fn(async () =>
+      proof("https://github.com/example/repo/commit/abc123"),
+    ),
+    readHostedSecurityProof: vi.fn(async () =>
+      proof("https://github.com/example/repo/actions/runs/2"),
+    ),
+    readProviderHealth: vi.fn(async () => ({
+      status: "available",
+      checkedAt: new Date().toISOString(),
+    })),
     findActiveAttempt: vi.fn(async () => null),
     dispatchAtomically: vi.fn(async (request) => lease(request)),
     heartbeatFenced: vi.fn(async () => true),
@@ -92,7 +99,10 @@ function adapters(overrides: Partial<WorkerRuntimeAdapters> = {}): WorkerRuntime
 }
 
 function input(overrides: Partial<WorkerCycleInput> = {}): WorkerCycleInput {
-  const identity: WorkerActorIdentity = { actorId: "worker:github-oidc:repo-1", source: "WORKLOAD_IDENTITY" };
+  const identity: WorkerActorIdentity = {
+    actorId: "worker:github-oidc:repo-1",
+    source: "WORKLOAD_IDENTITY",
+  };
   return {
     enabled: true,
     cycleId: CYCLE_ID,
@@ -154,37 +164,47 @@ describe("bounded agent worker runtime", () => {
 
   it("requires a server-verified actor rather than environment/caller text", async () => {
     for (const source of ["ENVIRONMENT", "UNTRUSTED", "UNKNOWN"] as const) {
-      const result = await runAgentWorkerCycle(
-        input({ actor: { actorId: "actor-1", source } }),
-      );
+      const result = await runAgentWorkerCycle(input({ actor: { actorId: "actor-1", source } }));
       expect(result).toMatchObject({ outcome: "HELD", code: "AUTHENTICATION_REQUIRED" });
     }
-    const blank = await runAgentWorkerCycle(input({ actor: { actorId: " ", source: "WORKLOAD_IDENTITY" } }));
+    const blank = await runAgentWorkerCycle(
+      input({ actor: { actorId: " ", source: "WORKLOAD_IDENTITY" } }),
+    );
     expect(blank).toMatchObject({ outcome: "HELD", code: "AUTHENTICATION_REQUIRED" });
   });
 
   it("fails closed when task read or authoritative scope lookup fails", async () => {
-    const readFailure = await runAgentWorkerCycle(input({
-      adapters: adapters({ loadTask: vi.fn(async () => { throw new Error("private db detail"); }) }),
-    }));
+    const readFailure = await runAgentWorkerCycle(
+      input({
+        adapters: adapters({
+          loadTask: vi.fn(async () => {
+            throw new Error("private db detail");
+          }),
+        }),
+      }),
+    );
     expect(readFailure).toMatchObject({ outcome: "HELD", code: "TASK_READ_FAILED" });
     expect(readFailure.reason).not.toContain("private db detail");
 
-    const noScope = await runAgentWorkerCycle(input({
-      adapters: adapters({ resolveAuthoritativeScope: vi.fn(async () => null) }),
-    }));
+    const noScope = await runAgentWorkerCycle(
+      input({
+        adapters: adapters({ resolveAuthoritativeScope: vi.fn(async () => null) }),
+      }),
+    );
     expect(noScope).toMatchObject({ outcome: "HELD", code: "SCOPE_AUTHORITY_MISSING" });
   });
 
   it("rejects task scope that differs from authoritative membership", async () => {
-    const result = await runAgentWorkerCycle(input({
-      adapters: adapters({
-        resolveAuthoritativeScope: vi.fn(async () => ({
-          workspaceId: "workspace-2",
-          projectId: "project-1",
-        })),
+    const result = await runAgentWorkerCycle(
+      input({
+        adapters: adapters({
+          resolveAuthoritativeScope: vi.fn(async () => ({
+            workspaceId: "workspace-2",
+            projectId: "project-1",
+          })),
+        }),
       }),
-    }));
+    );
     expect(result).toMatchObject({ outcome: "HELD", code: "SCOPE_MISMATCH" });
   });
 
@@ -206,18 +226,25 @@ describe("bounded agent worker runtime", () => {
   });
 
   it("requires fresh durable and hosted security proofs", async () => {
-    const missingDurable = await runAgentWorkerCycle(input({
-      adapters: adapters({
-        readDurableControlPlaneProof: vi.fn(async () => ({ status: "UNKNOWN", checkedAt: NOW.toISOString() })),
+    const missingDurable = await runAgentWorkerCycle(
+      input({
+        adapters: adapters({
+          readDurableControlPlaneProof: vi.fn(async () => ({
+            status: "UNKNOWN",
+            checkedAt: NOW.toISOString(),
+          })),
+        }),
       }),
-    }));
+    );
     expect(missingDurable).toMatchObject({ outcome: "HELD", code: "CONTROL_PLANE_UNPROVEN" });
 
-    const missingHosted = await runAgentWorkerCycle(input({
-      adapters: adapters({
-        readHostedSecurityProof: vi.fn(async () => proof("")),
+    const missingHosted = await runAgentWorkerCycle(
+      input({
+        adapters: adapters({
+          readHostedSecurityProof: vi.fn(async () => proof("")),
+        }),
       }),
-    }));
+    );
     expect(missingHosted).toMatchObject({ outcome: "HELD", code: "HOSTED_SECURITY_UNPROVEN" });
   });
 
@@ -235,17 +262,21 @@ describe("bounded agent worker runtime", () => {
   });
 
   it("holds on an existing active attempt, excluded provider, or capability mismatch", async () => {
-    const active = await runAgentWorkerCycle(input({
-      adapters: adapters({ findActiveAttempt: vi.fn(async () => "attempt-existing") }),
-    }));
+    const active = await runAgentWorkerCycle(
+      input({
+        adapters: adapters({ findActiveAttempt: vi.fn(async () => "attempt-existing") }),
+      }),
+    );
     expect(active).toMatchObject({ outcome: "HELD", code: "ACTIVE_ATTEMPT_EXISTS" });
 
     const excluded = await runAgentWorkerCycle(input({ excludedProviderIds: ["openai"] }));
     expect(excluded).toMatchObject({ outcome: "HELD", code: "PROVIDER_NOT_ELIGIBLE" });
 
-    const wrongCapability = await runAgentWorkerCycle(input({
-      provider: provider({ capabilities: ["research"] }),
-    }));
+    const wrongCapability = await runAgentWorkerCycle(
+      input({
+        provider: provider({ capabilities: ["research"] }),
+      }),
+    );
     expect(wrongCapability).toMatchObject({ outcome: "HELD", code: "PROVIDER_NOT_ELIGIBLE" });
   });
 
@@ -257,15 +288,17 @@ describe("bounded agent worker runtime", () => {
     expect(result.outcome).toBe("REVIEW_REQUIRED");
     expect(result.attemptId).toBe("attempt-1");
     expect(db.dispatchAtomically).toHaveBeenCalledTimes(1);
-    expect(db.dispatchAtomically).toHaveBeenCalledWith(expect.objectContaining({
-      cycleId: CYCLE_ID,
-      correlationId: CYCLE_ID + ":" + TASK_ID,
-      actorId: "worker:github-oidc:repo-1",
-      workspaceId: "workspace-1",
-      projectId: "project-1",
-      taskId: TASK_ID,
-      providerId: "openai",
-    }));
+    expect(db.dispatchAtomically).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cycleId: CYCLE_ID,
+        correlationId: CYCLE_ID + ":" + TASK_ID,
+        actorId: "worker:github-oidc:repo-1",
+        workspaceId: "workspace-1",
+        projectId: "project-1",
+        taskId: TASK_ID,
+        providerId: "openai",
+      }),
+    );
     expect(model.execute).toHaveBeenCalledTimes(1);
     const context = vi.mocked(model.execute).mock.calls[0]?.[1];
     expect(context).toBeDefined();
@@ -280,12 +313,14 @@ describe("bounded agent worker runtime", () => {
   it("aborts and records a timeout rather than retrying a slow provider", async () => {
     const db = adapters();
     const execute = vi.fn((_task, _context, _signal) => new Promise<unknown>(() => undefined));
-    const result = await runAgentWorkerCycle(input({
-      timeoutMs: 1000,
-      heartbeatIntervalMs: 250,
-      adapters: db,
-      provider: provider({ execute }),
-    }));
+    const result = await runAgentWorkerCycle(
+      input({
+        timeoutMs: 1000,
+        heartbeatIntervalMs: 250,
+        adapters: db,
+        provider: provider({ execute }),
+      }),
+    );
     expect(result).toMatchObject({ outcome: "TIMED_OUT", code: "EXECUTION_TIMEOUT" });
     expect(execute).toHaveBeenCalledTimes(1);
     expect(db.recordFailureFenced).toHaveBeenCalledWith(
@@ -297,14 +332,21 @@ describe("bounded agent worker runtime", () => {
 
   it("aborts and refuses to persist when the heartbeat fence is rejected", async () => {
     const db = adapters({ heartbeatFenced: vi.fn(async () => false) });
-    const execute = vi.fn((_task, _context, signal) => new Promise<unknown>((_resolve, reject) => {
-      signal.addEventListener("abort", () => reject(new Error("provider observed abort")), { once: true });
-    }));
-    const result = await runAgentWorkerCycle(input({
-      heartbeatIntervalMs: 100,
-      adapters: db,
-      provider: provider({ execute }),
-    }));
+    const execute = vi.fn(
+      (_task, _context, signal) =>
+        new Promise<unknown>((_resolve, reject) => {
+          signal.addEventListener("abort", () => reject(new Error("provider observed abort")), {
+            once: true,
+          });
+        }),
+    );
+    const result = await runAgentWorkerCycle(
+      input({
+        heartbeatIntervalMs: 100,
+        adapters: db,
+        provider: provider({ execute }),
+      }),
+    );
     expect(result).toMatchObject({ outcome: "LEASE_LOST", code: "LEASE_LOST" });
     expect(execute).toHaveBeenCalledTimes(1);
     expect(db.recordResultFenced).not.toHaveBeenCalled();
@@ -313,19 +355,26 @@ describe("bounded agent worker runtime", () => {
 
   it("rejects provider claims of DONE/ACCEPTED/INTEGRATED and records only a safe error code", async () => {
     const db = adapters();
-    const result = await runAgentWorkerCycle(input({
-      adapters: db,
-      provider: provider({ execute: vi.fn(async () => ({
-        status: "INTEGRATED",
-        summary: "done",
-        evidenceRefs: [],
-        changedPaths: [],
-        providerReportedTests: "PASS",
-        uncertainties: [],
-        nextAction: "merge",
-      })) }),
-    }));
-    expect(result).toMatchObject({ outcome: "INVALID_PROVIDER_RESULT", code: "PROVIDER_RESULT_INVALID" });
+    const result = await runAgentWorkerCycle(
+      input({
+        adapters: db,
+        provider: provider({
+          execute: vi.fn(async () => ({
+            status: "INTEGRATED",
+            summary: "done",
+            evidenceRefs: [],
+            changedPaths: [],
+            providerReportedTests: "PASS",
+            uncertainties: [],
+            nextAction: "merge",
+          })),
+        }),
+      }),
+    );
+    expect(result).toMatchObject({
+      outcome: "INVALID_PROVIDER_RESULT",
+      code: "PROVIDER_RESULT_INVALID",
+    });
     expect(db.recordResultFenced).not.toHaveBeenCalled();
     expect(db.recordFailureFenced).toHaveBeenCalledWith(
       expect.anything(),
@@ -335,37 +384,47 @@ describe("bounded agent worker runtime", () => {
   });
 
   it("rejects evidence containing credentials or changed paths outside task scope", async () => {
-    const secret = await runAgentWorkerCycle(input({
-      provider: provider({ execute: vi.fn(async () => ({
-        status: "VERIFYING",
-        summary: "token=super-secret-value",
-        evidenceRefs: [],
-        changedPaths: [],
-        providerReportedTests: "NOT_RUN",
-        uncertainties: [],
-        nextAction: "Review",
-      })) }),
-    }));
+    const secret = await runAgentWorkerCycle(
+      input({
+        provider: provider({
+          execute: vi.fn(async () => ({
+            status: "VERIFYING",
+            summary: "token=super-secret-value",
+            evidenceRefs: [],
+            changedPaths: [],
+            providerReportedTests: "NOT_RUN",
+            uncertainties: [],
+            nextAction: "Review",
+          })),
+        }),
+      }),
+    );
     expect(secret).toMatchObject({ outcome: "INVALID_PROVIDER_RESULT" });
 
-    const outsideScope = await runAgentWorkerCycle(input({
-      provider: provider({ execute: vi.fn(async () => ({
-        status: "VERIFYING",
-        summary: "Review complete",
-        evidenceRefs: [],
-        changedPaths: ["supabase/migrations/secret.sql"],
-        providerReportedTests: "NOT_RUN",
-        uncertainties: [],
-        nextAction: "Review",
-      })) }),
-    }));
+    const outsideScope = await runAgentWorkerCycle(
+      input({
+        provider: provider({
+          execute: vi.fn(async () => ({
+            status: "VERIFYING",
+            summary: "Review complete",
+            evidenceRefs: [],
+            changedPaths: ["supabase/migrations/secret.sql"],
+            providerReportedTests: "NOT_RUN",
+            uncertainties: [],
+            nextAction: "Review",
+          })),
+        }),
+      }),
+    );
     expect(outsideScope).toMatchObject({ outcome: "INVALID_PROVIDER_RESULT" });
   });
 
   it("returns LEASE_LOST if fenced result persistence rejects the generation/token", async () => {
-    const result = await runAgentWorkerCycle(input({
-      adapters: adapters({ recordResultFenced: vi.fn(async () => false) }),
-    }));
+    const result = await runAgentWorkerCycle(
+      input({
+        adapters: adapters({ recordResultFenced: vi.fn(async () => false) }),
+      }),
+    );
     expect(result).toMatchObject({ outcome: "LEASE_LOST", code: "LEASE_LOST" });
   });
 

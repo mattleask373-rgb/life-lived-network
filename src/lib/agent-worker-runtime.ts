@@ -16,36 +16,17 @@
  */
 
 export type WorkerEnvironmentKind =
-  | "DISPOSABLE"
-  | "DEVELOPMENT"
-  | "STAGING"
-  | "PRODUCTION"
-  | "UNKNOWN";
+  "DISPOSABLE" | "DEVELOPMENT" | "STAGING" | "PRODUCTION" | "UNKNOWN";
 
 export type WorkerProofStatus = "PROVEN" | "UNPROVEN" | "UNKNOWN";
 export type WorkerAutonomy = "L0" | "L1" | "L2" | "L3" | "L4";
 export type WorkerRisk = "P0" | "P1" | "P2" | "P3";
 export type WorkerLane =
-  | "PRODUCT"
-  | "ARCHITECTURE"
-  | "IMPLEMENTATION"
-  | "QA"
-  | "SECURITY"
-  | "REVIEW"
-  | "ORCHESTRATOR";
+  "PRODUCT" | "ARCHITECTURE" | "IMPLEMENTATION" | "QA" | "SECURITY" | "REVIEW" | "ORCHESTRATOR";
 
-export type WorkerCapability =
-  | "implementation"
-  | "research"
-  | "review"
-  | "qa"
-  | "security_audit";
+export type WorkerCapability = "implementation" | "research" | "review" | "qa" | "security_audit";
 
-export type WorkerProviderHealthStatus =
-  | "available"
-  | "degraded"
-  | "unavailable"
-  | "unknown";
+export type WorkerProviderHealthStatus = "available" | "degraded" | "unavailable" | "unknown";
 
 export interface WorkerProof {
   status: WorkerProofStatus;
@@ -58,11 +39,7 @@ export interface WorkerEnvironmentAttestation extends WorkerProof {
 }
 
 export type WorkerActorSource =
-  | "WORKLOAD_IDENTITY"
-  | "SERVER_SESSION"
-  | "ENVIRONMENT"
-  | "UNTRUSTED"
-  | "UNKNOWN";
+  "WORKLOAD_IDENTITY" | "SERVER_SESSION" | "ENVIRONMENT" | "UNTRUSTED" | "UNKNOWN";
 
 export interface WorkerActorIdentity {
   actorId: string | null;
@@ -90,11 +67,7 @@ export interface WorkerProvider {
   capabilities: readonly WorkerCapability[];
   maxAutonomy: WorkerAutonomy;
   maxRiskWithoutHumanGate: WorkerRisk;
-  execute(
-    task: WorkerTask,
-    context: WorkerProviderContext,
-    signal: AbortSignal,
-  ): Promise<unknown>;
+  execute(task: WorkerTask, context: WorkerProviderContext, signal: AbortSignal): Promise<unknown>;
 }
 
 export interface WorkerProviderHealth {
@@ -149,10 +122,7 @@ export interface WorkerProviderResult {
   nextAction: string;
 }
 
-export type WorkerFailureCode =
-  | "EXECUTION_TIMEOUT"
-  | "PROVIDER_FAILED"
-  | "PROVIDER_RESULT_INVALID";
+export type WorkerFailureCode = "EXECUTION_TIMEOUT" | "PROVIDER_FAILED" | "PROVIDER_RESULT_INVALID";
 
 export interface WorkerFailure {
   code: WorkerFailureCode;
@@ -324,7 +294,10 @@ function capabilityForLane(lane: WorkerLane): WorkerCapability | null {
 }
 
 function normalizeScope(value: string): string {
-  return value.trim().replace(/\/\*\*$/, "").replace(/\/+$/, "");
+  return value
+    .trim()
+    .replace(/\/\*\*$/, "")
+    .replace(/\/+$/, "");
 }
 
 function pathWithinScope(path: string, scope: string): boolean {
@@ -345,10 +318,26 @@ function isSafeRepositoryPath(value: unknown): value is string {
   return !SENSITIVE_VALUE_PATTERN.test(path);
 }
 
+function hasDisallowedControlCharacter(value: string): boolean {
+  for (const character of value) {
+    const code = character.charCodeAt(0);
+    if (
+      code === 0 ||
+      (code >= 1 && code <= 8) ||
+      code === 11 ||
+      code === 12 ||
+      (code >= 14 && code <= 31)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function safeText(value: unknown, maxLength: number): string | null {
   if (!nonBlank(value) || value.length > maxLength) return null;
   const text = value.trim();
-  if (/\u0000|[\u0001-\u0008\u000B\u000C\u000E-\u001F]/.test(text)) return null;
+  if (hasDisallowedControlCharacter(text)) return null;
   if (SENSITIVE_VALUE_PATTERN.test(text)) return null;
   return text;
 }
@@ -425,11 +414,7 @@ export function validateWorkerProviderResult(
   };
 }
 
-function validateLease(
-  lease: WorkerLease,
-  request: WorkerDispatchRequest,
-  nowMs: number,
-): boolean {
+function validateLease(lease: WorkerLease, request: WorkerDispatchRequest, nowMs: number): boolean {
   if (
     !lease ||
     lease.taskId !== request.taskId ||
@@ -485,10 +470,19 @@ function safeCycleError(
 export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<WorkerCycleResult> {
   const taskId = input.taskId;
   if (!input.enabled) {
-    return { outcome: "DISABLED", taskId, code: "WORKER_DISABLED", reason: "Worker feature flag is not explicitly enabled." };
+    return {
+      outcome: "DISABLED",
+      taskId,
+      code: "WORKER_DISABLED",
+      reason: "Worker feature flag is not explicitly enabled.",
+    };
   }
   if (!UUID_PATTERN.test(input.cycleId)) {
-    return held(taskId, "INVALID_CYCLE_ID", "A stable UUID cycle ID is required for durable idempotency.");
+    return held(
+      taskId,
+      "INVALID_CYCLE_ID",
+      "A stable UUID cycle ID is required for durable idempotency.",
+    );
   }
   if (
     !Number.isSafeInteger(input.timeoutMs) ||
@@ -499,7 +493,11 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
     input.heartbeatIntervalMs > WORKER_MAX_HEARTBEAT_INTERVAL_MS ||
     input.heartbeatIntervalMs >= input.timeoutMs
   ) {
-    return held(taskId, "INVALID_RUNTIME_BOUNDS", "Worker timeout and heartbeat interval are outside the safe bounded range.");
+    return held(
+      taskId,
+      "INVALID_RUNTIME_BOUNDS",
+      "Worker timeout and heartbeat interval are outside the safe bounded range.",
+    );
   }
 
   const nowMs = (input.now ?? new Date()).getTime();
@@ -519,17 +517,29 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
     !actorId ||
     (input.actor.source !== "WORKLOAD_IDENTITY" && input.actor.source !== "SERVER_SESSION")
   ) {
-    return held(taskId, "AUTHENTICATION_REQUIRED", "A server-verified workload or session identity is required.");
+    return held(
+      taskId,
+      "AUTHENTICATION_REQUIRED",
+      "A server-verified workload or session identity is required.",
+    );
   }
 
   let task: WorkerTask | null;
   try {
     task = await input.adapters.loadTask(taskId);
   } catch {
-    return held(taskId, "TASK_READ_FAILED", "The durable task could not be read; execution is held.");
+    return held(
+      taskId,
+      "TASK_READ_FAILED",
+      "The durable task could not be read; execution is held.",
+    );
   }
   if (!task || task.taskId !== taskId) {
-    return held(taskId, "TASK_NOT_FOUND", "The requested task is not present in the canonical durable queue.");
+    return held(
+      taskId,
+      "TASK_NOT_FOUND",
+      "The requested task is not present in the canonical durable queue.",
+    );
   }
   if (task.cancelled || task.status === "CANCELLED") {
     return held(taskId, "TASK_CANCELLED", "Cancelled work cannot be resurrected by a worker.");
@@ -537,30 +547,63 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
   if (task.status !== "READY") {
     return held(taskId, "TASK_NOT_READY", "Only a durable READY task may be dispatched.");
   }
-  if (!nonBlank(task.objective) || !nonBlank(task.workspaceId) || !nonBlank(task.projectId) || task.scopeIn.length === 0) {
-    return held(taskId, "TASK_SCOPE_INCOMPLETE", "Objective, authoritative workspace/project, and non-empty input scope are required.");
+  if (
+    !nonBlank(task.objective) ||
+    !nonBlank(task.workspaceId) ||
+    !nonBlank(task.projectId) ||
+    task.scopeIn.length === 0
+  ) {
+    return held(
+      taskId,
+      "TASK_SCOPE_INCOMPLETE",
+      "Objective, authoritative workspace/project, and non-empty input scope are required.",
+    );
   }
   if (task.humanApprovalRequired) {
-    return held(taskId, "HUMAN_APPROVAL_REQUIRED", "This task requires an explicit single-use human approval; the autonomous worker cannot consume it.");
+    return held(
+      taskId,
+      "HUMAN_APPROVAL_REQUIRED",
+      "This task requires an explicit single-use human approval; the autonomous worker cannot consume it.",
+    );
   }
   if (HUMAN_GATED_RISKS.includes(task.risk)) {
-    return held(taskId, "RISK_REQUIRES_HUMAN", "P0/P1 work is human-gated and cannot be autonomously dispatched.");
+    return held(
+      taskId,
+      "RISK_REQUIRES_HUMAN",
+      "P0/P1 work is human-gated and cannot be autonomously dispatched.",
+    );
   }
   if (AUTONOMY_RANK[task.autonomy] > AUTONOMY_RANK[WORKER_MAX_AUTONOMY]) {
-    return held(taskId, "AUTONOMY_NOT_SUPPORTED", "This worker runtime is limited to autonomy levels L0-L2.");
+    return held(
+      taskId,
+      "AUTONOMY_NOT_SUPPORTED",
+      "This worker runtime is limited to autonomy levels L0-L2.",
+    );
   }
 
   let scope: Readonly<{ workspaceId: string; projectId: string }> | null;
   try {
     scope = await input.adapters.resolveAuthoritativeScope(actorId);
   } catch {
-    return held(taskId, "SCOPE_AUTHORITY_MISSING", "Authoritative application membership could not be resolved.");
+    return held(
+      taskId,
+      "SCOPE_AUTHORITY_MISSING",
+      "Authoritative application membership could not be resolved.",
+    );
   }
   if (!scope || !nonBlank(scope.workspaceId) || !nonBlank(scope.projectId)) {
-    return held(taskId, "SCOPE_AUTHORITY_MISSING", "No authoritative application workspace/project membership exists for this actor.");
+    return held(
+      taskId,
+      "SCOPE_AUTHORITY_MISSING",
+      "No authoritative application workspace/project membership exists for this actor.",
+    );
   }
   if (scope.workspaceId !== task.workspaceId || scope.projectId !== task.projectId) {
-    return held(taskId, "SCOPE_MISMATCH", "Resolved actor scope does not exactly match the persisted task scope.");
+    return held(
+      taskId,
+      "SCOPE_MISMATCH",
+      "Resolved actor scope does not exactly match the persisted task scope.",
+    );
   }
 
   let durableProof: WorkerProof;
@@ -575,14 +618,26 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
       input.adapters.findActiveAttempt(taskId),
     ]);
   } catch {
-    return held(taskId, "READINESS_EVIDENCE_UNAVAILABLE", "Readiness evidence could not be fetched; execution is held.");
+    return held(
+      taskId,
+      "READINESS_EVIDENCE_UNAVAILABLE",
+      "Readiness evidence could not be fetched; execution is held.",
+    );
   }
 
   if (!proofIsFresh(durableProof, Date.now(), WORKER_MAX_PROOF_AGE_MS)) {
-    return held(taskId, "CONTROL_PLANE_UNPROVEN", "Durable control-plane proof is absent, stale, or has no trusted evidence reference.");
+    return held(
+      taskId,
+      "CONTROL_PLANE_UNPROVEN",
+      "Durable control-plane proof is absent, stale, or has no trusted evidence reference.",
+    );
   }
   if (!proofIsFresh(hostedProof, Date.now(), WORKER_MAX_PROOF_AGE_MS)) {
-    return held(taskId, "HOSTED_SECURITY_UNPROVEN", "Hosted security proof is absent, stale, or has no trusted evidence reference.");
+    return held(
+      taskId,
+      "HOSTED_SECURITY_UNPROVEN",
+      "Hosted security proof is absent, stale, or has no trusted evidence reference.",
+    );
   }
 
   const providerHealthAt = Date.parse(providerHealth.checkedAt);
@@ -592,10 +647,18 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
     providerHealthAt > Date.now() + MAX_CLOCK_SKEW_MS ||
     Date.now() - providerHealthAt > WORKER_MAX_PROVIDER_HEALTH_AGE_MS
   ) {
-    return held(taskId, "PROVIDER_UNAVAILABLE", "Provider health is unavailable, stale, or not explicitly available.");
+    return held(
+      taskId,
+      "PROVIDER_UNAVAILABLE",
+      "Provider health is unavailable, stale, or not explicitly available.",
+    );
   }
   if (activeAttemptId) {
-    return held(taskId, "ACTIVE_ATTEMPT_EXISTS", "A durable active attempt already exists for this task.");
+    return held(
+      taskId,
+      "ACTIVE_ATTEMPT_EXISTS",
+      "A durable active attempt already exists for this task.",
+    );
   }
   if (input.excludedProviderIds.includes(input.provider.id)) {
     return held(taskId, "PROVIDER_NOT_ELIGIBLE", "Provider is excluded by current policy.");
@@ -607,12 +670,20 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
     AUTONOMY_RANK[task.autonomy] > AUTONOMY_RANK[input.provider.maxAutonomy] ||
     RISK_RANK[task.risk] > RISK_RANK[input.provider.maxRiskWithoutHumanGate]
   ) {
-    return held(taskId, "PROVIDER_NOT_ELIGIBLE", "Provider capability, autonomy, or risk ceiling does not cover this task.");
+    return held(
+      taskId,
+      "PROVIDER_NOT_ELIGIBLE",
+      "Provider capability, autonomy, or risk ceiling does not cover this task.",
+    );
   }
 
   const correlationId = input.cycleId + ":" + task.taskId;
   if (correlationId.length > 240) {
-    return held(taskId, "INVALID_CYCLE_ID", "Cycle/task correlation ID exceeds the durable storage bound.");
+    return held(
+      taskId,
+      "INVALID_CYCLE_ID",
+      "Cycle/task correlation ID exceeds the durable storage bound.",
+    );
   }
   const request: WorkerDispatchRequest = {
     cycleId: input.cycleId,
@@ -634,12 +705,17 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
       outcome: "DISPATCH_REJECTED",
       taskId,
       code: "DISPATCH_REJECTED",
-      reason: "Atomic durable dispatch was rejected or could not be confirmed; provider execution was not started.",
+      reason:
+        "Atomic durable dispatch was rejected or could not be confirmed; provider execution was not started.",
     };
   }
   if (!validateLease(lease, request, Date.now())) {
     // Do not attempt a compensating write with an untrusted or incomplete lease.
-    return held(taskId, "INVALID_LEASE", "Dispatch returned an invalid or expired lease; provider execution was not started.");
+    return held(
+      taskId,
+      "INVALID_LEASE",
+      "Dispatch returned an invalid or expired lease; provider execution was not started.",
+    );
   }
 
   const controller = new AbortController();
@@ -701,7 +777,9 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
     let rawResult: unknown;
     try {
       rawResult = await Promise.race([
-        Promise.resolve().then(() => input.provider.execute(task, providerContext, controller.signal)),
+        Promise.resolve().then(() =>
+          input.provider.execute(task, providerContext, controller.signal),
+        ),
         timeoutPromise,
         leaseLostPromise,
       ]);
@@ -712,7 +790,8 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
           taskId,
           attemptId: lease.attemptId,
           code: "LEASE_LOST",
-          reason: "Lease heartbeat was rejected or unavailable; provider signal was aborted and no result was accepted.",
+          reason:
+            "Lease heartbeat was rejected or unavailable; provider signal was aborted and no result was accepted.",
         };
       }
       const failureCode: WorkerFailureCode = timedOut ? "EXECUTION_TIMEOUT" : "PROVIDER_FAILED";
@@ -730,7 +809,8 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
             taskId,
             attemptId: lease.attemptId,
             code: "LEASE_LOST",
-            reason: "Failure evidence could not be written because the active lease fence was rejected.",
+            reason:
+              "Failure evidence could not be written because the active lease fence was rejected.",
           };
         }
       } catch {
@@ -743,7 +823,12 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
             reason: "Lease was lost before failure evidence could be persisted.",
           };
         }
-        return safeCycleError(taskId, lease.attemptId, "PERSISTENCE_UNCONFIRMED", "Provider failure occurred but durable failure evidence could not be confirmed.");
+        return safeCycleError(
+          taskId,
+          lease.attemptId,
+          "PERSISTENCE_UNCONFIRMED",
+          "Provider failure occurred but durable failure evidence could not be confirmed.",
+        );
       }
       return {
         outcome: timedOut ? "TIMED_OUT" : "PROVIDER_FAILED",
@@ -780,7 +865,8 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
             taskId,
             attemptId: lease.attemptId,
             code: "LEASE_LOST",
-            reason: "Invalid provider output was not recorded because the lease fence was rejected.",
+            reason:
+              "Invalid provider output was not recorded because the lease fence was rejected.",
           };
         }
       } catch {
@@ -793,7 +879,12 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
             reason: "Lease was lost before invalid-output evidence could be persisted.",
           };
         }
-        return safeCycleError(taskId, lease.attemptId, "PERSISTENCE_UNCONFIRMED", "Invalid provider output was detected but the failure record could not be confirmed.");
+        return safeCycleError(
+          taskId,
+          lease.attemptId,
+          "PERSISTENCE_UNCONFIRMED",
+          "Invalid provider output was detected but the failure record could not be confirmed.",
+        );
       }
       return {
         outcome: "INVALID_PROVIDER_RESULT",
@@ -820,7 +911,12 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
           reason: "Lease was lost before result evidence could be persisted.",
         };
       }
-      return safeCycleError(taskId, lease.attemptId, "PERSISTENCE_UNCONFIRMED", "Provider result was produced but durable result persistence could not be confirmed.");
+      return safeCycleError(
+        taskId,
+        lease.attemptId,
+        "PERSISTENCE_UNCONFIRMED",
+        "Provider result was produced but durable result persistence could not be confirmed.",
+      );
     }
     if (!persisted) {
       return {
