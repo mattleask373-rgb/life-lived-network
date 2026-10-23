@@ -101,7 +101,3 @@ BEGIN
   RETURNING *;
 END;
 $$;
-
-ALTER FUNCTION public.claim_agent_task(TEXT, TEXT, INTEGER) RESTRICT;
-ALTER FUNCTION public.heartbeat_agent_task(TEXT, TEXT) RESTRICT;
-ALTER FUNCTION public.release_agent_task(TEXT, TEXT, TEXT) RESTRICT;
