@@ -4,6 +4,7 @@ import { buildPlaceIndex, type Place } from "./places";
 import { indexableServicePaths } from "./service-sitemap";
 import type { PublicListingSitemapRow } from "./locality-sitemap";
 import type { WorldEntry } from "./world-data";
+import type { WorkOpportunity } from "./work-opportunities";
 
 function place(overrides: Partial<Place> & Pick<Place, "id" | "name" | "slug" | "kind">): Place {
   return {
@@ -50,6 +51,26 @@ function entry(overrides: Partial<WorldEntry> = {}): WorldEntry {
   };
 }
 
+const reviewedWorkOpportunity: WorkOpportunity = {
+  arrangement: "seasonal",
+  engagementKind: "paid_work",
+  compensation: {
+    status: "stated_paid",
+    amountMinorUnits: 1200,
+    currency: "GBP",
+    basis: "hour",
+  },
+  accommodation: "not_stated",
+  skillRequirements: ["hospitality"],
+  hostExpectations: ["Reliability"],
+  conditions: ["Legal right to work required"],
+  jurisdictionCountryCode: "GB",
+  policyReviewStatus: "approved_by_human",
+  publicationStatus: "published",
+  provenance: { kind: "owner_declared", sourceName: "Test employer" },
+  rightsStatus: "cleared",
+};
+
 function rowsFor(entries: WorldEntry[]): PublicListingSitemapRow[] {
   return entries.map((value) => ({
     id: value.id,
@@ -69,6 +90,21 @@ describe("service sitemap indexability", () => {
     );
     expect(paths).toContain("/gb/birmingham/cleaning");
     expect(paths).toContain("/gb/west-midlands/cleaning");
+  });
+
+  it("includes reviewed, rights-cleared work opportunities using the same page taxonomy", () => {
+    const job = entry({
+      id: "seasonal-hospitality",
+      layer: "work",
+      kind: "opportunity",
+      title: "Seasonal hospitality work",
+      summary: "Paid seasonal work in a local hotel",
+      skills: ["hospitality shifts"],
+      workOpportunity: reviewedWorkOpportunity,
+    });
+    const paths = indexableServicePaths(index, rowsFor([job]), new Map([[job.id, job]]));
+    expect(paths).toContain("/gb/birmingham/hospitality-shifts");
+    expect(paths).toContain("/gb/west-midlands/hospitality-shifts");
   });
 
   it("excludes demonstration-only services", () => {
