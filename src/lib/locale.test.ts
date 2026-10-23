@@ -5,6 +5,7 @@ import {
   formatLocalizedDuration,
   formatLocalizedEventDate,
   isLocale,
+  LOCALE_TAGS,
   SUPPORTED_LOCALES,
   translate,
 } from "./locale";
@@ -15,6 +16,7 @@ describe("global locale foundation", () => {
     expect(isLocale("pt")).toBe(true);
     expect(isLocale("xx")).toBe(false);
     expect(isLocale(null)).toBe(false);
+    expect(LOCALE_TAGS).toEqual({ en: "en-GB", pt: "pt-PT", es: "es-ES", ja: "ja-JP" });
   });
 
   it("provides navigation and map labels in each supported locale", () => {
@@ -33,6 +35,7 @@ describe("global locale foundation", () => {
     expect(formatLocalizedCurrency(1250, "GBP", "en")).toBe("£1,250");
     expect(formatLocalizedCurrency(12.5, "EUR", "en")).toBe("€12.50");
     expect(formatLocalizedCurrency(0, "GBP", "pt")).toBe("Grátis");
+    expect(formatLocalizedCurrency(12.5, "INVALID", "en")).toBe("INVALID 12.50");
     expect(formatLocalizedCurrency(-40, "GBP", "es")).toContain("Paga");
     expect(formatLocalizedDuration(45, "en")).toBe("45 min");
     expect(formatLocalizedDuration(90, "pt")).toBe("1,5 h");
