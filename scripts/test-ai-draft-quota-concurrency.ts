@@ -1,8 +1,11 @@
 import postgres from "postgres";
+import { isLocalSupabaseDatabaseUrl } from "../src/lib/local-supabase-database-url";
 
 const databaseUrl = process.env["SUPABASE_DB_URL"]?.trim();
-if (!databaseUrl || !/^postgres(?:ql)?:\/\//i.test(databaseUrl)) {
-  console.error("SUPABASE_DB_URL must point to the isolated local Supabase database.");
+if (!isLocalSupabaseDatabaseUrl(databaseUrl)) {
+  console.error(
+    "SUPABASE_DB_URL must point to an isolated local Supabase database on a loopback host.",
+  );
   process.exitCode = 1;
 } else {
   const sql = postgres(databaseUrl, {
