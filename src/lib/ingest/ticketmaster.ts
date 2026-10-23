@@ -17,6 +17,79 @@ import { coordinate, instant, plainText, safeUrl } from "./normalise";
 export const TICKETMASTER_KEY = "ticketmaster-discovery";
 export const TICKETMASTER_ROOT = "https://app.ticketmaster.com/discovery/v2/events.json";
 
+/**
+ * Five-character geohashes are a coarse place-centre cell, not a locality
+ * polygon (roughly 4.9 km tall and up to 4.9 km wide at the equator; longitude
+ * cells narrow toward the poles). Keep the provider's radius filter as an
+ * approximate coverage request; never treat either filter as a boundary.
+ */
+export const TICKETMASTER_GEOHASH_PRECISION = 5;
+const GEOHASH_ALPHABET = "0123456789bcdefghjkmnpqrstuvwxyz";
+
+/** Deterministic standard geohash encoding for a canonical approximate centre. */
+export function ticketmasterGeoHash(
+  latitude: number | null | undefined,
+  longitude: number | null | undefined,
+  precision = TICKETMASTER_GEOHASH_PRECISION,
+): string | null {
+  if (
+    typeof latitude !== "number" ||
+    !Number.isFinite(latitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    typeof longitude !== "number" ||
+    !Number.isFinite(longitude) ||
+    longitude < -180 ||
+    longitude > 180
+  ) {
+    return null;
+  }
+  if (!Number.isSafeInteger(precision) || precision < 1 || precision > 12) {
+    throw new RangeError("Ticketmaster geohash precision must be an integer from 1 to 12");
+  }
+
+  let latMin = -90;
+  let latMax = 90;
+  let lonMin = -180;
+  let lonMax = 180;
+  let even = true;
+  let bitCount = 0;
+  let current = 0;
+  let result = "";
+
+  while (result.length < precision) {
+    if (even) {
+      const midpoint = (lonMin + lonMax) / 2;
+      if (longitude >= midpoint) {
+        current = (current << 1) | 1;
+        lonMin = midpoint;
+      } else {
+        current <<= 1;
+        lonMax = midpoint;
+      }
+    } else {
+      const midpoint = (latMin + latMax) / 2;
+      if (latitude >= midpoint) {
+        current = (current << 1) | 1;
+        latMin = midpoint;
+      } else {
+        current <<= 1;
+        latMax = midpoint;
+      }
+    }
+
+    even = !even;
+    bitCount += 1;
+    if (bitCount === 5) {
+      result += GEOHASH_ALPHABET[current]!;
+      bitCount = 0;
+      current = 0;
+    }
+  }
+
+  return result;
+}
+
 /** What a locality knows about itself. No source ever decides geography. */
 export interface LocalityQuery {
   /** From the locality's country, e.g. "GB", "IE", "PT". */
@@ -40,19 +113,11 @@ export function ticketmasterQuery(query: LocalityQuery): URLSearchParams {
   const params = new URLSearchParams();
   const country = query.countryCode.trim().toUpperCase().slice(0, 2);
   if (country) params.set("countryCode", country);
-  if (
-    typeof query.lat === "number" &&
-    Number.isFinite(query.lat) &&
-    query.lat >= -90 &&
-    query.lat <= 90 &&
-    typeof query.lng === "number" &&
-    Number.isFinite(query.lng) &&
-    query.lng >= -180 &&
-    query.lng <= 180
-  ) {
-    params.set("latlong", `${query.lat.toFixed(4)},${query.lng.toFixed(4)}`);
-    // The source works in radius, not in localities, so coverage around a
-    // locality centre is approximate. We keep that fact rather than hide it.
+  const geoPoint = ticketmasterGeoHash(query.lat, query.lng);
+  if (geoPoint) {
+    params.set("geoPoint", geoPoint);
+    // The provider's radius is centred on this approximate locality location.
+    // This remains approximate coverage, never a canonical locality boundary.
     const requestedRadius =
       typeof query.radiusKm === "number" && Number.isFinite(query.radiusKm) ? query.radiusKm : 15;
     params.set("radius", String(Math.max(1, Math.round(requestedRadius))));
