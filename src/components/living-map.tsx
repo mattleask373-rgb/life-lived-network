@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Minus, Plus, Crosshair } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { HeartHandshake, Minus, Plus, Crosshair } from "lucide-react";
 
 import { LAYERS, type WorldEntry } from "@/lib/world-data";
+import { clusterMapNeeds, placeNeedsForMap, type MapNeed } from "@/lib/map-needs";
 import {
   SCALE_LABEL,
   clusterPlaced,
@@ -17,6 +19,9 @@ import { LayerIcon } from "./layer-icon";
 
 interface Props {
   entries: WorldEntry[];
+  /** Public, place-level help requests for the optional map layer. */
+  needs?: readonly MapNeed[] | undefined;
+  showNeeds?: boolean | undefined;
   /** Stable entries used to fit the initial view when displayed map entries change. */
   viewBasisEntries?: WorldEntry[] | undefined;
   activeId?: string | undefined;
@@ -50,6 +55,8 @@ interface Props {
  */
 export function LivingMap({
   entries,
+  needs = [],
+  showNeeds = true,
   viewBasisEntries,
   activeId,
   onSelect,
@@ -121,6 +128,14 @@ export function LivingMap({
   const clusters = useMemo(
     () => clusterPlaced(placed, clusterCellX, clusterCellY),
     [placed, clusterCellX, clusterCellY],
+  );
+  const placedNeeds = useMemo(
+    () => (showNeeds ? placeNeedsForMap(needs, view, 300) : []),
+    [needs, showNeeds, view],
+  );
+  const needsClusters = useMemo(
+    () => clusterMapNeeds(placedNeeds, clusterCellX, clusterCellY),
+    [placedNeeds, clusterCellX, clusterCellY],
   );
 
   const onPointerDown = (e: React.PointerEvent) => {
@@ -234,6 +249,46 @@ export function LivingMap({
             style={{ left: `${cluster.left}%`, top: `${cluster.top}%` }}
           >
             {cluster.entries.length}
+          </button>
+        );
+      })}
+
+      {/* Needs are a separate, bounded map layer; they open the canonical reply flow. */}
+      {needsClusters.map((cluster) => {
+        const first = cluster.needs[0];
+        if (!first) return null;
+        if (cluster.needs.length === 1) {
+          return (
+            <Link
+              key={cluster.key}
+              to="/need/$id"
+              params={{ id: first.id }}
+              aria-label={`Open need: ${first.title}`}
+              onPointerDown={(event) => event.stopPropagation()}
+              className="focus-ink absolute z-10 grid h-11 w-11 -translate-x-1/2 -translate-y-full place-items-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow-lift transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring"
+              style={{ left: `${cluster.left}%`, top: `${cluster.top}%` }}
+            >
+              <HeartHandshake aria-hidden="true" size={17} strokeWidth={1.8} />
+            </Link>
+          );
+        }
+        return (
+          <button
+            key={cluster.key}
+            type="button"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => {
+              if (typeof first.lat !== "number" || typeof first.lng !== "number") return;
+              change(zoomView({ ...view, lat: first.lat, lng: first.lng }, 0.45));
+            }}
+            aria-label={`${cluster.needs.length} open needs here — zoom in to see them`}
+            className="focus-ink absolute z-10 grid h-11 min-w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-card bg-primary px-2 text-sm font-semibold text-primary-foreground shadow-lift hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring"
+            style={{ left: `${cluster.left}%`, top: `${cluster.top}%` }}
+          >
+            <span className="flex items-center gap-1">
+              <HeartHandshake aria-hidden="true" size={14} />
+              {cluster.needs.length}
+            </span>
           </button>
         );
       })}
