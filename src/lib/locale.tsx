@@ -208,15 +208,25 @@ export function translate(locale: Locale, key: TranslationKey): string {
 }
 
 export function formatLocalizedCurrency(cost: number, currency: string, locale: Locale): string {
-  const amount = new Intl.NumberFormat(LOCALE_TAGS[locale], {
-    style: "currency",
-    currency,
-    minimumFractionDigits: Number.isInteger(cost) ? 0 : 2,
-    maximumFractionDigits: 2,
-  }).format(Math.abs(cost));
-  if (cost < 0) return translate(locale, "money.pays") + " " + amount;
   if (cost === 0) return translate(locale, "money.free");
-  return amount;
+  const amount = Math.abs(cost);
+  try {
+    const formatted = new Intl.NumberFormat(LOCALE_TAGS[locale], {
+      style: "currency",
+      currency,
+      minimumFractionDigits: Number.isInteger(cost) ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+    return cost < 0 ? translate(locale, "money.pays") + " " + formatted : formatted;
+  } catch {
+    // A malformed provider currency must never crash the discovery card.
+    const numeric = new Intl.NumberFormat(LOCALE_TAGS[locale], {
+      minimumFractionDigits: Number.isInteger(cost) ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+    const amountWithCode = (currency.trim() || "UNKNOWN").toUpperCase() + " " + numeric;
+    return cost < 0 ? translate(locale, "money.pays") + " " + amountWithCode : amountWithCode;
+  }
 }
 
 export function formatLocalizedDuration(minutes: number, locale: Locale): string {
@@ -278,7 +288,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    document.documentElement.lang = locale;
+    document.documentElement.lang = LOCALE_TAGS[locale];
   }, [locale]);
 
   const setLocale = useCallback((next: Locale) => {
