@@ -31,6 +31,9 @@ describe("local_discovery locality security boundary", () => {
 
   it("derives authorization from verified private memberships, never an editable profile locality", () => {
     expect(migration).toContain("CREATE TABLE IF NOT EXISTS private.locality_memberships");
+    expect(migration).toContain("private.revoke_locality_membership_when_verifier_removed()");
+    expect(migration).toContain("NEW.status := 'revoked'");
+    expect(migration).toContain("NEW.verified_at := NULL");
     expect(migration).toContain("membership.status = 'verified'");
     expect(migration).toContain("membership.user_id = auth.uid()");
     expect(migration).toContain("membership.place_id = _need_place_id");
@@ -53,7 +56,7 @@ describe("local_discovery locality security boundary", () => {
   });
 
   it("covers anonymous, two-locality, child-locality, and profile-spoof cases in disposable SQL", () => {
-    expect(sqlTest).toContain("SELECT plan(16)");
+    expect(sqlTest).toContain("SELECT plan(18)");
     for (const label of [
       "anon_all_local",
       "anon_public",
@@ -64,6 +67,7 @@ describe("local_discovery locality security boundary", () => {
       "user_a_expired_locality_a",
       "user_a_after_profile_spoof",
       "user_no_grant_same_profile",
+      "user_a_after_verifier_deletion",
       "user_b_all_local",
       "user_b_cross_locality_a",
       "village_member_all_local",
