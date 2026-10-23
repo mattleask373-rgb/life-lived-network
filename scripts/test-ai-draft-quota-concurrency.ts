@@ -11,6 +11,13 @@ if (!databaseUrl || !/^postgres(?:ql)?:\/\//i.test(databaseUrl)) {
     idle_timeout: 5,
     onnotice: () => undefined,
   });
+  // Keep all attempts inside one fixed UTC hour, including runs started just
+  // before the boundary. This makes the expected hourly/daily counts deterministic.
+  const millisecondsToHour = 3_600_000 - (Date.now() % 3_600_000);
+  if (millisecondsToHour < 15_000) {
+    await new Promise((resolve) => setTimeout(resolve, millisecondsToHour + 1_000));
+  }
+
   const userId = crypto.randomUUID();
   const email = `quota-concurrency-${userId}@example.test`;
   let userCreated = false;
@@ -41,7 +48,7 @@ if (!databaseUrl || !/^postgres(?:ql)?:\/\//i.test(databaseUrl)) {
     userCreated = true;
 
     const attempts = 25;
-    const decisions = await Promise.all(
+    const results = await Promise.allSettled(
       Array.from({ length: attempts }, async () =>
         sql.begin(async (tx) => {
           await tx.unsafe("SET LOCAL ROLE authenticated");
@@ -56,6 +63,13 @@ if (!databaseUrl || !/^postgres(?:ql)?:\/\//i.test(databaseUrl)) {
         }),
       ),
     );
+    if (results.some((result) => result.status === "rejected")) {
+      throw new Error("One or more concurrent quota requests failed");
+    }
+    const decisions = results.map((result) => {
+      if (result.status !== "fulfilled") throw new Error("Quota request did not settle");
+      return result.value;
+    });
 
     const allowed = decisions.filter((decision) => decision.allowed).length;
     const hourlyDenied = decisions.filter((decision) => decision.limit_kind === "hourly").length;
