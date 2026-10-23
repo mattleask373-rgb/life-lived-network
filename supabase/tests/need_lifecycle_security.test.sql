@@ -27,7 +27,9 @@ insert into public.needs (
 
 CREATE TEMP TABLE lifecycle_probe_results (
   name text PRIMARY KEY,
-  affected_rows bigint NOT NULL
+  affected_rows bigint,
+  error_code text,
+  error_message text
 ) ON COMMIT DROP;
 GRANT INSERT ON TABLE pg_temp.lifecycle_probe_results TO authenticated, anon;
 
@@ -106,8 +108,9 @@ select ok(
   'public freshness filter has a supporting partial index'
 );
 
--- Execute as real client roles. Top-level data-modifying CTEs capture the
--- affected-row count into a transaction-local table for assertions after RESET ROLE.
+-- Execute as actual client roles. Capture outcomes in a transaction-local
+-- table, then assert them as postgres so pgTAP helper permissions cannot mask
+-- the access-control behavior being tested.
 set local role authenticated;
 set local request.jwt.claim.sub = 'aaaa0000-0000-4000-8000-000000000001';
 
@@ -142,6 +145,50 @@ with changed as (
 insert into pg_temp.lifecycle_probe_results(name, affected_rows)
 select 'owner_close', count(*) from changed;
 
+-- Catch the expected database error while still operating as the authenticated
+-- role; assert its SQLSTATE and message only after resetting the role.
+DO $closed_reopen$
+DECLARE
+  v_state text;
+  v_message text;
+  v_rows bigint;
+BEGIN
+  BEGIN
+    UPDATE public.needs
+       SET status = 'open'
+     WHERE id = '22222222-2222-4222-8222-222222222222';
+    GET DIAGNOSTICS v_rows = ROW_COUNT;
+    INSERT INTO pg_temp.lifecycle_probe_results(name, affected_rows)
+    VALUES ('closed_reopen', v_rows);
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_state = RETURNED_SQLSTATE, v_message = MESSAGE_TEXT;
+    INSERT INTO pg_temp.lifecycle_probe_results(name, error_code, error_message)
+    VALUES ('closed_reopen', v_state, v_message);
+  END;
+END;
+$closed_reopen$;
+
+DO $expired_reconfirm$
+DECLARE
+  v_state text;
+  v_message text;
+  v_rows bigint;
+BEGIN
+  BEGIN
+    UPDATE public.needs
+       SET last_confirmed_at = statement_timestamp()
+     WHERE id = '44444444-4444-4444-8444-444444444444';
+    GET DIAGNOSTICS v_rows = ROW_COUNT;
+    INSERT INTO pg_temp.lifecycle_probe_results(name, affected_rows)
+    VALUES ('expired_reconfirm', v_rows);
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_state = RETURNED_SQLSTATE, v_message = MESSAGE_TEXT;
+    INSERT INTO pg_temp.lifecycle_probe_results(name, error_code, error_message)
+    VALUES ('expired_reconfirm', v_state, v_message);
+  END;
+END;
+$expired_reconfirm$;
+
 reset role;
 
 select is(
@@ -162,24 +209,20 @@ select is(
   'owner can mark an open need as met'
 );
 
-set local role authenticated;
-set local request.jwt.claim.sub = 'aaaa0000-0000-4000-8000-000000000001';
-
-select throws_ok(
-  $test$update public.needs set status = 'open' where id = '22222222-2222-4222-8222-222222222222'$test$,
-  '42501',
-  'A closed need cannot be reopened',
+select is(
+  (select error_code || ':' || error_message
+     from pg_temp.lifecycle_probe_results where name = 'closed_reopen'),
+  '42501:A closed need cannot be reopened',
   'closed needs cannot be reopened by direct authenticated updates'
 );
 
-select throws_ok(
-  $test$update public.needs set last_confirmed_at = statement_timestamp() where id = '44444444-4444-4444-8444-444444444444'$test$,
-  '42501',
-  'A need whose stated time window has ended cannot be reconfirmed',
+select is(
+  (select error_code || ':' || error_message
+     from pg_temp.lifecycle_probe_results where name = 'expired_reconfirm'),
+  '42501:A need whose stated time window has ended cannot be reconfirmed',
   'an expired need cannot be refreshed to become discoverable again'
 );
 
-reset role;
 set local role anon;
 
 insert into pg_temp.lifecycle_probe_results(name, affected_rows)
@@ -205,17 +248,40 @@ select is(
 set local role authenticated;
 set local request.jwt.claim.sub = 'bbbb0000-0000-4000-8000-000000000002';
 
-select throws_ok(
-  $test$insert into public.connection_requests (need_id, sender_id, recipient_id, direction, note)
-    values ('33333333-3333-4333-8333-333333333333',
-            'bbbb0000-0000-4000-8000-000000000002',
-            'aaaa0000-0000-4000-8000-000000000001', 'offer', 'Stale request probe')$test$,
-  '42501',
-  'That need is not available for a connection request',
-  'stale demand cannot receive a direct connection request'
-);
+DO $stale_connection$
+DECLARE
+  v_state text;
+  v_message text;
+  v_rows bigint;
+BEGIN
+  BEGIN
+    INSERT INTO public.connection_requests (need_id, sender_id, recipient_id, direction, note)
+    VALUES (
+      '33333333-3333-4333-8333-333333333333',
+      'bbbb0000-0000-4000-8000-000000000002',
+      'aaaa0000-0000-4000-8000-000000000001',
+      'offer',
+      'Stale request probe'
+    );
+    GET DIAGNOSTICS v_rows = ROW_COUNT;
+    INSERT INTO pg_temp.lifecycle_probe_results(name, affected_rows)
+    VALUES ('stale_connection', v_rows);
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_state = RETURNED_SQLSTATE, v_message = MESSAGE_TEXT;
+    INSERT INTO pg_temp.lifecycle_probe_results(name, error_code, error_message)
+    VALUES ('stale_connection', v_state, v_message);
+  END;
+END;
+$stale_connection$;
 
 reset role;
+
+select is(
+  (select error_code || ':' || error_message
+     from pg_temp.lifecycle_probe_results where name = 'stale_connection'),
+  '42501:That need is not available for a connection request',
+  'stale demand cannot receive a direct connection request'
+);
 
 select * from finish();
 
