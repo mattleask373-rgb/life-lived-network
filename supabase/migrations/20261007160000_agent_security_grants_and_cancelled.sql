@@ -205,7 +205,6 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION public.transition_agent_task(TEXT, TEXT, TEXT, JSONB, TEXT) RESTRICT;
 
 REVOKE ALL ON FUNCTION public.transition_agent_task(TEXT, TEXT, TEXT, JSONB, TEXT) FROM PUBLIC;
 DO $$
