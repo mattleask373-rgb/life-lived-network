@@ -50,6 +50,15 @@ describe("governed locality membership provisioning contract", () => {
         action: "grant",
         reasonCode: "locality_relationship_verified",
         verificationMethod: "local_steward",
+        evidenceReference: "case:https://example.test/evidence",
+      }).success,
+    ).toBe(false);
+    expect(
+      reviewLocalityMembershipInput.safeParse({
+        ...base,
+        action: "grant",
+        reasonCode: "locality_relationship_verified",
+        verificationMethod: "local_steward",
         evidenceReference: "",
       }).success,
     ).toBe(false);
@@ -100,7 +109,9 @@ describe("governed locality membership provisioning contract", () => {
     expect(migration).toContain(
       "REVOKE ALL ON TABLE private.locality_membership_events FROM PUBLIC, anon, authenticated, service_role",
     );
-    expect(sqlTest).toContain("SELECT plan(15)");
+    expect(sqlTest).toContain("SELECT plan(18)");
+    expect(sqlTest).toContain("verification method is required");
+    expect(sqlTest).toContain("a short opaque evidence reference is required");
     expect(sqlTest).toContain("actor must be a current administrator");
     expect(sqlTest).toContain("no current verified locality membership found");
   });
