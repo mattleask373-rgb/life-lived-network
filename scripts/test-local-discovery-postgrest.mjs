@@ -614,10 +614,7 @@ async function main() {
           select: "id,visibility",
           id: "eq." + id,
         });
-        const response = await apiRequest(
-          "/rest/v1/" + table + "?" + query.toString(),
-          token,
-        );
+        const response = await apiRequest("/rest/v1/" + table + "?" + query.toString(), token);
         const rows = Array.isArray(response.json) ? response.json : null;
         add(
           name,
@@ -638,10 +635,7 @@ async function main() {
           select: "id,visibility",
           id: "eq." + id,
         });
-        const response = await apiRequest(
-          "/rest/v1/" + table + "?" + query.toString(),
-          token,
-        );
+        const response = await apiRequest("/rest/v1/" + table + "?" + query.toString(), token);
         const rows = Array.isArray(response.json) ? response.json : null;
         add(
           name,
