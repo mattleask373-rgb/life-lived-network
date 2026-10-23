@@ -41,7 +41,7 @@ The following PR records are closed as merged; their code/doc presence on curren
 
 - [PR #335](https://github.com/mattleask373-rgb/life-lived-network/pull/335) contains exact-count/bounded-page consistency checks, explicit public-eligibility requirements, fail-closed behavior for incomplete scans, and regression tests for truncation, missing/duplicate IDs and caps.
 - During this audit, the work-opportunity sitemap fix from overlapping #337 was ported into #335. Sitemap enumeration previously accepted only `isService(entry)` even though the service page supports `isService(entry) || hasPublicWorkOpportunity(entry)`. The consolidated branch reuses `hasPublicWorkOpportunity()` and includes a reviewed, rights-cleared seasonal hospitality regression fixture. Duplicate #337 was closed unmerged after its unique patch/test was ported.
-- The branch also wires the existing `SEO_SMOKE_ORIGIN` option through the scheduled GitHub workflow using the optional repository variable of the same name, with a regression test. This lets the owner select the confirmed canonical HTTPS host; the variable is not set by this PR and the live host/build mismatch remains.
+- The branch also wires the existing `SEO_SMOKE_ORIGIN` option through the scheduled GitHub workflow using the optional repository variable of the same name, with a regression test. This lets the owner select the confirmed canonical HTTPS host; the variable is not set by this PR and the live host/build mismatch remains. The static `public/robots.txt` and `public/sitemap.xml` currently name the Lovable origin, so any different canonical host must be reflected in those static assets/build output as well.
 - Latest head: `1b001496664aa19bd0fb67217816956667bed0d0`. Exact-head Verify passed: [run #39951816445](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39951816445). CodeQL and locked dependency audit passed: [run #39951816451](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/39951816451).
 - Supabase Preview skipped. Ready for independent code/security review of count semantics, public row eligibility and source lifecycle behavior; no hosted or deployed proof.
 
@@ -140,7 +140,7 @@ Only `life-lived-network` currently has the live app source and required CI/revi
 
 ## Human-only gates to leave until implementation is ready
 
-- Confirm repository sync target, production hostname, deployed SHA and Supabase project/environment.
+- Confirm repository sync target, production hostname, deployed SHA and Supabase project/environment; if the canonical hostname differs from Lovable, align `SEO_SMOKE_ORIGIN`, static robots/sitemap assets and build origin configuration together.
 - Approve production deployment/rollback, hosted migrations/RLS/grants, secret changes and provider activation.
 - Independent review of security-sensitive code and required main approvals.
 - Configure provider spend caps/alerts, email/domain/payment settings and budget.
