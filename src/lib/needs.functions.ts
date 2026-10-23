@@ -525,7 +525,11 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
     // window per chunk, which is merged before the canonical evaluator runs.
     const needPages = await Promise.all(
       placeChunks.map(async (chunk) => {
-        const { data: rows, error: needsError, count: exactCount } = await supabase
+        const {
+          data: rows,
+          error: needsError,
+          count: exactCount,
+        } = await supabase
           .from("needs")
           .select("*", { count: "exact" })
           .eq("status", "open")
