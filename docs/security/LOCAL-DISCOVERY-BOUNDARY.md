@@ -5,10 +5,10 @@
 ## Access contract
 
 - `public` needs may be read anonymously when they are open.
-- `local_discovery` needs may be read only by an authenticated user whose private, administrator-verified membership is at the need's place or an ancestor locality.
+- `local_discovery` needs may be read only by an authenticated user whose private, administrator-verified membership is for the exact place on the need.
 - `profiles.place_id` and query-string filters are not authorization evidence because the user can change them.
 - Membership and verification metadata live in the non-exposed `private.locality_memberships` table. Client roles have no direct table privileges. The helper function accepts only a need place ID and derives identity from `auth.uid()`; it does not accept a caller-supplied user ID.
-- A verified membership at a parent locality covers descendant places. A membership at a village does not confer access to its parent or sibling places. Cyclic ancestry is guarded against in the recursive lookup.
+- Place access is exact by default. Membership at a parent locality does not automatically grant access to descendants; a village membership does not confer access to its parent or siblings. If inherited locality grants are introduced later, they need explicit product/security approval and their own matrix.
 
 ## Deliberate fail-closed product behavior
 
