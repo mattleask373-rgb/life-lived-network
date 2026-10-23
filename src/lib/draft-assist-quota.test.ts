@@ -7,6 +7,13 @@ const migration = readFileSync(
   new URL("../../supabase/migrations/20261022121000_ai_draft_atomic_quota.sql", import.meta.url),
   "utf8",
 );
+const searchPathHardeningMigration = readFileSync(
+  new URL(
+    "../../supabase/migrations/20261023030000_harden_ai_draft_quota_search_path.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 const serverFunction = readFileSync(
   new URL("./draft-assist.functions.ts", import.meta.url),
   "utf8",
@@ -100,6 +107,12 @@ describe("AI draft quota database security contract", () => {
       "GRANT EXECUTE ON FUNCTION public.consume_ai_draft_quota() TO authenticated;",
     );
     expect(migration).not.toMatch(/^\s*(?:prompt|prompt_text|completion_text)\s+\w+/im);
+  });
+
+  it("removes the public schema from the effective quota-function search path", () => {
+    expect(searchPathHardeningMigration).toMatch(
+      /ALTER FUNCTION public\.consume_ai_draft_quota\(\)\s+SET search_path = pg_catalog;/,
+    );
   });
 
   it("checks the emergency stop and quota before the paid provider path", () => {
