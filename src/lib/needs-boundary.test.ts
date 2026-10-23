@@ -10,7 +10,9 @@ describe("public need-to-supply boundary", () => {
   it("requires explicit public visibility in addition to anonymous RLS", () => {
     expect(start).toBeGreaterThanOrEqual(0);
     expect(end).toBeGreaterThan(start);
-    expect(endpoint).toContain("const { publicServerClient } = await import(\"./supabase-public.server\")");
+    expect(endpoint).toContain(
+      'const { publicServerClient } = await import("./supabase-public.server")',
+    );
     expect(endpoint).toContain('.eq("id", data.needId)');
     expect(endpoint).toContain('.eq("visibility", "public")');
     expect(endpoint.indexOf('.eq("visibility", "public")')).toBeLessThan(
