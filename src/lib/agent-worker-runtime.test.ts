@@ -47,6 +47,7 @@ function lease(request: Parameters<WorkerRuntimeAdapters["dispatchAtomically"]>[
     actorId: request.actorId,
     workspaceId: request.workspaceId,
     projectId: request.projectId,
+    status: "DISPATCHED",
     leaseGeneration: 1,
     leaseToken: "lease-token-private-123456789",
     leaseExpiresAt: new Date(Date.now() + 60_000).toISOString(),
@@ -113,7 +114,6 @@ function input(overrides: Partial<WorkerCycleInput> = {}): WorkerCycleInput {
     excludedProviderIds: [],
     timeoutMs: 3000,
     heartbeatIntervalMs: 250,
-    now: NOW,
     adapters: adapters(),
     ...overrides,
   };
@@ -308,6 +308,23 @@ describe("bounded agent worker runtime", () => {
       expect.objectContaining({ status: "VERIFYING", providerReportedTests: "PASS" }),
     );
     expect(result.reason).toContain("independent verification and human review");
+  });
+
+  it("refuses to invoke the provider unless atomic dispatch returns DISPATCHED", async () => {
+    const model = provider();
+    const db = adapters({
+      dispatchAtomically: vi.fn(async (request) => ({
+        ...lease(request),
+        status: "CLAIMED",
+      }) as unknown as WorkerLease),
+    });
+
+    const result = await runAgentWorkerCycle(input({ adapters: db, provider: model }));
+
+    expect(result).toMatchObject({ outcome: "HELD", code: "INVALID_LEASE" });
+    expect(model.execute).not.toHaveBeenCalled();
+    expect(db.recordResultFenced).not.toHaveBeenCalled();
+    expect(db.recordFailureFenced).not.toHaveBeenCalled();
   });
 
   it("aborts and records a timeout rather than retrying a slow provider", async () => {

@@ -104,6 +104,8 @@ export interface WorkerLease {
   actorId: string;
   workspaceId: string;
   projectId: string;
+  /** Must be the status returned by the atomic dispatch RPC, not inferred locally. */
+  status: string;
   leaseGeneration: number;
   leaseToken: string;
   leaseExpiresAt: string;
@@ -223,7 +225,6 @@ export interface WorkerCycleInput {
   excludedProviderIds: readonly string[];
   timeoutMs: number;
   heartbeatIntervalMs: number;
-  now?: Date;
   adapters: WorkerRuntimeAdapters;
 }
 
@@ -417,6 +418,7 @@ export function validateWorkerProviderResult(
 function validateLease(lease: WorkerLease, request: WorkerDispatchRequest, nowMs: number): boolean {
   if (
     !lease ||
+    lease.status !== "DISPATCHED" ||
     lease.taskId !== request.taskId ||
     lease.runId !== request.cycleId ||
     lease.correlationId !== request.correlationId ||
@@ -500,7 +502,8 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
     );
   }
 
-  const nowMs = (input.now ?? new Date()).getTime();
+  // Never let a task payload or caller control the clock used for readiness checks.
+  const nowMs = Date.now();
   if (!ALLOWED_ENVIRONMENTS.includes(input.environment.kind)) {
     return held(
       taskId,
