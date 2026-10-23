@@ -43,10 +43,10 @@ SELECT
   COUNT(*) FILTER (WHERE event_type = 'quiet_result') AS quiet_results,
   COUNT(*) FILTER (WHERE event_type = 'need_submitted') AS needs_submitted,
   COUNT(*) FILTER (
-    WHERE event_type = 'need_status_changed' AND need_state = 'met'
+    WHERE event_type = 'need_status_changed' AND state = 'met'
   ) AS needs_marked_met,
   COUNT(*) FILTER (
-    WHERE event_type = 'need_status_changed' AND need_state = 'withdrawn'
+    WHERE event_type = 'need_status_changed' AND state = 'withdrawn'
   ) AS needs_withdrawn
 FROM reviewed_aggregate_event_sink
 GROUP BY day_utc, country_code, intent_family
