@@ -153,12 +153,18 @@ SELECT throws_ok(
   'a short opaque evidence reference is required',
   'URL-based evidence references are rejected before writing'
 );
+-- The service role is intentionally denied direct audit-table reads.
+-- Inspect the audit result as the disposable test owner, then return to the
+-- service-role context to exercise the RPC's revoke boundary.
+RESET ROLE;
 SELECT is(
   (SELECT count(*) FROM private.locality_membership_events WHERE action = 'grant'),
   1::bigint,
   'rejected malformed grants do not create audit events'
 );
 
+SET LOCAL ROLE service_role;
+SELECT set_config('request.jwt.claim.role', 'service_role', true);
 SELECT is(
   (SELECT membership_status FROM public.review_locality_membership(
     'revoke',
