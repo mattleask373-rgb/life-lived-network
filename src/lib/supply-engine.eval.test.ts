@@ -57,7 +57,10 @@ describe("P1-B adversarial supply-engine evaluation", () => {
       now: current,
     });
 
-    expect(answer.results).toEqual([]);
+    // The engine may still honestly show the local capability band; it must
+    // not label this conflicting window as open to opportunities.
+    expect(answer.results.some((result) => result.band === "open_to_opportunities")).toBe(false);
+    expect(answer.results.some((result) => result.band === "local_capability")).toBe(true);
     expect(answer.diagnostics.excludedByTime).toBe(1);
   });
 
@@ -214,7 +217,11 @@ describe("P1-B adversarial supply-engine evaluation", () => {
       need: {
         ...gardenerNeed,
         category: "underwater welding",
+        title: "Underwater welding support",
+        description: "Specialist underwater welding only.",
         requiredSkills: ["underwater welding"],
+        requiredRoles: [],
+        requiredQualifications: [],
       },
       people: [latentGardener],
       entries: [],
