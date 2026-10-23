@@ -209,9 +209,7 @@ export interface PlaceIndex {
 }
 
 export type PlaceHierarchyErrorCode =
-  | "DUPLICATE_ID"
-  | "DUPLICATE_SLUG"
-  | "MISSING_PARENT"
+  "DUPLICATE_ID" | "DUPLICATE_SLUG" | "MISSING_PARENT"
   | "CYCLE";
 
 export class PlaceHierarchyError extends Error {
