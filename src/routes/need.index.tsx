@@ -6,12 +6,7 @@ import { useState } from "react";
 import { parseNeedSearch } from "@/lib/need-prefill";
 
 import { useSession } from "@/hooks/use-session";
-import {
-  createNeed,
-  getMyNeeds,
-  getOpenNeeds,
-  updateMyNeedLifecycle,
-} from "@/lib/needs.functions";
+import { createNeed, getMyNeeds, getOpenNeeds, updateMyNeedLifecycle } from "@/lib/needs.functions";
 import {
   FLEXIBILITIES,
   NEED_INTENTS,

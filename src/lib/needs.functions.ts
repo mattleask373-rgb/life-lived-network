@@ -154,8 +154,13 @@ export const updateMyNeedLifecycle = createServerFn({ method: "POST" })
         .select("status, last_confirmed_at")
         .maybeSingle();
       if (error) throw error;
-      if (!updated) throw new Error("That need changed before it could be confirmed. Refresh and try again.");
-      return { status: updated.status as Need["status"], lastConfirmedAt: updated.last_confirmed_at };
+      if (!updated) {
+        throw new Error("That need changed before it could be confirmed. Refresh and try again.");
+      }
+      return {
+        status: updated.status as Need["status"],
+        lastConfirmedAt: updated.last_confirmed_at,
+      };
     }
 
     const { data: updated, error } = await context.supabase
@@ -167,8 +172,13 @@ export const updateMyNeedLifecycle = createServerFn({ method: "POST" })
       .select("status, last_confirmed_at")
       .maybeSingle();
     if (error) throw error;
-    if (!updated) throw new Error("That need is no longer open or has already changed.");
-    return { status: updated.status as Need["status"], lastConfirmedAt: updated.last_confirmed_at };
+    if (!updated) {
+      throw new Error("That need is no longer open or has already changed.");
+    }
+    return {
+      status: updated.status as Need["status"],
+      lastConfirmedAt: updated.last_confirmed_at,
+    };
   });
 
 export const getOpenNeeds = createServerFn({ method: "GET" })
