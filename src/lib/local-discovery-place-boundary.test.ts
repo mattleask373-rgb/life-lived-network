@@ -30,7 +30,8 @@ describe("local_discovery locality security boundary", () => {
     expect(migration).toContain("CREATE TABLE IF NOT EXISTS private.locality_memberships");
     expect(migration).toContain("membership.status = 'verified'");
     expect(migration).toContain("membership.user_id = auth.uid()");
-    expect(migration).toContain("WITH RECURSIVE place_chain");
+    expect(migration).toContain("membership.place_id = _need_place_id");
+    expect(migration).not.toContain("WITH RECURSIVE place_chain");
     expect(migration).toContain("SECURITY DEFINER");
     expect(migration).toContain("SET search_path = ''");
     expect(migration).not.toContain("FROM public.profiles");
@@ -49,11 +50,12 @@ describe("local_discovery locality security boundary", () => {
   });
 
   it("covers anonymous, two-locality, child-locality, and profile-spoof cases in disposable SQL", () => {
-    expect(sqlTest).toContain("SELECT plan(11)");
+    expect(sqlTest).toContain("SELECT plan(12)");
     for (const label of [
       "anon_all_local",
       "user_a_all_local",
       "user_a_cross_locality_b",
+      "user_a_cross_locality_child",
       "user_a_after_profile_spoof",
       "user_b_all_local",
       "user_b_cross_locality_a",
