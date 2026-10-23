@@ -8,7 +8,10 @@ const handlerSource = readFileSync(
   "utf8",
 );
 const migration = readFileSync(
-  new URL("../../supabase/migrations/20261023213000_locality_membership_admin.sql", import.meta.url),
+  new URL(
+    "../../supabase/migrations/20261023213000_locality_membership_admin.sql",
+    import.meta.url,
+  ),
   "utf8",
 );
 const sqlTest = readFileSync(
@@ -79,7 +82,9 @@ describe("governed locality membership provisioning contract", () => {
 
   it("checks the request-bound admin role before using the service-role client", () => {
     const roleCheck = handlerSource.indexOf('.eq("role", "admin")');
-    const serviceClient = handlerSource.indexOf('await import("@/integrations/supabase/client.server")');
+    const serviceClient = handlerSource.indexOf(
+      'await import("@/integrations/supabase/client.server")',
+    );
     expect(roleCheck).toBeGreaterThanOrEqual(0);
     expect(serviceClient).toBeGreaterThan(roleCheck);
     expect(handlerSource).toContain(".middleware([requireSupabaseAuth])");
