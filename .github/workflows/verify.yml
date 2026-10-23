@@ -32,6 +32,12 @@ jobs:
         run: bash scripts/check-tracked-env-files.sh
 
       - run: bun install --frozen-lockfile
+
+      # The exact `verify` status is required by the main ruleset. Keep the
+      # high/critical locked-dependency audit inside this required gate too;
+      # a separate CodeQL workflow can otherwise fail without blocking merge.
+      - name: Audit locked dependencies (high and critical)
+        run: bun audit --audit-level=high
       - run: bun run lint
       - run: bun run test
       - run: bun run build
