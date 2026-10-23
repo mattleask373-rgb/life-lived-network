@@ -66,7 +66,6 @@ describe("AI draft quota database security contract", () => {
     expect(sqlTest).toContain("independent quota row");
   });
 
- 
   it("binds the limit to auth.uid and serializes concurrent callers per account", () => {
     expect(migration).toContain("v_user_id := auth.uid();");
     expect(migration).toContain(
