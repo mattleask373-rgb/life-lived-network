@@ -74,6 +74,17 @@ describe("the provider adapter", () => {
     expect(ticketmasterAdapter.parse(payload({ ...GOOD, dates: {} })).events).toHaveLength(0);
   });
 
+  it("preserves valid multi-segment IANA timezones through normalization", () => {
+    const timezone = "America/Argentina/Buenos_Aires";
+    const { events } = ticketmasterAdapter.parse(
+      payload({
+        ...GOOD,
+        dates: { ...GOOD.dates, timezone },
+      }),
+    );
+    expect(normaliseEvent(events[0]!)?.timezone).toBe(timezone);
+  });
+
   it("keeps an event whose venue or coordinates are missing", () => {
     const { events } = ticketmasterAdapter.parse(payload({ ...GOOD, _embedded: {} }));
     expect(events).toHaveLength(1);
@@ -96,14 +107,79 @@ describe("the provider adapter", () => {
     expect(events[0]!.lng).toBeNull();
   });
 
-  it("handles a date with no time as that day where the event is", () => {
+  it("converts a source-local date/time using its IANA timezone", () => {
     const { events } = ticketmasterAdapter.parse(
       payload({
         ...GOOD,
-        dates: { start: { localDate: "2099-06-01" }, timezone: "Europe/Dublin" },
+        dates: {
+          start: { localDate: "2030-06-01", localTime: "19:30:00" },
+          timezone: "Europe/Dublin",
+        },
       }),
     );
-    expect(events[0]!.startsAt).toBe("2099-06-01T00:00:00.000Z");
+    // Dublin uses UTC+1 in June; the provider's 19:30 local event is 18:30Z.
+    expect(events[0]!.startsAt).toBe("2030-06-01T18:30:00.000Z");
+  });
+
+  it("handles a date with no time as local midnight, not UTC midnight", () => {
+    const { events } = ticketmasterAdapter.parse(
+      payload({
+        ...GOOD,
+        dates: { start: { localDate: "2030-06-01" }, timezone: "Europe/Dublin" },
+      }),
+    );
+    expect(events[0]!.startsAt).toBe("2030-05-31T23:00:00.000Z");
+  });
+
+  it("uses non-European timezone offsets without assuming London", () => {
+    const { events } = ticketmasterAdapter.parse(
+      payload({
+        ...GOOD,
+        dates: {
+          start: { localDate: "2030-06-01", localTime: "19:30:00" },
+          timezone: "America/New_York",
+        },
+      }),
+    );
+    expect(events[0]!.startsAt).toBe("2030-06-01T23:30:00.000Z");
+  });
+
+  it("rejects nonexistent and ambiguous wall times at daylight-saving transitions", () => {
+    const transitions = [
+      { localDate: "2030-03-31", localTime: "01:30:00" },
+      { localDate: "2030-10-27", localTime: "01:30:00" },
+    ];
+    for (const start of transitions) {
+      const { events } = ticketmasterAdapter.parse(
+        payload({
+          ...GOOD,
+          dates: { start, timezone: "Europe/Dublin" },
+        }),
+      );
+      expect(events).toHaveLength(0);
+    }
+  });
+
+  it("refuses local wall time when the provider omits its timezone", () => {
+    const { events } = ticketmasterAdapter.parse(
+      payload({
+        ...GOOD,
+        dates: { start: { localDate: "2030-06-01", localTime: "19:30:00" } },
+      }),
+    );
+    expect(events).toHaveLength(0);
+  });
+
+  it("keeps an explicit instant when no display timezone is supplied", () => {
+    const { events } = ticketmasterAdapter.parse(
+      payload({
+        ...GOOD,
+        dates: { start: { dateTime: "2030-06-01T18:30:00Z" } },
+      }),
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0]!.startsAt).toBe("2030-06-01T18:30:00.000Z");
+    expect(events[0]!.timezone).toBe("UTC");
   });
 
   it("carries a cancellation and a postponement through", () => {
