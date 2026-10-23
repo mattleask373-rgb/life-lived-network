@@ -158,6 +158,9 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
       .from("needs")
       .select("*")
       .eq("id", data.needId)
+      // This endpoint is deliberately global-public only. Verified-local
+      // needs require an authenticated flow; don't rely on RLS alone here.
+      .eq("visibility", "public")
       .maybeSingle();
     if (error) throw error;
     if (!needRow) return null;
