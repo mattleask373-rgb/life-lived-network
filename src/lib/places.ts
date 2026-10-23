@@ -208,12 +208,13 @@ export interface PlaceIndex {
   roots: Place[];
 }
 
-export type PlaceHierarchyErrorCode = "DUPLICATE_ID" | "MISSING_PARENT" | "CYCLE";
+export type PlaceHierarchyErrorCode = "DUPLICATE_ID" | "DUPLICATE_SLUG" | "MISSING_PARENT" | "CYCLE";
 
 export class PlaceHierarchyError extends Error {
   constructor(readonly code: PlaceHierarchyErrorCode) {
     const messages: Record<PlaceHierarchyErrorCode, string> = {
       DUPLICATE_ID: "The canonical place hierarchy contains a duplicate place ID.",
+      DUPLICATE_SLUG: "The canonical place hierarchy contains a duplicate place slug.",
       MISSING_PARENT: "The canonical place hierarchy contains a missing parent reference.",
       CYCLE: "The canonical place hierarchy contains a parent cycle.",
     };
@@ -230,8 +231,9 @@ export function buildPlaceIndex(places: Place[]): PlaceIndex {
 
   for (const place of places) {
     if (byId.has(place.id)) throw new PlaceHierarchyError("DUPLICATE_ID");
+    // The database has a unique index on slug too; never silently overwrite it.
+    if (bySlug.has(place.slug)) throw new PlaceHierarchyError("DUPLICATE_SLUG");
     byId.set(place.id, place);
-    // Slugs can be market-specific; a repeated display name is never an ID.
     bySlug.set(place.slug, place);
   }
 
