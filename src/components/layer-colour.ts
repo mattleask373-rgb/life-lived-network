@@ -1,4 +1,10 @@
 import type { LayerId } from "@/lib/world-data";
+import {
+  formatLocalizedCurrency,
+  formatLocalizedDuration,
+  formatLocalizedEventDate,
+  type Locale,
+} from "@/lib/locale";
 
 /**
  * Layer colours resolve to design tokens only — never raw hex in components.
@@ -43,66 +49,20 @@ export function currencySymbol(currency = "GBP"): string {
   return SYMBOL[currency] ?? `${currency} `;
 }
 
-export function money(cost: number, currency = "GBP"): string {
-  const amount = new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: Number.isInteger(cost) ? 0 : 2,
-    maximumFractionDigits: 2,
-  }).format(Math.abs(cost));
-  if (cost < 0) return `Pays ${amount}`;
-  if (cost === 0) return "Free";
-  return amount;
+export function money(
+  cost: number,
+  currency = "GBP",
+  locale: Locale = "en",
+): string {
+  return formatLocalizedCurrency(cost, currency, locale);
 }
-
-export function duration(minutes: number): string {
-  if (minutes === 0) return "No fixed time";
-  if (minutes < 60) return `${minutes} min`;
-  const h = minutes / 60;
-  return `${Number.isInteger(h) ? h : h.toFixed(1)} hr`;
+export function duration(minutes: number, locale: Locale = "en"): string {
+  return formatLocalizedDuration(minutes, locale);
 }
-
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sept",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-/**
- * A real date and time, in the time zone where it is actually happening.
- *
- * Assembled from numeric parts and our own names rather than a locale string,
- * so a server and a browser in different places always read it out identically.
- */
-export function eventDate(startsAt: string, timezone?: string): string {
-  const at = new Date(startsAt);
-  if (Number.isNaN(at.getTime())) return "";
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    ...(timezone ? { timeZone: timezone } : {}),
-  }).formatToParts(at);
-  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
-  const weekday = DAYS[new Date(`${at.toISOString()}`).getUTCDay()] ?? "";
-  const day = Number(get("day"));
-  const month = MONTHS[Number(get("month")) - 1] ?? "";
-  const hour = get("hour").padStart(2, "0");
-  const minute = get("minute").padStart(2, "0");
-  if (!day || !month) return "";
-  const named = get("weekday") || weekday;
-  return `${named} ${day} ${month}, ${hour}:${minute}`;
+export function eventDate(
+  startsAt: string,
+  timezone?: string,
+  locale: Locale = "en",
+): string {
+  return formatLocalizedEventDate(startsAt, timezone, locale);
 }

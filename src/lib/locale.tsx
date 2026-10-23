@@ -18,6 +18,13 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   ja: "日本語",
 };
 
+export const LOCALE_TAGS: Record<Locale, string> = {
+  en: "en-GB",
+  pt: "pt-PT",
+  es: "es-ES",
+  ja: "ja-JP",
+};
+
 const EN = {
   "language.label": "Choose language",
   "nav.main": "Main navigation",
@@ -50,6 +57,14 @@ const EN = {
   "layer.people": "People",
   "layer.nature": "Nature",
   "layer.food": "Food",
+  "money.free": "Free",
+  "money.pays": "Pays",
+  "duration.none": "No fixed time",
+  "duration.minutesShort": "min",
+  "duration.hoursShort": "hr",
+  "detail.when": "When",
+  "detail.takes": "Takes",
+  "detail.money": "Money",
 } as const;
 
 export type TranslationKey = keyof typeof EN;
@@ -79,6 +94,14 @@ const MESSAGES: Record<Locale, Dictionary> = {
     "nav.yourAccount": "A sua conta",
     "nav.signIn": "Entrar",
     "nav.you": "Perfil",
+    "money.free": "Grátis",
+    "money.pays": "Paga",
+    "duration.none": "Sem duração fixa",
+    "duration.minutesShort": "min",
+    "duration.hoursShort": "h",
+    "detail.when": "Quando",
+    "detail.takes": "Duração",
+    "detail.money": "Custo",
     "map.layers": "O que mostrar no mapa",
     "map.everything": "Tudo",
     "layer.work": "Trabalho",
@@ -112,6 +135,14 @@ const MESSAGES: Record<Locale, Dictionary> = {
     "nav.yourAccount": "Tu cuenta",
     "nav.signIn": "Iniciar sesión",
     "nav.you": "Tú",
+    "money.free": "Gratis",
+    "money.pays": "Paga",
+    "duration.none": "Sin duración fija",
+    "duration.minutesShort": "min",
+    "duration.hoursShort": "h",
+    "detail.when": "Cuándo",
+    "detail.takes": "Duración",
+    "detail.money": "Coste",
     "map.layers": "Qué mostrar en el mapa",
     "map.everything": "Todo",
     "layer.work": "Trabajo",
@@ -145,6 +176,14 @@ const MESSAGES: Record<Locale, Dictionary> = {
     "nav.yourAccount": "あなたのアカウント",
     "nav.signIn": "ログイン",
     "nav.you": "あなた",
+    "money.free": "無料",
+    "money.pays": "報酬",
+    "duration.none": "時間指定なし",
+    "duration.minutesShort": "分",
+    "duration.hoursShort": "時間",
+    "detail.when": "日時",
+    "detail.takes": "所要時間",
+    "detail.money": "費用",
     "map.layers": "地図に表示するもの",
     "map.everything": "すべて",
     "layer.work": "仕事",
@@ -166,6 +205,56 @@ export function isLocale(value: unknown): value is Locale {
 
 export function translate(locale: Locale, key: TranslationKey): string {
   return MESSAGES[locale][key] ?? MESSAGES.en[key] ?? key;
+}
+
+export function formatLocalizedCurrency(cost: number, currency: string, locale: Locale): string {
+  const amount = new Intl.NumberFormat(LOCALE_TAGS[locale], {
+    style: "currency",
+    currency,
+    minimumFractionDigits: Number.isInteger(cost) ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(Math.abs(cost));
+  if (cost < 0) return translate(locale, "money.pays") + " " + amount;
+  if (cost === 0) return translate(locale, "money.free");
+  return amount;
+}
+
+export function formatLocalizedDuration(minutes: number, locale: Locale): string {
+  if (minutes === 0) return translate(locale, "duration.none");
+  if (minutes < 60) {
+    const value = new Intl.NumberFormat(LOCALE_TAGS[locale], {
+      maximumFractionDigits: 0,
+    }).format(minutes);
+    return value + " " + translate(locale, "duration.minutesShort");
+  }
+  const hours = minutes / 60;
+  const value = new Intl.NumberFormat(LOCALE_TAGS[locale], {
+    maximumFractionDigits: 1,
+  }).format(hours);
+  return value + " " + translate(locale, "duration.hoursShort");
+}
+
+export function formatLocalizedEventDate(
+  startsAt: string,
+  timezone: string | undefined,
+  locale: Locale,
+): string {
+  const at = new Date(startsAt);
+  if (Number.isNaN(at.getTime())) return "";
+  try {
+    return new Intl.DateTimeFormat(LOCALE_TAGS[locale], {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      ...(timezone ? { timeZone: timezone } : {}),
+    }).format(at);
+  } catch {
+    // Never silently replace an invalid event timezone with the device timezone.
+    return "";
+  }
 }
 
 interface LocaleContextValue {

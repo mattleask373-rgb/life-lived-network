@@ -16,6 +16,7 @@ import { SourceLastChecked } from "@/components/source-last-checked";
 import { WorkOpportunityFacts } from "@/components/work-opportunity-facts";
 import { ReportPublicContent } from "@/components/report-public-content";
 import { duration, eventDate, layerText, money } from "./layer-colour";
+import { useLocale } from "@/lib/locale";
 import { LayerIcon } from "./layer-icon";
 
 export function EntrySheet({
@@ -34,6 +35,7 @@ export function EntrySheet({
   onClose: () => void;
   onOpenEntry: (entry: WorldEntry) => void;
 }) {
+  const { locale, t } = useLocale();
   const layer = LAYERS.find((l) => l.id === entry.layer);
   const related = relatedEntries(world, entry);
   const photos = usableSourcePhotos(entry.photos);
@@ -142,18 +144,18 @@ export function EntrySheet({
 
           <dl className="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
             <div className="card-paper rounded-2xl p-3">
-              <dt className="text-xs text-muted-foreground">When</dt>
+              <dt className="text-xs text-muted-foreground">{t("detail.when")}</dt>
               <dd className="mt-0.5">
-                {entry.startsAt ? eventDate(entry.startsAt, entry.timezone) : entry.when}
+                {entry.startsAt ? eventDate(entry.startsAt, entry.timezone, locale) : entry.when}
               </dd>
             </div>
             <div className="card-paper rounded-2xl p-3">
-              <dt className="text-xs text-muted-foreground">Takes</dt>
-              <dd className="mt-0.5">{duration(entry.minutes)}</dd>
+              <dt className="text-xs text-muted-foreground">{t("detail.takes")}</dt>
+              <dd className="mt-0.5">{duration(entry.minutes, locale)}</dd>
             </div>
             <div className="card-paper rounded-2xl p-3">
-              <dt className="text-xs text-muted-foreground">Money</dt>
-              <dd className="mt-0.5">{money(entry.cost, entry.currency)}</dd>
+              <dt className="text-xs text-muted-foreground">{t("detail.money")}</dt>
+              <dd className="mt-0.5">{money(entry.cost, entry.currency, locale)}</dd>
             </div>
           </dl>
 
@@ -176,7 +178,7 @@ export function EntrySheet({
               <p className="mt-1 text-muted-foreground">{availabilityLine(entry)}</p>
               <p className="mt-1 text-muted-foreground">
                 {BOOKING_LABEL[asBookingState(entry.bookingState)]} ·{" "}
-                {money(entry.cost, entry.currency)}
+                {money(entry.cost, entry.currency, locale)}
               </p>
               <p className="mt-1 text-muted-foreground">{qualificationLine(entry)}</p>
               <div className="mt-3">
