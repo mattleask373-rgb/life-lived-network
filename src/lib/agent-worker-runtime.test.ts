@@ -330,6 +330,25 @@ describe("bounded agent worker runtime", () => {
     expect(db.recordFailureFenced).not.toHaveBeenCalled();
   });
 
+  it("refuses to invoke a provider when the lease expires before the first heartbeat", async () => {
+    const model = provider();
+    const db = adapters({
+      dispatchAtomically: vi.fn(async (request) => ({
+        ...lease(request),
+        leaseExpiresAt: new Date(Date.now() + 100).toISOString(),
+      })),
+    });
+
+    const result = await runAgentWorkerCycle(
+      input({ heartbeatIntervalMs: 250, adapters: db, provider: model }),
+    );
+
+    expect(result).toMatchObject({ outcome: "HELD", code: "INVALID_LEASE" });
+    expect(model.execute).not.toHaveBeenCalled();
+    expect(db.recordResultFenced).not.toHaveBeenCalled();
+    expect(db.recordFailureFenced).not.toHaveBeenCalled();
+  });
+
   it("aborts and records a timeout rather than retrying a slow provider", async () => {
     const db = adapters();
     const execute = vi.fn((_task, _context, _signal) => new Promise<unknown>(() => undefined));
