@@ -53,17 +53,23 @@ export const reportPublicContent = createServerFn({ method: "POST" })
       throw new Error("You can't report your own content.");
     }
 
-    const { error: reportError } = await context.supabase.from("content_reports").upsert(
-      {
+    const { error: reportError } = await context.supabase
+      .from("content_reports")
+      .insert({
         reporter_id: context.userId,
         reported_user_id: reportedUserId,
         subject_type: data.subjectType,
         subject_id: data.subjectId,
         reason: data.reason,
         note: data.note,
-      },
-      { onConflict: "reporter_id,subject_type,subject_id", ignoreDuplicates: true },
-    );
+      });
+
+    // A duplicate report is an idempotent outcome. Do not expose
+    // the existing report or its status to the caller.
+    if (reportError?.code === "23505") {
+      return { reported: true };
+    }
+
     if (reportError) throw reportError;
     return { reported: true };
   });
