@@ -22,6 +22,7 @@ describe("agent control-plane migration lineage (static contract)", () => {
       "20261008030000_agent_stale_recovery_rpc.sql",
       "20261008100000_agent_control_plane_hosted_proof.sql",
       "20261022190000_harden_agent_control_plane_overloads.sql",
+      "20261023130000_agent_dispatch_idempotency_scope.sql",
     ];
     expect(names).toEqual([...names].sort());
     for (const name of names) expect(migration(name).length).toBeGreaterThan(100);
@@ -46,6 +47,11 @@ describe("agent control-plane migration lineage (static contract)", () => {
     expect(migration("20261008030000_agent_stale_recovery_rpc.sql")).toContain(
       "CREATE OR REPLACE FUNCTION public.mark_stale_agent_tasks",
     );
+    const idempotency = migration("20261023130000_agent_dispatch_idempotency_scope.sql");
+    expect(idempotency).toContain("ALTER COLUMN attempt_id SET DEFAULT gen_random_uuid()");
+    expect(idempotency).toContain("correlation ID already bound to a different dispatch scope");
+    expect(idempotency).toContain("task_row.lease_generation IS DISTINCT FROM attempt_row.lease_generation");
+
   });
 
   it("keeps client table access denied and execution RPCs service-role only", () => {
