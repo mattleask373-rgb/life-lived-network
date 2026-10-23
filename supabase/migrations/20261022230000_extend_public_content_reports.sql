@@ -119,14 +119,10 @@ BEGIN
 END;
 $function$;
 
--- Enforce report validation for direct table inserts, including PostgREST.
-DROP TRIGGER IF EXISTS guard_content_report_insert
-  ON public.content_reports;
-
-CREATE TRIGGER guard_content_report_insert
-  BEFORE INSERT ON public.content_reports
-  FOR EACH ROW
-  EXECUTE FUNCTION private.guard_content_report_insert();
+-- The earlier 20261012174000_harden_connection_request_updates.sql migration
+-- already attached content_reports_insert_guard to this function. Replacing
+-- the function body above updates that existing trigger; do not add a second
+-- BEFORE INSERT trigger or every report would be validated twice.
 
 REVOKE ALL ON FUNCTION private.guard_content_report_insert()
   FROM PUBLIC, anon, authenticated;
