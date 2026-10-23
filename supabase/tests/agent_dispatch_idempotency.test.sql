@@ -48,7 +48,7 @@ FROM public.dispatch_agent_attempt(
 );
 
 SELECT ok(
-  (SELECT count(*) = 1 AND min(attempt_id) IS NOT NULL FROM dispatch_probe)
+  (SELECT count(*) = 1 AND bool_and(attempt_id IS NOT NULL) FROM dispatch_probe)
   AND (SELECT status = 'CLAIMED' AND lease_token IS NOT NULL AND lease_expiry > now()
        FROM public.agent_tasks WHERE task_id = 'audit-dispatch-task-1'),
   'first dispatch creates one attempt and a live fenced task lease'
