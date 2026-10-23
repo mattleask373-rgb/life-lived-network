@@ -55,6 +55,7 @@ function rowsFor(entries: WorldEntry[]): PublicListingSitemapRow[] {
     id: value.id,
     place_id: "city",
     demonstration: value.demonstration ?? false,
+    publiclyEligible: true,
   }));
 }
 
@@ -128,6 +129,16 @@ describe("service sitemap indexability", () => {
     expect(paths).toContain("/gb/other-city/cleaning");
     expect(paths).toContain("/gb/other-root/cleaning");
     expect(paths).not.toContain("/gb/wide-area/cleaning");
+  });
+
+  it("fails closed when public eligibility evidence is absent", () => {
+    const cleaner = entry();
+    const unknownRows = rowsFor([cleaner]).map((row) => {
+      const unknown = { ...row } as Record<string, unknown>;
+      delete unknown.publiclyEligible;
+      return unknown as unknown as PublicListingSitemapRow;
+    });
+    expect(indexableServicePaths(index, unknownRows, new Map([[cleaner.id, cleaner]]))).toEqual([]);
   });
 
   it("does not backfill ineligible raw rows from after the first 60 page slots", () => {

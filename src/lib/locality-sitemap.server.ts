@@ -57,9 +57,17 @@ async function readPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot> {
 
 async function loadPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot> {
   const supabase = publicServerClient();
+  const readPlaceCount = async (): Promise<number | null> => {
+    const { count, error } = await supabase
+      .from("places")
+      .select("id", { count: "exact", head: true });
+    if (error) throw error;
+    return count;
+  };
   const places = await readBoundedSitemapPages<Place>(
     LOCALITY_SITEMAP_PLACE_LIMIT,
     QUERY_PAGE_SIZE,
+    readPlaceCount,
     async (from, to) => {
       const { data, error } = await supabase
         .from("places")
@@ -67,40 +75,55 @@ async function loadPublicSitemapSnapshot(): Promise<PublicSitemapSnapshot> {
         .order("id", { ascending: true })
         .range(from, to);
       if (error) throw error;
-      return (data ?? []) as unknown as Place[];
+      return { rows: (data ?? []) as unknown as Place[] };
     },
+    (place) => place.id,
   );
 
   const index = buildPlaceIndex(places);
   const settled = new Date(Date.now() - 3 * 3_600_000).toISOString();
-  const rows: ListingRow[] = [];
-
-  // This mirrors getWorld(): same public/current filters, same ordering, and
-  // one bounded global stream rather than one query per locality/category.
-  for (let offset = 0; offset <= LOCALITY_SITEMAP_LISTING_SCAN_LIMIT; offset += QUERY_PAGE_SIZE) {
-    const end = Math.min(offset + QUERY_PAGE_SIZE - 1, LOCALITY_SITEMAP_LISTING_SCAN_LIMIT);
-    const { data, error } = await supabase
+  const readListingCount = async (): Promise<number | null> => {
+    const { count, error } = await supabase
       .from("listings")
-      .select("*")
+      .select("id", { count: "exact", head: true })
       .eq("status", "published")
       .neq("data_quality", "expired")
-      .or(`starts_at.is.null,starts_at.gte.${settled}`)
-      .order("starts_at", { ascending: true, nullsFirst: false })
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: true })
-      .range(offset, end);
-
+      .or(`starts_at.is.null,starts_at.gte.${settled}`);
     if (error) throw error;
-    const page = (data ?? []) as unknown as (ListingRow & {
-      starts_at: string | null;
-      created_at: string;
-    })[];
-    rows.push(...page);
-    if (rows.length > LOCALITY_SITEMAP_LISTING_SCAN_LIMIT) {
-      throw new SitemapSourceLimitError("Listing scan reached the sitemap source cap");
-    }
-    if (page.length < end - offset + 1) break;
-  }
+    return count;
+  };
+
+  // Same published/current filters and stable ordering as the world reader.
+  // Count before/after the scan detects truncation without repeating an exact
+  // count for every range window.
+  const rows = await readBoundedSitemapPages<
+    ListingRow & { starts_at: string | null; created_at: string }
+  >(
+    LOCALITY_SITEMAP_LISTING_SCAN_LIMIT,
+    QUERY_PAGE_SIZE,
+    readListingCount,
+    async (offset, end) => {
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("status", "published")
+        .neq("data_quality", "expired")
+        .or(`starts_at.is.null,starts_at.gte.${settled}`)
+        .order("starts_at", { ascending: true, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: true })
+        .range(offset, end);
+
+      if (error) throw error;
+      return {
+        rows: (data ?? []) as unknown as (ListingRow & {
+          starts_at: string | null;
+          created_at: string;
+        })[],
+      };
+    },
+    (row) => row.id,
+  );
 
   const importedIds = rows
     .filter((row) => row.origin === "source" || row.origin === "confirmed")

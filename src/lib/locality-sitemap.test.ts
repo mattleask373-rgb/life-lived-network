@@ -33,6 +33,7 @@ function rowsFor(placeId: string, count: number, demonstration = false): PublicL
     id: `${placeId}-${demonstration ? "demo" : "real"}-${index}`,
     place_id: placeId,
     demonstration,
+    publiclyEligible: true,
     // Input ordering is significant; production passes the listing query's
     // stable order, so the earliest 60 entries are the page that gets rendered.
   }));
@@ -64,6 +65,15 @@ describe("locality sitemap indexability", () => {
     expect(indexableLocalityPaths(geography, [...hidden, ...laterEligible])).not.toContain(
       "/gb/birmingham",
     );
+  });
+
+  it("fails closed when public eligibility evidence is absent", () => {
+    const unknownRows = rowsFor("city", 3).map((row) => {
+      const unknown = { ...row } as Record<string, unknown>;
+      delete unknown.publiclyEligible;
+      return unknown as unknown as PublicListingSitemapRow;
+    });
+    expect(indexableLocalityPaths(geography, unknownRows)).not.toContain("/gb/birmingham");
   });
 
   it("fails closed when a bounded source scan may be incomplete", () => {
@@ -128,55 +138,186 @@ describe("locality sitemap indexability", () => {
 });
 
 describe("bounded sitemap source paging", () => {
-  it("reads stable adjacent ranges until a short page proves the scan is complete", async () => {
-    const source = Array.from({ length: 2501 }, (_, index) => index);
-    const calls: Array<[number, number]> = [];
-    const rows = await readBoundedSitemapPages(3000, 1000, async (from, to) => {
-      calls.push([from, to]);
-      return source.slice(from, to + 1);
-    });
+  interface Row {
+    id: string;
+    value: number;
+  }
+
+  it("reads adjacent ranges using an exact total count", async () => {
+    const source: Row[] = Array.from({ length: 2501 }, (_, index) => ({
+      id: String(index),
+      value: index,
+    }));
+    const rangeCalls: Array<[number, number]> = [];
+    let countCalls = 0;
+    const rows = await readBoundedSitemapPages(
+      3000,
+      1000,
+      async () => {
+        countCalls += 1;
+        return source.length;
+      },
+      async (from, to) => {
+        rangeCalls.push([from, to]);
+        return { rows: source.slice(from, to + 1) };
+      },
+      (row) => row.id,
+    );
 
     expect(rows).toEqual(source);
-    expect(calls).toEqual([
+    expect(countCalls).toBe(2);
+    expect(rangeCalls).toEqual([
       [0, 999],
       [1000, 1999],
-      [2000, 2999],
+      [2000, 2500],
     ]);
   });
 
-  it("fails closed when the scan reaches its hard cap", async () => {
-    const source = [0, 1, 2, 3, 4];
-    const calls: Array<[number, number]> = [];
+  it("rejects a short upstream-capped page when exact count shows more rows exist", async () => {
+    const source: Row[] = Array.from({ length: 2000 }, (_, index) => ({
+      id: String(index),
+      value: index,
+    }));
+    const rangeCalls: Array<[number, number]> = [];
+
     await expect(
-      readBoundedSitemapPages(5, 2, async (from, to) => {
-        calls.push([from, to]);
-        return source.slice(from, to + 1);
-      }),
+      readBoundedSitemapPages(
+        3000,
+        1000,
+        async () => source.length,
+        async (from, to) => {
+          rangeCalls.push([from, to]);
+          return { rows: source.slice(from, Math.min(from + 500, to + 1)) };
+        },
+        (row) => row.id,
+      ),
     ).rejects.toBeInstanceOf(SitemapSourceLimitError);
-    expect(calls).toEqual([
+    expect(rangeCalls).toEqual([[0, 999]]);
+  });
+
+  it("fails closed when exact count is absent or invalid", async () => {
+    for (const count of [null, -1, Number.NaN, Number.POSITIVE_INFINITY, 1.5]) {
+      await expect(
+        readBoundedSitemapPages(
+          100,
+          10,
+          async () => count,
+          async () => ({ rows: [] as readonly Row[] }),
+          (row) => row.id,
+        ),
+      ).rejects.toBeInstanceOf(SitemapSourceLimitError);
+    }
+  });
+
+  it("fails closed if the exact total changes during the scan", async () => {
+    let countCall = 0;
+    const source: Row[] = Array.from({ length: 4 }, (_, index) => ({
+      id: String(index),
+      value: index,
+    }));
+    await expect(
+      readBoundedSitemapPages(
+        10,
+        2,
+        async () => {
+          countCall += 1;
+          return countCall === 1 ? 4 : 5;
+        },
+        async (from, to) => ({ rows: source.slice(from, to + 1) }),
+        (row) => row.id,
+      ),
+    ).rejects.toBeInstanceOf(SitemapSourceLimitError);
+  });
+
+  it("fails closed when the source cap is reached", async () => {
+    const source: Row[] = Array.from({ length: 5 }, (_, index) => ({
+      id: String(index),
+      value: index,
+    }));
+    const rangeCalls: Array<[number, number]> = [];
+    await expect(
+      readBoundedSitemapPages(
+        5,
+        2,
+        async () => source.length,
+        async (from, to) => {
+          rangeCalls.push([from, to]);
+          return { rows: source.slice(from, to + 1) };
+        },
+        (row) => row.id,
+      ),
+    ).rejects.toBeInstanceOf(SitemapSourceLimitError);
+    expect(rangeCalls).toEqual([]);
+  });
+
+  it("accepts a complete empty source and a source below the hard cap", async () => {
+    await expect(
+      readBoundedSitemapPages(
+        5,
+        2,
+        async () => 0,
+        async () => ({ rows: [] as readonly Row[] }),
+        (row) => row.id,
+      ),
+    ).resolves.toEqual([]);
+
+    const source: Row[] = Array.from({ length: 4 }, (_, index) => ({
+      id: String(index),
+      value: index,
+    }));
+    const rangeCalls: Array<[number, number]> = [];
+    const rows = await readBoundedSitemapPages(
+      5,
+      2,
+      async () => source.length,
+      async (from, to) => {
+        rangeCalls.push([from, to]);
+        return { rows: source.slice(from, to + 1) };
+      },
+      (row) => row.id,
+    );
+    expect(rows).toEqual(source);
+    expect(rangeCalls).toEqual([
       [0, 1],
       [2, 3],
-      [4, 4],
     ]);
   });
 
-  it("accepts a complete scan below the hard cap, including the final empty page", async () => {
-    const source = [0, 1, 2, 3];
-    const calls: Array<[number, number]> = [];
-    const rows = await readBoundedSitemapPages(5, 2, async (from, to) => {
-      calls.push([from, to]);
-      return source.slice(from, to + 1);
-    });
-    expect(rows).toEqual(source);
-    expect(calls).toEqual([
-      [0, 1],
-      [2, 3],
-      [4, 4],
-    ]);
+  it("rejects missing and duplicate row identities", async () => {
+    const dupes: Row[] = [
+      { id: "a", value: 1 },
+      { id: "b", value: 2 },
+      { id: "b", value: 3 },
+      { id: "d", value: 4 },
+    ];
+    await expect(
+      readBoundedSitemapPages(
+        10,
+        2,
+        async () => dupes.length,
+        async (from, to) => ({ rows: dupes.slice(from, to + 1) }),
+        (row) => row.id,
+      ),
+    ).rejects.toBeInstanceOf(SitemapSourceLimitError);
+    await expect(
+      readBoundedSitemapPages(
+        10,
+        2,
+        async () => 1,
+        async () => ({ rows: [{ id: "", value: 1 }] }),
+        (row) => row.id,
+      ),
+    ).rejects.toBeInstanceOf(SitemapSourceLimitError);
   });
 
   it("rejects invalid scan bounds", async () => {
-    await expect(readBoundedSitemapPages(0, 10, async () => [])).rejects.toThrow(RangeError);
-    await expect(readBoundedSitemapPages(10, 0, async () => [])).rejects.toThrow(RangeError);
+    const emptyCounter = async () => 0;
+    const emptyReader = async () => ({ rows: [] as readonly Row[] });
+    await expect(
+      readBoundedSitemapPages(0, 10, emptyCounter, emptyReader, (row) => row.id),
+    ).rejects.toThrow(RangeError);
+    await expect(
+      readBoundedSitemapPages(10, 0, emptyCounter, emptyReader, (row) => row.id),
+    ).rejects.toThrow(RangeError);
   });
 });
