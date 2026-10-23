@@ -116,11 +116,11 @@ BEGIN
     status = to_status,
     updated_at = now(),
     reviewer = CASE
-      WHEN actor_role = 'reviewer' THEN COALESCE(reviewer, actor)
+      WHEN actor_role = 'reviewer' THEN COALESCE(transition_agent_task.reviewer, actor)
       ELSE t.reviewer
     END,
     evidence = CASE
-      WHEN evidence IS NOT NULL THEN COALESCE(t.evidence, '[]'::jsonb) || jsonb_build_array(evidence)
+      WHEN transition_agent_task.evidence IS NOT NULL THEN COALESCE(t.evidence, '[]'::jsonb) || jsonb_build_array(transition_agent_task.evidence)
       ELSE t.evidence
     END,
     -- Clear lease when leaving active ownership into terminal/side states
