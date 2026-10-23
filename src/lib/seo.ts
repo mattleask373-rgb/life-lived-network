@@ -143,19 +143,26 @@ export const XML_HEADERS = {
  * Crawler policy generated from the single PRIVATE_PATHS source of truth.
  * robots.txt is not access control. Static public/robots.txt must match this
  * output so both the static deploy path and the server route stay aligned.
+ *
+ * Keep a dedicated OAI-SearchBot group for ChatGPT Search discovery. Private
+ * routes are repeated in that group because a crawler-specific group should
+ * not rely on inheriting rules from the wildcard group.
  */
 export function robotsTxt(): string {
+  const privateDisallows = PRIVATE_PATHS.map((path) => `Disallow: ${path}`);
   const lines = [
+    "# ChatGPT Search may discover eligible public Atlas content.",
+    "# Repeat private-route rules in this specific crawler group.",
+    "User-agent: OAI-SearchBot",
+    "Allow: /",
+    ...privateDisallows,
+    "",
     "User-agent: *",
     "Allow: /",
+    ...privateDisallows,
     "",
-    "# Routes intentionally disallowed to crawlers. Keep in sync with PRIVATE_PATHS",
-    "# in src/lib/seo-route-policy.ts. robots.txt is crawler policy, not access control.",
-    "# NOINDEX_PATHS routes stay crawlable so crawlers can observe their noindex metadata.",
-    ...PRIVATE_PATHS.map((path) => `Disallow: ${path}`),
-    "",
-    "# /sitemap.xml is a sitemap index. Its child sitemaps list public screens",
-    "# locality/service pages that pass their current public-content indexability gates.",
+    "# /life-list intentionally stays crawlable so crawlers can observe its noindex metadata.",
+    "# The sitemap index lists only pages that pass the shared public-content indexability gates.",
     `Sitemap: ${SITE_ORIGIN}/sitemap.xml`,
     "",
   ];
