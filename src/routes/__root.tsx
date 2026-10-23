@@ -14,6 +14,14 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { WorldProvider } from "../lib/world-context";
 import { useSession } from "../hooks/use-session";
+import {
+  LocaleProvider,
+  LOCALE_LABELS,
+  SUPPORTED_LOCALES,
+  isLocale,
+  useLocale,
+  type TranslationKey,
+} from "../lib/locale";
 import { CompassMark } from "../components/compass-mark";
 import { Compass, Search, Route as RouteIcon, User } from "lucide-react";
 
@@ -140,44 +148,54 @@ function RootShell({ children }: { children: ReactNode }) {
  */
 const DOORS: {
   to: string;
-  label: string;
-  blurb: string;
-  under: { to: string; label: string }[];
+  labelKey: TranslationKey;
+  blurbKey: TranslationKey;
+  under: { to: string; labelKey: TranslationKey }[];
 }[] = [
   {
     to: "/",
-    label: "Explore",
-    blurb: "What's around you",
+    labelKey: "nav.explore",
+    blurbKey: "nav.exploreBlurb",
     under: [
-      { to: "/make", label: "Add something real" },
-      { to: "/life-list", label: "Your life list" },
-      { to: "/memories", label: "Places I've known" },
+      { to: "/make", labelKey: "nav.addSomething" },
+      { to: "/life-list", labelKey: "nav.lifeList" },
+      { to: "/memories", labelKey: "nav.memories" },
     ],
   },
   {
     to: "/need",
-    label: "Find",
-    blurb: "What you need, or can give",
+    labelKey: "nav.find",
+    blurbKey: "nav.findBlurb",
     under: [
-      { to: "/give", label: "I have an hour" },
-      { to: "/help", label: "What you can do" },
-      { to: "/earn", label: "Ways to earn" },
-      { to: "/conversations", label: "Conversations" },
+      { to: "/give", labelKey: "nav.haveHour" },
+      { to: "/help", labelKey: "nav.whatCanDo" },
+      { to: "/earn", labelKey: "nav.waysEarn" },
+      { to: "/conversations", labelKey: "nav.conversations" },
     ],
   },
   {
     to: "/road-trip",
-    label: "Journey",
-    blurb: "What's along your way",
-    under: [{ to: "/journey", label: "Shape a longer stay" }],
+    labelKey: "nav.journey",
+    blurbKey: "nav.journeyBlurb",
+    under: [{ to: "/journey", labelKey: "nav.longerStay" }],
   },
 ];
 
 function SiteHeader() {
   const { user, ready } = useSession();
+  const { locale, setLocale, t } = useLocale();
+  const doors = DOORS.map((door) => ({
+    to: door.to,
+    label: t(door.labelKey),
+    blurb: t(door.blurbKey),
+    under: door.under.map((link) => ({ to: link.to, label: t(link.labelKey) })),
+  }));
   return (
     <header className="border-b border-border bg-card/80 backdrop-blur-sm">
-      <nav aria-label="Main" className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6">
+      <nav
+        aria-label={t("nav.main")}
+        className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6"
+      >
         <div className="flex items-baseline justify-between gap-4">
           <Link to="/" className="focus-ink flex min-w-0 items-center gap-2 rounded-md">
             <CompassMark className="h-8 w-8 shrink-0" />
@@ -188,16 +206,36 @@ function SiteHeader() {
               <span className="block truncate font-display text-lg italic">Atlas</span>
             </span>
           </Link>
-          <Link
-            to={user ? "/profile" : "/auth"}
-            activeProps={{ className: "text-foreground" }}
-            className="focus-ink shrink-0 rounded-md px-2 py-1 text-sm text-muted-foreground hover:text-foreground"
-          >
-            {!ready ? "Account" : user ? "Your account" : "Sign in"}
-          </Link>
+          <div className="flex shrink-0 items-center gap-2">
+            <label className="sr-only" htmlFor="atlas-language">
+              {t("language.label")}
+            </label>
+            <select
+              id="atlas-language"
+              aria-label={t("language.label")}
+              value={locale}
+              onChange={(event) => {
+                if (isLocale(event.currentTarget.value)) setLocale(event.currentTarget.value);
+              }}
+              className="focus-ink min-h-11 max-w-28 rounded-lg border border-border bg-background px-2 text-xs text-foreground"
+            >
+              {SUPPORTED_LOCALES.map((supported) => (
+                <option key={supported} value={supported}>
+                  {LOCALE_LABELS[supported]}
+                </option>
+              ))}
+            </select>
+            <Link
+              to={user ? "/profile" : "/auth"}
+              activeProps={{ className: "text-foreground" }}
+              className="focus-ink shrink-0 rounded-md px-2 py-1 text-sm text-muted-foreground hover:text-foreground"
+            >
+              {!ready ? t("nav.account") : user ? t("nav.yourAccount") : t("nav.signIn")}
+            </Link>
+          </div>
         </div>
         <div className="hidden items-stretch gap-2 overflow-x-auto pb-1 md:flex">
-          {DOORS.map((door) => (
+          {doors.map((door) => (
             <Link
               key={door.to}
               to={door.to}
@@ -210,16 +248,18 @@ function SiteHeader() {
           ))}
         </div>
         <div className="flex items-center gap-4 overflow-x-auto whitespace-nowrap text-xs text-muted-foreground">
-          {DOORS.flatMap((door) => door.under).map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              activeProps={{ className: "text-foreground" }}
-              className="hover:text-foreground"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {doors
+            .flatMap((door) => door.under)
+            .map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                activeProps={{ className: "text-foreground" }}
+                className="hover:text-foreground"
+              >
+                {link.label}
+              </Link>
+            ))}
         </div>
       </nav>
     </header>
@@ -229,20 +269,21 @@ function SiteHeader() {
 /** Thumb-reach tabs on small screens; the same doors as the desktop header. */
 function MobileTabs() {
   const { user } = useSession();
+  const { t } = useLocale();
   const tabs = [
-    { to: "/", label: "Explore", icon: Compass, exact: true },
-    { to: "/need", label: "Find", icon: Search, exact: false },
-    { to: "/road-trip", label: "Journey", icon: RouteIcon, exact: false },
-    { to: user ? "/profile" : "/auth", label: "You", icon: User, exact: false },
+    { to: "/", labelKey: "nav.explore", icon: Compass, exact: true },
+    { to: "/need", labelKey: "nav.find", icon: Search, exact: false },
+    { to: "/road-trip", labelKey: "nav.journey", icon: RouteIcon, exact: false },
+    { to: user ? "/profile" : "/auth", labelKey: "nav.you", icon: User, exact: false },
   ];
   return (
     <nav
-      aria-label="Main tabs"
+      aria-label={t("nav.mainTabs")}
       className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur-sm md:hidden"
     >
       <ul className="mx-auto flex max-w-md justify-around px-2 pt-1">
-        {tabs.map(({ to, label, icon: Icon, exact }) => (
-          <li key={label} className="flex-1">
+        {tabs.map(({ to, labelKey, icon: Icon, exact }) => (
+          <li key={labelKey} className="flex-1">
             <Link
               to={to}
               activeOptions={{ exact }}
@@ -250,7 +291,7 @@ function MobileTabs() {
               className="focus-ink flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-xs font-medium text-muted-foreground"
             >
               <Icon className="h-5 w-5" aria-hidden="true" />
-              {label}
+              {t(labelKey)}
             </Link>
           </li>
         ))}
@@ -273,14 +314,16 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <WorldProvider>
-        <SiteHeader />
-        <div className="pb-20 md:pb-0">
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-        </div>
-        <MobileTabs />
-      </WorldProvider>
+      <LocaleProvider>
+        <WorldProvider>
+          <SiteHeader />
+          <div className="pb-20 md:pb-0">
+            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <Outlet />
+          </div>
+          <MobileTabs />
+        </WorldProvider>
+      </LocaleProvider>
     </QueryClientProvider>
   );
 }
