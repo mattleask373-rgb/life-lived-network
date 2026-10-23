@@ -75,7 +75,10 @@ const users = {
   childReader: { id: randomUUID(), email: `local-discovery-child-reader-${testTag}@example.test` },
   noGrant: { id: randomUUID(), email: `local-discovery-no-grant-${testTag}@example.test` },
   providerB: { id: randomUUID(), email: `local-discovery-provider-b-${testTag}@example.test` },
-  providerChild: { id: randomUUID(), email: `local-discovery-provider-child-${testTag}@example.test` },
+  providerChild: {
+    id: randomUUID(),
+    email: `local-discovery-provider-child-${testTag}@example.test`,
+  },
 };
 const places = {
   a: { id: randomUUID(), slug: `rwa-test-a-${testTag}`, name: "Synthetic Locality A" },
@@ -92,23 +95,43 @@ const needs = {
 };
 const facts = {
   capabilities: {
-    publicA: randomUUID(), localA: randomUUID(), localChild: randomUUID(), localB: randomUUID(),
-    privateA: randomUUID(), staleA: randomUUID(), expiredA: randomUUID(),
+    publicA: randomUUID(),
+    localA: randomUUID(),
+    localChild: randomUUID(),
+    localB: randomUUID(),
+    privateA: randomUUID(),
+    staleA: randomUUID(),
+    expiredA: randomUUID(),
   },
   serviceAreas: {
-    publicA: randomUUID(), localA: randomUUID(), localChild: randomUUID(), localB: randomUUID(),
-    localBFromProviderA: randomUUID(), privateA: randomUUID(),
+    publicA: randomUUID(),
+    localA: randomUUID(),
+    localChild: randomUUID(),
+    localB: randomUUID(),
+    localBFromProviderA: randomUUID(),
+    privateA: randomUUID(),
   },
   availability: {
-    publicA: randomUUID(), localA: randomUUID(), localChild: randomUUID(), localB: randomUUID(),
-    privateA: randomUUID(), staleA: randomUUID(), expiredA: randomUUID(),
+    publicA: randomUUID(),
+    localA: randomUUID(),
+    localChild: randomUUID(),
+    localB: randomUUID(),
+    privateA: randomUUID(),
+    staleA: randomUUID(),
+    expiredA: randomUUID(),
   },
   opportunityPreferences: {
-    publicA: randomUUID(), localA: randomUUID(), localChild: randomUUID(), localB: randomUUID(),
+    publicA: randomUUID(),
+    localA: randomUUID(),
+    localChild: randomUUID(),
+    localB: randomUUID(),
     privateA: randomUUID(),
   },
   contributions: {
-    publicA: randomUUID(), localA: randomUUID(), localChild: randomUUID(), localB: randomUUID(),
+    publicA: randomUUID(),
+    localA: randomUUID(),
+    localChild: randomUUID(),
+    localB: randomUUID(),
     privateA: randomUUID(),
   },
 };
@@ -583,40 +606,73 @@ async function main() {
       { _need_place_id: places.b.id },
     );
 
-    // Exercise every per-fact table through the actual PostgREST endpoint:
-    // known-ID reads must obey the same RLS boundary as filtered collections.
+    // Exercise every per-fact table through PostgREST, including known-ID
+    // reads and exact-count HEAD requests for hidden rows.
     async function expectOneFact(name, table, id, token, visibility) {
       try {
-        const query = new URLSearchParams({ select: "id,visibility", id: "eq." + id });
-        const response = await apiRequest("/rest/v1/" + table + "?" + query.toString(), token);
+        const query = new URLSearchParams({
+          select: "id,visibility",
+          id: "eq." + id,
+        });
+        const response = await apiRequest(
+          "/rest/v1/" + table + "?" + query.toString(),
+          token,
+        );
         const rows = Array.isArray(response.json) ? response.json : null;
-        add(name, response.status === 200 && rows?.length === 1 && rows[0]?.id === id && rows[0]?.visibility === visibility,
-          "expected exactly one permitted synthetic fact; HTTP " + response.status);
+        add(
+          name,
+          response.status === 200 &&
+            rows?.length === 1 &&
+            rows[0]?.id === id &&
+            rows[0]?.visibility === visibility,
+          "expected exactly one permitted synthetic fact; HTTP " + response.status,
+        );
       } catch {
         add(name, false, "request failed; details withheld");
       }
     }
+
     async function expectZeroFact(name, table, id, token) {
       try {
-        const query = new URLSearchParams({ select: "id,visibility", id: "eq." + id });
-        const response = await apiRequest("/rest/v1/" + table + "?" + query.toString(), token);
+        const query = new URLSearchParams({
+          select: "id,visibility",
+          id: "eq." + id,
+        });
+        const response = await apiRequest(
+          "/rest/v1/" + table + "?" + query.toString(),
+          token,
+        );
         const rows = Array.isArray(response.json) ? response.json : null;
-        add(name, response.status === 200 && Array.isArray(rows) && rows.length === 0,
-          "expected zero visible synthetic facts; HTTP " + response.status);
+        add(
+          name,
+          response.status === 200 && Array.isArray(rows) && rows.length === 0,
+          "expected zero visible synthetic facts; HTTP " + response.status,
+        );
       } catch {
         add(name, false, "request failed; details withheld");
       }
     }
+
     async function expectZeroFactHead(name, table, id, token) {
       try {
-        const query = new URLSearchParams({ select: "id", id: "eq." + id });
-        const response = await apiRequest("/rest/v1/" + table + "?" + query.toString(), token,
-          { Prefer: "count=exact", Range: "0-0" }, "HEAD");
+        const query = new URLSearchParams({
+          select: "id",
+          id: "eq." + id,
+        });
+        const response = await apiRequest(
+          "/rest/v1/" + table + "?" + query.toString(),
+          token,
+          { Prefer: "count=exact", Range: "0-0" },
+          "HEAD",
+        );
         const range = response.headers.get("content-range") ?? "";
         const slash = range.lastIndexOf("/");
         const total = slash >= 0 ? range.slice(slash + 1) : "";
-        add(name, response.status === 200 && total === "0",
-          "expected Content-Range total zero; HTTP " + response.status);
+        add(
+          name,
+          response.status === 200 && total === "0",
+          "expected Content-Range total zero; HTTP " + response.status,
+        );
       } catch {
         add(name, false, "request failed; details withheld");
       }
@@ -624,33 +680,149 @@ async function main() {
 
     for (const group of factTables) {
       const facts = group.ids;
-      await expectOneFact("anon reads explicit public " + group.table, group.table, facts.publicA, anon, "public");
-      await expectZeroFact("anon cannot read local A in " + group.table, group.table, facts.localA, anon);
-      await expectZeroFact("anon cannot read child in " + group.table, group.table, facts.localChild, anon);
-      await expectZeroFact("anon cannot read local B in " + group.table, group.table, facts.localB, anon);
-      await expectZeroFact("anon cannot read private in " + group.table, group.table, facts.privateA, anon);
+      await expectOneFact(
+        "anon reads explicit public " + group.table,
+        group.table,
+        facts.publicA,
+        anon,
+        "public",
+      );
+      await expectZeroFact(
+        "anon cannot read local A in " + group.table,
+        group.table,
+        facts.localA,
+        anon,
+      );
+      await expectZeroFact(
+        "anon cannot read child in " + group.table,
+        group.table,
+        facts.localChild,
+        anon,
+      );
+      await expectZeroFact(
+        "anon cannot read local B in " + group.table,
+        group.table,
+        facts.localB,
+        anon,
+      );
+      await expectZeroFact(
+        "anon cannot read private in " + group.table,
+        group.table,
+        facts.privateA,
+        anon,
+      );
 
-      await expectOneFact("A reads exact A fact in " + group.table, group.table, facts.localA, userA, "local_discovery");
-      await expectZeroFact("A cannot read child fact in " + group.table, group.table, facts.localChild, userA);
-      await expectZeroFact("A cannot read B fact in " + group.table, group.table, facts.localB, userA);
-      await expectZeroFact("A cannot read private fact in " + group.table, group.table, facts.privateA, userA);
-      await expectZeroFactHead("A cannot infer B existence by HEAD in " + group.table, group.table, facts.localB, userA);
+      await expectOneFact(
+        "A reads exact A fact in " + group.table,
+        group.table,
+        facts.localA,
+        userA,
+        "local_discovery",
+      );
+      await expectZeroFact(
+        "A cannot read child fact in " + group.table,
+        group.table,
+        facts.localChild,
+        userA,
+      );
+      await expectZeroFact(
+        "A cannot read B fact in " + group.table,
+        group.table,
+        facts.localB,
+        userA,
+      );
+      await expectZeroFact(
+        "A cannot read private fact in " + group.table,
+        group.table,
+        facts.privateA,
+        userA,
+      );
+      await expectZeroFactHead(
+        "A cannot infer B existence by HEAD in " + group.table,
+        group.table,
+        facts.localB,
+        userA,
+      );
 
-      await expectOneFact("B reads exact B fact in " + group.table, group.table, facts.localB, userB, "local_discovery");
-      await expectZeroFact("B cannot read A fact in " + group.table, group.table, facts.localA, userB);
-      await expectZeroFact("B cannot read child fact in " + group.table, group.table, facts.localChild, userB);
-      await expectZeroFact("B cannot read private fact in " + group.table, group.table, facts.privateA, userB);
+      await expectOneFact(
+        "B reads exact B fact in " + group.table,
+        group.table,
+        facts.localB,
+        userB,
+        "local_discovery",
+      );
+      await expectZeroFact(
+        "B cannot read A fact in " + group.table,
+        group.table,
+        facts.localA,
+        userB,
+      );
+      await expectZeroFact(
+        "B cannot read child fact in " + group.table,
+        group.table,
+        facts.localChild,
+        userB,
+      );
+      await expectZeroFact(
+        "B cannot read private fact in " + group.table,
+        group.table,
+        facts.privateA,
+        userB,
+      );
 
-      await expectOneFact("child reader reads exact child fact in " + group.table, group.table, facts.localChild, userChild, "local_discovery");
-      await expectZeroFact("child reader cannot read A fact in " + group.table, group.table, facts.localA, userChild);
-      await expectZeroFact("child reader cannot read B fact in " + group.table, group.table, facts.localB, userChild);
-      await expectZeroFact("child reader cannot read private fact in " + group.table, group.table, facts.privateA, userChild);
+      await expectOneFact(
+        "child reader reads exact child fact in " + group.table,
+        group.table,
+        facts.localChild,
+        userChild,
+        "local_discovery",
+      );
+      await expectZeroFact(
+        "child reader cannot read A fact in " + group.table,
+        group.table,
+        facts.localA,
+        userChild,
+      );
+      await expectZeroFact(
+        "child reader cannot read B fact in " + group.table,
+        group.table,
+        facts.localB,
+        userChild,
+      );
+      await expectZeroFact(
+        "child reader cannot read private fact in " + group.table,
+        group.table,
+        facts.privateA,
+        userChild,
+      );
 
-      await expectZeroFact("profile-only user cannot read local A in " + group.table, group.table, facts.localA, userNoGrant);
-      await expectOneFact("owner retains own private fact in " + group.table, group.table, facts.privateA, jwtFor(users.owner.id), "private");
+      await expectZeroFact(
+        "profile-only user cannot read local A in " + group.table,
+        group.table,
+        facts.localA,
+        userNoGrant,
+      );
+      await expectOneFact(
+        "owner retains own private fact in " + group.table,
+        group.table,
+        facts.privateA,
+        jwtFor(users.owner.id),
+        "private",
+      );
     }
-    await expectZeroFact("A cannot read service-area row targeted at B", "service_areas", facts.serviceAreas.localBFromProviderA, userA);
-    await expectOneFact("B can read service-area row targeted at B even when provider profile is A", "service_areas", facts.serviceAreas.localBFromProviderA, userB, "local_discovery");
+    await expectZeroFact(
+      "A cannot read service-area row targeted at B",
+      "service_areas",
+      facts.serviceAreas.localBFromProviderA,
+      userA,
+    );
+    await expectOneFact(
+      "B can read service-area row targeted at B even when provider profile is A",
+      "service_areas",
+      facts.serviceAreas.localBFromProviderA,
+      userB,
+      "local_discovery",
+    );
 
     const failures = results.filter((r) => !r.ok);
     for (const result of results) {
