@@ -16,7 +16,12 @@ export const reviewLocalityMembershipInput = z.discriminatedUnion("action", [
       userId,
       placeId,
       reasonCode: z.enum(["locality_relationship_verified", "local_steward_attestation"]),
-      verificationMethod: z.enum(["in_person", "local_steward", "document_checked", "other_reviewed"]),
+      verificationMethod: z.enum([
+        "in_person",
+        "local_steward",
+        "document_checked",
+        "other_reviewed",
+      ]),
       evidenceReference,
     })
     .strict(),
@@ -25,7 +30,12 @@ export const reviewLocalityMembershipInput = z.discriminatedUnion("action", [
       action: z.literal("revoke"),
       userId,
       placeId,
-      reasonCode: z.enum(["member_request", "verification_expired", "steward_review", "admin_correction"]),
+      reasonCode: z.enum([
+        "member_request",
+        "verification_expired",
+        "steward_review",
+        "admin_correction",
+      ]),
     })
     .strict(),
 ]);
