@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 
+import { renderSeoStaticAssets, validatePublicSiteOrigin } from "./seo-static-assets";
+
 import {
   absoluteUrl,
   privatePage,
@@ -13,6 +15,43 @@ import {
   robotsTxt,
   SITE_ORIGIN,
 } from "./seo";
+
+describe("generated static crawler assets", () => {
+  it("uses the configured canonical HTTPS origin for both static files", () => {
+    const assets = renderSeoStaticAssets("https://atlas.example/");
+    expect(validatePublicSiteOrigin("https://atlas.example/")).toBe("https://atlas.example");
+    expect(assets.robots).toContain("Sitemap: https://atlas.example/sitemap.xml");
+    expect(assets.sitemap).toContain(
+      "<loc>https://atlas.example/api/public/sitemap-pages.xml</loc>",
+    );
+    expect(assets.sitemap).toContain(
+      "<loc>https://atlas.example/api/public/sitemap-localities.xml</loc>",
+    );
+    expect(assets.robots).not.toContain("life-lived-network.lovable.app");
+    expect(assets.sitemap).not.toContain("life-lived-network.lovable.app");
+  });
+
+  it("rejects non-HTTPS, credentialed, path, query and fragment origins", () => {
+    for (const invalid of [
+      "http://atlas.example",
+      "https://user:password@atlas.example",
+      "https://atlas.example/app",
+      "https://atlas.example?campaign=1",
+      "https://atlas.example#section",
+      "not-a-url",
+    ]) {
+      expect(() => validatePublicSiteOrigin(invalid)).toThrow();
+    }
+  });
+
+  it("runs static asset generation as part of the production build", () => {
+    const packageJson = JSON.parse(
+      readFileSync(new URL("../../package.json", import.meta.url), "utf8"),
+    ) as { scripts?: { build?: string } };
+    expect(packageJson.scripts?.build).toContain("bun scripts/generate-seo-public-assets.ts");
+    expect(packageJson.scripts?.build).toContain("vite build");
+  });
+});
 
 describe("canonical addresses", () => {
   it("drops tracking parameters and fragments", () => {
