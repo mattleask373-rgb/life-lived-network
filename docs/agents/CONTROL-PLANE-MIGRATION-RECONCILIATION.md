@@ -1,7 +1,8 @@
 # Agent control-plane migration reconciliation
 
 **Audit date:** 22 October 2026  
-**Canonical main reviewed:** `a99d09f1517523a7a388245ca6b3d5c1245816cb`  
+**Original audit base:** `a99d09f1517523a7a388245ca6b3d5c1245816cb`  
+**Reconciliation branch rebuilt on current main:** `1f0a5d2b1c717db6cfc10c63f851a0e428313ee2`  
 **Status:** blocked before migration implementation/activation; no database was queried or changed by this source audit.
 
 ## Executive finding
@@ -85,3 +86,21 @@ Evidence must include commit SHA, migration versions, confirmed environment iden
 - Do not merge the divergent supervisor branch wholesale.
 - Do not run schema/ACL/RLS/grant changes on a hosted project until its identity and migration history are confirmed and the change is reviewed.
 - Keep executor activation, provider calls, automated merges/deployments and external side effects disabled until this lineage and issue #117's hostile-role proof pass, with independent review and explicit owner approval.
+
+
+## Current-main reconciliation candidate — 22 October 2026
+
+A new draft branch `agent/chatgpt/control-plane-reconciliation-current-main-2026-10-22` restores the eleven ordered candidate migrations onto current main without merging the divergent supervisor branch wholesale. It also includes:
+
+- a follow-up migration that removes the legacy three-argument heartbeat overload (the existing 17:10 tail only drops the two-argument overload);
+- final SECURITY DEFINER search-path hardening for the authoritative RPC signatures;
+- final explicit client-role table/function revokes plus service-role grants;
+- a fix to the read-only hosted-proof function so missing relations are evaluated with `to_regclass`, not unsafe `'name'::regclass` casts;
+- a static test that checks file order, table/function dependency signatures, client-deny/RPC-grant policy and both legacy heartbeat overloads.
+
+**These are repository-source tests, not SQL replay or hosted proof.** The branch must remain draft. The missing migrations have historical timestamps earlier than other migrations already on main. An authorized owner must inspect the actual remote migration-history table and identify the connected project before any migration push/repair. Clean replay and upgrade of an already-applied remote database are different cases; do not blindly execute this branch on a hosted project.
+
+
+## Current-main source rebuild — 22 October 2026
+
+The proposed migration/test/documentation files in this branch have been rebuilt directly on current `main` at `1f0a5d2b1c717db6cfc10c63f851a0e428313ee2`, instead of carrying the old divergent commit history. The current main migration directory contains the existing `20261007171000_remove_unfenced_heartbeat.sql` and `20261007172000_fence_release.sql` tail plus later connection-request migrations; no filename collision was found for the candidate's added migration filenames. This is a source-order inventory only. It does not establish which migration versions a hosted database has applied, and it is not replay, upgrade, grants/RLS verification, or deployment evidence.

@@ -21,6 +21,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
@@ -33,6 +35,60 @@ jobs:
       - run: bun run lint
       - run: bun run test
       - run: bun run build
+
+      - name: Detect database migration changes
+        id: migration-changes
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          PUSH_BASE_SHA: ${{ github.event.before || '' }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            base="$PR_BASE_SHA"
+          else
+            base="$PUSH_BASE_SHA"
+          fi
+          if [[ -z "$base" || "$base" =~ ^0+$ ]] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Base commit unavailable; conservatively running migration replay."
+            exit 0
+          fi
+          if git diff --name-only "$base" "$GITHUB_SHA" -- supabase/migrations supabase/config.toml | grep -q .; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Database migration/config changes detected."
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No database migration/config changes detected."
+          fi
+
+      - name: Set up Supabase CLI for local migration replay
+        if: ${{ steps.migration-changes.outputs.changed == 'true' }}
+        uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359
+        with:
+          version: "2.84.2"
+
+      - name: Start an isolated local Supabase stack
+        if: ${{ steps.migration-changes.outputs.changed == 'true' }}
+        run: supabase start --exclude studio,imgproxy,edge-runtime,logflare,vector,supavisor,inbucket
+
+      - name: Replay every migration against an empty local database
+        if: ${{ steps.migration-changes.outputs.changed == 'true' }}
+        run: supabase db reset --local
+
+      - name: Run local agent control-plane SQL security tests
+        if: ${{ steps.migration-changes.outputs.changed == 'true' }}
+        run: supabase test db --local
+
+      - name: Lint local database functions
+        if: ${{ steps.migration-changes.outputs.changed == 'true' }}
+        run: supabase db lint --local --fail-on error
+
+      - name: Stop isolated local Supabase stack
+        if: ${{ always() && steps.migration-changes.outputs.changed == 'true' }}
+        run: supabase stop --no-backup
+
 
       - name: Set up k6 for load-test script validation
         if: ${{ hashFiles('tests/load/staging-public-read.js') != '' }}
