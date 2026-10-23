@@ -18,7 +18,7 @@ const need = (id: string, lat: number | null, lng: number | null): MapNeed => ({
 describe("public needs map source contract", () => {
   it("filters open needs to public discovery visibility before returning them to the map", () => {
     const start = needsFunctions.indexOf("export const getOpenNeeds =");
-    const end = needsFunctions.indexOf("export const findSupplyForNeed =", start);
+    const end = needsFunctions.indexOf("export const getOpenNeedsForMember =", start);
     expect(start).toBeGreaterThanOrEqual(0);
     expect(end).toBeGreaterThan(start);
     const read = needsFunctions.slice(start, end);
