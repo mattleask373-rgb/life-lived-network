@@ -2,7 +2,10 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const migration = readFileSync(
-  new URL("../../supabase/migrations/20261023100000_local_discovery_place_boundary.sql", import.meta.url),
+  new URL(
+    "../../supabase/migrations/20261023100000_local_discovery_place_boundary.sql",
+    import.meta.url,
+  ),
   "utf8",
 );
 const sqlTest = readFileSync(
@@ -15,7 +18,9 @@ describe("local_discovery locality security boundary", () => {
   it("removes the previous broad public SELECT policy and separates public from local discovery", () => {
     expect(migration).toContain('DROP POLICY IF EXISTS "Public needs are readable by anyone"');
     expect(migration).toContain("visibility = 'public'");
-    expect(migration).toContain('CREATE POLICY "Verified locality members can read local discovery needs"');
+    expect(migration).toContain(
+      'CREATE POLICY "Verified locality members can read local discovery needs"',
+    );
     expect(migration).toContain("TO authenticated");
     expect(migration).toContain("visibility = 'local_discovery'");
     expect(migration).toContain("private.is_verified_locality_member(place_id)");
@@ -71,6 +76,8 @@ describe("local_discovery locality security boundary", () => {
     expect(reader).toContain('.in("visibility", ["public", "local_discovery"])');
     // The anonymous client can still ask for these rows, but RLS now returns
     // only public rows. A verified-member UX must use an authenticated read path.
-    expect(migration).toContain("CREATE POLICY \"Verified locality members can read local discovery needs\"");
+    expect(migration).toContain(
+      'CREATE POLICY "Verified locality members can read local discovery needs"',
+    );
   });
 });
