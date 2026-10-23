@@ -61,7 +61,7 @@ AS $function$
   );
 $function$;
 
-REVOKE ALL ON FUNCTION private.is_verified_locality_member(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION private.is_verified_locality_member(uuid) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION private.is_verified_locality_member(uuid) TO authenticated;
 
 -- Replace the previous global public-read policy. Public means globally readable;
