@@ -155,7 +155,6 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION public.transition_agent_task(TEXT, TEXT, TEXT, JSONB, TEXT) RESTRICT;
 
 -- Deployment verification (not enforceable in-migration across roles):
 -- GRANT EXECUTE ON FUNCTION public.transition_agent_task(TEXT, TEXT, TEXT, JSONB, TEXT) TO service_role;
