@@ -1,6 +1,9 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import { clusterMapNeeds, placeNeedsForMap, type MapNeed } from "./map-needs";
+
+const needsFunctions = readFileSync(new URL("./needs.functions.ts", import.meta.url), "utf8");
 import type { MapView } from "./map-view";
 
 const view: MapView = { lat: 0, lng: 0, spanLat: 10, spanLng: 14 };
@@ -10,6 +13,18 @@ const need = (id: string, lat: number | null, lng: number | null): MapNeed => ({
   placeText: "Town centre",
   lat,
   lng,
+});
+
+describe("public needs map source contract", () => {
+  it("filters open needs to public discovery visibility before returning them to the map", () => {
+    const start = needsFunctions.indexOf("export const getOpenNeeds =");
+    const end = needsFunctions.indexOf("export const findSupplyForNeed =", start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    const read = needsFunctions.slice(start, end);
+    expect(read).toContain('.eq("status", "open")');
+    expect(read).toContain('.in("visibility", ["public", "local_discovery"])');
+  });
 });
 
 describe("placeNeedsForMap", () => {
