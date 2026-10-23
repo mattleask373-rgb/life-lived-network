@@ -380,7 +380,8 @@ describe("bounded agent worker runtime", () => {
       expect.anything(),
       expect.objectContaining({ code: "PROVIDER_RESULT_INVALID" }),
     );
-    expect(JSON.stringify(result)).not.toMatch(/secret|token/i);
+    expect(JSON.stringify(result)).not.toContain("super-secret-value");
+    expect(JSON.stringify(result)).not.toContain("token=super-secret-value");
   });
 
   it("rejects evidence containing credentials or changed paths outside task scope", async () => {

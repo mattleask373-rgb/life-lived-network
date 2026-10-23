@@ -501,14 +501,18 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
   }
 
   const nowMs = (input.now ?? new Date()).getTime();
-  if (
-    !ALLOWED_ENVIRONMENTS.includes(input.environment.kind) ||
-    !proofIsFresh(input.environment, nowMs, WORKER_MAX_PROOF_AGE_MS)
-  ) {
+  if (!ALLOWED_ENVIRONMENTS.includes(input.environment.kind)) {
     return held(
       taskId,
-      input.environment.status === "PROVEN" ? "ENVIRONMENT_NOT_ALLOWED" : "ENVIRONMENT_NOT_PROVEN",
-      "Only a freshly evidenced disposable or development environment is eligible for automated execution.",
+      "ENVIRONMENT_NOT_ALLOWED",
+      "Only a disposable or development environment may be used by this worker runtime.",
+    );
+  }
+  if (!proofIsFresh(input.environment, nowMs, WORKER_MAX_PROOF_AGE_MS)) {
+    return held(
+      taskId,
+      "ENVIRONMENT_NOT_PROVEN",
+      "Environment attestation is missing, stale, or lacks a trusted evidence reference.",
     );
   }
 
