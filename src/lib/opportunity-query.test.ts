@@ -6,6 +6,7 @@ import {
   OPPORTUNITY_CANDIDATES_PER_CHUNK,
   mergeNewestNeedRows,
   boundOpportunityPage,
+  unresolvedOpportunityPlaceIds,
   OpportunityScopeTooWideError,
 } from "./opportunity-query";
 
@@ -54,6 +55,22 @@ describe("chunkOpportunityPlaceIds", () => {
     expect(() => chunkOpportunityPlaceIds(["a"], 0)).toThrow(RangeError);
     expect(() => chunkOpportunityPlaceIds(["a"], 1, 0)).toThrow(RangeError);
     expect(chunkOpportunityPlaceIds([])).toEqual([]);
+  });
+});
+
+describe("unresolvedOpportunityPlaceIds", () => {
+  it("keeps valid place references and reports missing saved IDs without duplicates", () => {
+    const places = new Map([
+      ["town-1", { id: "town-1" }],
+      ["county-1", { id: "county-1" }],
+    ]);
+    expect(
+      unresolvedOpportunityPlaceIds(
+        ["town-1", "stale-1", "county-1", "stale-1", "stale-2"],
+        places,
+      ),
+    ).toEqual(["stale-1", "stale-2"]);
+    expect(unresolvedOpportunityPlaceIds(["town-1", "county-1"], places)).toEqual([]);
   });
 });
 
