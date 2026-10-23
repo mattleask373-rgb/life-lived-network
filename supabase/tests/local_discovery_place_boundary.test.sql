@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(11);
+SELECT plan(12);
 
 -- All fixture rows are synthetic, and the transaction rolls back every change.
 INSERT INTO auth.users (
@@ -80,6 +80,11 @@ SELECT 'user_a_cross_locality_b', count(*)::integer
 FROM public.needs
 WHERE visibility = 'local_discovery'
   AND place_id = '10000000-0000-4000-8000-000000000003';
+INSERT INTO pg_temp.locality_probe_results
+SELECT 'user_a_cross_locality_child', count(*)::integer
+FROM public.needs
+WHERE visibility = 'local_discovery'
+  AND place_id = '10000000-0000-4000-8000-000000000002';
 
 -- An editable profile locality is not a trust or membership credential.
 UPDATE public.profiles
@@ -124,11 +129,13 @@ RESET ROLE;
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'anon_all_local'),
   0, 'anonymous requests cannot read local_discovery needs');
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_a_all_local'),
-  2, 'verified locality A member can read locality A and descendant-village needs');
+  1, 'verified locality A member can read only the exact locality granted');
+SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_a_cross_locality_child'),
+  0, 'parent locality membership does not implicitly grant descendant-place access');
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_a_cross_locality_b'),
   0, 'locality A member cannot read locality B needs');
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_a_after_profile_spoof'),
-  2, 'changing profile.place_id does not grant cross-locality access');
+  1, 'changing profile.place_id does not grant cross-locality access');
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_b_all_local'),
   1, 'verified locality B member sees locality B needs only');
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_b_cross_locality_a'),
