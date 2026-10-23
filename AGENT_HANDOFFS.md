@@ -34,3 +34,13 @@ This is the durable handoff ledger for the active bounded work. New entries must
 - Known limits and unresolved issues
 - Human gate / reviewer
 - Next smallest dependency-ordered action
+
+## 2026-10-23 22:14 UTC — exact-head RLS/administration verification result
+
+- **Task:** follow-up for #354 formatting-only fix and docs review pack.
+- **#354 exact head:** `016c9237467f719871341f3898b219acc78d284e`.
+- **Result:** PASS on [Verify run #40031616249](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40031616249). Steps passed: frozen install, locked dependency audit, lint, unit tests, build, full migration replay on empty local Supabase, local agent control-plane SQL security tests, loopback-only local-discovery PostgREST RLS test, DB function lint and k6 syntax parsing without sending traffic.
+- **Changes by this run:** only Prettier formatting in `src/lib/locality-membership-admin.test.ts` and `src/lib/locality-membership-admin.ts`; no authorization logic changed in those two commits.
+- **Limits:** Supabase Preview was skipped. The successful local chain is candidate evidence, not independent review, not hosted RLS proof and not authorization to merge. Review the admin provisioning function and all prior policy composition as a combined security boundary; owner Gate 0 and deletion-protection evidence remain unresolved.
+- **Docs:** PR #339 draft now contains the global gate board, priority list, handoff ledger, discovery backlog, retention and impact scorecards, Live Map spec, corrected local_discovery test matrix and geographic discovery/retention architecture. Its Verify/CodeQL dependency audit fails on the inherited main-branch Zod advisory before tests; do not copy or duplicate the dependency fix into this docs PR. Reconcile through #353 with human review.
+- **Next action:** independent security reviewer inspects #348 → #350 → #352 → #354, reviews grants/function search path/self-approval/audit atomicity and confirms direct PostgREST list/detail/supply behavior. Do not merge, deploy or write to any hosted DB.
