@@ -10,6 +10,14 @@ const migration = readFileSync(
   ),
   "utf8",
 );
+
+const priorReportGuardMigration = readFileSync(
+  new URL(
+    "../../supabase/migrations/20261012174000_harden_connection_request_updates.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
 const needDetail = readFileSync(new URL("../routes/need.$id.tsx", import.meta.url), "utf8");
 const reportControl = readFileSync(
   new URL("../components/report-public-content.tsx", import.meta.url),
@@ -71,6 +79,17 @@ describe("public report entry points", () => {
 });
 
 describe("database-enforced public report contract", () => {
+  it("reuses the existing report insert trigger instead of installing a duplicate", () => {
+    expect(priorReportGuardMigration).toContain("CREATE TRIGGER content_reports_insert_guard");
+    expect(priorReportGuardMigration).toContain(
+      "EXECUTE FUNCTION private.guard_content_report_insert();",
+    );
+    expect(migration).toContain(
+      "CREATE OR REPLACE FUNCTION private.guard_content_report_insert()",
+    );
+    expect(migration).not.toMatch(/^\\s*CREATE\\s+TRIGGER\\b/im);
+  });
+
   it("extends the report subject constraint without removing existing conversation reporting", () => {
     expect(migration).toContain("DROP CONSTRAINT IF EXISTS content_reports_subject_type_check");
     expect(migration).toContain("'profile'");
