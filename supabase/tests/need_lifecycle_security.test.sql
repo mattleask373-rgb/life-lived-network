@@ -279,7 +279,7 @@ reset role;
 select is(
   (select error_code || ':' || error_message
      from pg_temp.lifecycle_probe_results where name = 'stale_connection'),
-  '42501:That need is not available for a connection request',
+  '42501:the referenced need is not available to this user',
   'stale demand cannot receive a direct connection request'
 );
 
