@@ -57,30 +57,46 @@ GRANT INSERT ON TABLE pg_temp.quota_probe_results TO authenticated;
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', 'f14e0c44-3c65-4a2a-bac2-55d8863b1e81', true);
 
-INSERT INTO pg_temp.quota_probe_results (
-  user_id, attempt, allowed, retry_after_seconds, limit_kind
-)
-SELECT
-  'f14e0c44-3c65-4a2a-bac2-55d8863b1e81'::uuid,
-  g.attempt,
-  q.allowed,
-  q.retry_after_seconds,
-  q.limit_kind
-FROM generate_series(1, 21) AS g(attempt)
-CROSS JOIN LATERAL public.consume_ai_draft_quota() AS q;
+DO $quota_calls$
+DECLARE
+  v_attempt integer;
+  v_quota record;
+BEGIN
+  -- A no-argument set-returning RPC in FROM can be evaluated once by the
+  -- planner; loop explicitly so each row represents a distinct quota call.
+  FOR v_attempt IN 1..21 LOOP
+    SELECT * INTO v_quota FROM public.consume_ai_draft_quota();
+    INSERT INTO pg_temp.quota_probe_results (
+      user_id, attempt, allowed, retry_after_seconds, limit_kind
+    ) VALUES (
+      'f14e0c44-3c65-4a2a-bac2-55d8863b1e81'::uuid,
+      v_attempt,
+      v_quota.allowed,
+      v_quota.retry_after_seconds,
+      v_quota.limit_kind
+    );
+  END LOOP;
+END;
+$quota_calls$;
 
 SELECT set_config('request.jwt.claim.sub', 'e532d761-ef87-45d2-aed5-1c9d2a9ee3c3', true);
 
-INSERT INTO pg_temp.quota_probe_results (
-  user_id, attempt, allowed, retry_after_seconds, limit_kind
-)
-SELECT
-  'e532d761-ef87-45d2-aed5-1c9d2a9ee3c3'::uuid,
-  1,
-  q.allowed,
-  q.retry_after_seconds,
-  q.limit_kind
-FROM public.consume_ai_draft_quota() AS q;
+DO $quota_second_account$
+DECLARE
+  v_quota record;
+BEGIN
+  SELECT * INTO v_quota FROM public.consume_ai_draft_quota();
+  INSERT INTO pg_temp.quota_probe_results (
+    user_id, attempt, allowed, retry_after_seconds, limit_kind
+  ) VALUES (
+    'e532d761-ef87-45d2-aed5-1c9d2a9ee3c3'::uuid,
+    1,
+    v_quota.allowed,
+    v_quota.retry_after_seconds,
+    v_quota.limit_kind
+  );
+END;
+$quota_second_account$;
 
 RESET ROLE;
 
