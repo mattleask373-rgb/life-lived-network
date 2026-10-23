@@ -7,7 +7,7 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
-import { moveConnectionInput } from "./server-inputs";
+import { connectionRequestInput, moveConnectionInput } from "./server-inputs";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 import {
@@ -23,7 +23,7 @@ import {
   type ConnectionMessageRow,
   type ConnectionStatus,
 } from "./connection";
-import { rowToNeed, type NeedRow } from "./needs";
+import { needFreshnessCutoff, rowToNeed, type NeedRow } from "./needs";
 import { otherPerson, type ReportReason } from "./safety";
 
 const MAX_NOTE = 600;
@@ -39,33 +39,53 @@ export interface ConnectionSummary extends ConnectionRequest {
 /** Say you could help with something, or ask someone if they would. */
 export const sendConnectionRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
-    (input: {
-      needId: string;
-      recipientId: string;
-      direction: ConnectionDirection;
-      note?: string;
-    }) => input,
-  )
+  .inputValidator((input: unknown) => connectionRequestInput.parse(input))
   .handler(async ({ data, context }): Promise<ConnectionRequest> => {
     if (data.recipientId === context.userId) {
       throw new Error("You can't send this to yourself.");
     }
 
-    const { data: needRow, error: needError } = await context.supabase
+    const { publicServerClient } = await import("./supabase-public.server");
+    const publicSupabase = publicServerClient();
+    const now = new Date();
+    const nowIso = now.toISOString();
+    let readClient = publicSupabase;
+    let inside: string[] | null = null;
+    if (data.placeId) {
+      const { loadPlaceIndex } = await import("./place-index.server");
+      const { descendantIdsOf } = await import("./places");
+      const index = await loadPlaceIndex(publicSupabase);
+      if (!index.byId.has(data.placeId)) throw new Error("That locality isn't available.");
+      inside = descendantIdsOf(index, data.placeId);
+      if (inside.length > 400) throw new Error("Choose a smaller locality.");
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      readClient = supabaseAdmin;
+    }
+
+    const { data: needRow, error: needError } = await readClient
       .from("needs")
       .select("*")
       .eq("id", data.needId)
+      .eq("status", "open")
+      .in("visibility", inside ? ["public", "local_discovery"] : ["public"])
+      .gt("last_confirmed_at", needFreshnessCutoff(now))
+      .or(
+        `and(or(expires_at.is.null,expires_at.gt.${nowIso}),or(ends_at.is.null,ends_at.gt.${nowIso}))`,
+      )
       .maybeSingle();
     if (needError) throw needError;
-    if (!needRow) throw new Error("That need isn't here any more.");
+    if (
+      !needRow ||
+      (needRow.visibility === "local_discovery" &&
+        (!inside || !needRow.place_id || !inside.includes(needRow.place_id)))
+    ) {
+      throw new Error("That need isn't available in this locality any more.");
+    }
     const need = rowToNeed(needRow as unknown as NeedRow);
 
-    // An invitation can only come from the person who asked for help.
     if (data.direction === "invite" && need.creatorId !== context.userId) {
       throw new Error("Only the person who posted this can invite someone to it.");
     }
-    // An offer of help can only go to the person who asked.
     if (data.direction === "offer" && need.creatorId !== data.recipientId) {
       throw new Error("An offer of help goes to the person who asked.");
     }

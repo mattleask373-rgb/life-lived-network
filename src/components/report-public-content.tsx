@@ -25,10 +25,12 @@ export function ReportPublicContent({
   subjectType,
   subjectId,
   label,
+  placeId = null,
 }: {
   subjectType: PublicReportSubject;
   subjectId: string;
   label: string;
+  placeId?: string | null;
 }) {
   const { user } = useSession();
   const submit = useServerFn(reportPublicContent);
@@ -43,6 +45,7 @@ export function ReportPublicContent({
           subjectId,
           reason,
           note: note.trim(),
+          placeId,
         },
       }),
   });
