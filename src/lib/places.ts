@@ -208,7 +208,11 @@ export interface PlaceIndex {
   roots: Place[];
 }
 
-export type PlaceHierarchyErrorCode = "DUPLICATE_ID" | "DUPLICATE_SLUG" | "MISSING_PARENT" | "CYCLE";
+export type PlaceHierarchyErrorCode =
+  | "DUPLICATE_ID"
+  | "DUPLICATE_SLUG"
+  | "MISSING_PARENT"
+  | "CYCLE";
 
 export class PlaceHierarchyError extends Error {
   constructor(readonly code: PlaceHierarchyErrorCode) {
