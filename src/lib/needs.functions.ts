@@ -28,7 +28,9 @@ import { findSupply, type PersonCandidate, type SupplyAnswer } from "./supply-en
 import { freshness } from "./capability-freshness";
 import { needGeography } from "./geo-scope";
 import {
+  boundOpportunityPage,
   chunkOpportunityPlaceIds,
+  unresolvedOpportunityPlaceIds,
   mergeNewestNeedRows,
   OPPORTUNITY_CANDIDATES_PER_CHUNK,
   OpportunityScopeTooWideError,
@@ -422,9 +424,16 @@ async function signPhotos(
  * Owner-scoped, because it is built entirely out of what this person has said
  * about themselves. It is deliberately short, and it is not a feed.
  */
+export interface MyOpportunitiesResult {
+  status: "needs_places" | "complete" | "partial";
+  opportunities: PersonOpportunity[];
+  /** Number of locality chunks where at least one older ask may be outside the checked window. */
+  cappedChunks: number;
+}
+
 export const getMyOpportunities = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<PersonOpportunity[]> => {
+  .handler(async ({ context }): Promise<MyOpportunitiesResult> => {
     const { supabase, userId } = context;
     const [profileResult, capsResult, areasResult, windowsResult, prefsResult] = await Promise.all([
       supabase
@@ -448,6 +457,16 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
     const areas = areasResult.data;
     const windows = windowsResult.data;
     const prefs = prefsResult.data;
+    // A successful query must return a collection. Missing payloads are not
+    // evidence that the person has no capabilities, areas or availability.
+    if (
+      !Array.isArray(caps) ||
+      !Array.isArray(areas) ||
+      !Array.isArray(windows) ||
+      !Array.isArray(prefs)
+    ) {
+      throw new DataError("DATA_UNAVAILABLE", "A required profile collection was missing.");
+    }
 
     const serviceAreaPlaceIds = (areas ?? [])
       .filter((a) => a.relation !== "travelling_through")
@@ -461,13 +480,22 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
         [profile?.place_id, ...serviceAreaPlaceIds, ...travellingThroughPlaceIds].filter(Boolean),
       ),
     ] as string[];
-    if (!stated.length) return [];
+    if (!stated.length) {
+      return { status: "needs_places", opportunities: [], cappedChunks: 0 };
+    }
 
     // Somewhere you said you are or cover includes everywhere inside it, so a
     // need in a village inside your county is still yours to see.
     const { loadPlaceIndex } = await import("./place-index.server");
     const { descendantIdsOf } = await import("./places");
     const index = await loadPlaceIndex(supabase);
+    const unresolvedPlaceIds = unresolvedOpportunityPlaceIds(stated, index.byId);
+    if (unresolvedPlaceIds.length) {
+      throw new DataError(
+        "DATA_UNAVAILABLE",
+        "One or more saved localities could not be resolved. Update your home or service areas and retry.",
+      );
+    }
     const placeIds = [...new Set(stated.flatMap((id) => descendantIdsOf(index, id)))];
     let placeChunks: string[][];
     try {
@@ -487,8 +515,9 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
       .select("blocker_id, blocked_id")
       .or(`blocker_id.eq.${userId},blocked_id.eq.${userId}`);
     if (blocksError) throw blocksError;
+    if (!Array.isArray(blockRows)) throw new DataError("DATA_UNAVAILABLE");
     const blockedIds = new Set(
-      (blockRows ?? []).map((row) => (row.blocker_id === userId ? row.blocked_id : row.blocker_id)),
+      blockRows.map((row) => (row.blocker_id === userId ? row.blocked_id : row.blocker_id)),
     );
 
     // Keep every query locality-scoped. Broad areas use one bounded newest-first
@@ -504,16 +533,20 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
           .in("place_id", chunk)
           .order("created_at", { ascending: false })
           .order("id", { ascending: true })
-          .limit(OPPORTUNITY_CANDIDATES_PER_CHUNK);
+          // One extra row is a sentinel: a full 60-row page may be complete,
+          // or it may hide older asks. The next row tells us which is true.
+          .limit(OPPORTUNITY_CANDIDATES_PER_CHUNK + 1);
         if (needsError) throw needsError;
-        return rows ?? [];
+        if (!Array.isArray(rows)) throw new DataError("DATA_UNAVAILABLE");
+        return boundOpportunityPage(rows, OPPORTUNITY_CANDIDATES_PER_CHUNK);
       }),
     );
-    // Do not truncate candidate collection to a single global newest-60 window:
-    // that would let high-volume places crowd out smaller places before matching.
-    // At most 13 chunks × 60 rows = 780 candidates are considered.
+    // Do not truncate candidates to a single global window: that would let
+    // high-volume places crowd out smaller places before matching. Preserve
+    // the per-chunk cap, but tell the UI when any chunk exceeded its safe window.
+    const cappedChunks = needPages.filter((page) => page.truncated).length;
     const needRows = mergeNewestNeedRows(
-      needPages,
+      needPages.map((page) => page.rows),
       placeChunks.length * OPPORTUNITY_CANDIDATES_PER_CHUNK,
     );
 
@@ -524,7 +557,8 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
       .eq("status", "active")
       .limit(20);
     if (journeysError) throw journeysError;
-    const journeys: JourneyContext[] = (journeyRows ?? []).map((journey) => ({
+    if (!Array.isArray(journeyRows)) throw new DataError("DATA_UNAVAILABLE");
+    const journeys: JourneyContext[] = journeyRows.map((journey) => ({
       id: journey.id,
       ownerId: journey.owner_id,
       title: journey.title,
@@ -550,7 +584,7 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
       })),
     }));
 
-    return findOpportunitiesForPerson({
+    const opportunities = findOpportunitiesForPerson({
       geographyFor: (need) => {
         const key = need.placeId ?? "";
         const existing = geographies.get(key);
@@ -578,4 +612,9 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
         .filter((need) => !blockedIds.has(need.creatorId)),
       now: new Date().toISOString(),
     });
+    return {
+      status: cappedChunks > 0 ? "partial" : "complete",
+      opportunities,
+      cappedChunks,
+    };
   });
