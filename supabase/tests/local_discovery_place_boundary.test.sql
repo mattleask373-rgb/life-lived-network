@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(15);
+SELECT plan(16);
 
 -- All fixture rows are synthetic, and the transaction rolls back every change.
 INSERT INTO auth.users (
@@ -18,6 +18,9 @@ INSERT INTO auth.users (
    now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}'),
   ('dddddddd-dddd-4ddd-8ddd-dddddddddddd', '00000000-0000-0000-0000-000000000000',
    'authenticated', 'authenticated', 'atlas-locality-child@example.test', '',
+   now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}'),
+  ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', '00000000-0000-0000-0000-000000000000',
+   'authenticated', 'authenticated', 'atlas-locality-no-grant@example.test', '',
    now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}');
 
 INSERT INTO public.places (id, kind, name, slug, country_code, parent_id)
@@ -33,6 +36,10 @@ UPDATE public.profiles
 SET place_id = '10000000-0000-4000-8000-000000000001',
     discoverable = true
 WHERE id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+UPDATE public.profiles
+SET place_id = '10000000-0000-4000-8000-000000000001',
+    discoverable = true
+WHERE id = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
 
 INSERT INTO public.needs (id, creator_id, category, title, status, visibility, place_id, place_text)
 VALUES
@@ -144,6 +151,15 @@ WHERE visibility = 'local_discovery'
   );
 RESET ROLE;
 
+-- A self-reported profile locality without a verified membership grants no access.
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', true);
+INSERT INTO pg_temp.locality_probe_results
+SELECT 'user_no_grant_same_profile', count(*)::integer
+FROM public.needs
+WHERE visibility = 'local_discovery';
+RESET ROLE;
+
 -- Village-only membership does not grant access to its parent locality or sibling places.
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', true);
@@ -178,6 +194,8 @@ SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label 
   1, 'verified locality B member sees locality B needs only');
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_b_cross_locality_a'),
   0, 'locality B member cannot read locality A or its child-village needs');
+SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_no_grant_same_profile'),
+  0, 'matching profile.place_id without a verified membership grants no access');
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'village_member_all_local'),
   1, 'verified village member sees needs in that village only');
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'village_member_parent_place'),
