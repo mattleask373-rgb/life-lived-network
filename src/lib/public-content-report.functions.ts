@@ -53,16 +53,14 @@ export const reportPublicContent = createServerFn({ method: "POST" })
       throw new Error("You can't report your own content.");
     }
 
-    const { error: reportError } = await context.supabase
-      .from("content_reports")
-      .insert({
-        reporter_id: context.userId,
-        reported_user_id: reportedUserId,
-        subject_type: data.subjectType,
-        subject_id: data.subjectId,
-        reason: data.reason,
-        note: data.note,
-      });
+    const { error: reportError } = await context.supabase.from("content_reports").insert({
+      reporter_id: context.userId,
+      reported_user_id: reportedUserId,
+      subject_type: data.subjectType,
+      subject_id: data.subjectId,
+      reason: data.reason,
+      note: data.note,
+    });
 
     // A duplicate report is an idempotent outcome. Do not expose
     // the existing report or its status to the caller.
