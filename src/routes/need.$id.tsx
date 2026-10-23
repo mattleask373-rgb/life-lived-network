@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { z } from "zod";
 
 import { useSession } from "@/hooks/use-session";
 import { PersonAvatar } from "@/components/person-avatar";
@@ -19,6 +20,10 @@ const description =
   "Real possibilities for a real need: people who've said they can help, community projects, freely offered hours, swaps, and travellers passing through — each one plainly labelled.";
 
 export const Route = createFileRoute("/need/$id")({
+  validateSearch: (search: Record<string, unknown>) => {
+    const parsed = z.object({ placeId: z.string().uuid().optional() }).safeParse(search);
+    return parsed.success ? parsed.data : {};
+  },
   head: () => privatePage({ path: "", title, description }),
   errorComponent: () => (
     <Shell>
@@ -53,11 +58,12 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 function NeedAnswer() {
   const { id } = Route.useParams();
+  const { placeId } = Route.useSearch();
   const { user } = useSession();
   const find = useServerFn(findSupplyForNeed);
   const { data, isLoading } = useQuery({
-    queryKey: ["supply", id],
-    queryFn: () => find({ data: { needId: id } }),
+    queryKey: ["supply", id, placeId ?? "public"],
+    queryFn: () => find({ data: { needId: id, placeId: placeId ?? null } }),
   });
 
   if (isLoading) {
@@ -101,7 +107,7 @@ function NeedAnswer() {
       </header>
 
       {canReportNeed ? (
-        <ReportPublicContent subjectType="need" subjectId={need.id} label="need" />
+        <ReportPublicContent subjectType="need" subjectId={need.id} label="need" placeId={placeId ?? null} />
       ) : null}
 
       {quiet ? (
@@ -130,6 +136,7 @@ function NeedAnswer() {
                 band={band}
                 rows={rows}
                 needId={id}
+                placeId={placeId ?? null}
                 canInvite={Boolean(user && user.id === need.creatorId)}
               />
             );
@@ -157,7 +164,15 @@ function NeedAnswer() {
   );
 }
 
-function Invite({ needId, personId }: { needId: string; personId: string }) {
+function Invite({
+  needId,
+  personId,
+  placeId,
+}: {
+  needId: string;
+  personId: string;
+  placeId: string | null;
+}) {
   const [note, setNote] = useState("");
   const [open, setOpen] = useState(false);
   const send = useMutation({ mutationFn: useServerFn(sendConnectionRequest) });
@@ -203,7 +218,7 @@ function Invite({ needId, personId }: { needId: string; personId: string }) {
         disabled={send.isPending}
         onClick={() =>
           send.mutate({
-            data: { needId, recipientId: personId, direction: "invite", note: note.trim() },
+            data: { needId, recipientId: personId, direction: "invite", placeId, note: note.trim() },
           })
         }
         className="focus-ink mt-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm disabled:opacity-60"
@@ -226,11 +241,13 @@ function Band({
   band,
   rows,
   needId,
+  placeId,
   canInvite,
 }: {
   band: SupplyBand;
   rows: SupplyResult[];
   needId: string;
+  placeId: string | null;
   canInvite: boolean;
 }) {
   return (
@@ -271,7 +288,9 @@ function Band({
             {r.personId ? (
               <ReportPublicContent subjectType="profile" subjectId={r.personId} label="profile" />
             ) : null}
-            {canInvite && r.personId ? <Invite needId={needId} personId={r.personId} /> : null}
+            {canInvite && r.personId ? (
+              <Invite needId={needId} personId={r.personId} placeId={placeId} />
+            ) : null}
           </li>
         ))}
       </ul>

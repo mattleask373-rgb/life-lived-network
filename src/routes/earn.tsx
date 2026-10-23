@@ -145,6 +145,7 @@ function EarnPage() {
                   <Link
                     to="/need/$id"
                     params={{ id: o.need.id }}
+                    search={{ placeId: o.need.placeId ?? undefined }}
                     className="focus-ink text-lg underline"
                   >
                     {o.need.title}

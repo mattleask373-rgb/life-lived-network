@@ -12,6 +12,24 @@ export const moveConnectionInput = z.object({
 
 export const needIdInput = z.object({ needId: z.string().uuid() });
 
+export const needDiscoveryInput = z
+  .object({ placeId: z.string().uuid().nullable().optional() })
+  .strict();
+
+export const needDetailInput = needIdInput
+  .extend({ placeId: z.string().uuid().nullable().optional() })
+  .strict();
+
+export const connectionRequestInput = z
+  .object({
+    needId: z.string().uuid(),
+    recipientId: z.string().uuid(),
+    direction: z.enum(["offer", "invite"]),
+    placeId: z.string().uuid().nullable().optional(),
+    note: z.string().max(600).optional(),
+  })
+  .strict();
+
 export const needLifecycleInput = z
   .object({
     id: z.string().uuid(),

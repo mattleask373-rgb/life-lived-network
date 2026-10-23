@@ -263,6 +263,7 @@ export function LivingMap({
               key={cluster.key}
               to="/need/$id"
               params={{ id: first.id }}
+              search={{ placeId: first.placeId ?? undefined }}
               aria-label={`Open need: ${first.title}`}
               onPointerDown={(event) => event.stopPropagation()}
               className="focus-ink absolute z-10 grid h-11 w-11 -translate-x-1/2 -translate-y-full place-items-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow-lift transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring"

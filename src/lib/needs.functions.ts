@@ -11,7 +11,8 @@ import { DataError } from "./data/errors";
 import {
   canonicalizeNeedPlace,
   createNeedInput,
-  needIdInput,
+  needDetailInput,
+  needDiscoveryInput,
   needLifecycleInput,
 } from "./server-inputs";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -182,54 +183,53 @@ export const updateMyNeedLifecycle = createServerFn({ method: "POST" })
   });
 
 export const getOpenNeeds = createServerFn({ method: "GET" })
-  .inputValidator((input: { placeId?: string | null } | undefined) => input ?? {})
+  .inputValidator((input: unknown) => needDiscoveryInput.parse(input ?? {}))
   .handler(async ({ data }): Promise<Need[]> => {
     const { publicServerClient } = await import("./supabase-public.server");
-    const supabase = publicServerClient();
+    const publicSupabase = publicServerClient();
     const now = new Date();
     const nowIso = now.toISOString();
-    let query = supabase
-      .from("needs")
-      .select("*")
-      .eq("status", "open")
-      .in("visibility", data.placeId ? ["public", "local_discovery"] : ["public"])
-      .gt("last_confirmed_at", needFreshnessCutoff(now))
-      .or(
-        `and(or(expires_at.is.null,expires_at.gt.${nowIso}),or(ends_at.is.null,ends_at.gt.${nowIso}))`,
-      )
-      .order("created_at", { ascending: false })
-      .limit(50);
+
+    // Anonymous reads expose globally public rows only. Local-discovery rows
+    // are read behind the server boundary after a canonical locality is resolved.
+    let queryClient = publicSupabase;
+    let inside: string[] | null = null;
     if (data.placeId) {
-      // Asking about a city means asking about everywhere inside it. The
-      // hierarchy is expanded here, behind the boundary, so the browser only
-      // ever says where it is.
       const { loadPlaceIndex } = await import("./place-index.server");
       const { descendantIdsOf } = await import("./places");
-      const index = await loadPlaceIndex(supabase);
+      const index = await loadPlaceIndex(publicSupabase);
       if (!index.byId.has(data.placeId)) throw new DataError("NOT_FOUND");
-      const inside = descendantIdsOf(index, data.placeId);
+      inside = descendantIdsOf(index, data.placeId);
       if (inside.length > 400) {
         throw new DataError(
           "SCOPE_TOO_WIDE",
           `Open-need locality has ${inside.length} descendant places.`,
         );
       }
-      query = query.in("place_id", inside);
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      queryClient = supabaseAdmin;
     }
+
+    let query = queryClient
+      .from("needs")
+      .select("*")
+      .eq("status", "open")
+      .in("visibility", inside ? ["public", "local_discovery"] : ["public"])
+      .gt("last_confirmed_at", needFreshnessCutoff(now))
+      .or(
+        `and(or(expires_at.is.null,expires_at.gt.${nowIso}),or(ends_at.is.null,ends_at.gt.${nowIso}))`,
+      )
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (inside) query = query.in("place_id", inside);
+
     const { data: rows, error } = await query;
     if (error) throw error;
     return ((rows ?? []) as unknown as NeedRow[]).map(rowToNeed);
   });
 
-/**
- * The answer to "who or what could meet this?".
- *
- * Candidates are gathered cheaply — place first, then capability — and only
- * then handed to the engine, which does the honest labelling.
- */
 export const findSupplyForNeed = createServerFn({ method: "GET" })
-  // A malformed id is simply not a need: the page shows "not found", not a crash.
-  .inputValidator((input: { needId: string }) => needIdInput.safeParse(input).data ?? null)
+  .inputValidator((input: unknown) => needDetailInput.safeParse(input).data ?? null)
   .handler(async ({ data }): Promise<SupplyAnswer | null> => {
     if (!data) return null;
     const { publicServerClient } = await import("./supabase-public.server");
@@ -237,12 +237,27 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
     const now = new Date();
     const nowIso = now.toISOString();
 
-    const { data: needRow, error } = await supabase
+    let queryClient = supabase;
+    let inside: string[] | null = null;
+    if (data.placeId) {
+      const { loadPlaceIndex } = await import("./place-index.server");
+      const { descendantIdsOf } = await import("./places");
+      const index = await loadPlaceIndex(supabase);
+      if (!index.byId.has(data.placeId)) throw new DataError("NOT_FOUND");
+      inside = descendantIdsOf(index, data.placeId);
+      if (inside.length > 400) {
+        throw new DataError("SCOPE_TOO_WIDE", "Need locality exceeds the safe matching scope.");
+      }
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      queryClient = supabaseAdmin;
+    }
+
+    const { data: needRow, error } = await queryClient
       .from("needs")
       .select("*")
       .eq("id", data.needId)
       .eq("status", "open")
-      .in("visibility", ["public", "local_discovery"])
+      .in("visibility", inside ? ["public", "local_discovery"] : ["public"])
       .gt("last_confirmed_at", needFreshnessCutoff(now))
       .or(
         `and(or(expires_at.is.null,expires_at.gt.${nowIso}),or(ends_at.is.null,ends_at.gt.${nowIso}))`,
@@ -250,6 +265,12 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
       .maybeSingle();
     if (error) throw error;
     if (!needRow) return null;
+    if (
+      needRow.visibility === "local_discovery" &&
+      (!inside || !needRow.place_id || !inside.includes(needRow.place_id))
+    ) {
+      return null;
+    }
     const need = rowToNeed(needRow as unknown as NeedRow);
 
     // The real geography of this need: the place itself, everywhere inside it,
@@ -614,9 +635,10 @@ export const getMyOpportunities = createServerFn({ method: "GET" })
 
     // Keep every query locality-scoped. Broad areas use one bounded newest-first
     // window per chunk, which is merged before the canonical evaluator runs.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const needPages = await Promise.all(
       placeChunks.map(async (chunk) => {
-        const { data: rows, error: needsError } = await supabase
+        const { data: rows, error: needsError } = await supabaseAdmin
           .from("needs")
           .select("*")
           .eq("status", "open")

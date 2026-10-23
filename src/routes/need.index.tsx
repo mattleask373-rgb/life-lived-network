@@ -100,6 +100,7 @@ function NeedPage() {
           <NeedList
             heading="Yours"
             needs={mine}
+            placeId={place?.place.id ?? null}
             ownerActions
             onOwnerChanged={() => void qc.invalidateQueries({ queryKey: ["needs"] })}
           />
@@ -114,6 +115,7 @@ function NeedPage() {
           <NeedList
             heading="What people nearby need"
             needs={needs}
+            placeId={place?.place.id ?? null}
             empty="Nobody has asked for anything yet. Yours could be the first."
           />
         ) : null}
@@ -126,12 +128,14 @@ function NeedList({
   heading,
   needs,
   empty,
+  placeId,
   ownerActions = false,
   onOwnerChanged,
 }: {
   heading: string;
   needs: Need[];
   empty?: string;
+  placeId: string | null;
   ownerActions?: boolean;
   onOwnerChanged?: () => void;
 }) {
@@ -184,7 +188,12 @@ function NeedList({
             return (
               <li key={need.id} className="card-paper p-4">
                 {need.status === "open" && current ? (
-                  <Link to="/need/$id" params={{ id: need.id }} className="focus-ink block">
+                  <Link
+                    to="/need/$id"
+                    params={{ id: need.id }}
+                    search={{ placeId: placeId ?? undefined }}
+                    className="focus-ink block"
+                  >
                     {summary}
                   </Link>
                 ) : (
