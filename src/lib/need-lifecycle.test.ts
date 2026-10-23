@@ -119,8 +119,10 @@ describe("need lifecycle authorization and discovery parity", () => {
 
   it("scopes the nearby Need list to the selected locality and falls back to public-only", () => {
     expect(page).toContain('queryKey: ["needs", "open", place?.place.id ?? "public"]');
-    expect(page).toContain('openNeeds({ data: { placeId: place?.place.id ?? null } })');
-    expect(serverFunctions).toContain('.in("visibility", data.placeId ? ["public", "local_discovery"] : ["public"])');
+    expect(page).toContain("openNeeds({ data: { placeId: place?.place.id ?? null } })");
+    expect(serverFunctions).toContain(
+      '.in("visibility", data.placeId ? ["public", "local_discovery"] : ["public"])',
+    );
   });
 
   it("renders owner controls and avoids linking closed or stale needs to a public matching page", () => {
