@@ -1,5 +1,17 @@
 import { LAYERS, type LayerId } from "@/lib/world-data";
+import { useLocale, type TranslationKey } from "@/lib/locale";
 import { layerBg } from "./layer-colour";
+
+const LAYER_LABEL_KEYS: Record<LayerId, TranslationKey> = {
+  work: "layer.work",
+  experience: "layer.experience",
+  music: "layer.music",
+  art: "layer.art",
+  community: "layer.community",
+  people: "layer.people",
+  nature: "layer.nature",
+  food: "layer.food",
+};
 
 export function LayerFilter({
   active,
@@ -8,11 +20,12 @@ export function LayerFilter({
   active: LayerId[];
   onChange: (next: LayerId[]) => void;
 }) {
+  const { t } = useLocale();
   const toggle = (id: LayerId) =>
     onChange(active.includes(id) ? active.filter((x) => x !== id) : [...active, id]);
 
   return (
-    <div className="flex flex-wrap gap-2" role="group" aria-label="What to show on the map">
+    <div className="flex flex-wrap gap-2" role="group" aria-label={t("map.layers")}>
       <button
         type="button"
         onClick={() => onChange([])}
@@ -23,7 +36,7 @@ export function LayerFilter({
             : "border-border bg-card text-muted-foreground hover:text-foreground"
         }`}
       >
-        Everything
+        {t("map.everything")}
       </button>
       {LAYERS.map((layer) => {
         const on = active.includes(layer.id);
@@ -43,7 +56,7 @@ export function LayerFilter({
               aria-hidden="true"
               className={`h-2 w-2 shrink-0 rounded-full ${layerBg[layer.id]}`}
             />
-            {layer.label}
+            {t(LAYER_LABEL_KEYS[layer.id])}
           </button>
         );
       })}
