@@ -89,7 +89,8 @@ export function EntryCard({
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             {entry.startsAt ? "" : `${entry.when} · `}
-            {duration(entry.minutes, locale)} · {money(entry.cost, entry.currency, locale, entry.priceKnown !== false)}
+            {duration(entry.minutes, locale)} {"·"}
+            {money(entry.cost, entry.currency, locale, entry.priceKnown !== false)}
           </p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {service ? (
