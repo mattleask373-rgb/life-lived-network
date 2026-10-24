@@ -147,11 +147,7 @@ export async function readBoundedSitemapPages<T>(
   }
 
   const initialCount = await readCount();
-  if (
-    initialCount === null ||
-    !Number.isSafeInteger(initialCount) ||
-    initialCount < 0
-  ) {
+  if (initialCount === null || !Number.isSafeInteger(initialCount) || initialCount < 0) {
     throw new SitemapSourceLimitError("Sitemap source exact count is missing or invalid");
   }
   if (initialCount >= sourceLimit) {
@@ -185,7 +181,9 @@ export async function readBoundedSitemapPages<T>(
     finalCount !== initialCount ||
     rows.length !== initialCount
   ) {
-    throw new SitemapSourceLimitError("Sitemap source count changed or did not match the scanned rows");
+    throw new SitemapSourceLimitError(
+      "Sitemap source count changed or did not match the scanned rows",
+    );
   }
 
   return rows;
