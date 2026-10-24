@@ -6,6 +6,7 @@ Evidence-only snapshot of the current mismatch between repository source `public
 ## Probe timestamps
 - 2026-10-23 ~22:12 UTC (initial)
 - 2026-10-24 ~01:33 UTC (confirmation; same gap)
+- 2026-10-24 ~08:33 UTC (fresh confirmation; gap unchanged)
 
 ## Source (main `182fe7f05c9efbee9ac17ccbca4d420cc0f1b24f`)
 File: `public/robots.txt`
@@ -18,7 +19,7 @@ File: `public/robots.txt`
 ## Live host
 Host: `https://life-lived-network.lovable.app`
 
-- `GET /robots.txt` → HTTP 200, generic default content (confirmed 2026-10-24):
+- `GET /robots.txt` → HTTP 200, generic default content (confirmed 2026-10-24 ~08:33 UTC):
   ```
   User-agent: Googlebot
   Allow: /
