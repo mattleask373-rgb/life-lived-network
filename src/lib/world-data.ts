@@ -11,6 +11,7 @@
  */
 
 import type { WorkOpportunity } from "./work-opportunities";
+import { distanceKm } from "./geo-distance";
 
 export type LayerId =
   "work" | "experience" | "music" | "art" | "community" | "people" | "nature" | "food";
@@ -182,12 +183,30 @@ export function relatedEntries(entries: WorldEntry[], entry: WorldEntry, limit =
   return entries
     .filter((e) => e.id !== entry.id)
     .map((e) => {
-      const distance = Math.hypot(e.x - entry.x, e.y - entry.y);
-      const sameArea = e.neighbourhood === entry.neighbourhood ? -20 : 0;
-      const sameBand = e.band === entry.band ? -8 : 0;
+      const geographicDistance = distanceKm(
+        { lat: entry.lat ?? null, lng: entry.lng ?? null },
+        { lat: e.lat ?? null, lng: e.lng ?? null },
+      );
+      const hasGeographicDistance = geographicDistance !== null;
+      // x/y is a stylized legacy layout, not globally valid geography. Prefer
+      // coordinates when both exist, while retaining a useful fixture fallback.
+      const distance = hasGeographicDistance
+        ? geographicDistance / 13
+        : Math.hypot(e.x - entry.x, e.y - entry.y);
+      const bothPlaceIdsKnown = Boolean(entry.placeId && e.placeId);
+      const sameCanonicalPlace = bothPlaceIdsKnown && entry.placeId === e.placeId;
+      const sameNeighbourhoodLabel =
+        e.neighbourhood === entry.neighbourhood &&
+        (!bothPlaceIdsKnown || sameCanonicalPlace) &&
+        (!hasGeographicDistance || geographicDistance <= 50);
+      let sameArea = 0;
+      if (sameCanonicalPlace || sameNeighbourhoodLabel) {
+        sameArea = hasGeographicDistance ? -0.25 : -20;
+      }
+      const sameBand = e.band === entry.band ? (hasGeographicDistance ? -0.1 : -8) : 0;
       return { e, score: distance + sameArea + sameBand };
     })
-    .sort((a, b) => a.score - b.score)
+    .sort((a, b) => a.score - b.score || a.e.id.localeCompare(b.e.id))
     .slice(0, limit)
     .map((r) => r.e);
 }
