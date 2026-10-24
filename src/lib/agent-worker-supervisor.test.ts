@@ -38,7 +38,7 @@ function baseAdapters(
     readEnabled: vi.fn(async () => true),
     selectNextReadyTask: vi.fn(async () => null),
     createCycleId: vi.fn(() => CYCLE_A),
-    runCycle: vi.fn(async (taskId) => result(taskId)),
+    runCycle: vi.fn(async (taskId: string) => result(taskId)),
     writeHeartbeat: vi.fn(async (_heartbeat: AgentWorkerSupervisorHeartbeat) => undefined),
     now: () => new Date("2026-10-24T12:00:00.000Z"),
     random: () => 0.5,
@@ -56,7 +56,7 @@ describe("bounded agent worker supervisor", () => {
       readEnabled: vi.fn(async () => false),
       selectNextReadyTask: vi.fn(async () => "task-must-not-be-read"),
       runCycle: vi.fn(async (taskId) => result(taskId)),
-      writeHeartbeat: vi.fn(async (heartbeat) => {
+      writeHeartbeat: vi.fn(async (heartbeat: AgentWorkerSupervisorHeartbeat) => {
         heartbeatRows.push(heartbeat);
       }),
       sleep: abortOnSleep(controller, 2, delays),
@@ -124,7 +124,7 @@ describe("bounded agent worker supervisor", () => {
       selectNextReadyTask: vi.fn(async () => {
         throw new Error("token=super-secret-value");
       }),
-      writeHeartbeat: vi.fn(async (heartbeat) => {
+      writeHeartbeat: vi.fn(async (heartbeat: AgentWorkerSupervisorHeartbeat) => {
         heartbeatRows.push(heartbeat);
       }),
       sleep: abortOnSleep(controller, 3, delays),
@@ -148,7 +148,7 @@ describe("bounded agent worker supervisor", () => {
     const runCycle = vi.fn(async (taskId: string) => result(taskId));
     const adapters = baseAdapters({
       selectNextReadyTask: vi.fn(async () => "task-a"),
-      writeHeartbeat: vi.fn(async (heartbeat) => {
+      writeHeartbeat: vi.fn(async (heartbeat: AgentWorkerSupervisorHeartbeat) => {
         if (heartbeat.status === "RUNNING") {
           throw new Error("database token=private-detail");
         }
