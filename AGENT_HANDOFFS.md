@@ -8,7 +8,7 @@ This is the durable handoff ledger for the active bounded work. New entries must
 - **Status:** IN_PROGRESS / review required
 - **Baseline:** main 182fe7f05c9efbee9ac17ccbca4d420cc0f1b24f
 - **Scope:** refresh current repository metadata; reconcile gate status, open PR counts, exact branch/check state, and freeze global page generation until Gate 0 and locality privacy close.
-- **Evidence:** 93 open PRs from GitHub API (86 drafts, 7 non-drafts; 15 current-main-base, 64 stale main-base, 14 stacked/non-main-base). Active ruleset #24946178 requires one approving review and Verify, plus latest-push approval/thread resolution/stale-review dismissal. Raw rules did not show deletion protection; branch protection endpoint was inaccessible (403). See SECURITY_GATES.md.
+- **Historical evidence snapshot — 2026-10-23:** GitHub then reported 93 open PRs (86 drafts, 7 non-drafts; 15 current-main-base, 64 stale main-base, 14 stacked/non-main-base). The ruleset was described as active in that snapshot. **Superseded by the 2026-10-24 12:17 UTC governance correction below:** ruleset `24946178` currently reads `enforcement: disabled`, and `main` returns `protected: false`. Do not treat the earlier snapshot as current. Branch deletion protection remains unverified; see `SECURITY_GATES.md`.
 - **Not established:** live host/build/backend identity; hosted RLS/default ACL state; deployment parity; genuine 24/7 runtime; market supply/demand; retained human users or completed outcomes.
 - **Handoff:** owner/admin must close identity and governance gates; security reviewer must review #348 → #350 → #352 → #354 in dependency order. Do not create another locality implementation or widen public reads.
 
