@@ -154,7 +154,12 @@ function JourneyPage() {
                         </span>
                         <span className="block text-sm text-muted-foreground">
                           {s.entry.place} · {duration(s.entry.minutes)} ·{" "}
-                          {money(s.entry.cost, s.entry.currency, "en", s.entry.priceKnown !== false)}
+                          {money(
+                            s.entry.cost,
+                            s.entry.currency,
+                            "en",
+                            s.entry.priceKnown !== false,
+                          )}
                         </span>
                       </button>
                       <p className="mt-1 text-sm text-foreground/75 italic">{s.why}</p>
