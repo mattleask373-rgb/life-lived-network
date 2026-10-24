@@ -66,10 +66,10 @@ jobs:
           fi
           if git diff --name-only "$base" "$GITHUB_SHA" -- supabase/migrations supabase/config.toml supabase/tests scripts/test-local-discovery-postgrest.mjs | grep -q .; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "Database migration/config changes detected."
+            echo "Database migration/config/test inputs changed."
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No database migration/config changes detected."
+            echo "No database migration/config/test input changes detected."
           fi
 
       - name: Set up Supabase CLI for local migration replay
@@ -91,7 +91,7 @@ jobs:
         run: supabase test db --local
 
       - name: Run local-discovery RLS through PostgREST
-        if: ${{ steps.migration-changes.outputs.changed == 'true' && hashFiles('scripts/test-local-discovery-postgrest.mjs') != '' }}
+        if: ${{ steps.migration-changes.outputs.changed == 'true' }}
         shell: bash
         run: |
           set -euo pipefail
