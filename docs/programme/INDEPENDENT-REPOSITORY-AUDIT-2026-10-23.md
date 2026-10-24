@@ -1,5 +1,17 @@
 # Independent repository audit and merge queue — 2026-10-23
 
+## Governance status correction — 2026-10-24 12:17 UTC
+
+**This report is a historical 2026-10-23 snapshot.** The following live read supersedes its references to an active main ruleset:
+
+- At `2026-10-24T12:17:19.878Z`, `GET /branches/main` returned `protected: false` and `protection.enabled: false`, with no enforced required-status contexts.
+- Ruleset `24946178` is configured with review/verify/non-fast-forward requirements but currently has `enforcement: disabled`; those configured requirements are not active enforcement.
+- Branch-deletion protection remains **NOT VERIFIED**.
+- **HUMAN-QUEUED:** the repository owner/admin must re-enable enforcement via GitHub administrative settings and independently verify the current rules and branch-deletion control before any merge relies on them.
+
+Use the current gate board in `SECURITY_GATES.md` and the current governance correction at the top of `docs/agents/STATUS.md` for present-tense decisions.
+
+
 ## Current scope and evidence boundary — refreshed 2026-10-23 ~22:13 UTC
 
 - Repository: `mattleask373-rgb/life-lived-network`.
