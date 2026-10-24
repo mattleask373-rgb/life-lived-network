@@ -1,6 +1,6 @@
 # Local-discovery database boundary
 
-**Status:** candidate migration on an isolated non-main branch. Not merged, not deployed, and not tested against a hosted database.
+**Status (24 October 2026):** the base need-level RLS boundary and membership-expiry migration are merged into repository main and have passed empty-local-stack replay plus PostgREST tests. The fact-level policies and authenticated list/detail/supply integration in this PR are still a review candidate. No hosted database verification or deployment is claimed.
 
 ## Access contract
 
@@ -13,18 +13,13 @@
 
 ## Deliberate fail-closed product behavior
 
-The current generic open-needs server reader uses the anonymous Supabase client. Once this policy lands, that reader will show `public` needs only—even when it asks PostgREST for both public and local-discovery visibility values. This is intentional until the product's list, detail, and supply-matching paths can all use the authenticated user context and the same policy.
+The public `getOpenNeeds` and `findSupplyForNeed` paths remain anonymous and explicitly `visibility = 'public'`. This PR adds separate signed-in `getOpenNeedsForMember` and `findSupplyForNeedForMember` readers using the request-bound Supabase client, so RLS—not a client-provided user ID or service-role bypass—authorizes local-discovery rows. Route consumers select the member reader only when a valid session exists; a signed-out user continues to receive public-only results.
 
-Do not re-enable `local_discovery` in the anonymous read path or create a service-role bypass to make rows appear in the UI. The next implementation slice must:
-1. Add an authenticated, locality-scoped read path using the request's verified Supabase user.
-2. Keep local-discovery details and matching behind the same authenticated RLS checks, not the anonymous `findSupplyForNeed` reader.
-3. Preserve the single canonical `findSupply()` engine.
-4. Distinguish no matching rows from a failed/unauthorized locality read.
-5. Add integration tests for list → detail → supply, plus cross-place direct table/API calls.
+The server still uses the canonical `findSupply()` engine. Query helpers require exact counts/complete row sets and fail closed on database error, missing collection/count, or cap mismatch; a too-wide locality must not be misrepresented as an empty result. Tests exercise the existing RLS matrix and the list/detail/supply path. Membership verification/provisioning remains a separately reviewed admin operation in stacked PR #354; until that path is reviewed and merged, local-discovery memberships must not be self-created or inferred from `profiles.place_id`.
 
 ## Membership provisioning
 
-No self-service membership verification flow is implemented by this migration. A user-editable profile locality cannot be substituted. Verified memberships must be provisioned by a future reviewed administrator/steward workflow or trusted server process, with evidence and revocation. Until then, local-discovery records are not anonymously visible.
+No self-service membership verification flow is implemented by this PR. A user-editable profile locality cannot be substituted. The proposed admin/steward workflow in #354 requires an administrator-authorized RPC, controlled verification methods/reasons, opaque evidence references, atomic audit rows, explicit revocation, and expiry renewal. Until that PR receives independent review and passes exact-head verification, do not provision real memberships or claim the complete feature is live.
 
 ## Required verification
 
