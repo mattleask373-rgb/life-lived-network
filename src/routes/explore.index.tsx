@@ -76,7 +76,10 @@ function ExploreHub() {
           </ul>
         </section>
 
-        <section aria-labelledby="explore-actions-heading" className="mt-12 border-t border-border pt-8">
+        <section
+          aria-labelledby="explore-actions-heading"
+          className="mt-12 border-t border-border pt-8"
+        >
           <h2 id="explore-actions-heading" className="font-display text-2xl sm:text-3xl">
             Make something happen
           </h2>
