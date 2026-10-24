@@ -11,9 +11,9 @@ import { normaliseEvent, plainText, safeUrl, usableImages } from "./normalise";
 import { cancellationFor, discoverable, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent, titleKey } from "./dedupe";
 import {
-  assertTicketmasterResponseEnvelope,
   dueForRefresh,
   sourceKeyFor,
+  ticketmasterResponseEventCount,
 } from "./refresh.server";
 import type { SourceEvent, SourceRow } from "./contract";
 import { requireIngestStorageSuccess } from "./storage-result";
@@ -393,31 +393,35 @@ describe("making outside text safe", () => {
   });
 });
 
-describe("source response envelope validation", () => {
-  it("accepts a valid empty discovery response as zero events", () => {
-    expect(() =>
-      assertTicketmasterResponseEnvelope({
+describe("Ticketmaster source response envelope", () => {
+  it("counts raw response records while accepting a valid empty search result", () => {
+    expect(
+      ticketmasterResponseEventCount({
         _links: { self: { href: "/discovery/v2/events.json" } },
         page: { size: 50, totalElements: 0, totalPages: 0, number: 0 },
       }),
-    ).not.toThrow();
-    expect(() =>
-      assertTicketmasterResponseEnvelope({ _embedded: { events: [] } }),
-    ).not.toThrow();
+    ).toBe(0);
+    expect(ticketmasterResponseEventCount({ _embedded: { events: [] } })).toBe(0);
+    expect(
+      ticketmasterResponseEventCount({ _embedded: { events: [{ id: "a" }, { id: "" }] } }),
+    ).toBe(2);
   });
 
   it("rejects a provider fault, malformed body or malformed event collection", () => {
-    expect(() => assertTicketmasterResponseEnvelope(null)).toThrow(
+    expect(() => ticketmasterResponseEventCount(null)).toThrow(
       "The source returned an invalid response.",
     );
-    expect(() => assertTicketmasterResponseEnvelope({ unexpected: true })).toThrow(
+    expect(() => ticketmasterResponseEventCount({ unexpected: true })).toThrow(
       "The source returned an invalid response envelope.",
     );
     expect(() =>
-      assertTicketmasterResponseEnvelope({ fault: { faultstring: "secret" } }),
+      ticketmasterResponseEventCount({ fault: { faultstring: "secret" } }),
     ).toThrow("The source returned a provider fault.");
     expect(() =>
-      assertTicketmasterResponseEnvelope({ _embedded: { events: "not-an-array" } }),
+      ticketmasterResponseEventCount({ _embedded: null, page: {} }),
+    ).toThrow("The source returned an invalid event collection.");
+    expect(() =>
+      ticketmasterResponseEventCount({ _embedded: { events: "not-an-array" } }),
     ).toThrow("The source returned an invalid event collection.");
   });
 });
