@@ -4,13 +4,14 @@
 ALTER TABLE public.listings
   ADD COLUMN IF NOT EXISTS price_known boolean NOT NULL DEFAULT true;
 
--- Before this field existed, the importer converted an absent source price to
--- cost=0 and an absent currency to GBP. We cannot recover whether those older
--- values were actually free, so fail closed and let the next approved refresh
--- restore a source-backed known price when evidence exists.
+-- Before this field existed, the importer converted an absent source amount to
+-- cost=0; currency could also have been defaulted or partially present. We
+-- cannot distinguish those records from genuinely free events, so conservatively
+-- mark all old source-origin zeros unknown. A future approved refresh restores a
+-- source-backed free price only when the source explicitly supplies zero + currency.
 UPDATE public.listings
 SET price_known = false,
     currency = 'XXX'
 WHERE origin = 'source'
   AND cost = 0
-  AND currency = 'GBP';
+  AND price_known = true;
