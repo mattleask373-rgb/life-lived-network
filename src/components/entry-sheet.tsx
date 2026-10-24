@@ -169,7 +169,9 @@ export function EntrySheet({
             </div>
             <div className="card-paper rounded-2xl p-3">
               <dt className="text-xs text-muted-foreground">Money</dt>
-              <dd className="mt-0.5">{money(entry.cost, entry.currency, "en", entry.priceKnown !== false)}</dd>
+              <dd className="mt-0.5">
+                {money(entry.cost, entry.currency, "en", entry.priceKnown !== false)}
+              </dd>
             </div>
           </dl>
 
