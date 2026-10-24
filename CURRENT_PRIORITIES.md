@@ -1,50 +1,59 @@
 # Current Priorities — Evidence-Gated Execution
 
-**Snapshot:** 2026-10-24 12:26 UTC  
-**Current main:** 182fe7f05c9efbee9ac17ccbca4d420cc0f1b24f  
-**Operating mode:** security-first, no public surface expansion while Gates 0 and 4 remain open.
+**Snapshot:** 24 October 2026, current live GitHub and CI evidence  
+**Canonical main:** 70a3e261b18e3be5e90429e4ad4defd1fd8008c7  
+**Operating mode:** no global expansion, public AI or production worker activation until security, identity and pilot gates close.
 
-## Highest-priority dependency order
+## Confirmed state
 
-### P0-A — Confirm authoritative environment identity (owner/admin)
-Required: exact Lovable Git target + protected non-main sync branch; canonical host and deployed build SHA; production Supabase project ID; separate disposable Supabase project. Until verified, do not sync Lovable, change hosted settings, inspect/write private production rows, run load tests, or republish.
+- PR #353 (Zod 4.6.7 / Undici 7.30.1) merged at 12:30 UTC.
+- PR #348 (foundational private membership-backed local-discovery boundary for needs) merged at 12:32 UTC.
+- Main is protected. Ruleset 24946178 is active and requires one human approval, approval of the latest push, dismissal of stale approvals, resolved review threads, strict Verify and non-fast-forward prevention. Branch-deletion protection is not separately proved.
+- Main Verify [#40094349108](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40094349108) and CodeQL [#40094349114](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40094349114) passed on the current SHA.
+- The #350 fact-scope changes were not released on main; they were part of the #348 stack after #348 merged. Clean current-main replacement PRs #362 and #363 are the active review candidates.
+- Latest available Public SEO Smoke [#40088907466](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40088907466) failed on older main SHA 182fe7f05c9efbee9ac17ccbca4d420cc0f1b24f with 19 assertions. The current deployed host/build has not been freshly revalidated.
+- Open queue: 99 PRs; 87 drafts and 12 ready for review. Only 11 target the exact current main SHA; 88 target older or stacked SHAs. Reconcile one candidate at a time.
 
-### P0-B — Close the local_discovery boundary in code and disposable evidence
-Keep the existing candidate chain together, review each exact head, and re-run the combined disposable matrix after dependency reconciliation:
-1. [#348 — verified locality boundary](https://github.com/mattleask373-rgb/life-lived-network/pull/348), head `8b91b6b0dcfd564bd2265783b4c4327da9077280`, base main `182fe7f05c9efbee9ac17ccbca4d420cc0f1b24f`. Verify [#40093067234](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40093067234): lint, Vitest, build, empty local migration replay, pgTAP creator-policy bypass regression, direct PostgREST RLS, DB function lint and k6 **PASS**; final strict dependency gate **FAIL** as intended. CodeQL [#40093067082](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40093067082): JS/TS analysis passed, locked audit failed.
-2. [#350 — scoped personal facts](https://github.com/mattleask373-rgb/life-lived-network/pull/350), head `1d9dda353d79fea962207294e8784483b83c425c`, stacked on #348. Verify [#40093505114](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40093505114): lint/tests/build, empty local migration replay, pgTAP, PostgREST RLS, DB lint and k6 **PASS**; final audit gate **FAIL**.
-3. [#352 — authenticated local reads](https://github.com/mattleask373-rgb/life-lived-network/pull/352), head `4961076dd68379418518b6e1683c01b6caf66862`, stacked on #350. Verify [#40093578097](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40093578097): lint/tests/build, empty local migration replay, pgTAP, PostgREST RLS, DB lint and k6 **PASS**; final audit gate **FAIL**.
-4. [#354 — audited membership provisioning](https://github.com/mattleask373-rgb/life-lived-network/pull/354), head `74f86db58f796ed709f45ebe57e7f6c1d1227598`, stacked on #352. Verify [#40093582425](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40093582425) **PASS** including local replay, pgTAP, PostgREST, DB lint and k6. Important: this branch’s lock blob is the same patched dependency lock as #353 (`a60fa15ac9e6859f901350fd02ddad877fa8834a`); this explains its clean audit but creates duplicated dependency changes in the stack. Do not use this to bypass #353’s review.
-5. All of #350/#352/#354 include the corrected shared boundary migration/test blobs `5670800d8fd21d7718e643febe5e93d0fff962f2` / `e7b39ee5a8f999e2a9abd800b193aaf6e556f3e2`. This regression prevents the old creator SELECT policy from bypassing verified membership through permissive-policy OR composition.
-6. Independent security review remains required for effective RLS/grants, SECURITY DEFINER privileges, service-role boundary, membership lifecycle (expiry policy is not implemented), provisioning authority, and the list → detail → supply contract.
+## Highest-priority work
 
-Do not merge a partial slice that makes local_discovery disappear into an unexplained empty state or reopens an anonymous read fallback. Preserve truthful distinction between no eligible rows and a failed/unauthorized read.
+### P0 — current-main security reviews
 
-### P0-C — Dependency gate and exact-head verification
-- [#353 — Zod 4.6.7 / Undici 7.30.1 security remediation](https://github.com/mattleask373-rgb/life-lived-network/pull/353), head `7e63c7e385ed1fc8c6c380eca3967cb85cafad51`: Verify [#40085945708](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40085945708) and CodeQL [#40085945605](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40085945605) pass on that head. It remains unmerged and has no independent APPROVE review; current owner/admin enforcement of main protection is disabled, so both governance and reviewer gates remain open.
-- Dependency overlap is concrete: #348/#350/#352 currently use lock blob `106f982662d4689dbc2ccd94cf820bfaf479259b` with `undici@7.30.0`, while #353 and #354 use lock blob `a60fa15ac9e6859f901350fd02ddad877fa8834a` with `undici@7.30.1`. Integrate/reconcile #353 first after admin protection is restored; forward-update the locality stack without reverting the patch.
-- [#351 — fail closed on incomplete row reads](https://github.com/mattleask373-rgb/life-lived-network/pull/351), head `64fda4c94010fb4d8ed6cebf752f2270bf20ac4f`: Verify [#40092610365](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40092610365) lint/tests/build/k6 passed; final dependency gate failed; database steps skipped on its source-only change. Current-head CodeQL has not been established in this snapshot.
-- Never treat cancelled/old-head checks as current green status.
+1. **#358 — Verify concurrency isolation.** Current Verify and CodeQL pass; one human approval remains.
+2. **#362 — verified locality fact-level RLS and authenticated exact-place readers.** Verify, local replay, pgTAP, direct PostgREST RLS, DB lint and CodeQL pass. Human review of policies/grants/routes is mandatory.
+3. **#363 — audited membership administration.** Verify, local replay, pgTAP, PostgREST, DB lint and CodeQL pass. Review actor identity, server-only service role, SECURITY DEFINER ownership/search_path/grants, no self-approval, expiry/revocation and audit atomicity. Never provision real members before owner-authorised rehearsal.
 
-### P0-D — SEO parity and public/private route policy
-- [#335 — sitemap completeness and live verification](https://github.com/mattleask373-rgb/life-lived-network/pull/335), head `a6a309821cde6f2509fc5d04686d5c7de1bf412a`, temporarily based on #358 diagnostics. Verify [#40092565854](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40092565854) lint/tests/build/k6 passed; final audit gate failed; CodeQL is not refreshed on this exact head. Restore canonical `main` and rerun after #353/#358 are integrated in the approved order. Live-host verification remains blocked on Gate 0.
-- Do not weaken smoke assertions. First confirm canonical host/build and authorize republish, then test the exact host with GET-only checks.
-- [#355 — live SEO gap evidence](https://github.com/mattleask373-rgb/life-lived-network/pull/355) is a new docs-only draft based on current main. The report records its own ~22:12 UTC probe: `GET /robots.txt` returned 200 with generic Allow-only rules and no Sitemap directive; `GET /sitemap.xml` returned 404. Treat that as agent-reported, source-linked evidence, not independent verification by this session. It does not authorize a republish. Review it alongside #335 after Gate 0 host/build identity is confirmed.
-- Keep Life List and other private surfaces out of public sitemaps and indexable metadata.
+### P0/P1 — truthful data and account state
 
-### P0-E — Governance evidence
-Owner/admin must restore and prove protection enforcement before any merge decision. Fresh read-only GitHub evidence at `2026-10-24T12:17:19Z` shows ruleset 24946178 has `enforcement: disabled`; `main` returns `protected: false` and `protection.enabled: false`. The ruleset is configured for one approval, latest-push approval, stale-review dismissal, resolved threads, strict `verify`, and non-fast-forward prevention, but these are dormant while enforcement is disabled. Branch deletion protection is separately **NOT VERIFIED**.
+4. **#351** fail-closed world row reads — current Verify passes; review and integrate after #358.
+5. **#360** honest hours pagination and complete enrichment — current Verify passes; stacked on #351, then retarget/recheck after #351 merges.
+6. **#357** map/list parity at the 300-pin cap — current Verify passes; human UI/mobile/accessibility QA remains.
+7. **#341** Life List write integrity — current Verify passes; review account-switch fencing, failed writes and guest migration.
+8. **#345** need freshness/lifecycle — refresh to current main; full migration/RLS evidence and independent policy review are required.
 
-## Next tier, ordered only after Tier 0
+### P1 — identity, AI cost and measurement
 
-1. Life List mutation durability and clear user-visible write failure (#341 is proposed; review current exact head, don't assume merged).
-2. Map/list parity, cancellation, deterministic pagination and exact-count/sentinel semantics; preserve current server-owned locality scope.
-3. WorkOpportunity source, publication, freshness, rights and human attestation contract.
-4. AI draft quota, concurrent request tests, cost limits and kill switch in a disposable environment; public grounded AI remains OFF.
-5. Accessibility/mobile/date-line QA, four-language correctness and consent/privacy review.
-6. Live Map specification and global geographic discovery architecture are design artifacts only until security/identity gates pass.
-7. Non-production worker rehearsal, then outcome-led one-locality pilot after owner/legal/safety authorization.
+9. **#343** magic-link sign-in — current Verify and CodeQL pass; owner must confirm production email delivery, canonical Site URL and redirect allow-list.
+10. **#340** AI quota concurrency — refresh to current main and prove the quota migration/test actually runs on a disposable DB before any AI enablement.
+11. **#349** per-attempt draft cost limits — review after quota evidence; provider billing caps/alerts and kill-switch rehearsal remain owner duties.
+12. **#347** privacy-minimised outcome contract — docs/contract only, no live event sink. Privacy/RLS/retention review and a separate instrumentation PR are required before pilot outcome claims.
 
-## Merge queue policy
+### P1/P2 — search, presentation and operations
 
-Current GitHub snapshot at `2026-10-24T12:25:32Z`: **98 open PRs (93 drafts, 5 non-drafts)**. The default branch remains `182fe7f05c9efbee9ac17ccbca4d420cc0f1b24f`. Ruleset `24946178` currently has `enforcement: disabled`; `main` is returned as `protected: false`. Before merge planning, re-check base/head SHAs, changed paths, review/thread state, exact checks, and restore/verify governance controls. Consolidate only after preserving unique fixes. No automated merge.
+13. **#335/#355** robots, sitemap and private-route parity. Confirm Gate 0; retain completeness assertions and fresh host GET evidence before any authorized republish.
+14. **#346** partial four-locale foundation. Finish target market strings/forms/legal/safety content and manual accessibility review.
+15. **#359** worker/dispatch core. CodeQL passes; Verify was still running at latest read. It is not a live 24/7 service.
+16. **#361** broad 49-package update. Verify/CodeQL passed on its own head but it is 48 commits behind current main; refresh ancestry and run targeted UI regressions before review.
+
+## Owner-only Gate 0
+
+Before hosted inspection, sync, write, deploy, provider activation or real membership provisioning, the owner/admin must record:
+- exact Lovable repository and protected non-main sync branch;
+- canonical public HTTPS host and deployed build SHA;
+- actual production Supabase project ID;
+- separate disposable Supabase project and rollback path.
+
+A project reference in the repository is not proof of live backend identity.
+
+## Never infer
+
+Skipped database steps are not passes. Old-head or cancelled runs are not current evidence. Local disposable RLS is not hosted RLS. A worker core is not a 24/7 service. Source changes are not proof that the public host changed. Public “Ask this place” remains OFF.
