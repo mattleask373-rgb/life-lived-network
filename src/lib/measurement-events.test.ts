@@ -213,7 +213,15 @@ describe("privacy-minimised measurement event contract", () => {
       targetKind: "need",
     });
     expect(Object.keys(parsed).sort()).toEqual(
-      ["action", "countryCode", "dayUTC", "intentFamily", "schemaVersion", "targetKind", "type"].sort(),
+      [
+        "action",
+        "countryCode",
+        "dayUTC",
+        "intentFamily",
+        "schemaVersion",
+        "targetKind",
+        "type",
+      ].sort(),
     );
   });
 });
