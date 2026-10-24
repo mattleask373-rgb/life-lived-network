@@ -55,6 +55,7 @@ function rowsFor(entries: WorldEntry[]): PublicListingSitemapRow[] {
     id: value.id,
     place_id: "city",
     demonstration: value.demonstration ?? false,
+    publiclyEligible: true,
   }));
 }
 
