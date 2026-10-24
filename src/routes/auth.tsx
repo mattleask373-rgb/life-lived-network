@@ -22,6 +22,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -145,20 +146,27 @@ function AuthPage() {
           {mode === "up" || mode === "in" ? (
             <button
               type="button"
-              disabled={busy || !email}
+              disabled={busy || resendingConfirmation || !email}
               onClick={async () => {
                 setError(null);
                 setNote(null);
-                const { error: err } = await supabase.auth.resend({ type: "signup", email });
-                if (err) setError("We couldn't resend that just now. Try again in a minute.");
-                else
-                  setNote(
-                    "If that address is waiting to be confirmed, a fresh link is on its way.",
-                  );
+                setResendingConfirmation(true);
+                try {
+                  const { error: err } = await supabase.auth.resend({ type: "signup", email });
+                  if (err) setError("We couldn't resend that just now. Try again in a minute.");
+                  else
+                    setNote(
+                      "If that address is waiting to be confirmed, a fresh link is on its way.",
+                    );
+                } catch {
+                  setError("We couldn't resend that just now. Try again in a minute.");
+                } finally {
+                  setResendingConfirmation(false);
+                }
               }}
               className="focus-ink text-sm text-muted-foreground underline disabled:opacity-60"
             >
-              Resend my confirmation email
+              {resendingConfirmation ? "Resending confirmation…" : "Resend my confirmation email"}
             </button>
           ) : null}
 
