@@ -34,7 +34,8 @@ import { useLifeList } from "@/hooks/use-life-list";
 import { fetchWorldEntries } from "@/lib/listings";
 import { loadLocalityEntries } from "@/lib/locality-page-data";
 import { getLocality, type PlaceBrief } from "@/lib/locality.functions";
-import { getOpenNeeds } from "@/lib/needs.functions";
+import { getOpenNeeds, getOpenNeedsForMember } from "@/lib/needs.functions";
+import { useSession } from "@/hooks/use-session";
 import { localityPath } from "@/lib/locality-path";
 import { contributions, localityQuestions, providerGroups, upcomingEvents } from "@/lib/locality";
 import { KIND_LABEL } from "@/lib/places";
@@ -211,12 +212,17 @@ function LocalityPage() {
   const navigate = useNavigate();
   const { geography, entries, scopeTooWide } = Route.useLoaderData();
   const { place, ancestors, children, siblings } = geography;
+  const { user } = useSession();
   const [open, setOpen] = useState<WorldEntry | null>(null);
   const { has, toggle } = useLifeList();
   const openNeedsFn = useServerFn(getOpenNeeds);
+  const openNeedsForMemberFn = useServerFn(getOpenNeedsForMember);
   const openNeedsQuery = useQuery({
-    queryKey: ["open-needs", place.id],
-    queryFn: () => openNeedsFn({ data: { placeId: place.id } }),
+    queryKey: ["open-needs", place.id, user?.id ?? null],
+    queryFn: () =>
+      user
+        ? openNeedsForMemberFn({ data: { placeId: place.id } })
+        : openNeedsFn({ data: { placeId: place.id } }),
   });
   const needCount = openNeedsQuery.data === undefined ? null : openNeedsQuery.data.length;
   const needsStatus = openNeedsQuery.isError
