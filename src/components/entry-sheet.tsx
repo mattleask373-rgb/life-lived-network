@@ -234,6 +234,12 @@ export function EntrySheet({
                 {entry.organiser ? `, organised by ${entry.organiser}` : ""}. Nobody here posted it,
                 so details are theirs, not ours.
               </p>
+              {entry.ticketUrl ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Ticket inventory and availability have not been checked here; confirm them with
+                  the source.
+                </p>
+              ) : null}
               <div className="mt-2 flex flex-wrap gap-3">
                 {entry.sourceUrl ? (
                   <a
@@ -252,7 +258,7 @@ export function EntrySheet({
                     rel="noreferrer noopener"
                     className="focus-ink underline"
                   >
-                    Tickets
+                    Ticket information
                   </a>
                 ) : null}
               </div>
