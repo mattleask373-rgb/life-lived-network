@@ -7,7 +7,7 @@
 **Decision:** **Not ready for global rollout or autonomous 24/7 production execution.** Continue bounded source work and non-production validation; keep public AI activation, hosted schema/RLS writes, production deployment, paid campaigns, and global expansion behind owner/security gates.
 
 
-**Open-PR backlog snapshot (13:30 UTC):** 97 open PRs: 78 drafts, 19 non-drafts, 14 based on other unmerged branches. Track the remaining dependency graph and consolidation tasks in [issue #374](https://github.com/mattleask373-rgb/life-lived-network/issues/374). Prior checks do not make a stale stacked head merge-ready.
+**Open-PR backlog snapshot (13:30 UTC):** 97 open PRs: 78 drafts, 19 non-drafts, 14 based on other unmerged branches. Track the remaining dependency graph in [issue #374](https://github.com/mattleask373-rgb/life-lived-network/issues/374), and the owner-controlled canonical deploy/Supabase/first-market identity gate in [issue #375](https://github.com/mattleask373-rgb/life-lived-network/issues/375). Prior checks do not make a stale stacked head merge-ready.
 
 This snapshot supersedes the historical coordination notes retained below. Re-verify exact heads and external environment state before any merge or deployment.
 
@@ -74,10 +74,7 @@ Use this order to minimize risk and avoid stale stacked merges. It is an executi
 18. **#366 / #339 / #283 / #338 and orchestration docs.** Merge current, non-duplicative governance docs only after factual review and exact-head checks. Maintain one canonical status file.
 19. **Remaining 14 stacked PRs.** Reconcile in [issue #374](https://github.com/mattleask373-rgb/life-lived-network/issues/374); preserve real dependency edges (#360→#351, #109→#108→#106, #103→#102→#101, #104→#103, #57→#54, #58→#49, #62→#61, #86→#72). Port diagnostic-base candidates to current main rather than merging workflow scaffolding or duplicate feature commits.
 
-The ordering is a dependency plan, not permission to merge. Any changed head invalidates old checks; SQL/authorization changes require independent human security review.
-The ordering is a dependency plan, not permission to merge. Any changed head invalidates prior checks; SQL/authorization PRs require independent human security review.
-The ordering is a dependency plan, not permission to merge.
-The ordering is a dependency plan, not permission to merge. Any changed head invalidates previous check evidence; any SQL/authorization PR needs independent human security review.
+The ordering is a dependency plan, not permission to merge. Any changed head invalidates prior exact-head checks; SQL/authorization PRs require independent human security review.
 
 ## 4. Global expansion acceptance gates
 
@@ -111,6 +108,7 @@ The connected `real-world-atlas-agent-orchestration` repository has an open draf
 
 - **Repository admin:** confirm the active ruleset remains enforced; check deletion protection separately; define approved reviewers and required checks.
 - **Product/environment owner:** confirm the authoritative Lovable Git and Supabase project identities, the published build SHA, market scope, pilot budget and rollback owner.
+- **Canonical environment gate:** close [issue #375](https://github.com/mattleask373-rgb/life-lived-network/issues/375) with non-secret references for canonical repo/Lovable sync target, public host/deployed build SHA, separate production and disposable Supabase project refs, first pilot locality/country, and release/rollback authority.
 - **Independent security reviewer:** review #362 and refreshed #354 as one authorization boundary; review #359's dispatch/execution boundary before any worker activation.
 - **Operations owner:** define production SLOs, alert routing, on-call, backup/restore, cost limits and kill switch; prove them in a disposable 24/7 rehearsal.
 - **Market owner:** approve first locality/country, legitimate supply partners, native-language QA and legal review before any public rollout.
