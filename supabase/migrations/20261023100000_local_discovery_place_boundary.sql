@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS private.locality_memberships (
     CHECK (status IN ('pending', 'verified', 'revoked')),
   verified_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   verified_at timestamptz,
+  -- Membership authorization expires after 180 days unless an administrator re-verifies it.
+  expires_at timestamptz NOT NULL DEFAULT (now() + interval '180 days'),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (user_id, place_id),
@@ -84,6 +86,7 @@ AS $function$
         AND membership.status = 'verified'
         AND membership.verified_by IS NOT NULL
         AND membership.verified_at IS NOT NULL
+        AND membership.expires_at > pg_catalog.statement_timestamp()
     ),
     false
   );
