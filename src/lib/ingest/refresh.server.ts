@@ -75,6 +75,45 @@ export function dueForRefresh(source: SourceRow, now = new Date()): boolean {
   return since >= Math.max(source.refresh_minutes, 15) * 60000;
 }
 
+/**
+ * Validate transport-level Ticketmaster response shape before interpreting an
+ * absent event list as a valid empty search result. The adapter parser remains
+ * deliberately non-throwing for fixture and test use; the server fetch boundary
+ * must distinguish malformed/provider-fault responses from a successful zero.
+ */
+export function assertTicketmasterResponseEnvelope(payload: unknown): void {
+  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
+    throw new Error("The source returned an invalid response.");
+  }
+
+  const record = payload as Record<string, unknown>;
+  if (Object.prototype.hasOwnProperty.call(record, "fault")) {
+    throw new Error("The source returned a provider fault.");
+  }
+
+  const embedded = record["_embedded"];
+  const page = record["page"];
+  const links = record["_links"];
+  const hasEmbedded = typeof embedded === "object" && embedded !== null && !Array.isArray(embedded);
+  const hasPage = typeof page === "object" && page !== null && !Array.isArray(page);
+  const hasLinks = typeof links === "object" && links !== null && !Array.isArray(links);
+
+  if (!hasEmbedded && !hasPage && !hasLinks) {
+    throw new Error("The source returned an invalid response envelope.");
+  }
+
+  if (hasEmbedded) {
+    const embeddedRecord = embedded as Record<string, unknown>;
+    if (
+      embeddedRecord["events"] !== undefined &&
+      !Array.isArray(embeddedRecord["events"])
+    ) {
+      throw new Error("The source returned an invalid event collection.");
+    }
+  }
+}
+
+
 /** The map still wants a rough position; real coordinates stay approximate. */
 function mapPosition(lat: number | null, lng: number | null): { x: number; y: number } {
   if (lat === null || lng === null) return { x: 50, y: 50 };
@@ -218,6 +257,7 @@ async function readFromSource(
     if (!response.ok) throw new Error(`The source answered with ${response.status}.`);
 
     const payload: unknown = await response.json().catch(() => null);
+    assertTicketmasterResponseEnvelope(payload);
     const parsed = parse(payload);
     outcome.read += parsed.events.length;
     outcome.skipped.push(...parsed.skipped.slice(0, 10));
