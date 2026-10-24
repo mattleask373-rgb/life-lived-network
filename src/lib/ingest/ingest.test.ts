@@ -11,6 +11,7 @@ import { normaliseEvent, plainText, safeUrl, usableImages } from "./normalise";
 import { cancellationFor, discoverable, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent, titleKey } from "./dedupe";
 import { dueForRefresh, sourceKeyFor } from "./refresh.server";
+import { fixtureAdapter, fixturePayload } from "./fixture-source";
 import type { SourceEvent, SourceRow } from "./contract";
 
 function payload(event: Record<string, unknown>) {
@@ -205,6 +206,23 @@ describe("the provider adapter", () => {
   it("is registered as data, by name", () => {
     expect(adapterFor(sourceKeyFor("Ticketmaster Discovery"))).not.toBeNull();
     expect(adapterFor("no-such-source")).toBeNull();
+  });
+});
+
+describe("fixture locality evidence", () => {
+  it("includes the requested canonical country in provider-shaped fixture venues", () => {
+    const parsed = fixtureAdapter.parse(
+      fixturePayload({
+        lat: 35.68,
+        lng: 139.69,
+        localityName: "Tokyo",
+        timezone: "Asia/Tokyo",
+        countryCode: "JP",
+        now: new Date("2027-01-01T00:00:00.000Z"),
+      }),
+    );
+    expect(parsed.events.length).toBeGreaterThan(0);
+    expect(parsed.events.every((event) => event.countryCode === "JP")).toBe(true);
   });
 });
 
