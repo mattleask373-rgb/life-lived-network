@@ -170,9 +170,7 @@ describe("map/list synchronization", () => {
     expect(partition.unrenderedInView.map((item) => item.id)).toEqual(
       inFrame.slice(MAX_MAP_PINS).map((item) => item.id),
     );
-    expect(partition.outsideView.map((item) => item.id)).toEqual(
-      offScreen.map((item) => item.id),
-    );
+    expect(partition.outsideView.map((item) => item.id)).toEqual(offScreen.map((item) => item.id));
     expect(entriesForMapList(entries, partition, false).map((item) => item.id)).toEqual(
       inFrame.slice(0, MAX_MAP_PINS).map((item) => item.id),
     );
