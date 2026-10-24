@@ -1,5 +1,14 @@
 # Roadmap
 
+## 2026-10-22 — reusable market onboarding gate (documentation port)
+
+- Ported the country-agnostic checklist to `docs/launch/MARKET-ONBOARDING-CHECKLIST.md` on a fresh branch based on current main (`1f0a5d2b1c717db6cfc10c63f851a0e428313ee2`), rather than merging the stale PR #179 branch.
+- Covers canonical place hierarchy/URLs, ISO country/currency and minor units, IANA timezone/DST/date-only behavior, local employment/volunteering policy, source terms and image rights, freshness/withdrawal/takedown, moderation/privacy, canonical `findSupply()` integration, sitemap/indexability parity, dry-run/idempotency/rollback, tests and explicit go/no-go owners.
+- Documentation and roadmap only: no place/event/need inventory, credentials, feed activation, schema/RLS/grant changes, production writes, merge or deployment.
+- A validated place tree or imported row is not evidence that the market has genuine eligible inventory. New markets stay NOT LIVE until real supply, rights, moderation and publication gates are evidenced and a human approves release.
+- Exact-head Verify, CodeQL and independent review are required before merge.
+
+
 ## 2026-10-19/20 — Overwrite reconciliation + service pages (SEO slice 3, frontend half)
 
 - Repository overwrite incident (19 Oct, 21:37) reconciled read-only: current main is a superset of the backup branch `lovable-backup-main-1792442270`. The backup's only unique content is two historical plan docs and the tracked `.env` that PR #157 deliberately removed — no implementation work is stranded. Backup left untouched; do not restore `.env` from it.
