@@ -62,11 +62,10 @@ describe("bounded agent worker supervisor", () => {
       sleep: abortOnSleep(controller, 2, delays),
     });
 
-    const summary = await runAgentWorkerSupervisor(
-      adapters,
-      controller.signal,
-      { pollIntervalMs: 1000, maxBackoffMs: 4000 },
-    );
+    const summary = await runAgentWorkerSupervisor(adapters, controller.signal, {
+      pollIntervalMs: 1000,
+      maxBackoffMs: 4000,
+    });
 
     expect(adapters.readEnabled).toHaveBeenCalledTimes(2);
     expect(adapters.selectNextReadyTask).not.toHaveBeenCalled();
@@ -102,11 +101,10 @@ describe("bounded agent worker supervisor", () => {
       sleep: abortOnSleep(controller, 2, delays),
     });
 
-    const summary = await runAgentWorkerSupervisor(
-      adapters,
-      controller.signal,
-      { pollIntervalMs: 1000, maxBackoffMs: 4000 },
-    );
+    const summary = await runAgentWorkerSupervisor(adapters, controller.signal, {
+      pollIntervalMs: 1000,
+      maxBackoffMs: 4000,
+    });
 
     expect(runCycle.mock.calls.map(([taskId]) => taskId)).toEqual(["task-a", "task-b"]);
     expect(adapters.createCycleId).toHaveBeenCalledTimes(2);
@@ -130,11 +128,10 @@ describe("bounded agent worker supervisor", () => {
       sleep: abortOnSleep(controller, 3, delays),
     });
 
-    const summary = await runAgentWorkerSupervisor(
-      adapters,
-      controller.signal,
-      { pollIntervalMs: 1000, maxBackoffMs: 2000 },
-    );
+    const summary = await runAgentWorkerSupervisor(adapters, controller.signal, {
+      pollIntervalMs: 1000,
+      maxBackoffMs: 2000,
+    });
 
     expect(delays).toEqual([1000, 2000, 2000]);
     expect(summary.consecutiveFailures).toBeGreaterThanOrEqual(1);
@@ -157,11 +154,10 @@ describe("bounded agent worker supervisor", () => {
       sleep: abortOnSleep(controller, 1, delays),
     });
 
-    await runAgentWorkerSupervisor(
-      adapters,
-      controller.signal,
-      { pollIntervalMs: 1000, maxBackoffMs: 2000 },
-    );
+    await runAgentWorkerSupervisor(adapters, controller.signal, {
+      pollIntervalMs: 1000,
+      maxBackoffMs: 2000,
+    });
 
     expect(runCycle).not.toHaveBeenCalled();
     expect(delays).toEqual([1000]);
@@ -182,11 +178,10 @@ describe("bounded agent worker supervisor", () => {
         sleep: abortOnSleep(controller, 1, delays),
       });
 
-      await runAgentWorkerSupervisor(
-        adapters,
-        controller.signal,
-        { pollIntervalMs: 1000, maxBackoffMs: 2000 },
-      );
+      await runAgentWorkerSupervisor(adapters, controller.signal, {
+        pollIntervalMs: 1000,
+        maxBackoffMs: 2000,
+      });
 
       expect(runCycle).not.toHaveBeenCalled();
       expect(delays).toEqual([1000]);
