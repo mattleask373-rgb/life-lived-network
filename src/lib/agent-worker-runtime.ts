@@ -241,7 +241,14 @@ const HUMAN_GATED_RISKS: readonly WorkerRisk[] = ["P0", "P1"];
 const ALLOWED_ENVIRONMENTS: readonly WorkerEnvironmentKind[] = ["DISPOSABLE", "DEVELOPMENT"];
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SENSITIVE_VALUE_PATTERN =
-  /(?:sk-[A-Za-z0-9]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|Bearer\s+\S+|-----BEGIN (?:OPENSSH|RSA|EC|PRIVATE) KEY-----|(?:token|secret|password|api[_-]?key)\s*[:=]\s*\S+)/i;
+  /(?:sk-[A-Za-z0-9]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|Bearer\s+\S+|-----BEGIN (?:OPENSSH|RSA|EC|PRIVATE) KEY-----|(?:token|secret|password|api[_-]?key|credential|signature|authorization|access[_-]?key(?:[_-]?id)?|jwt)\s*[:=]\s*\S+)/i;
+const URL_USERINFO_PATTERN = /\bhttps?:\/\/[^/\s?#@]*@/i;
+
+function containsSensitiveMaterial(value: string): boolean {
+  // A signed URL or URL user-info can carry a reusable credential even when
+  // the surrounding text has no obvious token= or secret= marker.
+  return SENSITIVE_VALUE_PATTERN.test(value) || URL_USERINFO_PATTERN.test(value);
+}
 
 const AUTONOMY_RANK: Record<WorkerAutonomy, number> = {
   L0: 0,
@@ -272,7 +279,7 @@ function nonBlank(value: unknown): value is string {
 
 function proofIsFresh(proof: WorkerProof, nowMs: number, maxAgeMs: number): boolean {
   if (proof.status !== "PROVEN" || !nonBlank(proof.evidenceRef)) return false;
-  if (SENSITIVE_VALUE_PATTERN.test(proof.evidenceRef)) return false;
+  if (containsSensitiveMaterial(proof.evidenceRef)) return false;
   if (!proof.evidenceRef.startsWith("https://") && !proof.evidenceRef.startsWith("urn:")) {
     return false;
   }
@@ -316,7 +323,7 @@ function isSafeRepositoryPath(value: unknown): value is string {
   if (path === ".env" || (path.startsWith(".env.") && path !== ".env.example")) return false;
   if (/(^|\/)(\.git|secrets?)(\/|$)/i.test(path)) return false;
   if (/\.(pem|p12|pfx|key)$/i.test(path)) return false;
-  return !SENSITIVE_VALUE_PATTERN.test(path);
+  return !containsSensitiveMaterial(path);
 }
 
 function hasDisallowedControlCharacter(value: string): boolean {
@@ -339,7 +346,7 @@ function safeText(value: unknown, maxLength: number): string | null {
   if (!nonBlank(value) || value.length > maxLength) return null;
   const text = value.trim();
   if (hasDisallowedControlCharacter(text)) return null;
-  if (SENSITIVE_VALUE_PATTERN.test(text)) return null;
+  if (containsSensitiveMaterial(text)) return null;
   return text;
 }
 
