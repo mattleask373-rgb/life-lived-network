@@ -1,0 +1,68 @@
+title: "[Agent handoff] "
+labels:
+  - agent-coordination
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to hand work to another agent or report a blocker.
+        Link the Issue/PR, include reproducible evidence, and mark unverified facts UNKNOWN.
+        Do not include secrets, private user data, or credentials.
+  - type: input
+    id: agent_role
+    attributes:
+      label: Agent / role
+      description: Who is handing off the work?
+      placeholder: "e.g. SEO reviewer"
+    validations:
+      required: true
+  - type: input
+    id: issue_pr
+    attributes:
+      label: Related Issue or PR URL
+      placeholder: "https://github.com/owner/repo/issues/123"
+    validations:
+      required: true
+  - type: dropdown
+    id: status
+    attributes:
+      label: Status
+      options:
+        - IN PROGRESS
+        - BLOCKED
+        - REVIEW NEEDED
+        - DONE
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: What changed or was learned?
+      description: Summarise the deliverable or finding. Distinguish verified facts from hypotheses.
+      placeholder: "Result, scope, and what remains unknown..."
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Commit SHA, file paths, CI run, test output or other reproducible evidence.
+      placeholder: "Exact links / SHAs / test commands and outcomes..."
+    validations:
+      required: true
+  - type: textarea
+    id: next_action
+    attributes:
+      label: Next action and owner
+      description: State the next concrete step and the role expected to take it.
+      placeholder: "Next step — owner role..."
+    validations:
+      required: true
+  - type: textarea
+    id: blockers
+    attributes:
+      label: Blockers, dependencies, or approval needed
+      description: Write NONE if no blocker exists. Never assume silence is approval.
+      placeholder: "Specific blocker / required decision / NONE"
+    validations:
+      required: true
