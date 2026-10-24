@@ -206,7 +206,9 @@ function Home() {
         (mapPartition.unrenderedInView.length
           ? ` · ${mapPartition.unrenderedInView.length} more in-view records not pinned at the display limit`
           : "") +
-        (mapPartition.outsideView.length ? ` · ${mapPartition.outsideView.length} outside view` : "") +
+        (mapPartition.outsideView.length
+          ? ` · ${mapPartition.outsideView.length} outside view`
+          : "") +
         (viewportLoaded && viewportPage?.hasMore ? " · more records available" : "")
       : mapPartition.unpinned.length + " unpinned · map view preparing";
   const viewportPending = Boolean(expectedViewportBounds && !viewportMatchesView);
