@@ -1,0 +1,144 @@
+name: Agent Coordination Status
+
+# Runs on a cadence that matches the 24/7 plan + on demand.
+# Never writes to main, never merges, never touches production or hosted Supabase.
+on:
+  schedule:
+    # Every 4 hours (UTC) — aligns with the lane rotation windows
+    - cron: "5 */4 * * *"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Why this status run was triggered"
+        required: false
+        default: "manual refresh"
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+    paths:
+      - "package.json"
+      - "bun.lock"
+      - "supabase/migrations/**"
+      - "supabase/tests/**"
+      - "src/lib/needs*.ts"
+      - "src/lib/map-*.ts"
+      - "src/lib/listings.ts"
+      - ".github/workflows/**"
+
+concurrency:
+  group: agent-coordination-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+  checks: read
+
+jobs:
+  status:
+    name: Produce coordination evidence ledger
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
+      checks: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: latest
+
+      - name: Frozen install (read-only validation)
+        run: bun install --frozen-lockfile
+
+      - name: Capture live repository state
+        id: state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          MAIN_SHA=$(git rev-parse origin/main)
+          echo "main_sha=$MAIN_SHA" >> "$GITHUB_OUTPUT"
+
+          # Critical PR numbers from the current release gates
+          CRITICAL_PRS="353 348 350 352 354 351 349 355"
+
+          {
+            echo "## Agent Coordination Status"
+            echo ""
+            echo "**UTC:** $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "**Trigger:** ${{ github.event_name }} ${{ github.event.inputs.reason || '' }}"
+            echo "**Workflow run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo ""
+            echo "### Main"
+            echo "- SHA: \`$MAIN_SHA\`"
+            echo "- Short: \`$(git rev-parse --short origin/main)\`"
+            echo ""
+            echo "### Critical draft PRs (Gate 1 & 2)"
+            for pr in $CRITICAL_PRS; do
+              if gh pr view "$pr" --json number,title,state,isDraft,headRefOid,baseRefOid,url 2>/dev/null; then
+                :
+              else
+                echo "- PR #$pr: not found or inaccessible"
+              fi
+            done
+            echo ""
+            echo "### Locked dependency audit (high/critical)"
+          } > coordination-status.md
+
+          # Run the same audit the Verify gate uses
+          if bun audit --audit-level=high >> coordination-status.md 2>&1; then
+            echo "" >> coordination-status.md
+            echo "**Audit result:** CLEAN (high/critical)" >> coordination-status.md
+            echo "audit_clean=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "" >> coordination-status.md
+            echo "**Audit result:** FAIL — high/critical findings remain" >> coordination-status.md
+            echo "audit_clean=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          {
+            echo ""
+            echo "### HUMAN-QUEUED items (do not auto-close)"
+            echo "1. Independent approval + merge of PR #353 (dependency gate)"
+            echo "2. Human-authoritative Lovable Git destination + build SHA + canonical host + Supabase project (Gate 0)"
+            echo "3. Independent security review of reconciled #348 locality stack + disposable matrix evidence"
+            echo "4. Authorization for live SEO GETs on verified host"
+            echo "5. Authorization + identity of isolated staging for load tests"
+            echo "6. Founder decision on first pilot market + steward"
+            echo "7. Founder approval for any public AI surface"
+            echo ""
+            echo "### Agent next actions (L0–L3 only)"
+            echo "- Keep #353 exact-head checks fresh"
+            echo "- Prepare post-#353 rebase plan for the locality stack"
+            echo "- Continue correctness, API-contract, a11y, i18n, and load-plan draft PRs on isolated branches"
+            echo "- Never merge, force-push, or touch production"
+            echo ""
+            echo "### Stop conditions"
+            echo "- Any uncertainty about production impact → halt lane and document"
+            echo "- Missing human identity evidence → do not claim Gate 0 closed"
+            echo "- Green CI on a draft is not approval"
+          } >> coordination-status.md
+
+      - name: Upload evidence ledger
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f29b43e5  # v4.4.3
+        with:
+          name: coordination-status-${{ github.run_id }}
+          path: coordination-status.md
+          retention-days: 14
+
+      - name: Job summary
+        run: |
+          cat coordination-status.md >> "$GITHUB_STEP_SUMMARY"
+          if [[ "${{ steps.state.outputs.audit_clean }}" != "true" ]]; then
+            echo "::warning::Locked dependency audit still reports high/critical findings. PR #353 remains the priority human gate."
+          fi
