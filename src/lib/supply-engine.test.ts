@@ -105,6 +105,15 @@ describe("supply engine", () => {
     expect(bands(answer.results)).toContain("skills_exchange");
   });
 
+  it("does not describe an unknown price as freely offered help", () => {
+    const answer = findSupply({
+      need: contributionNeed,
+      people: [],
+      entries: [{ ...freeHelpEntry, priceKnown: false }],
+    });
+    expect(bands(answer.results)).not.toContain("contribution");
+  });
+
   it("finds community and freely-offered help for a contribution need", () => {
     const answer = findSupply({
       need: contributionNeed,
