@@ -560,7 +560,10 @@ async function storeEvent(
       .update(provenancePayload)
       .eq("id", existingRecord.id);
     if (provenanceUpdateError) {
-      const { error: rollbackError } = await admin.from("listings").delete().eq("id", created.id);
+      const { error: rollbackError } = await admin
+        .from("listings")
+        .delete()
+        .eq("id", created.id);
       if (rollbackError) {
         throw new Error("Listing rollback after provenance failure could not be confirmed.");
       }
@@ -574,7 +577,9 @@ async function storeEvent(
     });
     if (provenanceInsertError) {
       const { error: rollbackError } = await admin.from("listings").delete().eq("id", created.id);
-      if (rollbackError) throw new Error("Listing rollback after provenance failure could not be confirmed.");
+      if (rollbackError) {
+        throw new Error("Listing rollback after provenance failure could not be confirmed.");
+      }
       throw new Error("New source provenance insert could not be confirmed.");
     }
   }
