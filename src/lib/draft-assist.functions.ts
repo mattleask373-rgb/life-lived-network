@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { setResponseHeader, setResponseStatus } from "@tanstack/react-start/server";
 import { cleanInput, draftInputSchema, isDraftAssistDisabled, type Draft } from "./draft-assist";
 import { draftQuotaRetryMessage, parseDraftQuotaResponse } from "./draft-assist-quota";
 
@@ -62,6 +63,11 @@ export const draftFromText = createServerFn({ method: "POST" })
     const quota = parseDraftQuotaResponse(quotaResponse.data);
     if (!quota || !quota.allowed) {
       if (quota && !quota.allowed && quota.limitKind !== "unavailable") {
+        // Keep the typed result for app callers while making the transport
+        // contract explicit for clients, proxies, and operational monitoring.
+        setResponseStatus(429);
+        setResponseHeader("Retry-After", String(quota.retryAfterSeconds));
+        setResponseHeader("Cache-Control", "no-store");
         return {
           ok: false,
           error: draftQuotaRetryMessage(quota.retryAfterSeconds),
