@@ -95,6 +95,25 @@ describe("the provider adapter", () => {
     expect(normaliseEvent(events[0]!)?.timezone).toBe(timezone);
   });
 
+  it("does not trim an invalid overlong country code into a valid one", () => {
+    const { events } = ticketmasterAdapter.parse(
+      payload({
+        ...GOOD,
+        _embedded: {
+          ...GOOD._embedded,
+          venues: [
+            {
+              ...GOOD._embedded.venues[0],
+              country: { countryCode: "USA" },
+            },
+          ],
+        },
+      }),
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0]?.countryCode).toBeUndefined();
+  });
+
   it("keeps an event whose venue or coordinates are missing", () => {
     const { events } = ticketmasterAdapter.parse(payload({ ...GOOD, _embedded: {} }));
     expect(events).toHaveLength(1);
