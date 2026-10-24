@@ -324,7 +324,8 @@ describe("bounded agent worker runtime", () => {
 
     const result = await runAgentWorkerCycle(input({ adapters: db, provider: model }));
 
-    expect(result).toMatchObject({ outcome: "HELD", code: "INVALID_LEASE" });
+    expect(result).toMatchObject({ outcome: "HELD", code: "DISPATCH_REPLAYED" });
+    expect(result.reason).toContain("already dispatched");
     expect(model.execute).not.toHaveBeenCalled();
     expect(db.recordResultFenced).not.toHaveBeenCalled();
     expect(db.recordFailureFenced).not.toHaveBeenCalled();
