@@ -10,6 +10,32 @@ import {
 
 export const DEFAULT_SEO_SMOKE_ORIGIN = "https://life-lived-network.lovable.app";
 
+/** Validate the configured canonical site origin; reject path/query/fragment and credentials. */
+export function validateSeoSmokeOrigin(value?: string): string {
+  const candidate = value?.trim() || DEFAULT_SEO_SMOKE_ORIGIN;
+  let parsed: URL;
+  try {
+    parsed = new URL(candidate);
+  } catch {
+    throw new Error("SEO_SMOKE_ORIGIN must be a valid absolute HTTPS origin.");
+  }
+  if (
+    parsed.protocol !== "https:" ||
+    parsed.username ||
+    parsed.password ||
+    (parsed.pathname !== "/" && parsed.pathname !== "") ||
+    parsed.search ||
+    parsed.hash ||
+    candidate.includes("?") ||
+    candidate.includes("#")
+  ) {
+    throw new Error(
+      "SEO_SMOKE_ORIGIN must be an HTTPS origin without credentials, path, query or fragment.",
+    );
+  }
+  return parsed.origin;
+}
+
 export interface SmokeDocument {
   status: number;
   contentType: string | null;
@@ -431,12 +457,7 @@ async function fetchDocument(path: string, origin: string): Promise<SmokeDocumen
 }
 
 export async function runSeoSmoke(): Promise<number> {
-  const configuredOrigin = process.env.SEO_SMOKE_ORIGIN?.trim() || DEFAULT_SEO_SMOKE_ORIGIN;
-  const parsedOrigin = new URL(configuredOrigin);
-  if (parsedOrigin.protocol !== "https:" || parsedOrigin.username || parsedOrigin.password) {
-    throw new Error("SEO_SMOKE_ORIGIN must be an HTTPS origin without embedded credentials");
-  }
-  const origin = parsedOrigin.origin;
+  const origin = validateSeoSmokeOrigin(process.env.SEO_SMOKE_ORIGIN);
   const [robots, sitemap, homepage, ...noindexDocs] = await Promise.all([
     fetchDocument("/robots.txt", origin),
     fetchDocument("/sitemap.xml", origin),
