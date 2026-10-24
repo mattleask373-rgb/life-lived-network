@@ -62,13 +62,18 @@ export interface WorkerTask {
   cancelled: boolean;
 }
 
+type WorkerExecute = (
+  task: WorkerTask,
+  context: WorkerProviderContext,
+  signal: AbortSignal,
+) => Promise<unknown>;
+
 export interface WorkerProvider {
   id: string;
   capabilities: readonly WorkerCapability[];
   maxAutonomy: WorkerAutonomy;
   maxRiskWithoutHumanGate: WorkerRisk;
-  execute(task: WorkerTask, context: WorkerProviderContext, signal: AbortSignal):
-    Promise<unknown>;
+  execute: WorkerExecute;
 }
 
 export interface WorkerProviderHealth {
