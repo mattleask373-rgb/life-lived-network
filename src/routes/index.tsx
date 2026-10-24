@@ -193,7 +193,6 @@ function Home() {
     () => new Set(mapPartition.unpinned.map((entry) => entry.id)),
     [mapPartition.unpinned],
   );
-  const locatedCount = mapEntries.length - mapPartition.unpinned.length;
   const mapListSummary = showAllLoaded
     ? mapListEntries.length +
       (viewportLoaded
