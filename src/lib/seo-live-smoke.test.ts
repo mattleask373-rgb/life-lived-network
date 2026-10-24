@@ -10,6 +10,7 @@ import {
 import {
   DEFAULT_SEO_SMOKE_ORIGIN,
   evaluateSeoSmoke,
+  validateSeoSmokeOrigin,
   type SeoSmokeDocuments,
   type SitemapChildSmokeDocument,
   type SmokeDocument,
@@ -111,6 +112,18 @@ describe("public SEO live smoke contract", () => {
   it("passes the optional owner-configured canonical origin into the scheduled live probe", () => {
     expect(liveSmokeWorkflow).toContain("SEO_SMOKE_ORIGIN: ${{ vars.SEO_SMOKE_ORIGIN }}");
     expect(liveSmokeWorkflow).toContain("run: bun scripts/seo-live-smoke.ts");
+  });
+
+  it("accepts only a canonical HTTPS origin for the live smoke target", () => {
+    expect(validateSeoSmokeOrigin("https://atlas.example/")).toBe("https://atlas.example");
+    expect(() => validateSeoSmokeOrigin("http://atlas.example")).toThrow();
+    expect(() => validateSeoSmokeOrigin("https://user:secret@atlas.example")).toThrow();
+    expect(() => validateSeoSmokeOrigin("https://atlas.example/app")).toThrow();
+    expect(() => validateSeoSmokeOrigin("https://atlas.example?campaign=1")).toThrow();
+    expect(() => validateSeoSmokeOrigin("https://atlas.example#section")).toThrow();
+    expect(() => validateSeoSmokeOrigin("https://atlas.example?")).toThrow();
+    expect(() => validateSeoSmokeOrigin("https://atlas.example#")).toThrow();
+    expect(() => validateSeoSmokeOrigin("not-a-url")).toThrow();
   });
 
   it("accepts a correct public robots file, URL-set sitemap, rendered homepage and crawlable noindex page", () => {
@@ -240,6 +253,17 @@ describe("public SEO live smoke contract", () => {
     expect(failures).toContain("sitemap.xml: expected HTTP 200, received 404");
     expect(failures).toContain("sitemap.xml: expected an XML content type");
     expect(failures).toContain("homepage: missing or incorrect canonical link");
+  });
+
+  it("rejects same-origin sitemap URLs containing embedded credentials without logging them", () => {
+    const documents = healthyDocuments();
+    documents.sitemap.body = documents.sitemap.body.replace(
+      origin + "/journey",
+      "https://user:secret@" + new URL(origin).host + "/journey",
+    );
+    const failures = evaluateSeoSmoke(documents);
+    expect(failures).toContain("sitemap.xml: URL must not contain embedded credentials");
+    expect(failures.join("\n")).not.toContain("user:secret");
   });
 
   it("rejects private URLs in a sitemap and cross-origin URLs", () => {
