@@ -1,13 +1,15 @@
-import { placeEntries, type MapView } from "./map-view";
+import { MAX_MAP_PINS, placeEntries, type MapView } from "./map-view";
 import type { WorldEntry } from "./world-data";
 
 export interface MapListPartition {
-  /** Coordinate-backed entries whose pins are inside the current map frame. */
+  /** Coordinate-backed entries the map actually renders as pins (subject to MAX_MAP_PINS). */
   inView: WorldEntry[];
   /** Entries without safe, usable coordinates. They remain available in the list. */
   unpinned: WorldEntry[];
-  /** Coordinate-backed entries outside the current frame. */
+  /** Coordinate-backed entries outside the map's renderable frame. */
   outsideView: WorldEntry[];
+  /** In-frame records not pinned because the map's explicit render cap was reached. */
+  unrenderedInView: WorldEntry[];
 }
 
 function hasUsableCoordinates(entry: WorldEntry): boolean {
@@ -49,19 +51,24 @@ export function partitionMapList(entries: WorldEntry[], view: MapView | null): M
   const located = entries.filter(hasUsableCoordinates);
 
   if (!view) {
-    return { inView: [], unpinned, outsideView: located };
+    return { inView: [], unpinned, outsideView: located, unrenderedInView: [] };
   }
 
-  const visibleEntries = new Set(
-    placeEntries(located, view, Math.max(located.length, 1))
-      .filter(({ left, top }) => left >= 0 && left <= 100 && top >= 0 && top <= 100)
-      .map(({ entry }) => entry),
-  );
+  // Use the same default cap as LivingMap so the list's "in this view" items
+  // correspond to actual pins. Calculate all in-frame candidates separately so
+  // a reached cap is explicit instead of silently looking like missing supply.
+  const rendered = placeEntries(located, view, MAX_MAP_PINS);
+  const allInFrame = placeEntries(located, view, Math.max(located.length, 1));
+  const renderedIds = new Set(rendered.map(({ entry }) => entry.id));
+  const allInFrameIds = new Set(allInFrame.map(({ entry }) => entry.id));
 
   return {
-    inView: located.filter((entry) => visibleEntries.has(entry)),
+    inView: rendered.map(({ entry }) => entry),
     unpinned,
-    outsideView: located.filter((entry) => !visibleEntries.has(entry)),
+    outsideView: located.filter((entry) => !allInFrameIds.has(entry.id)),
+    unrenderedInView: allInFrame
+      .filter(({ entry }) => !renderedIds.has(entry.id))
+      .map(({ entry }) => entry),
   };
 }
 
