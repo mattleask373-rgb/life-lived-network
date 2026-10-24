@@ -228,9 +228,7 @@ export function createSourceLocalityResolver(
 }
 
 /** One-shot convenience for tests and callers handling a single source event. */
-export function resolveSourceLocality(
-  input: ResolveSourceLocalityInput,
-): SourceLocalityResolution {
+export function resolveSourceLocality(input: ResolveSourceLocalityInput): SourceLocalityResolution {
   const { places, ...resolverInput } = input;
   return createSourceLocalityResolver(places)(resolverInput);
 }
