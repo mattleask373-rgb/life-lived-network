@@ -56,9 +56,9 @@ describe("agent control-plane migration lineage (static contract)", () => {
     expect(idempotency).toContain("NULL::TEXT");
     expect(idempotency).toContain("'REPLAYED'::TEXT");
     expect(idempotency).toContain("ALTER COLUMN attempt_id SET DEFAULT gen_random_uuid()");
-    expect(
-      migration("20261023130000_agent_dispatch_idempotency_scope.sql"),
-    ).not.toContain("attempt_row.lease_generation, attempt_row.lease_token,");
+    expect(migration("20261023130000_agent_dispatch_idempotency_scope.sql")).not.toContain(
+      "attempt_row.lease_generation, attempt_row.lease_token,",
+    );
 
   });
 
