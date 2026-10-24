@@ -120,7 +120,7 @@ export function whyNot(all: WorldEntry[], savedIds: string[], nudge = 0): WorldE
   const savedLayers = new Set(all.filter((e) => savedIds.includes(e.id)).map((e) => e.layer));
   const candidates = all
     .filter((e) => e.quality !== "expired" && !e.demonstration && !savedIds.includes(e.id))
-    .filter((e) => e.cost <= 20)
+    .filter((e) => e.priceKnown !== false && e.cost <= 20)
     .sort((a, b) => {
       const aNew = savedLayers.has(a.layer) ? 1 : 0;
       const bNew = savedLayers.has(b.layer) ? 1 : 0;
