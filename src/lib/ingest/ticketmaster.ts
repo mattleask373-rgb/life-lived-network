@@ -408,7 +408,7 @@ export const ticketmasterAdapter: SourceAdapter = {
         timezone,
         venueName: plainText(venue["name"], 120),
         neighbourhood: plainText(asRecord(venue["city"])["name"], 80),
-        ...( /^[A-Z]{2}$/.test(countryCode) ? { countryCode } : {}),
+        ...(/^[A-Z]{2}$/.test(countryCode) ? { countryCode } : {}),
         lat: coordinate(location["latitude"], 90),
         lng: coordinate(location["longitude"], 180),
         category: layerFor(event),
