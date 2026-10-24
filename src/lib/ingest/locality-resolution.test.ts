@@ -12,7 +12,13 @@ const places: CanonicalLocality[] = [
   { id: "bham", parent_id: "wm", name: "Birmingham", slug: "birmingham", country_code: "GB" },
   { id: "digbeth", parent_id: "bham", name: "Digbeth", slug: "digbeth", country_code: "GB" },
   { id: "brum-ne", parent_id: "bham", name: "Northfield", slug: "northfield", country_code: "GB" },
-  { id: "another-northfield", parent_id: "wm", name: "Northfield", slug: "northfield-west-midlands", country_code: "GB" },
+  {
+    id: "another-northfield",
+    parent_id: "wm",
+    name: "Northfield",
+    slug: "northfield-west-midlands",
+    country_code: "GB",
+  },
   { id: "pt", parent_id: null, name: "Portugal", slug: "portugal", country_code: "PT" },
   { id: "lis", parent_id: "pt", name: "Lisbon", slug: "lisbon", country_code: "PT" },
   { id: "lis-old", parent_id: "pt", name: "São João", slug: "sao-joao", country_code: "PT" },
@@ -128,7 +134,11 @@ describe("source event canonical locality resolution", () => {
 
   it("fails closed for invalid or missing country scope and broken source configuration", () => {
     expect(
-      resolveSourceLocality({ evidence: { neighbourhood: "Birmingham" }, queryCountryCode: "", places }),
+      resolveSourceLocality({
+        evidence: { neighbourhood: "Birmingham" },
+        queryCountryCode: "",
+        places,
+      }),
     ).toEqual({ status: "unresolved", reason: "INVALID_QUERY_COUNTRY" });
     expect(
       resolveSourceLocality({
