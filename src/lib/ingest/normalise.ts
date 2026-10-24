@@ -219,9 +219,7 @@ export function normaliseEvent(raw: SourceEvent): SourceEvent | null {
     sourceUrl,
     ...(raw.ticketUrl ? { ticketUrl: safeUrl(raw.ticketUrl) } : {}),
     cost:
-      typeof raw.cost === "number" && Number.isFinite(raw.cost) && raw.cost >= 0
-        ? raw.cost
-        : null,
+      typeof raw.cost === "number" && Number.isFinite(raw.cost) && raw.cost >= 0 ? raw.cost : null,
     currency: /^[A-Z]{3}$/i.test((raw.currency ?? "").trim())
       ? raw.currency!.trim().toUpperCase()
       : "",
