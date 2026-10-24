@@ -11,6 +11,7 @@ import { normaliseEvent, plainText, safeUrl, usableImages } from "./normalise";
 import { cancellationFor, discoverable, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent, titleKey } from "./dedupe";
 import { dueForRefresh, sourceKeyFor } from "./refresh.server";
+import { fixtureAdapter, fixturePayload } from "./fixture-source";
 import type { SourceEvent, SourceRow } from "./contract";
 
 function payload(event: Record<string, unknown>) {
@@ -35,6 +36,7 @@ const GOOD = {
       {
         name: "An arch venue",
         city: { name: "Digbeth" },
+        country: { countryCode: "GB" },
         location: { latitude: "52.476", longitude: "-1.884" },
       },
     ],
@@ -52,6 +54,9 @@ describe("the provider adapter", () => {
     expect(event.startsAt).toBe("2099-04-18T19:30:00.000Z");
     expect(event.category).toBe("music");
     expect(event.venueName).toBe("An arch venue");
+    expect(event.neighbourhood).toBe("Digbeth");
+    expect(event.countryCode).toBe("GB");
+    expect(normaliseEvent(event)?.countryCode).toBe("GB");
     expect(event.lat).toBeCloseTo(52.476, 3);
     expect(event.organiser).toBe("A brass band");
     expect(event.cost).toBe(12);
@@ -88,6 +93,25 @@ describe("the provider adapter", () => {
       }),
     );
     expect(normaliseEvent(events[0]!)?.timezone).toBe(timezone);
+  });
+
+  it("does not trim an invalid overlong country code into a valid one", () => {
+    const { events } = ticketmasterAdapter.parse(
+      payload({
+        ...GOOD,
+        _embedded: {
+          ...GOOD._embedded,
+          venues: [
+            {
+              ...GOOD._embedded.venues[0],
+              country: { countryCode: "USA" },
+            },
+          ],
+        },
+      }),
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0]?.countryCode).toBeUndefined();
   });
 
   it("keeps an event whose venue or coordinates are missing", () => {
@@ -201,6 +225,28 @@ describe("the provider adapter", () => {
   it("is registered as data, by name", () => {
     expect(adapterFor(sourceKeyFor("Ticketmaster Discovery"))).not.toBeNull();
     expect(adapterFor("no-such-source")).toBeNull();
+  });
+});
+
+describe("fixture locality evidence", () => {
+  it("includes the requested canonical country in provider-shaped fixture venues", () => {
+    const parsed = fixtureAdapter.parse(
+      fixturePayload({
+        lat: 35.68,
+        lng: 139.69,
+        localityName: "Tokyo",
+        timezone: "Asia/Tokyo",
+        countryCode: "JP",
+        now: new Date("2027-01-01T00:00:00.000Z"),
+      }),
+    );
+    expect(parsed.events.length).toBeGreaterThan(0);
+    expect(
+      parsed.events.find((event) => event.externalId === "fixture-evening-music")?.countryCode,
+    ).toBe("JP");
+    expect(
+      parsed.events.find((event) => event.externalId === "fixture-no-coordinates")?.countryCode,
+    ).toBeUndefined();
   });
 });
 

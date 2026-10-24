@@ -21,6 +21,11 @@ import { cancellationFor, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent } from "./dedupe";
 import { TICKETMASTER_KEY, TICKETMASTER_ROOT, ticketmasterQuery } from "./ticketmaster";
 import { FIXTURE_SOURCE_KEY, fixturePayload } from "./fixture-source";
+import {
+  createSourceLocalityResolver,
+  isPlaceWithinSourceCoverage,
+  type CanonicalLocality,
+} from "./locality-resolution";
 
 const MAX_PAGES = 2;
 const MAX_EVENTS = 120;
@@ -111,6 +116,35 @@ export async function refreshSourceRun(request: RefreshRequest): Promise<IngestO
     return { ...outcome, failure: "Refreshed recently — nothing to do yet." };
   }
 
+  let canonicalPlaces: CanonicalLocality[] = [];
+  let selectedPlace: CanonicalLocality | undefined;
+  try {
+    // Load the complete, bounded canonical hierarchy before asking the provider.
+    // A missing/capped/invalid hierarchy must never cause a request or a guess.
+    const { loadPlaceIndex } = await import("../place-index.server");
+    const placeIndex = await loadPlaceIndex(supabaseAdmin);
+    canonicalPlaces = placeIndex.places;
+    selectedPlace = placeIndex.byId.get(request.placeId);
+  } catch {
+    return finish(source, {
+      ...outcome,
+      failure: "The canonical locality hierarchy could not be confirmed.",
+    });
+  }
+
+  const requestedCountryCode = request.countryCode.trim().toUpperCase();
+  if (
+    !selectedPlace ||
+    !/^[A-Z]{2}$/.test(requestedCountryCode) ||
+    selectedPlace.country_code.trim().toUpperCase() !== requestedCountryCode ||
+    !isPlaceWithinSourceCoverage(request.placeId, source.place_ids, canonicalPlaces)
+  ) {
+    return finish(source, {
+      ...outcome,
+      failure: "The selected locality is outside the source's confirmed coverage or country.",
+    });
+  }
+
   let events: SourceEvent[] = [];
   try {
     events = await readFromSource(adapter.key, request, outcome, adapter.parse);
@@ -119,14 +153,32 @@ export async function refreshSourceRun(request: RefreshRequest): Promise<IngestO
     return finish(source, { ...outcome, failure });
   }
 
+  const resolveEventLocality = createSourceLocalityResolver(canonicalPlaces);
   for (const raw of events.slice(0, MAX_EVENTS)) {
     const event = normaliseEvent(raw);
     if (!event) {
       outcome.skipped.push("A record arrived too incomplete to keep");
       continue;
     }
+
+    const locality = resolveEventLocality({
+      evidence: event,
+      queryCountryCode: request.countryCode,
+      sourcePlaceIds: source.place_ids,
+    });
+    if (locality.status !== "resolved") {
+      outcome.skipped.push(`Unresolved source locality (${locality.reason}).`);
+      try {
+        await rememberUnresolvedSourceRecord(supabaseAdmin, source, event);
+      } catch {
+        outcome.skipped.push("Could not retain unresolved source identity.");
+      }
+      continue;
+    }
+
     try {
-      const result = await storeEvent(supabaseAdmin, source, request, event);
+      const resolvedRequest = { ...request, placeId: locality.placeId };
+      const result = await storeEvent(supabaseAdmin, source, resolvedRequest, event);
       if (result === "imported") outcome.imported += 1;
       if (result === "updated") outcome.updated += 1;
       if (result === "duplicate") outcome.duplicates += 1;
@@ -176,6 +228,7 @@ async function readFromSource(
         lng: request.lng,
         localityName: request.localityName ?? "",
         timezone: request.timezone ?? "Europe/London",
+        countryCode: request.countryCode,
       }),
     );
     outcome.read += parsed.events.length;
@@ -221,6 +274,94 @@ async function readFromSource(
 
 type Admin = Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"];
 
+/**
+ * Keep an internal identity/provenance pointer for an event whose locality is
+ * not deterministic. It intentionally creates no public listing and stores no
+ * event-text snapshot; the source URL/ID/hash allow a later bounded refresh to
+ * retry resolution without claiming that a guessed locality is correct.
+ */
+async function rememberUnresolvedSourceRecord(
+  admin: Admin,
+  source: SourceRow,
+  event: SourceEvent,
+): Promise<void> {
+  const now = new Date().toISOString();
+  const hash = payloadHash(event);
+  const { data: existingRecord, error: lookupError } = await admin
+    .from("source_records")
+    .select("id, listing_id")
+    .eq("source_id", source.id)
+    .eq("external_id", event.externalId)
+    .maybeSingle();
+
+  if (lookupError) throw new Error("Unresolved source identity lookup was not confirmed.");
+
+  if (existingRecord) {
+    if (existingRecord.listing_id) {
+      // Current source evidence no longer resolves with confidence. Unpublish
+      // the linked source-derived listing before updating provenance, so an
+      // incomplete or conflicting locality never remains publicly discoverable.
+      const listingUpdate =
+        event.state === "live"
+          ? await admin
+              .from("listings")
+              .update({ status: "draft", data_quality: "may have changed" })
+              .eq("id", existingRecord.listing_id)
+          : await admin
+              .from("listings")
+              .update({
+                status: "draft",
+                cancellation: cancellationFor(event.state),
+                last_checked_at: now,
+                data_quality: qualityFor(
+                  eventFreshness({
+                    lastCheckedAt: now,
+                    sourceUpdatedAt: event.sourceUpdatedAt ?? null,
+                    startsAt: event.startsAt,
+                    endsAt: event.endsAt ?? null,
+                    refreshMinutes: source.refresh_minutes,
+                  }),
+                ),
+              })
+              .eq("id", existingRecord.listing_id);
+      if (listingUpdate.error) {
+        throw new Error("Unresolved listing could not be made non-public.");
+      }
+    }
+
+    const { error: sourceRecordError } = await admin
+      .from("source_records")
+      .update({
+        last_seen_at: now,
+        source_state: event.state,
+        // Preserve the prior hash when a listing was linked: the latest
+        // incoming content may no longer be trusted enough to overwrite it.
+        ...(existingRecord.listing_id
+          ? {}
+          : {
+              source_url: event.sourceUrl,
+              payload_hash: hash,
+              source_updated_at: event.sourceUpdatedAt ?? null,
+            }),
+      })
+      .eq("id", existingRecord.id);
+    if (sourceRecordError) throw new Error("Unresolved source identity update was not confirmed.");
+    return;
+  }
+
+  const { error: insertError } = await admin.from("source_records").insert({
+    source_id: source.id,
+    external_id: event.externalId,
+    source_url: event.sourceUrl,
+    payload_hash: hash,
+    listing_id: null,
+    source_state: event.state,
+    last_seen_at: now,
+    source_updated_at: event.sourceUpdatedAt ?? null,
+  });
+  if (insertError) throw new Error("Unresolved source identity insert was not confirmed.");
+}
+
 async function storeEvent(
   admin: Admin,
   source: SourceRow,
@@ -230,12 +371,15 @@ async function storeEvent(
   const now = new Date().toISOString();
   const hash = payloadHash(event);
 
-  const { data: existingRecord } = await admin
+  const { data: existingRecord, error: existingRecordError } = await admin
     .from("source_records")
     .select("id, listing_id, payload_hash")
     .eq("source_id", source.id)
     .eq("external_id", event.externalId)
     .maybeSingle();
+  if (existingRecordError) {
+    throw new Error("Source identity lookup could not be confirmed.");
+  }
 
   const freshness = eventFreshness({
     lastCheckedAt: now,
@@ -282,21 +426,46 @@ async function storeEvent(
     demonstration: sourceKeyFor(source.name) === FIXTURE_SOURCE_KEY,
   };
 
-  // Already known to this source: update in place, keep its provenance.
+  // A previously linked event may have been assigned to the radius centre by
+  // older code. Compare canonical locality as well as payload identity so a
+  // fresh deterministic resolution corrects the listing's place_id.
   if (existingRecord?.listing_id) {
-    if (existingRecord.payload_hash === hash) {
-      await admin
+    const { data: existingListing, error: existingListingError } = await admin
+      .from("listings")
+      .select("id, place_id")
+      .eq("id", existingRecord.listing_id)
+      .maybeSingle();
+    if (existingListingError || !existingListing) {
+      throw new Error("Existing source listing could not be confirmed.");
+    }
+
+    if (existingRecord.payload_hash === hash && existingListing.place_id === request.placeId) {
+      const { error: sourceSeenError } = await admin
         .from("source_records")
         .update({ last_seen_at: now, source_state: event.state })
         .eq("id", existingRecord.id);
-      await admin
+      if (sourceSeenError) throw new Error("Source freshness could not be confirmed.");
+      const { error: listingFreshnessError } = await admin
         .from("listings")
-        .update({ last_checked_at: now, data_quality: listing.data_quality })
+        .update({
+          status: "published",
+          last_checked_at: now,
+          data_quality: listing.data_quality,
+          cancellation: listing.cancellation,
+        })
         .eq("id", existingRecord.listing_id);
+      if (listingFreshnessError) throw new Error("Listing freshness could not be confirmed.");
       return "duplicate";
     }
-    await admin.from("listings").update(listing).eq("id", existingRecord.listing_id);
-    await admin
+
+    const { error: listingUpdateError } = await admin
+      .from("listings")
+      .update(listing)
+      .eq("id", existingRecord.listing_id);
+    if (listingUpdateError) {
+      throw new Error("Existing source listing update could not be confirmed.");
+    }
+    const { error: sourceRecordUpdateError } = await admin
       .from("source_records")
       .update({
         last_seen_at: now,
@@ -306,6 +475,9 @@ async function storeEvent(
         source_updated_at: event.sourceUpdatedAt ?? null,
       })
       .eq("id", existingRecord.id);
+    if (sourceRecordUpdateError) {
+      throw new Error("Source provenance update could not be confirmed.");
+    }
     return "updated";
   }
 
@@ -333,15 +505,34 @@ async function storeEvent(
       },
     );
     if (decision.same) {
-      await admin.from("source_records").insert({
-        source_id: source.id,
-        external_id: event.externalId,
-        source_url: event.sourceUrl,
-        payload_hash: hash,
-        listing_id: candidate.id,
-        source_state: event.state,
-        last_seen_at: now,
-      });
+      if (existingRecord) {
+        const { error: linkError } = await admin
+          .from("source_records")
+          .update({
+            listing_id: candidate.id,
+            source_url: event.sourceUrl,
+            payload_hash: hash,
+            source_state: event.state,
+            last_seen_at: now,
+            source_updated_at: event.sourceUpdatedAt ?? null,
+          })
+          .eq("id", existingRecord.id);
+        if (linkError) throw new Error("Resolved source provenance link could not be confirmed.");
+      } else {
+        const { error: provenanceInsertError } = await admin.from("source_records").insert({
+          source_id: source.id,
+          external_id: event.externalId,
+          source_url: event.sourceUrl,
+          payload_hash: hash,
+          listing_id: candidate.id,
+          source_state: event.state,
+          last_seen_at: now,
+          source_updated_at: event.sourceUpdatedAt ?? null,
+        });
+        if (provenanceInsertError) {
+          throw new Error("Cross-source provenance insert could not be confirmed.");
+        }
+      }
       return "duplicate";
     }
   }
@@ -353,15 +544,45 @@ async function storeEvent(
     .single();
   if (error) throw error;
 
-  await admin.from("source_records").insert({
-    source_id: source.id,
-    external_id: event.externalId,
+  const provenancePayload = {
     source_url: event.sourceUrl,
     payload_hash: hash,
     listing_id: created.id,
     source_state: event.state,
     last_seen_at: now,
-  });
+    source_updated_at: event.sourceUpdatedAt ?? null,
+  };
+  if (existingRecord) {
+    // This external event was known but unresolved. Link its existing identity
+    // row instead of violating UNIQUE(source_id, external_id) with a new insert.
+    const { error: provenanceUpdateError } = await admin
+      .from("source_records")
+      .update(provenancePayload)
+      .eq("id", existingRecord.id);
+    if (provenanceUpdateError) {
+      const { error: rollbackError } = await admin
+        .from("listings")
+        .delete()
+        .eq("id", created.id);
+      if (rollbackError) {
+        throw new Error("Listing rollback after provenance failure could not be confirmed.");
+      }
+      throw new Error("Resolved source provenance update could not be confirmed.");
+    }
+  } else {
+    const { error: provenanceInsertError } = await admin.from("source_records").insert({
+      source_id: source.id,
+      external_id: event.externalId,
+      ...provenancePayload,
+    });
+    if (provenanceInsertError) {
+      const { error: rollbackError } = await admin.from("listings").delete().eq("id", created.id);
+      if (rollbackError) {
+        throw new Error("Listing rollback after provenance failure could not be confirmed.");
+      }
+      throw new Error("New source provenance insert could not be confirmed.");
+    }
+  }
 
   const images = usableImages(event.images, source.store_images);
   if (images.length) {

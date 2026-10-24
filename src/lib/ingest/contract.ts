@@ -67,6 +67,8 @@ export interface SourceEvent {
   neighbourhood?: string;
   /** The locality slug the source is scoped to, from the source record. */
   localitySlug?: string;
+  /** Two-letter country code declared by the provider's venue record, when supplied. */
+  countryCode?: string;
   lat?: number | null;
   lng?: number | null;
   category: LayerId;

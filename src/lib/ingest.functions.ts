@@ -124,6 +124,21 @@ export const refreshSource = createServerFn({ method: "POST" })
     if (error) throw error;
     if (!place) throw new Error("That locality does not exist.");
 
+    const countryCode =
+      typeof place.country_code === "string" ? place.country_code.trim().toUpperCase() : "";
+    if (!/^[A-Z]{2}$/.test(countryCode)) {
+      throw new Error("That locality has no valid canonical country code.");
+    }
+
+    const timezone = typeof place.timezone === "string" ? place.timezone.trim() : "";
+    try {
+      // Reject missing/bad locality metadata rather than silently forcing global
+      // events and fixture clocks into the UK/London context.
+      new Intl.DateTimeFormat("en", { timeZone: timezone }).format(new Date(0));
+    } catch {
+      throw new Error("That locality has no valid canonical time zone.");
+    }
+
     const days = Math.min(Math.max(data.days ?? 14, 1), 60);
     const startsAfter = new Date().toISOString();
     const endsBefore = new Date(Date.now() + days * 86400000).toISOString();
@@ -132,7 +147,7 @@ export const refreshSource = createServerFn({ method: "POST" })
     return refreshSourceRun({
       sourceId: data.sourceId,
       placeId: place.id,
-      countryCode: place.country_code || "GB",
+      countryCode,
       lat: place.lat === null ? null : Number(place.lat),
       lng: place.lng === null ? null : Number(place.lng),
       // A city centre covers more ground than a village; both stay approximate.
@@ -140,7 +155,7 @@ export const refreshSource = createServerFn({ method: "POST" })
       startsAfter,
       endsBefore,
       localityName: place.name ?? "",
-      timezone: place.timezone || "Europe/London",
+      timezone,
       ...(data.force ? { force: true } : {}),
     });
   });
