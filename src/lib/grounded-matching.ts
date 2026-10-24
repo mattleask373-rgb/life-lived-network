@@ -95,19 +95,21 @@ export function groundedMatch(entries: WorldEntry[], query: MatchQuery = {}): Ma
         }
       }
 
-      // Free / pays / outdoors / give
-      if (query.free && entry.cost === 0) {
-        score += 12;
-        reasons.push("Free");
-      } else if (query.free && entry.cost > 0) {
-        score -= 8;
-      }
+      // Free / pays / outdoors / give. Unknown is neither free nor paid.
+      if (entry.priceKnown !== false) {
+        if (query.free && entry.cost === 0) {
+          score += 12;
+          reasons.push("Free");
+        } else if (query.free && entry.cost > 0) {
+          score -= 8;
+        }
 
-      if (query.pays && entry.cost < 0) {
-        score += 15;
-        reasons.push("Pays");
-      } else if (query.pays && entry.cost >= 0) {
-        score -= 10;
+        if (query.pays && entry.cost < 0) {
+          score += 15;
+          reasons.push("Pays");
+        } else if (query.pays && entry.cost >= 0) {
+          score -= 10;
+        }
       }
 
       if (query.outdoors && entry.outdoors) {
