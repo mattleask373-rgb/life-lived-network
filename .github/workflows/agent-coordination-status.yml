@@ -64,6 +64,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           EVENT_NAME: ${{ github.event_name }}
+          CAPTURED_AT: ${{ steps.state.outputs.captured_at }}
           MANUAL_REASON: ${{ inputs.reason || '' }}
         run: |
           set -euo pipefail
@@ -98,7 +99,7 @@ jobs:
               printf -- '- Audit scope: default branch (main) for scheduled/manual runs.\n\n'
             fi
             printf '### Critical PR snapshots\n\n'
-            printf 'Exact refs, review states, and check rollups are also preserved in the machine-readable JSONL artifact. This workflow reports metadata; it does not approve or merge PRs.\n\n'
+            printf 'Exact refs, review states, check-run IDs, URLs, conclusions, and UTC start/completion timestamps are preserved in the machine-readable JSONL artifact. This workflow reports metadata; it does not approve or merge PRs.\n\n'
           } > coordination-status.md
 
           # Fail visibly if the most important human-gated PR cannot be read.
@@ -111,7 +112,21 @@ jobs:
           CRITICAL_PRS="353 358 356 348 350 352 354 351 349 335 339 336 344 357 355 272"
           for pr in $CRITICAL_PRS; do
             if pr_raw="$(gh pr view "$pr" --json number,title,state,isDraft,headRefOid,baseRefOid,url,reviews,statusCheckRollup 2>/dev/null)"; then
-              pr_json="$(jq -c '{
+              pr_head_for_checks="$(jq -r '.headRefOid // ""' <<< "$pr_raw")"
+              check_runs_available=true
+              if [[ -n "$pr_head_for_checks" ]]; then
+                if check_runs_raw="$(gh api "repos/$GITHUB_REPOSITORY/commits/$pr_head_for_checks/check-runs" -F per_page=100 --jq '[.check_runs[] | {id, name, head_sha, status, conclusion, started_at, completed_at, html_url, check_suite_id: .check_suite.id}]' 2>/dev/null)"; then
+                  :
+                else
+                  check_runs_raw='[]'
+                  check_runs_available=false
+                fi
+              else
+                check_runs_raw='[]'
+                check_runs_available=false
+              fi
+              pr_json="$(jq -c --arg capturedAt "$CAPTURED_AT" --argjson checkRuns "$check_runs_raw" --argjson checkRunsAvailable "$check_runs_available" '{
+                capturedAt: $capturedAt,
                 number,
                 title,
                 state,
@@ -120,7 +135,9 @@ jobs:
                 baseRefOid,
                 url,
                 reviewStates: ((.reviews // []) | map({state, submittedAt, author: (.author.login // null)})),
-                checks: ((.statusCheckRollup // []) | map({name, status, conclusion}))
+                checks: ((.statusCheckRollup // []) | map({name, status, conclusion, detailsUrl, startedAt, completedAt})),
+                checkRunsAvailable: $checkRunsAvailable,
+                checkRuns: $checkRuns
               }' <<< "$pr_raw")"
               printf '%s\n' "$pr_json" >> coordination-prs.jsonl
 
@@ -132,7 +149,7 @@ jobs:
               pr_url="$(jq -r '.url' <<< "$pr_raw")"
               printf -- '- PR #%s | state=%s | draft=%s | head=`%s` | base=`%s` | %s\n'                 "$pr_number" "$pr_state" "$pr_draft" "$pr_head" "$pr_base" "$pr_url" >> coordination-status.md
             else
-              jq -cn --argjson number "$pr" '{number: $number, available: false}' >> coordination-prs.jsonl
+              jq -cn --argjson number "$pr" --arg capturedAt "$CAPTURED_AT" '{number: $number, capturedAt: $capturedAt, available: false}' >> coordination-prs.jsonl
               printf -- '- PR #%s: not found or inaccessible; verify manually.\n' "$pr" >> coordination-status.md
             fi
           done
