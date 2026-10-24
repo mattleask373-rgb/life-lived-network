@@ -1,5 +1,98 @@
+# Agent System Status — live snapshot (24 October 2026)
 
-# Agent System Status — 2026-10-24 (authoritative current snapshot)
+**Repository:** `mattleask373-rgb/life-lived-network`  
+**Default branch:** `main`  
+**Exact main SHA at this refresh:** `34245a75d8a53bd1a47fa74deddc3bdf14ee8a6d`  
+**Open PR inventory at refresh:** 84 open pull requests, including #379–#381. The backlog still includes old drafts and stacked branches.  
+**Release decision:** **BLOCKED** — do not merge or deploy while the main protection ruleset is reported disabled and independent reviews are absent.
+
+## Current blocking governance finding
+
+A fresh GET of ruleset `24946178` (“living World - protect main”) reported `enforcement: disabled` and `updated_at: 2026-10-24T14:49:42.473+01:00`. The stored rules still specify:
+- one approving review, dismissal of stale reviews, approval of the latest push, and resolved review threads;
+- strict required `verify` status checks;
+- non-fast-forward protection;
+- no configured bypass actors.
+
+**Stored definitions do not enforce themselves while enforcement is disabled.** The repository branch-protection endpoint was inaccessible to this integration (403), so do not infer whether an independent protection mechanism also exists. A repository administrator must restore/confirm enforcement and verify the effective raw rules before merge work proceeds. This audit did not change ruleset settings.
+
+## Integrated since the earlier status snapshot
+
+GitHub currently reports these previously audited implementation PRs merged into `main`:
+- #361 grouped dependency updates;
+- #364 Verify push/PR concurrency isolation;
+- #365 Dependabot missing-label correction;
+- #366 readiness-status document refresh;
+- #351 fail-closed world reads and #360 dependent pagination completeness;
+- #362 authenticated locality reads/fact-level RLS and #363 audited locality membership administration;
+- #367 per-attempt AI token/retry/timeout limits;
+- #368 static canonical robots/sitemap asset generation and safer live-origin configuration;
+- #369 fail-closed sitemap source completeness;
+- #359 bounded worker core and idempotent dispatch;
+- #371 privacy-safe need lifecycle measurement contract.
+
+These merges improve source code and local verification. They do **not** prove hosted RLS deployment, live SEO parity, provider budget configuration, or an active continuous worker. In particular, #359 is a runtime core with abstract adapters—not a deployed scheduler/worker fleet.
+
+## Current AI quota PRs
+
+| PR | Exact head / evidence | Decision |
+| --- | --- | --- |
+| [#379 — HTTP 429 for durable quota denials](https://github.com/mattleask373-rgb/life-lived-network/pull/379) | Head `0e36dc1c6b4bf090915393a1ceb1e58d48f0bcf8`. Exact-head Verify, CodeQL, TypeScript analysis and locked-dependency audit passed. Supabase Preview is skipped. No review submissions found in the latest review read. | Ready for independent review, not merge-authorized. It sets status 429, a validated positive Retry-After header and Cache-Control no-store on a valid durable quota denial while preserving the typed result. A deployed request smoke is still needed. |
+| [#380 — quota concurrency test on current main](https://github.com/mattleask373-rgb/life-lived-network/pull/380) | Head `9d0b443f2f98487e087e1ce92657c4cc4cab7cde`. Exact-head Verify (both observed runs), CodeQL, TypeScript analysis and locked-dependency audit passed. Supabase Preview is skipped. | Ready for independent review, not merge-authorized. It ports the #340 concurrency harness onto main and adds a loopback-only database guard plus local CI integration. Require review of the integration harness and cleanup/failure behavior. |
+| [#340 — old quota concurrency PR](https://github.com/mattleask373-rgb/life-lived-network/pull/340) | Closed unmerged after current-main replacement #380 was opened and exact-head checks passed. Its diff included unrelated dependency/lockfile and workflow changes. | Do not reopen or merge this branch. Keep #380 as the sole active concurrency-test implementation and require independent review. |
+
+### What remains for issue #290
+
+The source already contains an atomic per-account quota RPC (5 requests per UTC hour and 20 per UTC day), invoked before the paid provider module, plus per-attempt bounds. These source controls are not a release-ready global cost boundary until verified against a named disposable environment. Remaining work includes:
+- complete concurrency/replay proof with the current-main #380 CI run;
+- account/IP abuse controls for other expensive endpoints, with minimal or keyed/hashed network identifiers and no raw prompt logging;
+- owner-configured provider hard spend caps and alert recipients, with alert delivery tested;
+- an operator kill switch with measured propagation and tested provider-side stop;
+- request-level verification of 429/Retry-After behavior after authorized deployment;
+- multi-instance outage, timeout, clock-boundary, retry-storm and rollback exercises.
+
+No provider budget or hosted environment was changed by these PRs.
+
+## Continuous AI execution state
+
+Issue [#373](https://github.com/mattleask373-rgb/life-lived-network/issues/373) remains the execution gate after #359. No concrete persistent dispatcher/scheduler was proven active in this refresh. The next implementation should be a sequence of narrow PRs, not one large rollout:
+1. server-only adapter that derives actor/workspace/project from verified workload identity and exclusively uses the canonical fenced RPCs;
+2. persistent scheduler/dispatcher with bounded concurrency, idempotent dispatch/completion, heartbeat, missed-run recovery, backoff, retry ceilings, cancellation and dead-letter/manual review;
+3. observability and incident controls (queue age, outcomes, retries, latency/cost, alerts, redacted logs, circuit-breaker, emergency stop);
+4. reproducible non-production 24/7 rehearsal: duplicate dispatch/replay, forged scope, expired lease/stale worker, restart, provider and DB outage, quota exhaustion, alert routing, secret rotation and restore/rollback.
+
+Remain disabled by default and never allow worker output to merge, deploy, change production data/schema/ACL/RLS, send campaigns, make payments, or activate public AI without explicit human approval. Daily automations and scheduled GitHub workflows are not evidence of a persistent 24/7 executor.
+
+## Environment, SEO and launch evidence
+
+[Issue #375](https://github.com/mattleask373-rgb/life-lived-network/issues/375) now shows the owner identity checklist marked complete, covering the canonical repository, Lovable sync destination, hostname/build/rollback, distinct production and disposable Supabase project references, deployment mechanism, first market and accountable owners. Treat that as recorded owner input, not as a substitute for technical verification.
+
+- The last recorded live SEO observations in [#355](https://github.com/mattleask373-rgb/life-lived-network/pull/355) are historical and must not be cited as a current live result.
+- This refresh did not obtain a fresh robots/sitemap/Life List response; external retrieval was unavailable because the connected Firecrawl account was out of credits. Mark live SEO parity **NOT RUN**, not pass or fail.
+- #368/#369 repair build/source behavior only after an owner-authorized deployment. Set `SEO_SMOKE_ORIGIN` to the confirmed canonical HTTPS origin before running the live probe; absence of the variable now fails explicitly.
+- Supabase Preview being skipped is not hosted DB proof. Require migration replay, grant/RLS inspection and PostgREST/security probes against the owner-confirmed disposable environment before considering a hosted change.
+- Global expansion still needs a consent-based, rights-cleared first-market pilot with verified supply and a measured path from discovery → request → response → completed outcome, plus localization, local legal/policy review, support ownership, budget, SLOs and rollback evidence.
+
+## Dependency-ordered next actions
+
+1. **Repository administrator:** restore/confirm active enforcement for ruleset #24946178, verify the effective rules and deletion protection, and re-read the raw configuration. No merge before that.
+2. **#380:** wait for latest exact-head Verify; fix any failure and repeat all required checks. Then request independent review of #379/#380.
+3. **#379/#380:** after governance enforcement and independent approval are restored, merge separately with exact-head checks and resolved threads; do not merge both if one changes the other's required base/checks.
+4. **#340:** closed unmerged as superseded by #380. Keep #380 as the only active concurrency harness; its tests are local disposable CI evidence, not hosted DB or provider-spend proof.
+5. **#290:** implement/review provider budget alerts, operator kill controls and bounded abuse protections; prove in a named disposable project.
+6. **#373:** build concrete worker adapter, persistent scheduler, observability and fault-injection rehearsal as small PRs; leave production activation off.
+7. **Market rollout:** close the technical and owner gates only with recorded reproducible evidence; launch one small pilot before replication.
+
+## Evidence discipline
+
+This is an on-demand repository snapshot. Every CI conclusion applies to the cited commit SHA only. A skipped check is not a pass. No merge, production deployment, hosted DB mutation, secret change, provider activation or paid campaign was performed during this refresh.
+
+---
+
+The following document is retained solely as historical coordination material. Its candidate list, open-PR count, ruleset state, SHAs and check conclusions are superseded unless re-fetched.
+
+
+# Historical Agent System Status — snapshot from 2026-10-24 13:32 UTC (superseded)
 
 **Audit timestamp:** 2026-10-24 13:32 UTC  
 **Repository:** `mattleask373-rgb/life-lived-network`  
