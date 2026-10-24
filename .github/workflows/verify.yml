@@ -118,18 +118,6 @@ jobs:
           fi
           SUPABASE_DB_URL="$db_url" bun scripts/test-ai-draft-quota-concurrency.ts
 
-      - name: Run concurrent AI draft quota integration test
-        if: ${{ steps.migration-changes.outputs.changed == 'true' && hashFiles('supabase/migrations/20261022121000_ai_draft_atomic_quota.sql') != '' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          db_url="$(supabase status --output env | sed -n 's/^DB_URL=//p' | tr -d '"' | head -n 1)"
-          if [[ -z "$db_url" ]]; then
-            echo "Could not obtain the isolated local database URL."
-            exit 1
-          fi
-          SUPABASE_DB_URL="$db_url" bun scripts/test-ai-draft-quota-concurrency.ts
-
       - name: Stop isolated local Supabase stack
         if: ${{ always() && steps.migration-changes.outputs.changed == 'true' }}
         run: supabase stop --no-backup
