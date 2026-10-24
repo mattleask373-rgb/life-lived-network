@@ -141,11 +141,10 @@ describe("bounded agent worker supervisor", () => {
       },
     });
 
-    const summary = await runAgentWorkerSupervisor(
-      adapters,
-      controller.signal,
-      { pollIntervalMs: 1000, maxBackoffMs: 2000 },
-    );
+    const summary = await runAgentWorkerSupervisor(adapters, controller.signal, {
+      pollIntervalMs: 1000,
+      maxBackoffMs: 2000,
+    });
 
     expect(runCycle).toHaveBeenCalledTimes(1);
     expect(summary).toMatchObject({
