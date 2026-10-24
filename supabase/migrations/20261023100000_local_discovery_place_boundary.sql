@@ -98,6 +98,17 @@ DROP POLICY IF EXISTS "Public needs are readable by anyone" ON public.needs;
 DROP POLICY IF EXISTS "Current public needs are readable by anyone" ON public.needs;
 DROP POLICY IF EXISTS "Verified locality members can read local discovery needs" ON public.needs;
 
+-- PostgreSQL combines permissive SELECT policies with OR. The historic creator
+-- policy would otherwise let a creator read their own local_discovery row without
+-- verified place membership, bypassing the boundary below. Preserve owner reads
+-- for public needs (including stale/closed public rows), but never local_discovery.
+DROP POLICY IF EXISTS "People can read their own needs" ON public.needs;
+CREATE POLICY "People can read their own needs"
+  ON public.needs
+  FOR SELECT
+  TO authenticated
+  USING (auth.uid() = creator_id AND visibility = 'public');
+
 CREATE POLICY "Public needs are readable by anyone"
   ON public.needs
   FOR SELECT
