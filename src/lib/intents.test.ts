@@ -67,6 +67,12 @@ describe("doSomethingToday (groundedMatch integration)", () => {
     expect(layers.size).toBeGreaterThanOrEqual(Math.min(3, results.length));
   });
 
+  it("does not treat an unknown price as an affordable cheap suggestion", () => {
+    const unknown = base({ id: "unknown", cost: 0, priceKnown: false, layer: "food" });
+    const known = base({ id: "known", cost: 0, priceKnown: true, layer: "nature" });
+    expect(whyNot([unknown, known], [])?.id).toBe("known");
+  });
+
   it("maps work intent to paid preference without inventing records", () => {
     const world = [
       base({ id: "paid", layer: "work", cost: -40, band: "today" }),

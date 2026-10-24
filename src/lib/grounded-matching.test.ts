@@ -63,6 +63,24 @@ describe("groundedMatch", () => {
     }
   });
 
+  it("does not describe an unknown amount as free or paid", () => {
+    const outcome = groundedMatch(
+      [
+        base({ id: "unknown", cost: 0, priceKnown: false }),
+        base({ id: "confirmed-free", cost: 0, priceKnown: true }),
+      ],
+      { free: true },
+    );
+    expect(outcome.kind).toBe("matches");
+    if (outcome.kind === "matches") {
+      expect(outcome.matches[0]?.entry.id).toBe("confirmed-free");
+      expect(outcome.matches[0]?.evidence.reasons).toContain("Free");
+      expect(
+        outcome.matches.find((match) => match.entry.id === "unknown")?.evidence.reasons,
+      ).not.toContain("Free");
+    }
+  });
+
   it("respects free / pays / outdoors preferences", () => {
     const entries = [
       base({ id: "paid", cost: -50, outdoors: false }),

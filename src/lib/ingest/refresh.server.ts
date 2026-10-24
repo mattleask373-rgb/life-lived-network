@@ -21,6 +21,7 @@ import { cancellationFor, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent } from "./dedupe";
 import { TICKETMASTER_KEY, TICKETMASTER_ROOT, ticketmasterQuery } from "./ticketmaster";
 import { FIXTURE_SOURCE_KEY, fixturePayload } from "./fixture-source";
+import { storedSourcePrice } from "./price-state";
 
 const MAX_PAGES = 2;
 const MAX_EVENTS = 120;
@@ -245,6 +246,8 @@ async function storeEvent(
     refreshMinutes: source.refresh_minutes,
   });
 
+  const storedPrice = storedSourcePrice(event);
+
   const listing = {
     creator_id: null,
     kind: "event",
@@ -261,8 +264,7 @@ async function storeEvent(
     when_text: whenWording(event.startsAt, event.endsAt, event.timezone),
     band: bandFor(event.startsAt, event.timezone),
     minutes: minutesBetween(event.startsAt, event.endsAt),
-    cost: event.cost ?? 0,
-    currency: event.currency || "GBP",
+    ...storedPrice,
     social: "friendly",
     outdoors: false,
     skills: [],

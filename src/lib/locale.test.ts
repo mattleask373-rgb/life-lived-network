@@ -25,6 +25,8 @@ describe("global locale foundation", () => {
       expect(translate(locale, "map.everything")).not.toBe("");
       expect(translate(locale, "layer.community")).not.toBe("");
       expect(translate(locale, "detail.money")).not.toBe("");
+      expect(translate(locale, "money.unknown")).not.toBe("");
+      expect(translate(locale, "money.unknown")).not.toBe("");
     }
     expect(translate("pt", "map.everything")).toBe("Tudo");
     expect(translate("es", "nav.find")).toBe("Encontrar");
@@ -35,6 +37,11 @@ describe("global locale foundation", () => {
     expect(formatLocalizedCurrency(1250, "GBP", "en")).toBe("£1,250");
     expect(formatLocalizedCurrency(12.5, "EUR", "en")).toBe("€12.50");
     expect(formatLocalizedCurrency(0, "GBP", "pt")).toBe("Grátis");
+    expect(formatLocalizedCurrency(0, "GBP", "en", false)).toBe("Price not provided");
+    expect(formatLocalizedCurrency(0, "XXX", "en")).toBe("Price not provided");
+    expect(formatLocalizedCurrency(25, "XXX", "pt", false)).toBe("Preço não indicado");
+    expect(formatLocalizedCurrency(0, "XXX", "es", false)).toBe("Precio no indicado");
+    expect(formatLocalizedCurrency(0, "XXX", "ja", false)).toBe("価格情報なし");
     expect(formatLocalizedCurrency(12.5, "INVALID", "en")).toBe("INVALID 12.50");
     expect(formatLocalizedCurrency(-40, "GBP", "es")).toContain("Paga");
     expect(formatLocalizedDuration(45, "en")).toBe("45 min");

@@ -31,7 +31,12 @@ export interface Journey {
   name: string;
   idea: string;
   steps: JourneyStep[];
+  /** Sum of explicitly known amounts only; not a claim about missing prices. */
   spend: number;
+  /** Null when the entries' known prices use different or no currencies. */
+  spendCurrency: string | null;
+  /** True only when every step has a known price and one shared currency. */
+  spendComplete: boolean;
   earn: number;
   uncertain: string[];
 }
@@ -81,8 +86,9 @@ function pick(
       const p = priority.indexOf(e.layer);
       score += p === -1 ? 12 : p * 2;
       if (brief.interests.includes(e.layer)) score -= 6;
-      if (brief.wantsPaidWork && e.cost < 0) score -= 8;
-      if (e.cost > brief.budget) score += 20;
+      if (e.priceKnown !== false && brief.wantsPaidWork && e.cost < 0) score -= 8;
+      if (e.priceKnown === false) score += 8;
+      else if (e.cost > brief.budget) score += 20;
       if (e.social !== brief.social) score += 2;
       if (!e.verified) score += 1;
       return { e, score };
@@ -112,15 +118,42 @@ function buildShape(
     });
   }
 
-  const spend = steps.reduce((n, s) => n + Math.max(0, s.entry.cost), 0);
-  const earn = steps.reduce((n, s) => n + Math.max(0, -s.entry.cost), 0);
+  const knownCurrencies = new Set(
+    steps
+      .filter((step) => step.entry.priceKnown !== false)
+      .map((step) => (step.entry.currency ?? "GBP").trim().toUpperCase()),
+  );
+  const spendCurrency = knownCurrencies.size === 1 ? [...knownCurrencies][0]! : null;
+  const allPricesKnown = steps.every((step) => step.entry.priceKnown !== false);
+  const spendComplete = allPricesKnown && spendCurrency !== null;
+  const spend = steps.reduce(
+    (total, step) => total + (step.entry.priceKnown === false ? 0 : Math.max(0, step.entry.cost)),
+    0,
+  );
+  const earn = steps.reduce(
+    (total, step) => total + (step.entry.priceKnown === false ? 0 : Math.max(0, -step.entry.cost)),
+    0,
+  );
   const uncertain = steps.filter((s) => !s.entry.verified).map((s) => s.entry.title);
 
-  return { name: shape.name, idea: shape.idea, steps, spend, earn, uncertain };
+  return {
+    name: shape.name,
+    idea: shape.idea,
+    steps,
+    spend,
+    spendCurrency,
+    spendComplete,
+    earn,
+    uncertain,
+  };
 }
 
 function reason(entry: WorldEntry, brief: JourneyBrief): string {
-  if (entry.cost < 0) return `${money(entry.cost, entry.currency)} the same day.`;
+  if (entry.priceKnown === false) {
+    return "Price not provided; confirm the cost before deciding if it fits your budget.";
+  }
+  if (entry.cost < 0)
+    return `${money(entry.cost, entry.currency, "en", entry.priceKnown !== false)} the same day.`;
   if (brief.interests.includes(entry.layer) && entry.give)
     return `You said this interests you — and there's something to give here.`;
   if (brief.interests.includes(entry.layer)) return "You said this interests you.";
@@ -169,7 +202,8 @@ export function whatIsPossible(brief: HoursBrief, world: WorldEntry[]): WorldEnt
       .filter((e) => e.kind !== "service")
       .filter((e) => e.minutes > 0)
       .filter((e) => e.minutes <= brief.minutes + 30)
-      .filter((e) => Math.max(0, e.cost) <= brief.spend)
+      // A budget is a real constraint: unknown prices cannot be assumed to fit.
+      .filter((e) => e.priceKnown !== false && Math.max(0, e.cost) <= brief.spend)
       .filter((e) => (brief.outdoors ? e.outdoors : true))
       .map((e) => {
         let score = 0;

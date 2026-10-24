@@ -169,7 +169,9 @@ export function EntrySheet({
             </div>
             <div className="card-paper rounded-2xl p-3">
               <dt className="text-xs text-muted-foreground">Money</dt>
-              <dd className="mt-0.5">{money(entry.cost, entry.currency)}</dd>
+              <dd className="mt-0.5">
+                {money(entry.cost, entry.currency, "en", entry.priceKnown !== false)}
+              </dd>
             </div>
           </dl>
 
@@ -192,7 +194,7 @@ export function EntrySheet({
               <p className="mt-1 text-muted-foreground">{availabilityLine(entry)}</p>
               <p className="mt-1 text-muted-foreground">
                 {BOOKING_LABEL[asBookingState(entry.bookingState)]} ·{" "}
-                {money(entry.cost, entry.currency)}
+                {money(entry.cost, entry.currency, "en", entry.priceKnown !== false)}
               </p>
               <p className="mt-1 text-muted-foreground">{qualificationLine(entry)}</p>
               <div className="mt-3">
@@ -234,6 +236,12 @@ export function EntrySheet({
                 {entry.organiser ? `, organised by ${entry.organiser}` : ""}. Nobody here posted it,
                 so details are theirs, not ours.
               </p>
+              {entry.ticketUrl ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Ticket inventory and availability have not been checked here; confirm them with
+                  the source.
+                </p>
+              ) : null}
               <div className="mt-2 flex flex-wrap gap-3">
                 {entry.sourceUrl ? (
                   <a
@@ -252,7 +260,7 @@ export function EntrySheet({
                     rel="noreferrer noopener"
                     className="focus-ink underline"
                   >
-                    Tickets
+                    Ticket information
                   </a>
                 ) : null}
               </div>

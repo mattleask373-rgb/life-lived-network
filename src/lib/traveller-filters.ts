@@ -28,9 +28,9 @@ export function matchesTravellerFilter(
 ): boolean {
   switch (filter) {
     case "free":
-      return entry.cost === 0;
+      return entry.priceKnown !== false && entry.cost === 0;
     case "paid":
-      return entry.cost < 0;
+      return entry.priceKnown !== false && entry.cost < 0;
     case "this-week": {
       if (!entry.startsAt || entry.cancellation) return false;
       const at = Date.parse(entry.startsAt);

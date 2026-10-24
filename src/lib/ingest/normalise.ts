@@ -218,8 +218,11 @@ export function normaliseEvent(raw: SourceEvent): SourceEvent | null {
     ...(raw.organiser ? { organiser: plainText(raw.organiser, 160) } : {}),
     sourceUrl,
     ...(raw.ticketUrl ? { ticketUrl: safeUrl(raw.ticketUrl) } : {}),
-    cost: typeof raw.cost === "number" && Number.isFinite(raw.cost) ? Math.max(raw.cost, 0) : null,
-    currency: /^[A-Z]{3}$/.test(raw.currency ?? "") ? (raw.currency as string) : "GBP",
+    cost:
+      typeof raw.cost === "number" && Number.isFinite(raw.cost) && raw.cost >= 0 ? raw.cost : null,
+    currency: /^[A-Z]{3}$/i.test((raw.currency ?? "").trim())
+      ? raw.currency!.trim().toUpperCase()
+      : "",
     ...(raw.images ? { images: raw.images } : {}),
     state:
       raw.state === "cancelled" || raw.state === "postponed" || raw.state === "removed"

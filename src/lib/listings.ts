@@ -40,6 +40,8 @@ export interface ListingRow {
   minutes: number;
   cost: number;
   currency: string;
+  /** Optional for older test fixtures; current schema rows always include it. */
+  price_known?: boolean;
   give: string | null;
   social: string;
   outdoors: boolean;
@@ -176,7 +178,8 @@ export function rowToEntry(
     y: Number(row.y),
     lat: row.lat === null ? null : Number(row.lat),
     lng: row.lng === null ? null : Number(row.lng),
-    currency: row.currency || "GBP",
+    currency: row.price_known === false ? "XXX" : row.currency || "GBP",
+    priceKnown: row.price_known !== false,
     when: row.when_text,
     band: asBand(row.band),
     minutes: row.minutes,

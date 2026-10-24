@@ -35,6 +35,12 @@ describe("matchesTravellerFilter", () => {
     expect(matchesTravellerFilter(entry({ cost: -20 }), "free", NOW)).toBe(false);
   });
 
+  it("does not infer free or paid from an unknown amount", () => {
+    const unknown = entry({ cost: 0, priceKnown: false });
+    expect(matchesTravellerFilter(unknown, "free", NOW)).toBe(false);
+    expect(matchesTravellerFilter(unknown, "paid", NOW)).toBe(false);
+  });
+
   it("paid means the entry pays the person (negative cost)", () => {
     expect(matchesTravellerFilter(entry({ cost: -15 }), "paid", NOW)).toBe(true);
     expect(matchesTravellerFilter(entry({ cost: 0 }), "paid", NOW)).toBe(false);

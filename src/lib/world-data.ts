@@ -42,6 +42,11 @@ export interface WorldEntry {
   /** Currency of `cost`, so a price is never shown in the wrong money. */
   currency?: string;
   /**
+   * False means the source has not supplied a usable amount and currency.
+   * Omitted retains the historical first-party contract (cost=0 means free).
+   */
+  priceKnown?: boolean;
+  /**
    * True for clearly-labelled demonstration records. Real activity never sets
    * this, and the interface always says so where it appears.
    */
@@ -50,7 +55,11 @@ export interface WorldEntry {
   band: TimeBand;
   /** Minutes a person would realistically give to this. */
   minutes: number;
-  /** Cost in euros. 0 means free. Negative means it pays. */
+  /**
+   * Amount in `currency` units. Zero means free only when `priceKnown` is not
+   * false; negative means it pays. Unknown source prices keep a zero storage
+   * placeholder but must never be displayed or matched as free.
+   */
   cost: number;
   summary: string;
   /** Short, plainly-worded details. */
