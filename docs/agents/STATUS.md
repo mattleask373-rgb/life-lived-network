@@ -1,10 +1,43 @@
-# Agent System Status — live snapshot (24 October 2026)
+# Agent System Status — latest evidence snapshot (24 October 2026, 16:58 UTC)
 
 **Repository:** `mattleask373-rgb/life-lived-network`  
 **Default branch:** `main`  
-**Exact main SHA at this refresh:** `34245a75d8a53bd1a47fa74deddc3bdf14ee8a6d`  
-**Open PR inventory at refresh:** 84 open pull requests, including #379–#381. The backlog still includes old drafts and stacked branches.  
-**Release decision:** **BLOCKED** — do not merge or deploy while the main protection ruleset is reported disabled and independent reviews are absent.
+**Exact main SHA:** `c48599ee574c275737df31b4db73ea50dec23ebb`  
+**Open PR inventory:** 83 PRs in the latest recorded build-loop scan at approximately 16:55 UTC; refresh before any release decision.  
+**Release decision:** **BLOCKED / NO-GO** — the raw main ruleset reports disabled enforcement; live host/source parity is not freshly verified; no independently proven persistent 24/7 worker or non-production rehearsal is available.
+
+> **Snapshot precedence:** This is the latest status header. The sections below preserve dated audit/history records and can contain earlier SHAs, counts and check outcomes. Where an older section conflicts with this snapshot, use this timestamped section and refresh live evidence before taking action.
+
+## Latest verified state — 24 October 2026, approximately 16:58 UTC
+
+### Source and checks
+- Current `main`: `c48599ee574c275737df31b4db73ea50dec23ebb`.
+- Latest recorded exact-main Verify pass: [#40109624837](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40109624837). A later Verify attempt [#40112794360](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40112794360) was cancelled; it must not be presented as a pass.
+- Current-main CodeQL, TypeScript analysis and locked dependency audit passed on [#40107475244](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40107475244). Supabase Preview was **SKIPPED**, not passed.
+- [PR #384 — bounded worker supervisor](https://github.com/mattleask373-rgb/life-lived-network/pull/384) is a draft, not merged. Its branch `agent/chatgpt/LW-20261024-008-bounded-supervisor-loop` is 9 commits ahead and 0 behind `main` at the latest comparison; latest reported head is `5866fb6097856536e0822773851eae9d0443f823`.
+- Exact-head Verify [#40113569404](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40113569404) passed lint, locked dependency audit, tests, production client/SSR/Nitro build and k6 syntax validation. Result: 99 test files passed / 1 skipped; 808 tests passed / 3 skipped. CodeQL [#40113569418](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40113569418) passed.
+- The supervisor remains a dependency-injected source component. It has **no connected Supabase adapter, authenticated scheduler, provider adapter, hosted heartbeat, operator alerting, non-production rehearsal or proven persistent uptime**. Do not call it a 24/7 worker.
+
+### Governance and environment
+- Raw ruleset [#24946178](https://github.com/mattleask373-rgb/life-lived-network/rules/24946178) reported `enforcement: disabled` at its latest recorded update `2026-10-24T16:38:02.004+01:00`. Stored rules include one required review and `verify`, but those definitions do not enforce themselves while the ruleset is disabled. The current ruleset contains no explicit deletion-protection rule; effective deletion protection is **NOT PROVEN**. A repository administrator must restore/confirm enforcement and verify the effective configuration.
+- Issue [#375 — owner environment and pilot gate](https://github.com/mattleask373-rgb/life-lived-network/issues/375) records the owner checklist as complete, but this status refresh did not independently reproduce the exact Lovable destination, deployed build SHA, production Supabase linkage, disposable database identity or rollback proof from authoritative dashboards.
+- The historical Lovable sync branch `Loveable/work/safely` and PR [#383](https://github.com/mattleask373-rgb/life-lived-network/pull/383) remain a risky divergent reconciliation path; keep #383 draft and unmerged. Do not run a Lovable sync/write as a substitute for reviewed GitHub changes.
+
+### Published-host SEO and launch
+- Latest available same-day GET-only SEO evidence is [Public SEO Smoke #40088907466](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40088907466), observed around 11:11 UTC on 24 October: **19 checks failed** against `https://life-lived-network.lovable.app`, including `/sitemap.xml` returning 404, missing homepage canonical, missing `/life-list` noindex, missing sitemap directive and missing explicit OAI-SearchBot group in `robots.txt`.
+- Fresh direct endpoint checks during the later 16:55 UTC build-loop run were **NOT RUN** because external retrieval was unavailable. Treat the 11:11 UTC result as timestamped historical evidence, not a fresh probe.
+- Do not publish/redeploy until the authoritative host/build identity is confirmed and the owner authorizes the deployment route. Then rerun direct GET-only robots/sitemap/private-route/canonical checks against that exact host.
+- Production data/schema/RLS/grants/secrets were not changed as part of the supervisor work. Hosted backend policy and migration state remain unproven by source checks alone.
+
+### Dependency-ordered next actions
+1. **Repository administrator:** restore/confirm effective main enforcement and verify deletion protection. No agent merge or bypass.
+2. **Owner + security reviewer:** record the exact disposable/development Supabase project reference and safe workload identity through authoritative settings, without posting keys or passwords.
+3. **Implementation:** build the server-only adapter to the canonical fenced control plane, durable kill-switch/heartbeat, run closure, provider cancellation/quotas, alerts and recovery only against that verified non-production environment.
+4. **Verification:** run isolated migration replay, pgTAP/PostgREST security probes and fault injection for forged scope, duplicate/replayed dispatch, stale lease, restart, cancellation, quota stop, alert delivery and rollback.
+5. **Independent review:** review PR #384 and any adapter PR; keep them drafts until every exact-head check and security review passes. No automated merge/deploy.
+6. **Release/market:** establish a fresh SEO smoke on the owner-confirmed host, then prepare a human-approved, consented first-market pilot with verified supply, support owner, cost/safety limits and outcome measurement.
+
+---
 
 ## Current blocking governance finding
 
