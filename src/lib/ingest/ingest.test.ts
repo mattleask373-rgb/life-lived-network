@@ -10,11 +10,7 @@ import { adapterFor } from "./registry";
 import { normaliseEvent, plainText, safeUrl, usableImages } from "./normalise";
 import { cancellationFor, discoverable, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent, titleKey } from "./dedupe";
-import {
-  dueForRefresh,
-  sourceKeyFor,
-  ticketmasterResponseEventCount,
-} from "./refresh.server";
+import { dueForRefresh, sourceKeyFor, ticketmasterResponseEventCount } from "./refresh.server";
 import type { SourceEvent, SourceRow } from "./contract";
 import { requireIngestStorageSuccess } from "./storage-result";
 
@@ -416,13 +412,19 @@ describe("Ticketmaster source response envelope", () => {
     );
     expect(() =>
       ticketmasterResponseEventCount({ fault: { faultstring: "secret" } }),
-    ).toThrow("The source returned a provider fault.");
+    ).toThrow(
+      "The source returned a provider fault.",
+    );
     expect(() =>
       ticketmasterResponseEventCount({ _embedded: null, page: {} }),
-    ).toThrow("The source returned an invalid event collection.");
+    ).toThrow(
+      "The source returned an invalid event collection.",
+    );
     expect(() =>
       ticketmasterResponseEventCount({ _embedded: { events: "not-an-array" } }),
-    ).toThrow("The source returned an invalid event collection.");
+    ).toThrow(
+      "The source returned an invalid event collection.",
+    );
   });
 });
 
