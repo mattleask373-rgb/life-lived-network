@@ -28,7 +28,8 @@ VALUES
   ('10000000-0000-4000-8000-000000000001', 'city', 'Test Locality A', 'test-locality-a', 'GB', NULL),
   ('10000000-0000-4000-8000-000000000002', 'village', 'Test Village A1', 'test-village-a1', 'GB',
    '10000000-0000-4000-8000-000000000001'),
-  ('10000000-0000-4000-8000-000000000003', 'city', 'Test Locality B', 'test-locality-b', 'GB', NULL);
+  ('10000000-0000-4000-8000-000000000003', 'city', 'Test Locality B', 'test-locality-b', 'GB', NULL),
+  ('10000000-0000-4000-8000-000000000004', 'city', 'Test Locality D', 'test-locality-d', 'GB', NULL);
 
 -- auth.users' on_auth_user_created trigger inserts profile rows in this migration lineage.
 -- Set the synthetic user's initial locality without colliding with that trigger-created row.
@@ -67,7 +68,11 @@ INSERT INTO public.needs (
   ('20000000-0000-4000-8000-000000000006', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
    'practical', 'Expired local need in locality A', 'open', 'local_discovery',
    '10000000-0000-4000-8000-000000000001', 'Test Locality A',
-   now(), now() - interval '1 hour', NULL);
+   now(), now() - interval '1 hour', NULL),
+  ('20000000-0000-4000-8000-000000000007', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+   'practical', 'Creator-owned local need without membership', 'open', 'local_discovery',
+   '10000000-0000-4000-8000-000000000004', 'Test Locality D',
+   now(), NULL, NULL);
 
 INSERT INTO private.locality_memberships
   (user_id, place_id, status, verified_by, verified_at)
@@ -195,7 +200,7 @@ SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label 
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_b_cross_locality_a'),
   0, 'locality B member cannot read locality A or its child-village needs');
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_no_grant_same_profile'),
-  0, 'matching profile.place_id without a verified membership grants no access');
+  0, 'a non-member cannot read local_discovery rows even when they created one or spoof their profile place');
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'village_member_all_local'),
   1, 'verified village member sees needs in that village only');
 SELECT is((SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'village_member_parent_place'),
