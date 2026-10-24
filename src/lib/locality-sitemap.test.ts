@@ -182,7 +182,12 @@ describe("bounded sitemap source paging", () => {
         async () => 5,
         async (from, to) => {
           calls.push([from, to]);
-          return { rows: Array.from({ length: to - from + 1 }, (_, i) => ({ id: String(from + i), value: from + i })) };
+          return {
+            rows: Array.from({ length: to - from + 1 }, (_, i) => ({
+              id: String(from + i),
+              value: from + i,
+            })),
+          };
         },
         (row) => row.id,
       ),
@@ -196,7 +201,12 @@ describe("bounded sitemap source paging", () => {
         10,
         3,
         async () => 4,
-        async (from, to) => ({ rows: Array.from({ length: Math.max(0, to - from) }, (_, i) => ({ id: String(from + i), value: from + i })) }),
+        async (from, to) => ({
+          rows: Array.from({ length: Math.max(0, to - from) }, (_, i) => ({
+            id: String(from + i),
+            value: from + i,
+          })),
+        }),
         (row) => row.id,
       ),
     ).rejects.toThrow("short or invalid page");
@@ -208,7 +218,12 @@ describe("bounded sitemap source paging", () => {
         10,
         3,
         async () => 2,
-        async () => ({ rows: [{ id: "same", value: 1 }, { id: "same", value: 2 }] }),
+        async () => ({
+          rows: [
+            { id: "same", value: 1 },
+            { id: "same", value: 2 },
+          ],
+        }),
         (row) => row.id,
       ),
     ).rejects.toThrow("duplicate row ID");
@@ -221,7 +236,12 @@ describe("bounded sitemap source paging", () => {
         10,
         3,
         async () => (++countCalls === 1 ? 2 : 3),
-        async () => ({ rows: [{ id: "1", value: 1 }, { id: "2", value: 2 }] }),
+        async () => ({
+          rows: [
+            { id: "1", value: 1 },
+            { id: "2", value: 2 },
+          ],
+        }),
         (row) => row.id,
       ),
     ).rejects.toThrow("count changed");
@@ -229,9 +249,31 @@ describe("bounded sitemap source paging", () => {
 
   it("rejects missing counts and invalid bounds", async () => {
     await expect(
-      readBoundedSitemapPages(10, 3, async () => null, async () => ({ rows: [] }), (row) => row.id),
+      readBoundedSitemapPages(
+        10,
+        3,
+        async () => null,
+        async () => ({ rows: [] }),
+        (row) => row.id,
+      ),
     ).rejects.toThrow("count is missing");
-    await expect(readBoundedSitemapPages(0, 10, async () => 0, async () => ({ rows: [] }), (row) => row.id)).rejects.toThrow(RangeError);
-    await expect(readBoundedSitemapPages(10, 0, async () => 0, async () => ({ rows: [] }), (row) => row.id)).rejects.toThrow(RangeError);
+    await expect(
+      readBoundedSitemapPages(
+        0,
+        10,
+        async () => 0,
+        async () => ({ rows: [] }),
+        (row) => row.id,
+      ),
+    ).rejects.toThrow(RangeError);
+    await expect(
+      readBoundedSitemapPages(
+        10,
+        0,
+        async () => 0,
+        async () => ({ rows: [] }),
+        (row) => row.id,
+      ),
+    ).rejects.toThrow(RangeError);
   });
 });
