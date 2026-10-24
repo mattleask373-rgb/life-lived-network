@@ -55,6 +55,7 @@ describe("the provider adapter", () => {
     expect(event.venueName).toBe("An arch venue");
     expect(event.neighbourhood).toBe("Digbeth");
     expect(event.countryCode).toBe("GB");
+    expect(normaliseEvent(event)?.countryCode).toBe("GB");
     expect(event.lat).toBeCloseTo(52.476, 3);
     expect(event.organiser).toBe("A brass band");
     expect(event.cost).toBe(12);
