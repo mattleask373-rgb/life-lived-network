@@ -10,3 +10,16 @@ export function requireIngestStorageSuccess(error: unknown, operation: string): 
     throw new Error(`Ingest storage operation could not be confirmed: ${operation}.`);
   }
 }
+
+import type { IngestOutcome } from "./contract";
+
+/**
+ * Mark an ingest run as failed when persistence was not confirmed.
+ *
+ * Kept separate so callers cannot count an event-storage failure as a
+ * successful source refresh just because it was caught to keep the run bounded.
+ */
+export function markIngestStorageFailure(outcome: IngestOutcome): void {
+  outcome.failure = "One or more event storage operations could not be confirmed.";
+  outcome.skipped.push("An event was not stored because persistence could not be confirmed.");
+}
