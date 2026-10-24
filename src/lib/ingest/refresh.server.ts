@@ -350,12 +350,15 @@ async function storeEvent(
   const now = new Date().toISOString();
   const hash = payloadHash(event);
 
-  const { data: existingRecord } = await admin
+  const { data: existingRecord, error: existingRecordError } = await admin
     .from("source_records")
     .select("id, listing_id, payload_hash")
     .eq("source_id", source.id)
     .eq("external_id", event.externalId)
     .maybeSingle();
+  if (existingRecordError) {
+    throw new Error("Source identity lookup could not be confirmed.");
+  }
 
   const freshness = eventFreshness({
     lastCheckedAt: now,
@@ -402,21 +405,43 @@ async function storeEvent(
     demonstration: sourceKeyFor(source.name) === FIXTURE_SOURCE_KEY,
   };
 
-  // Already known to this source: update in place, keep its provenance.
+  // A previously linked event may have been assigned to the radius centre by
+  // older code. Compare canonical locality as well as payload identity so a
+  // fresh deterministic resolution corrects the listing's place_id.
   if (existingRecord?.listing_id) {
-    if (existingRecord.payload_hash === hash) {
-      await admin
+    const { data: existingListing, error: existingListingError } = await admin
+      .from("listings")
+      .select("id, place_id")
+      .eq("id", existingRecord.listing_id)
+      .maybeSingle();
+    if (existingListingError || !existingListing) {
+      throw new Error("Existing source listing could not be confirmed.");
+    }
+
+    if (existingRecord.payload_hash === hash && existingListing.place_id === request.placeId) {
+      const { error: sourceSeenError } = await admin
         .from("source_records")
         .update({ last_seen_at: now, source_state: event.state })
         .eq("id", existingRecord.id);
-      await admin
+      if (sourceSeenError) throw new Error("Source freshness could not be confirmed.");
+      const { error: listingFreshnessError } = await admin
         .from("listings")
-        .update({ last_checked_at: now, data_quality: listing.data_quality })
+        .update({
+          last_checked_at: now,
+          data_quality: listing.data_quality,
+          cancellation: listing.cancellation,
+        })
         .eq("id", existingRecord.listing_id);
+      if (listingFreshnessError) throw new Error("Listing freshness could not be confirmed.");
       return "duplicate";
     }
-    await admin.from("listings").update(listing).eq("id", existingRecord.listing_id);
-    await admin
+
+    const { error: listingUpdateError } = await admin
+      .from("listings")
+      .update(listing)
+      .eq("id", existingRecord.listing_id);
+    if (listingUpdateError) throw new Error("Existing source listing update could not be confirmed.");
+    const { error: sourceRecordUpdateError } = await admin
       .from("source_records")
       .update({
         last_seen_at: now,
@@ -426,6 +451,7 @@ async function storeEvent(
         source_updated_at: event.sourceUpdatedAt ?? null,
       })
       .eq("id", existingRecord.id);
+    if (sourceRecordUpdateError) throw new Error("Source provenance update could not be confirmed.");
     return "updated";
   }
 
@@ -453,15 +479,34 @@ async function storeEvent(
       },
     );
     if (decision.same) {
-      await admin.from("source_records").insert({
-        source_id: source.id,
-        external_id: event.externalId,
-        source_url: event.sourceUrl,
-        payload_hash: hash,
-        listing_id: candidate.id,
-        source_state: event.state,
-        last_seen_at: now,
-      });
+      if (existingRecord) {
+        const { error: linkError } = await admin
+          .from("source_records")
+          .update({
+            listing_id: candidate.id,
+            source_url: event.sourceUrl,
+            payload_hash: hash,
+            source_state: event.state,
+            last_seen_at: now,
+            source_updated_at: event.sourceUpdatedAt ?? null,
+          })
+          .eq("id", existingRecord.id);
+        if (linkError) throw new Error("Resolved source provenance link could not be confirmed.");
+      } else {
+        const { error: provenanceInsertError } = await admin.from("source_records").insert({
+          source_id: source.id,
+          external_id: event.externalId,
+          source_url: event.sourceUrl,
+          payload_hash: hash,
+          listing_id: candidate.id,
+          source_state: event.state,
+          last_seen_at: now,
+          source_updated_at: event.sourceUpdatedAt ?? null,
+        });
+        if (provenanceInsertError) {
+          throw new Error("Cross-source provenance insert could not be confirmed.");
+        }
+      }
       return "duplicate";
     }
   }
@@ -473,15 +518,38 @@ async function storeEvent(
     .single();
   if (error) throw error;
 
-  await admin.from("source_records").insert({
-    source_id: source.id,
-    external_id: event.externalId,
+  const provenancePayload = {
     source_url: event.sourceUrl,
     payload_hash: hash,
     listing_id: created.id,
     source_state: event.state,
     last_seen_at: now,
-  });
+    source_updated_at: event.sourceUpdatedAt ?? null,
+  };
+  if (existingRecord) {
+    // This external event was known but unresolved. Link its existing identity
+    // row instead of violating UNIQUE(source_id, external_id) with a new insert.
+    const { error: provenanceUpdateError } = await admin
+      .from("source_records")
+      .update(provenancePayload)
+      .eq("id", existingRecord.id);
+    if (provenanceUpdateError) {
+      const { error: rollbackError } = await admin.from("listings").delete().eq("id", created.id);
+      if (rollbackError) throw new Error("Listing rollback after provenance failure could not be confirmed.");
+      throw new Error("Resolved source provenance update could not be confirmed.");
+    }
+  } else {
+    const { error: provenanceInsertError } = await admin.from("source_records").insert({
+      source_id: source.id,
+      external_id: event.externalId,
+      ...provenancePayload,
+    });
+    if (provenanceInsertError) {
+      const { error: rollbackError } = await admin.from("listings").delete().eq("id", created.id);
+      if (rollbackError) throw new Error("Listing rollback after provenance failure could not be confirmed.");
+      throw new Error("New source provenance insert could not be confirmed.");
+    }
+  }
 
   const images = usableImages(event.images, source.store_images);
   if (images.length) {
