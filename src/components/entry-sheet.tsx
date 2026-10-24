@@ -169,7 +169,7 @@ export function EntrySheet({
             </div>
             <div className="card-paper rounded-2xl p-3">
               <dt className="text-xs text-muted-foreground">Money</dt>
-              <dd className="mt-0.5">{money(entry.cost, entry.currency)}</dd>
+              <dd className="mt-0.5">{money(entry.cost, entry.currency, "en", entry.priceKnown !== false)}</dd>
             </div>
           </dl>
 
@@ -192,7 +192,7 @@ export function EntrySheet({
               <p className="mt-1 text-muted-foreground">{availabilityLine(entry)}</p>
               <p className="mt-1 text-muted-foreground">
                 {BOOKING_LABEL[asBookingState(entry.bookingState)]} ·{" "}
-                {money(entry.cost, entry.currency)}
+                {money(entry.cost, entry.currency, "en", entry.priceKnown !== false)}
               </p>
               <p className="mt-1 text-muted-foreground">{qualificationLine(entry)}</p>
               <div className="mt-3">
