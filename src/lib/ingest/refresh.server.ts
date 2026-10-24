@@ -280,11 +280,45 @@ async function rememberUnresolvedSourceRecord(
   if (lookupError) throw new Error("Unresolved source identity lookup was not confirmed.");
 
   if (existingRecord) {
+    if (existingRecord.listing_id) {
+      // Current source evidence no longer resolves with confidence. Unpublish
+      // the linked source-derived listing before updating provenance, so an
+      // incomplete or conflicting locality never remains publicly discoverable.
+      const listingUpdate =
+        event.state === "live"
+          ? await admin
+              .from("listings")
+              .update({ status: "draft", data_quality: "may have changed" })
+              .eq("id", existingRecord.listing_id)
+          : await admin
+              .from("listings")
+              .update({
+                status: "draft",
+                cancellation: cancellationFor(event.state),
+                last_checked_at: now,
+                data_quality: qualityFor(
+                  eventFreshness({
+                    lastCheckedAt: now,
+                    sourceUpdatedAt: event.sourceUpdatedAt ?? null,
+                    startsAt: event.startsAt,
+                    endsAt: event.endsAt ?? null,
+                    refreshMinutes: source.refresh_minutes,
+                  }),
+                ),
+              })
+              .eq("id", existingRecord.listing_id);
+      if (listingUpdate.error) {
+        throw new Error("Unresolved listing could not be made non-public.");
+      }
+    }
+
     const { error: sourceRecordError } = await admin
       .from("source_records")
       .update({
         last_seen_at: now,
         source_state: event.state,
+        // Preserve the prior hash when a listing was linked: the latest
+        // incoming content may no longer be trusted enough to overwrite it.
         ...(existingRecord.listing_id
           ? {}
           : {
@@ -295,36 +329,6 @@ async function rememberUnresolvedSourceRecord(
       })
       .eq("id", existingRecord.id);
     if (sourceRecordError) throw new Error("Unresolved source identity update was not confirmed.");
-
-    if (existingRecord.listing_id) {
-      if (event.state === "live") {
-        const { error: cautionError } = await admin
-          .from("listings")
-          .update({ data_quality: "may have changed" })
-          .eq("id", existingRecord.listing_id);
-        if (cautionError) throw new Error("Existing listing caution could not be confirmed.");
-      } else {
-        const { error: cancellationError } = await admin
-          .from("listings")
-          .update({
-            cancellation: cancellationFor(event.state),
-            last_checked_at: now,
-            data_quality: qualityFor(
-              eventFreshness({
-                lastCheckedAt: now,
-                sourceUpdatedAt: event.sourceUpdatedAt ?? null,
-                startsAt: event.startsAt,
-                endsAt: event.endsAt ?? null,
-                refreshMinutes: source.refresh_minutes,
-              }),
-            ),
-          })
-          .eq("id", existingRecord.listing_id);
-        if (cancellationError) {
-          throw new Error("Source cancellation could not be confirmed on the existing listing.");
-        }
-      }
-    }
     return;
   }
 
