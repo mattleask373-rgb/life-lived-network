@@ -121,8 +121,12 @@ export function resolveSourceLocality(
     return { status: "unresolved", reason: "COUNTRY_MISMATCH" };
   }
 
-  const byId = new Map(input.places.map((place) => [place.id, place]));
-  const bySlug = new Map(input.places.map((place) => [place.slug.toLowerCase(), place]));
+  const byId = new Map<string, CanonicalLocality>(
+    input.places.map((place) => [place.id, place] as const),
+  );
+  const bySlug = new Map<string, CanonicalLocality>(
+    input.places.map((place) => [place.slug.toLowerCase(), place] as const),
+  );
   if (input.sourcePlaceIds?.some((id) => !byId.has(id))) {
     return { status: "unresolved", reason: "INVALID_SOURCE_SCOPE" };
   }
