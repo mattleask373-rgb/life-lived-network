@@ -201,11 +201,13 @@ function Home() {
         : " loaded records for " + (discoveryPlace?.name ?? placeName))
     : view
       ? mapPartition.inView.length +
-        " of " +
-        locatedCount +
-        " located records in view · " +
+        " pins shown · " +
         mapPartition.unpinned.length +
         " unpinned" +
+        (mapPartition.unrenderedInView.length
+          ? ` · ${mapPartition.unrenderedInView.length} more in-view records not pinned at the display limit`
+          : "") +
+        (mapPartition.outsideView.length ? ` · ${mapPartition.outsideView.length} outside view` : "") +
         (viewportLoaded && viewportPage?.hasMore ? " · more records available" : "")
       : mapPartition.unpinned.length + " unpinned · map view preparing";
   const viewportPending = Boolean(expectedViewportBounds && !viewportMatchesView);
@@ -224,6 +226,7 @@ function Home() {
     showAllLoaded ||
     !view ||
     mapPartition.outsideView.length > 0 ||
+    mapPartition.unrenderedInView.length > 0 ||
     mapBaseFilteredEntries.length > mapEntries.length;
 
   const mapListContents = (
