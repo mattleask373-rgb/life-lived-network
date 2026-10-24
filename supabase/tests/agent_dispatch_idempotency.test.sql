@@ -137,7 +137,7 @@ SET lease_expiry = clock_timestamp() - interval '1 second'
 WHERE task_id = 'audit-dispatch-task-1';
 
 SELECT throws_ok(
-  $ SELECT * FROM public.dispatch_agent_attempt(
+  $dispatch_retry$ SELECT * FROM public.dispatch_agent_attempt(
     'audit-dispatch-task-1',
     '00000000-0000-4000-8000-00000000d101',
     'audit-worker',
@@ -145,7 +145,7 @@ SELECT throws_ok(
     'audit-project',
     'test-provider',
     'audit-correlation-idempotent'
-  ) $,
+  ) $dispatch_retry$,
   'P0001',
   'existing dispatch lease is no longer active',
   'an expired lease cannot be replayed to authorize another provider call'
