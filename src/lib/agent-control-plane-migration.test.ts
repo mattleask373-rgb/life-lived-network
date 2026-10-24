@@ -67,7 +67,8 @@ describe("agent control-plane migration lineage (static contract)", () => {
     );
     expect(dispatchTest).toContain("'REPLAYED'");
     expect(dispatchTest).toContain("lease_token IS NULL");
-    expect(dispatchTest).toContain("existing dispatch lease is no longer active");  });
+    expect(dispatchTest).toContain("existing dispatch lease is no longer active");
+  });
 
   it("keeps client table access denied and execution RPCs service-role only", () => {
     const initial = migration("20261007120000_agent_orchestration.sql");
