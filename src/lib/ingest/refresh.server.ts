@@ -81,9 +81,21 @@ export function dueForRefresh(source: SourceRow, now = new Date()): boolean {
  * deliberately non-throwing for fixture and test use; the server fetch boundary
  * must distinguish malformed/provider-fault responses from a successful zero.
  */
-export function ticketmasterResponseEventCount(payload: unknown): number {
+export function ticketmasterResponsePage(
+  payload: unknown,
+  expectedPage: number,
+  requestedPageSize: number,
+): { eventCount: number; hasNextPage: boolean } {
   if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
     throw new Error("The source returned an invalid response.");
+  }
+  if (
+    !Number.isSafeInteger(expectedPage) ||
+    expectedPage < 0 ||
+    !Number.isSafeInteger(requestedPageSize) ||
+    requestedPageSize < 1
+  ) {
+    throw new Error("The source returned an invalid response envelope.");
   }
 
   const record = payload as Record<string, unknown>;
@@ -95,57 +107,76 @@ export function ticketmasterResponseEventCount(payload: unknown): number {
   const hasEmbeddedProperty = Object.prototype.hasOwnProperty.call(record, "_embedded");
   const page = record["page"];
   const links = record["_links"];
-  const hasEmbedded = typeof embedded === "object" && embedded !== null && !Array.isArray(embedded);
-  const hasPage = typeof page === "object" && page !== null && !Array.isArray(page);
-  const hasLinks = typeof links === "object" && links !== null && !Array.isArray(links);
+  const hasEmbedded =
+    typeof embedded === "object" && embedded !== null && !Array.isArray(embedded);
+  const pageRecord =
+    typeof page === "object" && page !== null && !Array.isArray(page)
+      ? (page as Record<string, unknown>)
+      : null;
+  const linksRecord =
+    typeof links === "object" && links !== null && !Array.isArray(links)
+      ? (links as Record<string, unknown>)
+      : null;
+  const validPageMetadata =
+    pageRecord !== null &&
+    ["size", "totalElements", "totalPages", "number"].every((key) => {
+      const value = pageRecord[key];
+      return Number.isSafeInteger(value) && (value as number) >= 0;
+    });
+  const selfLink = linksRecord?.["self"];
+  const validSelfLink =
+    typeof selfLink === "object" &&
+    selfLink !== null &&
+    !Array.isArray(selfLink) &&
+    typeof (selfLink as Record<string, unknown>)["href"] === "string" &&
+    ((selfLink as Record<string, unknown>)["href"] as string).length > 0;
 
-  if (!hasEmbedded && hasEmbeddedProperty) {
+  // An event array alone is not enough evidence that a provider read is complete.
+  // Require the pagination envelope for both non-empty and empty responses.
+  if (!validPageMetadata || !validSelfLink) {
+    throw new Error("The source returned an invalid response envelope.");
+  }
+  if (pageRecord.number !== expectedPage || pageRecord.size > requestedPageSize) {
+    throw new Error("The source returned an invalid response envelope.");
+  }
+  if (hasEmbeddedProperty && !hasEmbedded) {
     throw new Error("The source returned an invalid event collection.");
   }
-  if (!hasEmbedded) {
-    const pageRecord = hasPage ? (page as Record<string, unknown>) : null;
-    const validPageMetadata =
-      pageRecord !== null &&
-      ["size", "totalElements", "totalPages", "number"].every((key) => {
-        const value = pageRecord[key];
-        return Number.isSafeInteger(value) && (value as number) >= 0;
-      });
-    const linksRecord = hasLinks ? (links as Record<string, unknown>) : null;
-    const selfLink = linksRecord?.["self"];
-    const validSelfLink =
-      typeof selfLink === "object" &&
-      selfLink !== null &&
-      !Array.isArray(selfLink) &&
-      typeof (selfLink as Record<string, unknown>)["href"] === "string" &&
-      ((selfLink as Record<string, unknown>)["href"] as string).length > 0;
 
-    if (!validPageMetadata || !validSelfLink) {
-      throw new Error("The source returned an invalid response envelope.");
-    }
-    if (pageRecord["totalElements"] !== 0 || pageRecord["totalPages"] !== 0) {
-      throw new Error("The source returned an invalid event collection.");
-    }
-    return 0;
-  }
-
-  const embeddedRecord = embedded as Record<string, unknown>;
-  const events = embeddedRecord["events"];
-  if (!Array.isArray(events)) {
+  const events = hasEmbedded ? (embedded as Record<string, unknown>)["events"] : undefined;
+  if (hasEmbedded && !Array.isArray(events)) {
     throw new Error("The source returned an invalid event collection.");
   }
-  if (hasPage) {
-    const pageRecord = page as Record<string, unknown>;
-    if (
-      (events.length === 0 &&
-        (pageRecord["totalElements"] !== 0 || pageRecord["totalPages"] !== 0)) ||
-      (events.length > 0 && (pageRecord["totalElements"] === 0 || pageRecord["totalPages"] === 0))
-    ) {
+  const eventCount = Array.isArray(events) ? events.length : 0;
+
+  if (pageRecord.totalElements === 0) {
+    if (pageRecord.totalPages !== 0 || pageRecord.number !== 0 || eventCount !== 0) {
       throw new Error("The source returned an invalid event collection.");
     }
+    return { eventCount: 0, hasNextPage: false };
   }
-  // Return the number of provider records before event validation. Pagination
-  // must not stop early merely because some records in a full page were skipped.
-  return events.length;
+
+  if (
+    pageRecord.size === 0 ||
+    pageRecord.totalPages === 0 ||
+    pageRecord.number >= pageRecord.totalPages ||
+    !hasEmbedded ||
+    !Array.isArray(events) ||
+    eventCount === 0 ||
+    eventCount > requestedPageSize ||
+    eventCount > pageRecord.size ||
+    Math.ceil(pageRecord.totalElements / pageRecord.size) !== pageRecord.totalPages
+  ) {
+    throw new Error("The source returned an invalid event collection.");
+  }
+
+  const hasNextPage = pageRecord.number + 1 < pageRecord.totalPages;
+  // A short page before the advertised final page means records may be missing.
+  if (hasNextPage && eventCount < pageRecord.size) {
+    throw new Error("The source returned an incomplete event page.");
+  }
+
+  return { eventCount, hasNextPage };
 }
 
 /** The map still wants a rough position; real coordinates stay approximate. */
@@ -295,12 +326,16 @@ async function readFromSource(
     if (!response.ok) throw new Error(`The source answered with ${response.status}.`);
 
     const payload: unknown = await response.json().catch(() => null);
-    const rawEventCount = ticketmasterResponseEventCount(payload);
+    const pageResult = ticketmasterResponsePage(payload, page, 50);
     const parsed = parse(payload);
     outcome.read += parsed.events.length;
     outcome.skipped.push(...parsed.skipped.slice(0, 10));
     collected.push(...parsed.events);
-    if (rawEventCount < 50) break;
+    if (!pageResult.hasNextPage) break;
+    if (page === MAX_PAGES - 1) {
+      // Never report a capped multi-page read as a complete source refresh.
+      throw new Error("The source result exceeds the configured page limit.");
+    }
   }
   return collected;
 }

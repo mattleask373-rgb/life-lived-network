@@ -10,7 +10,7 @@ import { adapterFor } from "./registry";
 import { normaliseEvent, plainText, safeUrl, usableImages } from "./normalise";
 import { cancellationFor, discoverable, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent, titleKey } from "./dedupe";
-import { dueForRefresh, sourceKeyFor, ticketmasterResponseEventCount } from "./refresh.server";
+import { dueForRefresh, sourceKeyFor, ticketmasterResponsePage } from "./refresh.server";
 import type { IngestOutcome, SourceEvent, SourceRow } from "./contract";
 import { markIngestStorageFailure, requireIngestStorageSuccess } from "./storage-result";
 
@@ -390,58 +390,103 @@ describe("making outside text safe", () => {
 });
 
 describe("Ticketmaster source response envelope", () => {
-  it("counts raw response records while accepting a valid empty search result", () => {
-    expect(
-      ticketmasterResponseEventCount({
-        _links: { self: { href: "/discovery/v2/events.json" } },
-        page: { size: 50, totalElements: 0, totalPages: 0, number: 0 },
-      }),
-    ).toBe(0);
-    expect(ticketmasterResponseEventCount({ _embedded: { events: [] } })).toBe(0);
-    expect(() =>
-      ticketmasterResponseEventCount({
-        _embedded: { events: [] },
-        _links: { self: { href: "/discovery/v2/events.json" } },
-        page: { size: 50, totalElements: 1, totalPages: 1, number: 0 },
-      }),
-    ).toThrow("The source returned an invalid event collection.");
-    expect(
-      ticketmasterResponseEventCount({ _embedded: { events: [{ id: "a" }, { id: "" }] } }),
-    ).toBe(2);
+  const links = { _links: { self: { href: "/discovery/v2/events.json" } } };
+  const page = (overrides: Record<string, unknown> = {}) => ({
+    size: 50,
+    totalElements: 0,
+    totalPages: 0,
+    number: 0,
+    ...overrides,
+  });
+  const response = (events?: unknown, pageOverrides: Record<string, unknown> = {}) => ({
+    ...links,
+    page: page(pageOverrides),
+    ...(events === undefined ? {} : { _embedded: { events } }),
   });
 
-  it("rejects a provider fault, malformed body or malformed event collection", () => {
-    expect(() => ticketmasterResponseEventCount(null)).toThrow(
-      "The source returned an invalid response.",
+  it("accepts a verified empty result and counts raw provider records", () => {
+    expect(ticketmasterResponsePage(response(), 0, 50)).toEqual({
+      eventCount: 0,
+      hasNextPage: false,
+    });
+    expect(ticketmasterResponsePage(response([]), 0, 50)).toEqual({
+      eventCount: 0,
+      hasNextPage: false,
+    });
+    expect(
+      ticketmasterResponsePage(
+        response([{ id: "a" }, { id: "" }], { totalElements: 2, totalPages: 1 }),
+        0,
+        50,
+      ),
+    ).toEqual({ eventCount: 2, hasNextPage: false });
+  });
+
+  it("rejects a missing envelope instead of interpreting an empty array as verified zero", () => {
+    expect(() => ticketmasterResponsePage({ _embedded: { events: [] } }, 0, 50)).toThrow(
+      "The source returned an invalid response envelope.",
     );
-    expect(() => ticketmasterResponseEventCount({ unexpected: true })).toThrow(
+    expect(() => ticketmasterResponsePage({ unexpected: true }, 0, 50)).toThrow(
       "The source returned an invalid response envelope.",
     );
     expect(() =>
-      ticketmasterResponseEventCount({
-        page: { size: 50, totalElements: 0, totalPages: 0, number: 0 },
-      }),
-    ).toThrow("The source returned an invalid response envelope.");
-    expect(() =>
-      ticketmasterResponseEventCount({
-        _links: { self: { href: "/discovery/v2/events.json" } },
-      }),
-    ).toThrow("The source returned an invalid response envelope.");
-    expect(() =>
-      ticketmasterResponseEventCount({
-        _links: { self: { href: "/discovery/v2/events.json" } },
-        page: { size: 50, totalElements: 1, totalPages: 1, number: 0 },
-      }),
+      ticketmasterResponsePage(
+        { ...links, page: page({ totalElements: 1, totalPages: 1 }) },
+        0,
+        50,
+      ),
     ).toThrow("The source returned an invalid event collection.");
-    expect(() => ticketmasterResponseEventCount({ fault: { faultstring: "secret" } })).toThrow(
+  });
+
+  it("rejects malformed provider bodies, pagination metadata and event collections", () => {
+    expect(() => ticketmasterResponsePage(null, 0, 50)).toThrow(
+      "The source returned an invalid response.",
+    );
+    expect(() => ticketmasterResponsePage({ fault: { faultstring: "secret" } }, 0, 50)).toThrow(
       "The source returned a provider fault.",
     );
-    expect(() => ticketmasterResponseEventCount({ _embedded: null, page: {} })).toThrow(
+    expect(() => ticketmasterResponsePage(response(null), 0, 50)).toThrow(
       "The source returned an invalid event collection.",
     );
-    expect(() => ticketmasterResponseEventCount({ _embedded: { events: "not-an-array" } })).toThrow(
-      "The source returned an invalid event collection.",
-    );
+    expect(() =>
+      ticketmasterResponsePage(
+        response("not-an-array", { totalElements: 1, totalPages: 1 }),
+        0,
+        50,
+      ),
+    ).toThrow("The source returned an invalid event collection.");
+    expect(() =>
+      ticketmasterResponsePage(
+        response([{ id: "a" }], { totalElements: 1, totalPages: 1, number: 1 }),
+        0,
+        50,
+      ),
+    ).toThrow("The source returned an invalid response envelope.");
+    expect(() =>
+      ticketmasterResponsePage(
+        response([{ id: "a" }], { totalElements: 1, totalPages: 2 }),
+        0,
+        50,
+      ),
+    ).toThrow("The source returned an invalid event collection.");
+  });
+
+  it("surfaces continuation and rejects a short page when more pages are advertised", () => {
+    const fullPage = Array.from({ length: 50 }, (_, index) => ({ id: String(index) }));
+    expect(
+      ticketmasterResponsePage(
+        response(fullPage, { totalElements: 100, totalPages: 2 }),
+        0,
+        50,
+      ),
+    ).toEqual({ eventCount: 50, hasNextPage: true });
+    expect(() =>
+      ticketmasterResponsePage(
+        response([{ id: "only-one" }], { totalElements: 100, totalPages: 2 }),
+        0,
+        50,
+      ),
+    ).toThrow("The source returned an incomplete event page.");
   });
 });
 
