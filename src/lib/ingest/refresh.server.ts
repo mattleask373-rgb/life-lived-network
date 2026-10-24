@@ -21,6 +21,7 @@ import { cancellationFor, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent } from "./dedupe";
 import { TICKETMASTER_KEY, TICKETMASTER_ROOT, ticketmasterQuery } from "./ticketmaster";
 import { FIXTURE_SOURCE_KEY, fixturePayload } from "./fixture-source";
+import { requireIngestStorageSuccess } from "./storage-result";
 
 const MAX_PAGES = 2;
 const MAX_EVENTS = 120;
@@ -84,7 +85,7 @@ export async function refreshSourceRun(request: RefreshRequest): Promise<IngestO
     .select("*")
     .eq("id", request.sourceId)
     .maybeSingle();
-  if (sourceError) throw sourceError;
+  requireIngestStorageSuccess(sourceError, "source configuration lookup");
   if (!sourceRow) throw new Error("That source does not exist.");
   const source = sourceRow as unknown as SourceRow;
 
@@ -140,7 +141,7 @@ export async function refreshSourceRun(request: RefreshRequest): Promise<IngestO
   async function finish(row: SourceRow, result: IngestOutcome): Promise<IngestOutcome> {
     const failed = Boolean(result.failure);
     const now = new Date().toISOString();
-    await supabaseAdmin
+    const { error: statusUpdateError } = await supabaseAdmin
       .from("sources")
       .update({
         last_run_at: now,
@@ -153,6 +154,7 @@ export async function refreshSourceRun(request: RefreshRequest): Promise<IngestO
           : { last_success_at: now, last_error_category: "" }),
       })
       .eq("id", row.id);
+    requireIngestStorageSuccess(statusUpdateError, "source health update");
     return result;
   }
 }
@@ -230,12 +232,13 @@ async function storeEvent(
   const now = new Date().toISOString();
   const hash = payloadHash(event);
 
-  const { data: existingRecord } = await admin
+  const { data: existingRecord, error: existingRecordError } = await admin
     .from("source_records")
     .select("id, listing_id, payload_hash")
     .eq("source_id", source.id)
     .eq("external_id", event.externalId)
     .maybeSingle();
+  requireIngestStorageSuccess(existingRecordError, "source-record lookup");
 
   const freshness = eventFreshness({
     lastCheckedAt: now,
@@ -285,18 +288,24 @@ async function storeEvent(
   // Already known to this source: update in place, keep its provenance.
   if (existingRecord?.listing_id) {
     if (existingRecord.payload_hash === hash) {
-      await admin
+      const { error: sourceSeenError } = await admin
         .from("source_records")
         .update({ last_seen_at: now, source_state: event.state })
         .eq("id", existingRecord.id);
-      await admin
+      requireIngestStorageSuccess(sourceSeenError, "source-record freshness update");
+      const { error: listingFreshnessError } = await admin
         .from("listings")
         .update({ last_checked_at: now, data_quality: listing.data_quality })
         .eq("id", existingRecord.listing_id);
+      requireIngestStorageSuccess(listingFreshnessError, "listing freshness update");
       return "duplicate";
     }
-    await admin.from("listings").update(listing).eq("id", existingRecord.listing_id);
-    await admin
+    const { error: listingUpdateError } = await admin
+      .from("listings")
+      .update(listing)
+      .eq("id", existingRecord.listing_id);
+    requireIngestStorageSuccess(listingUpdateError, "existing listing update");
+    const { error: sourceRecordUpdateError } = await admin
       .from("source_records")
       .update({
         last_seen_at: now,
@@ -306,12 +315,13 @@ async function storeEvent(
         source_updated_at: event.sourceUpdatedAt ?? null,
       })
       .eq("id", existingRecord.id);
+    requireIngestStorageSuccess(sourceRecordUpdateError, "source-record update");
     return "updated";
   }
 
   // A different source may already hold this event. Only merge on the stored
   // evidence rule; anything short of that stays two separate records.
-  const { data: nearby } = await admin
+  const { data: nearby, error: nearbyLookupError } = await admin
     .from("listings")
     .select("id, title, starts_at, place, place_id, origin")
     .eq("place_id", request.placeId)
@@ -319,6 +329,7 @@ async function storeEvent(
     .gte("starts_at", new Date(new Date(event.startsAt).getTime() - 7200000).toISOString())
     .lte("starts_at", new Date(new Date(event.startsAt).getTime() + 7200000).toISOString())
     .limit(50);
+  requireIngestStorageSuccess(nearbyLookupError, "cross-source deduplication lookup");
 
   for (const candidate of nearby ?? []) {
     if (!candidate.starts_at) continue;
@@ -333,7 +344,7 @@ async function storeEvent(
       },
     );
     if (decision.same) {
-      await admin.from("source_records").insert({
+      const { error: provenanceInsertError } = await admin.from("source_records").insert({
         source_id: source.id,
         external_id: event.externalId,
         source_url: event.sourceUrl,
@@ -342,6 +353,7 @@ async function storeEvent(
         source_state: event.state,
         last_seen_at: now,
       });
+      requireIngestStorageSuccess(provenanceInsertError, "cross-source provenance insert");
       return "duplicate";
     }
   }
@@ -353,7 +365,7 @@ async function storeEvent(
     .single();
   if (error) throw error;
 
-  await admin.from("source_records").insert({
+  const { error: sourceRecordInsertError } = await admin.from("source_records").insert({
     source_id: source.id,
     external_id: event.externalId,
     source_url: event.sourceUrl,
@@ -362,6 +374,7 @@ async function storeEvent(
     source_state: event.state,
     last_seen_at: now,
   });
+  requireIngestStorageSuccess(sourceRecordInsertError, "new source provenance insert");
 
   const images = usableImages(event.images, source.store_images);
   if (images.length) {
