@@ -137,6 +137,22 @@ describe("map/list synchronization", () => {
     expect(entriesForMapList(entries, partition, true)).toEqual(entries);
   });
 
+  it("keeps cap-omission counts empty until the viewport is ready", () => {
+    const entries = [
+      entry("located-a", view.lat, view.lng),
+      entry("located-b", 40, -3),
+      entry("unpinned", null, null),
+    ];
+
+    const partition = partitionMapList(entries, null);
+
+    expect(partition.inView).toEqual([]);
+    expect(partition.unpinned.map((item) => item.id)).toEqual(["unpinned"]);
+    expect(partition.outsideView.map((item) => item.id)).toEqual(["located-a", "located-b"]);
+    expect(partition.unrenderedInView).toEqual([]);
+    expect(entriesForMapList(entries, partition, true)).toEqual(entries);
+  });
+
   it("returns no viewport matches for an empty input", () => {
     const partition = partitionMapList([], view);
 
