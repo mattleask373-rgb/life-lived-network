@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(18);
+SELECT plan(20);
 
 -- Synthetic admin and subject accounts only; the transaction rolls back.
 INSERT INTO auth.users (
@@ -46,6 +46,38 @@ SELECT ok(
     AND NOT has_table_privilege('authenticated', 'private.locality_membership_events', 'INSERT')
     AND NOT has_table_privilege('service_role', 'private.locality_membership_events', 'INSERT'),
   'only the security-definer RPC owner can append audit rows'
+);
+
+SELECT ok(
+  EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_proc AS function_record
+    JOIN pg_catalog.pg_namespace AS namespace_record
+      ON namespace_record.oid = function_record.pronamespace
+    WHERE namespace_record.nspname = 'public'
+      AND function_record.proname = 'review_locality_membership'
+      AND function_record.prosecdef
+      AND EXISTS (
+        SELECT 1
+        FROM pg_catalog.unnest(function_record.proconfig) AS config(setting)
+        WHERE config.setting LIKE 'search_path=%'
+          AND pg_catalog.replace(config.setting, 'search_path=', '') IN ('', '""')
+      )
+  ),
+  'membership RPC is SECURITY DEFINER with an empty search_path'
+);
+
+SELECT ok(
+  EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_class AS relation_record
+    JOIN pg_catalog.pg_namespace AS namespace_record
+      ON namespace_record.oid = relation_record.relnamespace
+    WHERE namespace_record.nspname = 'private'
+      AND relation_record.relname = 'locality_membership_events'
+      AND relation_record.relrowsecurity
+  ),
+  'membership audit table has row-level security enabled'
 );
 
 SET LOCAL ROLE service_role;
