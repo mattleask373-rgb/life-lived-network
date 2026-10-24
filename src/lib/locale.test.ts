@@ -26,6 +26,7 @@ describe("global locale foundation", () => {
       expect(translate(locale, "layer.community")).not.toBe("");
       expect(translate(locale, "detail.money")).not.toBe("");
       expect(translate(locale, "money.unknown")).not.toBe("");
+      expect(translate(locale, "money.unknown")).not.toBe("");
     }
     expect(translate("pt", "map.everything")).toBe("Tudo");
     expect(translate("es", "nav.find")).toBe("Encontrar");
