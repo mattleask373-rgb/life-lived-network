@@ -430,6 +430,7 @@ export type Database = {
           cancellation: string
           contact_note: string | null
           cost: number
+          price_known: boolean
           created_at: string
           creator_id: string | null
           currency: string
@@ -479,6 +480,7 @@ export type Database = {
           cancellation?: string
           contact_note?: string | null
           cost?: number
+          price_known?: boolean
           created_at?: string
           creator_id?: string | null
           currency?: string
@@ -528,6 +530,7 @@ export type Database = {
           cancellation?: string
           contact_note?: string | null
           cost?: number
+          price_known?: boolean
           created_at?: string
           creator_id?: string | null
           currency?: string
