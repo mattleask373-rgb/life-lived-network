@@ -25,9 +25,7 @@ describe("email authentication paths", () => {
     expect(authSource).toContain(
       'catch {\n                  setError("We couldn\'t resend that just now. Try again in a minute.");',
     );
-    expect(authSource).toContain(
-      "finally {\n                  setResendingConfirmation(false);",
-    );
+    expect(authSource).toContain("finally {\n                  setResendingConfirmation(false);");
   });
   it("keeps password sign-in, account creation, Google OAuth and password recovery available", () => {
     expect(authSource).toContain("supabase.auth.signInWithPassword({ email, password })");

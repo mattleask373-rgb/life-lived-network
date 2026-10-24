@@ -23,7 +23,8 @@ describe("public needs map source contract", () => {
     expect(end).toBeGreaterThan(start);
     const read = needsFunctions.slice(start, end);
     expect(read).toContain('.eq("status", "open")');
-    expect(read).toContain('.in("visibility", ["public", "local_discovery"])');
+    expect(read).toContain('.eq("visibility", "public")');
+    expect(read).not.toContain('.in("visibility", ["public", "local_discovery"])');
   });
 });
 
