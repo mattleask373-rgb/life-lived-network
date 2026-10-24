@@ -423,7 +423,7 @@ describe("bounded agent worker runtime", () => {
     expect(JSON.stringify(result)).not.toContain("token=super-secret-value");
   });
 
-  it("rejects evidence containing credentials or changed paths outside task scope", async () => {
+  it("rejects credential material, signed URLs, and changed paths outside task scope", async () => {
     const secret = await runAgentWorkerCycle(
       input({
         provider: provider({
@@ -440,6 +440,42 @@ describe("bounded agent worker runtime", () => {
       }),
     );
     expect(secret).toMatchObject({ outcome: "INVALID_PROVIDER_RESULT" });
+
+    const signedUrl = await runAgentWorkerCycle(
+      input({
+        provider: provider({
+          execute: vi.fn(async () => ({
+            status: "VERIFYING",
+            summary: "Review complete",
+            evidenceRefs: [
+              "https://storage.example.test/object?X-Amz-Credential=temporary&X-Amz-Signature=abc123",
+            ],
+            changedPaths: [],
+            providerReportedTests: "NOT_RUN",
+            uncertainties: [],
+            nextAction: "Review",
+          })),
+        }),
+      }),
+    );
+    expect(signedUrl).toMatchObject({ outcome: "INVALID_PROVIDER_RESULT" });
+
+    const userInfoUrl = await runAgentWorkerCycle(
+      input({
+        provider: provider({
+          execute: vi.fn(async () => ({
+            status: "VERIFYING",
+            summary: "Review complete",
+            evidenceRefs: ["https://worker:private-value@storage.example.test/object"],
+            changedPaths: [],
+            providerReportedTests: "NOT_RUN",
+            uncertainties: [],
+            nextAction: "Review",
+          })),
+        }),
+      }),
+    );
+    expect(userInfoUrl).toMatchObject({ outcome: "INVALID_PROVIDER_RESULT" });
 
     const outsideScope = await runAgentWorkerCycle(
       input({
