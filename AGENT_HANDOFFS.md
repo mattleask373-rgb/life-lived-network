@@ -44,3 +44,12 @@ This is the durable handoff ledger for the active bounded work. New entries must
 - **Limits:** Supabase Preview was skipped. The successful local chain is candidate evidence, not independent review, not hosted RLS proof and not authorization to merge. Review the admin provisioning function and all prior policy composition as a combined security boundary; owner Gate 0 and deletion-protection evidence remain unresolved.
 - **Docs:** PR #339 draft now contains the global gate board, priority list, handoff ledger, discovery backlog, retention and impact scorecards, Live Map spec, corrected local_discovery test matrix and geographic discovery/retention architecture. Its Verify/CodeQL dependency audit fails on the inherited main-branch Zod advisory before tests; do not copy or duplicate the dependency fix into this docs PR. Reconcile through #353 with human review.
 - **Next action:** independent security reviewer inspects #348 → #350 → #352 → #354, reviews grants/function search path/self-approval/audit atomicity and confirms direct PostgREST list/detail/supply behavior. Do not merge, deploy or write to any hosted DB.
+
+
+## 2026-10-24 12:17 UTC — governance enforcement correction
+
+- **Current main SHA:** `182fe7f05c9efbee9ac17ccbca4d420cc0f1b24f`.
+- **Fresh evidence:** at `2026-10-24T12:17:19.878Z`, `GET /branches/main` returned `protected: false`, `protection.enabled: false`, and no enforced status contexts. Ruleset `24946178` (“living World - protect main”) contains the intended review/verify/non-fast-forward settings but its live `enforcement` is **`disabled`**.
+- **Interpretation:** the configured rules are not active enforcement. Previous entries in this handoff file that describe the ruleset as active are historical snapshots and are superseded for current decisions by this entry.
+- **HUMAN-QUEUED:** repository admin must re-enable the ruleset through GitHub's administrative UI, independently verify that enforcement reads back as active, and establish branch-deletion protection as a separate control. No agent changed any admin setting.
+- PR #353 remains open/unmerged; its exact-head Verify/CodeQL had previously passed, but it must not be merged on the assumption that the desired protections are active. Require independent human approval and re-check governance evidence after the admin action.
