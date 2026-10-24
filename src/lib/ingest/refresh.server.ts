@@ -22,8 +22,8 @@ import { payloadHash, sameEvent } from "./dedupe";
 import { TICKETMASTER_KEY, TICKETMASTER_ROOT, ticketmasterQuery } from "./ticketmaster";
 import { FIXTURE_SOURCE_KEY, fixturePayload } from "./fixture-source";
 import {
+  createSourceLocalityResolver,
   isPlaceWithinSourceCoverage,
-  resolveSourceLocality,
   type CanonicalLocality,
 } from "./locality-resolution";
 
@@ -153,6 +153,7 @@ export async function refreshSourceRun(request: RefreshRequest): Promise<IngestO
     return finish(source, { ...outcome, failure });
   }
 
+  const resolveEventLocality = createSourceLocalityResolver(canonicalPlaces);
   for (const raw of events.slice(0, MAX_EVENTS)) {
     const event = normaliseEvent(raw);
     if (!event) {
@@ -160,10 +161,9 @@ export async function refreshSourceRun(request: RefreshRequest): Promise<IngestO
       continue;
     }
 
-    const locality = resolveSourceLocality({
+    const locality = resolveEventLocality({
       evidence: event,
       queryCountryCode: request.countryCode,
-      places: canonicalPlaces,
       sourcePlaceIds: source.place_ids,
     });
     if (locality.status !== "resolved") {
