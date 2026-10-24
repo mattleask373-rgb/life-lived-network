@@ -58,7 +58,7 @@ export function fixturePayload(request: FixtureRequest): unknown {
   const venue = {
     name: `${town} demonstration hall`,
     city: { name: town },
-    ...( /^[A-Z]{2}$/.test(countryCode) ? { country: { countryCode } } : {}),
+    ...(/^[A-Z]{2}$/.test(countryCode) ? { country: { countryCode } } : {}),
     location,
   };
   const timezone = request.timezone || "Europe/London";
