@@ -125,3 +125,30 @@ A new draft branch `agent/chatgpt/control-plane-reconciliation-current-main-2026
 ## Current-main source rebuild — 22 October 2026
 
 The proposed migration/test/documentation files in this branch have been rebuilt directly on current `main` at `1f0a5d2b1c717db6cfc10c63f851a0e428313ee2`, instead of carrying the old divergent commit history. The current main migration directory contains the existing `20261007171000_remove_unfenced_heartbeat.sql` and `20261007172000_fence_release.sql` tail plus later connection-request migrations; no filename collision was found for the candidate's added migration filenames. This is a source-order inventory only. It does not establish which migration versions a hosted database has applied, and it is not replay, upgrade, grants/RLS verification, or deployment evidence.
+
+
+## Execution evidence refresh — 24 October 2026
+
+**Current-main ref:** `182fe7f05c9efbee9ac17ccbca4d420cc0f1b24f`.
+
+A fresh read of the current-main migration directory confirms these source files are present:
+
+- `20261007120000_agent_orchestration.sql` creates `public.agent_tasks` and `public.agent_events`, enables RLS on tasks, and installs the no-client-access policy.
+- `20261007170000_agent_lease_fencing.sql` contains the fenced task-transition and lease implementation, including task-completion storage.
+- `20261007171000_remove_unfenced_heartbeat.sql` drops the legacy two-argument heartbeat and restricts execution of the five-argument fenced signature.
+- `20261007172000_fence_release.sql` drops the unfenced release overload and grants the five-argument fenced release function only to `service_role`.
+
+This corrects any reading of the current source that says those prerequisite files are absent. It is still **repository-source evidence only**: it does not establish which versions a hosted database has applied, nor whether a remote migration-history table is consistent with these filenames.
+
+### Isolated replay evidence
+
+The stacked candidate at PR #354 head `d9e6fe78f66729724dc251f7e5d3852623524244` completed Verify run [#40089371399](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40089371399) successfully. That workflow replayed the proposed stack against an empty isolated local Supabase database and ran its database tests. This is useful clean-replay evidence for the candidate stack; it is **not** proof of hosted migration history, deployment, or authorization to apply the migrations remotely. PR #354 remains an unmerged draft and is based on the locality/security stack.
+
+### Remaining executor conflict and dependency gate
+
+- PR #336 remains an unmerged runtime proposal at `253c9590a2682b3c82dc407dce402fffbdce82cf`. Its current Verify run [#40089642228](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40089642228) failed at the locked dependency audit before runtime tests or SQL replay.
+- PR #344 remains an unmerged SQL proposal at `f2e680675641b791959931a16a2b3efd2ee8468c`. Its exact replay contract differs from #336: #344 returns an existing live lease token for an exact retry, whereas #336 emits a metadata-only `REPLAYED` marker without a lease token. These contracts must be reconciled and tested; neither is authorized for hosted execution.
+- Current `main` still has the older Zod/Undici dependency baseline. PR #353 proposes Zod `4.6.7` and Undici `7.30.1`; its recorded Verify [#40085945708](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40085945708) and CodeQL [#40085945605](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40085945605) passed on its exact head, but it remains draft and has no approving review.
+- The current draft audit PR #339 has no submitted reviews or inline review threads. Its latest Verify [#40089757320](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40089757320) and CodeQL [#40089757296](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40089757296) failed overall at the dependency-audit gate.
+
+Do not claim a continuous executor. A scheduler, authenticated provider adapter, persisted heartbeat, lease fencing across dispatch/heartbeat/release, idempotent attempts, cancellation, capped retry/spend, dead-letter visibility, kill switch, and recovery still require isolated environment proof and independent review. No hosted mutation, provider call, or deployment is authorized by these results.
