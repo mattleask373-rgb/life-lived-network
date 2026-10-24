@@ -115,7 +115,6 @@ describe("public SEO live smoke contract", () => {
     expect(() => validateSeoSmokeOrigin("not-a-url")).toThrow();
   });
 
-
   it("accepts a correct public robots file, URL-set sitemap, rendered homepage and crawlable noindex page", () => {
     expect(evaluateSeoSmoke(healthyDocuments())).toEqual([]);
   });
