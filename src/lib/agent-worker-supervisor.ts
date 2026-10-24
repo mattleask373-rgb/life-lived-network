@@ -182,7 +182,7 @@ export async function runAgentWorkerSupervisor(
   let lastOutcome: WorkerCycleResult["outcome"] | undefined;
 
   while (!signal.aborted) {
-    let status: AgentWorkerSupervisorStatus = "IDLE";
+    let status: AgentWorkerSupervisorStatus;
 
     try {
       const enabled = await adapters.readEnabled();
@@ -248,7 +248,6 @@ export async function runAgentWorkerSupervisor(
     const heartbeat = snapshot(status, now(), completedCycles, consecutiveFailures, lastOutcome);
     if (!(await tryWriteHeartbeat(adapters, heartbeat))) {
       consecutiveFailures += 1;
-      status = "DEGRADED";
     }
 
     const delay =
