@@ -65,7 +65,13 @@ export function sourceKeyFor(name: string): string {
 /** Is this source allowed to run right now? Interval is the source's own. */
 export function dueForRefresh(source: SourceRow, now = new Date()): boolean {
   if (!source.last_run_at) return true;
-  const since = now.getTime() - new Date(source.last_run_at).getTime();
+
+  const lastRunAt = Date.parse(source.last_run_at);
+  if (!Number.isFinite(lastRunAt) || lastRunAt > now.getTime()) return true;
+
+  if (!Number.isFinite(source.refresh_minutes) || source.refresh_minutes < 0) return true;
+
+  const since = now.getTime() - lastRunAt;
   return since >= Math.max(source.refresh_minutes, 15) * 60000;
 }
 
