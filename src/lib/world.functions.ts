@@ -19,6 +19,7 @@ import {
   type Page,
 } from "./data/contract";
 import { asDataError, DataError } from "./data/errors";
+import { requireQueryRows } from "./data/query-rows";
 import { localityQueryScope } from "./locality-query-scope";
 import { resolvePublicListingLifecycles } from "./public-listing-lifecycle.server";
 import { rowToEntry, type ListingRow } from "./listings";
@@ -125,13 +126,13 @@ async function readWorld(
     query = query.or(`starts_at.is.null,starts_at.gte.${context.startTime ?? settled}`);
     if (context.endTime) query = query.or(`starts_at.is.null,starts_at.lte.${context.endTime}`);
 
-    const { data: rows, error } = await query;
-    if (error) throw error;
+    const { data: rowData, error: rowsError } = await query;
     throwIfAborted(signal);
+    const rows = requireQueryRows(rowData, rowsError, "World listing");
 
     // Use one sentinel row to distinguish an exactly-full final page from a page with more data.
     // The sentinel is not processed; it becomes the first row of the next offset page.
-    const boundedRows = splitPageWithLookahead(rows ?? [], limit);
+    const boundedRows = splitPageWithLookahead(rows, limit);
     const listings = boundedRows.items as unknown as ListingRow[];
     const hasMore = boundedRows.hasMore;
     // One extra query for all creators, never one per listing.
@@ -141,20 +142,21 @@ async function readWorld(
     ];
     const photos = new Map<string, SourcePhoto[]>();
     if (creatorIds.length) {
-      const { data: profiles } = await supabase
+      const profileResult = await supabase
         .from("profiles")
         .select("id, display_name")
         .in("id", creatorIds)
         .eq("discoverable", true)
         .abortSignal(signal);
       throwIfAborted(signal);
-      for (const p of profiles ?? []) {
+      const profiles = requireQueryRows(profileResult.data, profileResult.error, "Creator profile");
+      for (const p of profiles) {
         if (p.display_name) names.set(p.id, p.display_name);
       }
     }
 
     if (listings.length) {
-      const { data: photoRows, error: photoError } = await supabase
+      const photoResult = await supabase
         .from("listing_photos")
         .select("listing_id, image_url, source_url, credit, alt_text, position")
         .in(
@@ -164,8 +166,8 @@ async function readWorld(
         .order("position", { ascending: true })
         .abortSignal(signal);
       throwIfAborted(signal);
-      if (photoError) throw photoError;
-      for (const photo of photoRows ?? []) {
+      const photoRows = requireQueryRows(photoResult.data, photoResult.error, "Listing photo");
+      for (const photo of photoRows) {
         const current = photos.get(photo.listing_id) ?? [];
         current.push({
           url: photo.image_url,
