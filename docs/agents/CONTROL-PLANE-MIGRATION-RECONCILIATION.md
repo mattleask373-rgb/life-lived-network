@@ -1,5 +1,26 @@
 # Agent control-plane migration reconciliation
 
+## Current-main source recheck — 24 October 2026
+
+**Canonical source ref checked:** `main` at `182fe7f05c9efbee9ac17ccbca4d420cc0f1b24f`. This section supersedes the older 22 October source-presence claims below. It does not replace the owner gate for remote migration history or project identity.
+
+The current main migration tree **does contain** the prerequisite objects previously described as missing in the historical audit:
+
+- [`20261007120000_agent_orchestration.sql`](../../supabase/migrations/20261007120000_agent_orchestration.sql) creates `public.agent_tasks` and `public.agent_events`.
+- [`20261007170000_agent_lease_fencing.sql`](../../supabase/migrations/20261007170000_agent_lease_fencing.sql) adds lease generation/token fencing and defines the five-argument heartbeat signature.
+- [`20261007171000_remove_unfenced_heartbeat.sql`](../../supabase/migrations/20261007171000_remove_unfenced_heartbeat.sql) removes the unfenced overload and revokes/re-grants the fenced signature.
+- [`20261007172000_fence_release.sql`](../../supabase/migrations/20261007172000_fence_release.sql) defines the fenced release function against `public.agent_tasks`.
+
+The earlier statements that those source prerequisites are absent are therefore stale for the checked main SHA and must not be used as current evidence. The current source still needs static signature/grant/RLS review, and the existence of migration files is not proof that any hosted database has applied them.
+
+**Fresh isolated replay evidence:** PR #354 head `d9e6fe78f66729724dc251f7e5d3852623524244` completed [Verify run #40089371399](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40089371399) successfully on 24 October. The run replayed every migration against an empty isolated local Supabase stack, ran `supabase test db --local` (pgTAP), exercised local-discovery RLS through PostgREST, linted database functions, and parsed the k6 script without sending traffic. That head includes current main plus proposed #348/#350/#352/#354 changes, so it is evidence for that combined source sequence in the disposable workflow environment—not a main-only run and not a hosted/production migration-history proof.
+
+**Remote-state boundary remains unchanged:** no hosted project was queried or modified. The owner must identify the actual Supabase project/environment and retrieve its migration history read-only before any hosted migration, repair, or schema/RLS/grant action. Clean replay and upgrade of an already-applied remote database are different cases. Do not merge the heavily divergent `phase3-supervisor-reconciliation` branch wholesale.
+
+Current related proposals remain unmerged and review-gated: #344 is a separate SQL migration/test PR with recorded green local replay but no submitted independent review; #336 is a draft runtime PR that still mixes SQL migration/tests with TypeScript runtime code and is not a persistent 24/7 executor. Keep SQL changes isolated from runtime work, keep public dispatch disabled, and require independent security/database review before any merge decision.
+
+
+
 **Audit date:** 22 October 2026  
 **Original audit base:** `a99d09f1517523a7a388245ca6b3d5c1245816cb`  
 **Reconciliation branch rebuilt on current main:** `1f0a5d2b1c717db6cfc10c63f851a0e428313ee2`  
