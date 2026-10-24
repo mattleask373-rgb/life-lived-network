@@ -418,7 +418,9 @@ describe("bounded agent worker runtime", () => {
   it("reports unconfirmed persistence if a cancellation cannot be recorded", async () => {
     const controller = new AbortController();
     const db = adapters({
-      recordCancellationFenced: vi.fn(async () => false),
+      recordCancellationFenced: vi.fn(async () => {
+        throw new Error("private persistence detail");
+      }),
     });
     const execute = vi.fn((_task, _context, _providerSignal) => {
       controller.abort();
