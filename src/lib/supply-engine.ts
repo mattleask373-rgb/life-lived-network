@@ -277,7 +277,10 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
   for (const entry of entries) {
     const hit = matchTerms([entry.title, entry.summary, ...(entry.skills ?? [])].join(" "), words);
     if (!hit) continue;
-    const isOffer = entry.layer === "work" || entry.kind === "skill" || entry.cost < 0;
+    const isOffer =
+      entry.layer === "work" ||
+      entry.kind === "skill" ||
+      (entry.priceKnown !== false && entry.cost < 0);
     if (!isOffer) continue;
     if (!entryInScope(entry.placeId ?? null, geo)) continue;
     push({
@@ -450,7 +453,7 @@ export function findSupply(input: SupplyInput): SupplyAnswer {
         caveat: BAND_CAVEAT.community,
         actions: ["view", "join", "save"],
       });
-    } else if (entry.cost === 0 && entry.give) {
+    } else if (entry.priceKnown !== false && entry.cost === 0 && entry.give) {
       push({
         id: `contribution-${entry.id}`,
         band: "contribution",
