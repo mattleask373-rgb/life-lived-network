@@ -55,7 +55,11 @@ export interface WorldEntry {
   band: TimeBand;
   /** Minutes a person would realistically give to this. */
   minutes: number;
-  /** Cost in euros. 0 means free. Negative means it pays. */
+  /**
+   * Amount in `currency` units. Zero means free only when `priceKnown` is not
+   * false; negative means it pays. Unknown source prices keep a zero storage
+   * placeholder but must never be displayed or matched as free.
+   */
   cost: number;
   summary: string;
   /** Short, plainly-worded details. */
