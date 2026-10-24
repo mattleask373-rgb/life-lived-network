@@ -6,7 +6,7 @@ import { useState } from "react";
 import { parseNeedSearch } from "@/lib/need-prefill";
 
 import { useSession } from "@/hooks/use-session";
-import { createNeed, getMyNeeds, getOpenNeeds } from "@/lib/needs.functions";
+import { createNeed, getMyNeeds, getOpenNeeds, getOpenNeedsForMember } from "@/lib/needs.functions";
 import { FLEXIBILITIES, NEED_INTENTS, URGENCIES, type Need } from "@/lib/needs";
 import { fetchDefaultPlace } from "@/lib/places";
 import { money } from "@/components/layer-colour";
@@ -29,6 +29,7 @@ function NeedPage() {
   const typed = from ?? "";
   const qc = useQueryClient();
   const openNeeds = useServerFn(getOpenNeeds);
+  const openNeedsForMember = useServerFn(getOpenNeedsForMember);
   const myNeeds = useServerFn(getMyNeeds);
 
   const { data: place } = useQuery({ queryKey: ["place", "default"], queryFn: fetchDefaultPlace });
@@ -38,8 +39,11 @@ function NeedPage() {
     isError: needsError,
     refetch: refetchNeeds,
   } = useQuery({
-    queryKey: ["needs", "open"],
-    queryFn: () => openNeeds({ data: {} }),
+    queryKey: ["needs", "open", user?.id ?? null, place?.place.id ?? null],
+    queryFn: () =>
+      user
+        ? openNeedsForMember({ data: { placeId: place?.place.id ?? null } })
+        : openNeeds({ data: { placeId: place?.place.id ?? null } }),
   });
   const { data: mine } = useQuery({
     queryKey: ["needs", "mine", user?.id],
