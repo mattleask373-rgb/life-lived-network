@@ -64,7 +64,7 @@ jobs:
             echo "Base commit unavailable; conservatively running migration replay."
             exit 0
           fi
-          if git diff --name-only "$base" "$GITHUB_SHA" -- supabase/migrations supabase/config.toml supabase/tests scripts/test-local-discovery-postgrest.mjs | grep -q .; then
+          if git diff --name-only "$base" "$GITHUB_SHA" -- supabase/migrations supabase/config.toml supabase/tests scripts/test-local-discovery-postgrest.mjs scripts/test-ai-draft-quota-concurrency.ts src/lib/local-supabase-database-url.ts | grep -q .; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
             echo "Database migration/config/test inputs changed."
           else
@@ -101,6 +101,18 @@ jobs:
             SUPABASE_ANON_KEY="$ANON_KEY" \
             SUPABASE_JWT_SECRET="$JWT_SECRET" \
             bun scripts/test-local-discovery-postgrest.mjs
+
+      - name: Run concurrent AI draft quota integration test
+        if: ${{ steps.migration-changes.outputs.changed == 'true' && hashFiles('supabase/migrations/20261022121000_ai_draft_atomic_quota.sql') != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          eval "$(supabase status --output env)"
+          if [[ -z "${DB_URL:-}" ]]; then
+            echo "Could not obtain the isolated local database URL."
+            exit 1
+          fi
+          SUPABASE_DB_URL="$DB_URL" bun scripts/test-ai-draft-quota-concurrency.ts
 
       - name: Lint local database functions
         if: ${{ steps.migration-changes.outputs.changed == 'true' }}
