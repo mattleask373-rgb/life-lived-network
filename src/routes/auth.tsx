@@ -13,7 +13,7 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-type Mode = "in" | "up" | "forgot";
+type Mode = "in" | "up" | "forgot" | "magic";
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -22,6 +22,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +47,16 @@ function AuthPage() {
         const { error: err } = await supabase.auth.signInWithPassword({ email, password });
         if (err) throw err;
         void navigate({ to: "/profile" });
+      } else if (mode === "magic") {
+        const { error: err } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: `${window.location.origin}/profile`,
+            shouldCreateUser: false,
+          },
+        });
+        if (err) throw err;
+        setNote("Check your email — a sign-in link is on its way.");
       } else {
         const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/profile`,
@@ -77,7 +88,13 @@ function AuthPage() {
     <main className="paper-grain min-h-screen">
       <div className="mx-auto max-w-md px-4 pt-10 pb-20 sm:px-6">
         <h1 className="text-3xl sm:text-4xl">
-          {mode === "up" ? "Come in" : mode === "in" ? "Welcome back" : "Forgotten it?"}
+          {mode === "up"
+            ? "Come in"
+            : mode === "in"
+              ? "Welcome back"
+              : mode === "magic"
+                ? "Check your inbox"
+                : "Forgotten it?"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           You never needed an account to look around. You need one to save things, post something
@@ -109,7 +126,7 @@ function AuthPage() {
             />
           </label>
 
-          {mode !== "forgot" ? (
+          {mode === "up" || mode === "in" ? (
             <label className="block text-sm">
               <span className="text-muted-foreground">Password</span>
               <input
@@ -129,20 +146,27 @@ function AuthPage() {
           {mode === "up" || mode === "in" ? (
             <button
               type="button"
-              disabled={busy || !email}
+              disabled={busy || resendingConfirmation || !email}
               onClick={async () => {
                 setError(null);
                 setNote(null);
-                const { error: err } = await supabase.auth.resend({ type: "signup", email });
-                if (err) setError("We couldn't resend that just now. Try again in a minute.");
-                else
-                  setNote(
-                    "If that address is waiting to be confirmed, a fresh link is on its way.",
-                  );
+                setResendingConfirmation(true);
+                try {
+                  const { error: err } = await supabase.auth.resend({ type: "signup", email });
+                  if (err) setError("We couldn't resend that just now. Try again in a minute.");
+                  else
+                    setNote(
+                      "If that address is waiting to be confirmed, a fresh link is on its way.",
+                    );
+                } catch {
+                  setError("We couldn't resend that just now. Try again in a minute.");
+                } finally {
+                  setResendingConfirmation(false);
+                }
               }}
               className="focus-ink text-sm text-muted-foreground underline disabled:opacity-60"
             >
-              Resend my confirmation email
+              {resendingConfirmation ? "Resending confirmation…" : "Resend my confirmation email"}
             </button>
           ) : null}
 
@@ -179,9 +203,22 @@ function AuthPage() {
                 I already have an account
               </button>
             ) : null}
-            {mode !== "forgot" ? (
+            {mode !== "forgot" && mode !== "magic" ? (
               <button type="button" className="underline" onClick={() => setMode("forgot")}>
                 I've forgotten my password
+              </button>
+            ) : null}
+            {mode === "in" ? (
+              <button
+                type="button"
+                className="underline"
+                onClick={() => {
+                  setError(null);
+                  setNote(null);
+                  setMode("magic");
+                }}
+              >
+                Email me a sign-in link
               </button>
             ) : null}
           </div>
