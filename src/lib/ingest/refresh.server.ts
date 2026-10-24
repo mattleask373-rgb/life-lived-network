@@ -21,7 +21,11 @@ import { cancellationFor, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent } from "./dedupe";
 import { TICKETMASTER_KEY, TICKETMASTER_ROOT, ticketmasterQuery } from "./ticketmaster";
 import { FIXTURE_SOURCE_KEY, fixturePayload } from "./fixture-source";
-import { resolveSourceLocality, type CanonicalLocality } from "./locality-resolution";
+import {
+  isPlaceWithinSourceCoverage,
+  resolveSourceLocality,
+  type CanonicalLocality,
+} from "./locality-resolution";
 
 const MAX_PAGES = 2;
 const MAX_EVENTS = 120;
@@ -112,28 +116,41 @@ export async function refreshSourceRun(request: RefreshRequest): Promise<IngestO
     return { ...outcome, failure: "Refreshed recently — nothing to do yet." };
   }
 
+  let canonicalPlaces: CanonicalLocality[] = [];
+  let selectedPlace: CanonicalLocality | undefined;
+  try {
+    // Load the complete, bounded canonical hierarchy before asking the provider.
+    // A missing/capped/invalid hierarchy must never cause a request or a guess.
+    const { loadPlaceIndex } = await import("../place-index.server");
+    const placeIndex = await loadPlaceIndex(supabaseAdmin);
+    canonicalPlaces = placeIndex.places;
+    selectedPlace = placeIndex.byId.get(request.placeId);
+  } catch {
+    return finish(source, {
+      ...outcome,
+      failure: "The canonical locality hierarchy could not be confirmed.",
+    });
+  }
+
+  const requestedCountryCode = request.countryCode.trim().toUpperCase();
+  if (
+    !selectedPlace ||
+    !/^[A-Z]{2}$/.test(requestedCountryCode) ||
+    selectedPlace.country_code.trim().toUpperCase() !== requestedCountryCode ||
+    !isPlaceWithinSourceCoverage(request.placeId, source.place_ids, canonicalPlaces)
+  ) {
+    return finish(source, {
+      ...outcome,
+      failure: "The selected locality is outside the source's confirmed coverage or country.",
+    });
+  }
+
   let events: SourceEvent[] = [];
   try {
     events = await readFromSource(adapter.key, request, outcome, adapter.parse);
   } catch (error) {
     const failure = error instanceof Error ? error.message : "The source could not be reached.";
     return finish(source, { ...outcome, failure });
-  }
-
-  let canonicalPlaces: CanonicalLocality[] = [];
-  if (events.length > 0) {
-    try {
-      // Reject incomplete/capped hierarchies rather than guessing from a partial
-      // index. This is an internal, reviewer-only refresh path, not a user read.
-      const { loadPlaceIndex } = await import("../place-index.server");
-      const placeIndex = await loadPlaceIndex(supabaseAdmin);
-      canonicalPlaces = placeIndex.places;
-    } catch {
-      return finish(source, {
-        ...outcome,
-        failure: "The canonical locality hierarchy could not be confirmed.",
-      });
-    }
   }
 
   for (const raw of events.slice(0, MAX_EVENTS)) {
