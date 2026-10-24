@@ -33,6 +33,8 @@ export interface Bounds {
 /** Street level up to most of a hemisphere. */
 export const MIN_SPAN = 0.004;
 export const MAX_SPAN = 140;
+/** Maximum number of listing pins rendered at once; lists must disclose anything beyond this bound. */
+export const MAX_MAP_PINS = 300;
 
 export type Scale = "neighbourhood" | "city" | "region" | "country" | "world";
 
@@ -190,7 +192,7 @@ export function toScreen(
 }
 
 /** Only what the viewport can actually show, and only what has coordinates. */
-export function placeEntries(entries: WorldEntry[], view: MapView, limit = 300): Placed[] {
+export function placeEntries(entries: WorldEntry[], view: MapView, limit = MAX_MAP_PINS): Placed[] {
   const placed: Placed[] = [];
   for (const entry of entries) {
     if (
