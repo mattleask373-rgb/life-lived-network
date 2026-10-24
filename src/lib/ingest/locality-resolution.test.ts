@@ -62,7 +62,7 @@ describe("source event canonical locality resolution", () => {
     ).toEqual({ status: "unresolved", reason: "AMBIGUOUS_CANONICAL_NAME" });
   });
 
-  it("can disambiguate a repeated name through the configured source scope", () => {
+  it("does not use source scope alone to disambiguate repeated locality names", () => {
     expect(
       resolveSourceLocality({
         evidence: { neighbourhood: "Northfield" },
@@ -70,7 +70,7 @@ describe("source event canonical locality resolution", () => {
         sourcePlaceIds: ["bham"],
         places,
       }),
-    ).toMatchObject({ status: "resolved", placeId: "brum-ne" });
+    ).toEqual({ status: "unresolved", reason: "AMBIGUOUS_CANONICAL_NAME" });
   });
 
   it("refuses a source result outside its configured locality scope", () => {
