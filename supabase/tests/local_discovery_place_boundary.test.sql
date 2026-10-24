@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(18);
+SELECT plan(19);
 
 -- All fixture rows are synthetic, and the transaction rolls back every change.
 INSERT INTO auth.users (
@@ -226,6 +226,26 @@ SELECT ok(
   AND NOT has_table_privilege('service_role', 'private.locality_memberships', 'UPDATE')
   AND NOT has_table_privilege('service_role', 'private.locality_memberships', 'DELETE'),
   'service role must use the narrow SECURITY DEFINER RPC, not direct membership-table access'
+);
+
+-- An expired membership is denied even while its status still reads verified.
+UPDATE private.locality_memberships
+SET expires_at = now() - interval '1 second'
+WHERE user_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+  AND place_id = '10000000-0000-4000-8000-000000000001';
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', true);
+INSERT INTO pg_temp.locality_probe_results
+SELECT 'user_a_after_membership_expiry', count(*)::integer
+FROM public.needs
+WHERE visibility = 'local_discovery';
+RESET ROLE;
+
+SELECT is(
+  (SELECT visible_count FROM pg_temp.locality_probe_results WHERE label = 'user_a_after_membership_expiry'),
+  0,
+  'expired locality membership cannot authorize local-discovery reads'
 );
 
 -- Deleting the account that verified membership revokes those grants instead
