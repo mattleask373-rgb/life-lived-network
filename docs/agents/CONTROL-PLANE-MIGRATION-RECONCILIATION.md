@@ -26,16 +26,13 @@ Current related proposals remain unmerged and review-gated: #344 is a separate S
 **Reconciliation branch rebuilt on current main:** `1f0a5d2b1c717db6cfc10c63f851a0e428313ee2`  
 **Status:** blocked before migration implementation/activation; no database was queried or changed by this source audit.
 
-## Executive finding
+## Historical audit finding — superseded by the 24 October source recheck
 
-The two agent-related tail migrations on current `main` assume prerequisites that are absent from the current main migration tree:
+The 22 October audit was performed against an older main snapshot (`a99d09f1517523a7a388245ca6b3d5c1245816cb`) and reported that the tail heartbeat/release migrations lacked earlier prerequisite definitions. That source-level conclusion is **superseded** by the 24 October recheck above for current main `182fe7f05c9efbee9ac17ccbca4d420cc0f1b24f`: the current migration directory includes the orchestration tables, fenced five-argument heartbeat, and release RPC prerequisites.
 
-- `supabase/migrations/20261007171000_remove_unfenced_heartbeat.sql` drops the legacy two-argument heartbeat, then executes `REVOKE ALL ON FUNCTION public.heartbeat_agent_task(TEXT, TEXT, INTEGER, BIGINT, TEXT) FROM PUBLIC`. Current main contains no earlier creation of that five-argument signature.
-- `supabase/migrations/20261007172000_fence_release.sql` defines a release function returning `SETOF public.agent_tasks`, but current main has no earlier creation of `public.agent_tasks` in its migration history.
+The previously recorded Preview error at [run 119790420947](https://github.com/mattleask373-rgb/life-lived-network/runs/119790420947) is historical evidence for the state tested at that time. It must not be presented as a fresh result for current main. Likewise, a skipped Supabase Preview check is not proof of successful migration replay.
 
-A previous Supabase Preview run failed on the missing heartbeat overload at the REVOKE statement ([recorded run](https://github.com/mattleask373-rgb/life-lived-network/runs/119790420947)). Preview is skipped in many current checks because preview-branch creation is disabled; a skipped check is not proof.
-
-The candidate lineage is on `phase3-supervisor-reconciliation`, at the source commit observed during this audit `87b82ac717f683da7c3bce6f29131f14d705324a`. GitHub compare reported **108 commits ahead / 639 behind main** and 66 changed files. It is not safe to merge that branch wholesale.
+The durable schema is now present in repository source. The live environment's applied migration history, effective grants/RLS, project identity, generated deployed types, and operating executor remain distinct unproven facts. A source file or green local replay cannot establish those hosted facts.
 
 ## Migration dependency map (candidate lineage)
 
@@ -56,6 +53,23 @@ The filenames/order below were read from that branch. They are candidate artefac
 | 11 | `20261008030000_agent_stale_recovery_rpc.sql` | Replaces stale-marking/recovery to clear expired lease tokens and record attempt/audit evidence. | Depends on all prior task, fencing, attempt and audit objects. Verify one transaction/fencing behavior and idempotency. |
 
 Current `main` additionally has the 17:10 and 17:20 tail migrations above, plus later unrelated connection-request migrations (12 October and 22 October). The source branch also contains dozens of application and documentation files; copy only individually reviewed artefacts in a current-main-based consolidation.
+
+
+
+## Dispatch idempotency and attempt creation — 24 October 2026
+
+Source inspection at the current-main SHA found two independent dispatch hazards that must be addressed before enabling any worker:
+
+1. `agent_execution_attempts.attempt_id` is a UUID primary key with no default in `20261008010000_agent_execution_identity.sql`, but the original `dispatch_agent_attempt` INSERT omits `attempt_id`. An explicit `gen_random_uuid()` default is required for a fresh dispatch to insert an attempt.
+2. The original correlation replay returned the existing attempt's live `lease_token` and `DISPATCHED` status. A caller could interpret an exact retry as permission to call a paid provider again. Merely checking that the original lease is active does not make an external side effect idempotent.
+
+The canonical SQL candidate is [PR #344](https://github.com/mattleask373-rgb/life-lived-network/pull/344), which now proposes the UUID default, full correlation scope checks, and a metadata-only `REPLAYED` return with `lease_token = NULL`. Its pgTAP test checks that retry/reuse returns no token, creates no second attempt/audit row, rejects task/run/provider collisions, and leaves the original lease generation/token unchanged. PR #336 is now runtime-only to avoid carrying a second competing implementation of the same SQL contract.
+
+PR #344 is temporarily stacked on [PR #358](https://github.com/mattleask373-rgb/life-lived-network/pull/358), whose Verify workflow runs independent validation after a high/critical dependency-audit finding but still fails the required `verify` status at a final gate. This stack is for diagnostics only. Before merge review, the owner/maintainer must integrate the approved dependency fix through the protected branch, retarget #358/#344 to the resulting main SHA, and rerun exact-head checks.
+
+**Validation boundary:** the earlier #354 Verify [#40089371399](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40089371399) passed empty local Supabase migration replay, pgTAP, local-discovery RLS via PostgREST, database-function lint, and k6 parse-only on a combined candidate stack based on feature branches. It is useful disposable evidence for that exact stack and commit `d9e6fe78f66729724dc251f7e5d3852623524244`, not proof that current main or a hosted database contains/applies the same lineage. The updated #344 SQL test needs a fresh exact-head replay after the metadata-only contract changed.
+
+No hosted migration/history query or schema mutation was performed for this source review. Do not activate dispatch, connect a provider, merge, deploy, or infer hosted identity from repository state.
 
 ## Trust-boundary observations
 
