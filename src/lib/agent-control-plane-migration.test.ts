@@ -55,9 +55,11 @@ describe("agent control-plane migration lineage (static contract)", () => {
     );
     expect(idempotency).toContain("NULL::TEXT");
     expect(idempotency).toContain("'REPLAYED'::TEXT");
-    expect(migration("20261023130000_agent_dispatch_idempotency_scope.sql")).not.toContain(
-      "attempt_row.lease_generation, attempt_row.lease_token,",
-    );
+    const replayBlock =
+      idempotency.split("IF FOUND THEN")[1]?.split("IF task_row.status <> 'READY'")[0] ?? "";
+    expect(replayBlock).toContain("attempt_row.lease_generation, NULL::TEXT");
+    expect(replayBlock).toContain("'REPLAYED'::TEXT");
+    expect(replayBlock).not.toContain("attempt_row.lease_generation, attempt_row.lease_token,");
 
     const dispatchTest = readFileSync(
       new URL("../../supabase/tests/agent_dispatch_idempotency.test.sql", import.meta.url),
