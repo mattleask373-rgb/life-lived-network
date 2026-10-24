@@ -31,7 +31,7 @@ Do not merge a partial slice that makes local_discovery disappear into an unexpl
 - Keep Life List and other private surfaces out of public sitemaps and indexable metadata.
 
 ### P0-E — Governance evidence
-Owner/admin must prove deletion protection and current bypass configuration. Ruleset 24946178 currently shows one approval, latest-push approval, stale-review dismissal, resolved-thread requirement and strict Verify; the returned rules did not show branch deletion protection.
+Owner/admin must restore and prove protection enforcement before any merge decision. Fresh read-only GitHub evidence at `2026-10-24T12:17:19Z` shows ruleset 24946178 has `enforcement: disabled`; `main` returns `protected: false` and `protection.enabled: false`. The ruleset is configured for one approval, latest-push approval, stale-review dismissal, resolved threads, strict `verify`, and non-fast-forward prevention, but these are dormant while enforcement is disabled. Branch deletion protection is separately **NOT VERIFIED**.
 
 ## Next tier, ordered only after Tier 0
 
