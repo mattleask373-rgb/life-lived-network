@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(21);
+SELECT plan(23);
 
 -- Synthetic admin and subject accounts only; the transaction rolls back.
 INSERT INTO auth.users (
@@ -121,6 +121,35 @@ SELECT ok(
      AND place_id = '10000000-0000-4000-8000-000000000001'),
   'administrator grant sets a fresh 180-day membership expiry'
 );
+UPDATE private.locality_memberships
+SET expires_at = now() - interval '1 second'
+WHERE user_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+  AND place_id = '10000000-0000-4000-8000-000000000001';
+
+SET LOCAL ROLE service_role;
+SELECT set_config('request.jwt.claim.role', 'service_role', true);
+SELECT is(
+  (SELECT membership_status FROM public.review_locality_membership(
+    'grant',
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    '10000000-0000-4000-8000-000000000001',
+    'local_steward',
+    'case:steward-2026-002',
+    'local_steward_attestation'
+  )),
+  'verified',
+  'administrator grant can renew an expired membership'
+);
+RESET ROLE;
+
+SELECT ok(
+  (SELECT expires_at > now() + interval '179 days'
+   FROM private.locality_memberships
+   WHERE user_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+     AND place_id = '10000000-0000-4000-8000-000000000001'),
+  'renewal restores a fresh 180-day authorization window'
+);
 SELECT is(
   (SELECT count(*) FROM private.locality_membership_events
    WHERE action = 'grant'
@@ -198,7 +227,7 @@ SELECT throws_ok(
 RESET ROLE;
 SELECT is(
   (SELECT count(*) FROM private.locality_membership_events WHERE action = 'grant'),
-  1::bigint,
+  2::bigint,
   'rejected malformed grants do not create audit events'
 );
 
