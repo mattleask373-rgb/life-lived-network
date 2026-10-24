@@ -23,6 +23,14 @@ export type Draft = z.infer<typeof draftSchema>;
 export const MAX_INPUT = 2000;
 
 /**
+ * Per-attempt provider bounds. These supplement the durable account quota;
+ * they are not a provider billing cap and do not enable any AI feature.
+ */
+export const DRAFT_MAX_OUTPUT_TOKENS = 800;
+export const DRAFT_MAX_DURATION_MS = 30_000;
+export const DRAFT_MAX_RETRIES = 0;
+
+/**
  * Server-side emergency stop for paid draft generation. The kill switch is
  * opt-in by environment value so existing deployments keep their current
  * behaviour until an operator deliberately disables the feature.
