@@ -35,6 +35,7 @@ const GOOD = {
       {
         name: "An arch venue",
         city: { name: "Digbeth" },
+        country: { countryCode: "GB" },
         location: { latitude: "52.476", longitude: "-1.884" },
       },
     ],
@@ -52,6 +53,8 @@ describe("the provider adapter", () => {
     expect(event.startsAt).toBe("2099-04-18T19:30:00.000Z");
     expect(event.category).toBe("music");
     expect(event.venueName).toBe("An arch venue");
+    expect(event.neighbourhood).toBe("Digbeth");
+    expect(event.countryCode).toBe("GB");
     expect(event.lat).toBeCloseTo(52.476, 3);
     expect(event.organiser).toBe("A brass band");
     expect(event.cost).toBe(12);
