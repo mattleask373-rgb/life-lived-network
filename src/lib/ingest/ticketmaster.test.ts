@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { fixtureAdapter, fixturePayload, FIXTURE_LABEL, FIXTURE_SOURCE_KEY } from "./fixture-source";
+import {
+  fixtureAdapter,
+  fixturePayload,
+  FIXTURE_LABEL,
+  FIXTURE_SOURCE_KEY,
+} from "./fixture-source";
 import { normaliseEvent } from "./normalise";
 import {
   ticketmasterAdapter,
@@ -297,7 +302,9 @@ describe("Ticketmaster offline adapter boundary", () => {
     expect(result.events.find((event) => event.externalId === "fixture-postponed")?.state).toBe(
       "postponed",
     );
-    expect(result.events.find((event) => event.externalId === "fixture-no-coordinates")).toMatchObject({
+    expect(
+      result.events.find((event) => event.externalId === "fixture-no-coordinates"),
+    ).toMatchObject({
       lat: null,
       lng: null,
     });
