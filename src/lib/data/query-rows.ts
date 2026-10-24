@@ -12,10 +12,7 @@ export function requireQueryRows<T>(
 ): T[] {
   if (error != null) throw error;
   if (!Array.isArray(rows)) {
-    throw new DataError(
-      "DATA_UNAVAILABLE",
-      `${resource} query returned no row collection.`,
-    );
+    throw new DataError("DATA_UNAVAILABLE", `${resource} query returned no row collection.`);
   }
   return rows;
 }
