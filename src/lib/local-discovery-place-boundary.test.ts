@@ -35,6 +35,7 @@ describe("local_discovery locality security boundary", () => {
     expect(migration).toContain("NEW.status := 'revoked'");
     expect(migration).toContain("NEW.verified_at := NULL");
     expect(migration).toContain("membership.status = 'verified'");
+    expect(migration).toContain("membership.expires_at > pg_catalog.statement_timestamp()");
     expect(migration).toContain("membership.user_id = auth.uid()");
     expect(migration).toContain("membership.place_id = _need_place_id");
     expect(migration).not.toContain("WITH RECURSIVE place_chain");
@@ -56,7 +57,7 @@ describe("local_discovery locality security boundary", () => {
   });
 
   it("covers anonymous, two-locality, child-locality, and profile-spoof cases in disposable SQL", () => {
-    expect(sqlTest).toContain("SELECT plan(18)");
+    expect(sqlTest).toContain("SELECT plan(19)");
     for (const label of [
       "anon_all_local",
       "anon_public",
@@ -66,6 +67,7 @@ describe("local_discovery locality security boundary", () => {
       "user_a_stale_locality_a",
       "user_a_expired_locality_a",
       "user_a_after_profile_spoof",
+      "user_a_after_membership_expiry",
       "user_no_grant_same_profile",
       "user_a_after_verifier_deletion",
       "user_b_all_local",
