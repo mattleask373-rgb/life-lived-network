@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(7);
+SELECT plan(8);
 
 -- Integration contract for the server-only dispatch RPC. All synthetic
 -- control-plane rows and assertions are rolled back with this transaction.
@@ -130,6 +130,25 @@ SELECT throws_ok(
   'P0001',
   'correlation ID already bound to a different dispatch scope',
   'correlation reuse across execution runs is rejected'
+);
+
+UPDATE public.agent_tasks
+SET lease_expiry = clock_timestamp() - interval '1 second'
+WHERE task_id = 'audit-dispatch-task-1';
+
+SELECT throws_ok(
+  $ SELECT * FROM public.dispatch_agent_attempt(
+    'audit-dispatch-task-1',
+    '00000000-0000-4000-8000-00000000d101',
+    'audit-worker',
+    'audit-workspace',
+    'audit-project',
+    'test-provider',
+    'audit-correlation-idempotent'
+  ) $,
+  'P0001',
+  'existing dispatch lease is no longer active',
+  'an expired lease cannot be replayed to authorize another provider call'
 );
 
 SELECT ok(
