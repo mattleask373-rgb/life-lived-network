@@ -209,6 +209,8 @@ describe("privacy-minimised measurement event contract", () => {
       schemaVersion: 1,
       dayUTC,
       type: "action_selected",
+      countryCode: "GB",
+      intentFamily: "local_service",
       action: "start_connection",
       targetKind: "need",
     });
