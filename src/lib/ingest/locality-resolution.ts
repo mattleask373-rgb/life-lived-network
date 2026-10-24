@@ -91,6 +91,24 @@ function belongsToSourceScope(
   return sourcePlaceIds.some((scopeId) => isWithinPlace(place.id, scopeId, byId));
 }
 
+/**
+ * Check the selected refresh locality against the source's declared coverage.
+ * Empty coverage means no explicit allow-list; the caller must still validate
+ * the locality and country using the complete canonical hierarchy.
+ */
+export function isPlaceWithinSourceCoverage(
+  placeId: string,
+  sourcePlaceIds: readonly string[],
+  places: readonly CanonicalLocality[],
+): boolean {
+  const byId = new Map<string, CanonicalLocality>(
+    places.map((place) => [place.id, place] as const),
+  );
+  if (!byId.has(placeId) || sourcePlaceIds.some((id) => !byId.has(id))) return false;
+  if (sourcePlaceIds.length === 0) return true;
+  return sourcePlaceIds.some((scopeId) => isWithinPlace(placeId, scopeId, byId));
+}
+
 function resolved(
   place: CanonicalLocality,
   matchedBy: "canonical_slug" | "exact_name_country",
