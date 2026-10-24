@@ -241,7 +241,12 @@ describe("fixture locality evidence", () => {
       }),
     );
     expect(parsed.events.length).toBeGreaterThan(0);
-    expect(parsed.events.every((event) => event.countryCode === "JP")).toBe(true);
+    expect(
+      parsed.events.find((event) => event.externalId === "fixture-evening-music")?.countryCode,
+    ).toBe("JP");
+    expect(
+      parsed.events.find((event) => event.externalId === "fixture-no-coordinates")?.countryCode,
+    ).toBeUndefined();
   });
 });
 
