@@ -448,6 +448,7 @@ async function storeEvent(
       const { error: listingFreshnessError } = await admin
         .from("listings")
         .update({
+          status: "published",
           last_checked_at: now,
           data_quality: listing.data_quality,
           cancellation: listing.cancellation,
