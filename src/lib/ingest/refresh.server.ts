@@ -21,6 +21,7 @@ import { cancellationFor, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent } from "./dedupe";
 import { TICKETMASTER_KEY, TICKETMASTER_ROOT, ticketmasterQuery } from "./ticketmaster";
 import { FIXTURE_SOURCE_KEY, fixturePayload } from "./fixture-source";
+import { storedSourcePrice } from "./price-state";
 
 const MAX_PAGES = 2;
 const MAX_EVENTS = 120;
@@ -245,10 +246,7 @@ async function storeEvent(
     refreshMinutes: source.refresh_minutes,
   });
 
-  const hasUsableAmount =
-    typeof event.cost === "number" && Number.isFinite(event.cost) && event.cost >= 0;
-  const hasUsableCurrency = /^[A-Z]{3}$/.test(event.currency ?? "") && event.currency !== "XXX";
-  const priceKnown = hasUsableAmount && hasUsableCurrency;
+  const storedPrice = storedSourcePrice(event);
 
   const listing = {
     creator_id: null,
@@ -266,9 +264,7 @@ async function storeEvent(
     when_text: whenWording(event.startsAt, event.endsAt, event.timezone),
     band: bandFor(event.startsAt, event.timezone),
     minutes: minutesBetween(event.startsAt, event.endsAt),
-    cost: hasUsableAmount ? event.cost! : 0,
-    currency: priceKnown ? event.currency! : "XXX",
-    price_known: priceKnown,
+    ...storedPrice,
     social: "friendly",
     outdoors: false,
     skills: [],
