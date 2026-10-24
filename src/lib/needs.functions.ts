@@ -115,7 +115,7 @@ export const getOpenNeeds = createServerFn({ method: "GET" })
       .from("needs")
       .select("*")
       .eq("status", "open")
-      .in("visibility", ["public", "local_discovery"])
+      .eq("visibility", "public")
       .order("created_at", { ascending: false })
       .limit(50);
     if (data.placeId) {
@@ -158,6 +158,9 @@ export const findSupplyForNeed = createServerFn({ method: "GET" })
       .from("needs")
       .select("*")
       .eq("id", data.needId)
+      // This endpoint is deliberately global-public only. Verified-local
+      // needs require an authenticated flow; don't rely on RLS alone here.
+      .eq("visibility", "public")
       .maybeSingle();
     if (error) throw error;
     if (!needRow) return null;
