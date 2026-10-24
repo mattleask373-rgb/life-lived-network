@@ -1,7 +1,7 @@
 -- Make durable agent dispatch retries safe and truly idempotent.
 -- A correlation ID is a unique idempotency key, not authority to retrieve an
--- unrelated attempt. A retry may return an existing lease only when it matches
--- the original complete scope and that lease is still live.
+-- unrelated attempt. An exact retry returns a metadata-only REPLAYED marker
+-- with no lease token, so the caller cannot treat replay as new work.
 --
 -- The historical dispatch INSERT omits attempt_id; the base table did not
 -- declare a default. Without this default every fresh dispatch fails at insert.
@@ -118,11 +118,14 @@ BEGIN
       RAISE EXCEPTION 'existing dispatch lease is no longer active';
     END IF;
 
+    -- Do not re-emit the original lease token or DISPATCHED state. The
+    -- worker runtime accepts only a fresh DISPATCHED result; a replay marker
+    -- must never authorize a second provider invocation.
     RETURN QUERY SELECT
       attempt_row.attempt_id, attempt_row.task_id, attempt_row.run_id,
       attempt_row.workspace_id, attempt_row.project_id,
-      attempt_row.lease_generation, attempt_row.lease_token,
-      attempt_row.status, attempt_row.correlation_id;
+      attempt_row.lease_generation, NULL::TEXT,
+      'REPLAYED'::TEXT, attempt_row.correlation_id;
     RETURN;
   END IF;
 
