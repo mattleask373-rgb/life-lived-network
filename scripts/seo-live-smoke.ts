@@ -121,6 +121,11 @@ function validateSitemapLocations(
       if (url.origin !== origin || url.protocol !== "https:") {
         failures.push(label + ": URL is outside the canonical HTTPS origin: " + location);
       }
+      // URL.origin intentionally omits URL user-info. Reject it separately,
+      // without echoing the potentially secret-bearing URL into CI logs.
+      if (url.username || url.password) {
+        failures.push(label + ": URL must not contain embedded credentials");
+      }
       if (isPrivatePath(url.pathname)) {
         failures.push(label + ": private route must not be listed: " + url.pathname);
       } else if (isNoindexPath(url.pathname)) {
@@ -178,6 +183,32 @@ function validateUrlset(
       );
     }
   }
+}
+
+/** Validate the configured canonical site origin; do not silently discard paths or credentials. */
+export function validateSeoSmokeOrigin(value?: string): string {
+  const candidate = value?.trim() || DEFAULT_SEO_SMOKE_ORIGIN;
+  let parsed: URL;
+  try {
+    parsed = new URL(candidate);
+  } catch {
+    throw new Error("SEO_SMOKE_ORIGIN must be a valid absolute HTTPS origin.");
+  }
+  if (
+    parsed.protocol !== "https:" ||
+    parsed.username ||
+    parsed.password ||
+    (parsed.pathname !== "/" && parsed.pathname !== "") ||
+    parsed.search ||
+    parsed.hash ||
+    candidate.includes("?") ||
+    candidate.includes("#")
+  ) {
+    throw new Error(
+      "SEO_SMOKE_ORIGIN must be an HTTPS origin without credentials, path, query or fragment.",
+    );
+  }
+  return parsed.origin;
 }
 
 /** Checks the published site, supporting both a legacy URL set and an index. */
@@ -431,12 +462,7 @@ async function fetchDocument(path: string, origin: string): Promise<SmokeDocumen
 }
 
 export async function runSeoSmoke(): Promise<number> {
-  const configuredOrigin = process.env.SEO_SMOKE_ORIGIN?.trim() || DEFAULT_SEO_SMOKE_ORIGIN;
-  const parsedOrigin = new URL(configuredOrigin);
-  if (parsedOrigin.protocol !== "https:" || parsedOrigin.username || parsedOrigin.password) {
-    throw new Error("SEO_SMOKE_ORIGIN must be an HTTPS origin without embedded credentials");
-  }
-  const origin = parsedOrigin.origin;
+  const origin = validateSeoSmokeOrigin(process.env.SEO_SMOKE_ORIGIN);
   const [robots, sitemap, homepage, ...noindexDocs] = await Promise.all([
     fetchDocument("/robots.txt", origin),
     fetchDocument("/sitemap.xml", origin),
