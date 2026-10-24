@@ -10,8 +10,9 @@ import { adapterFor } from "./registry";
 import { normaliseEvent, plainText, safeUrl, usableImages } from "./normalise";
 import { cancellationFor, discoverable, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent, titleKey } from "./dedupe";
-import { dueForRefresh, sourceKeyFor } from "./refresh.server";
-import type { SourceEvent, SourceRow } from "./contract";
+import { dueForRefresh, sourceKeyFor, ticketmasterResponsePage } from "./refresh.server";
+import type { IngestOutcome, SourceEvent, SourceRow } from "./contract";
+import { markIngestStorageFailure, requireIngestStorageSuccess } from "./storage-result";
 
 function payload(event: Record<string, unknown>) {
   return { _embedded: { events: [event] } };
@@ -388,6 +389,142 @@ describe("making outside text safe", () => {
   });
 });
 
+describe("Ticketmaster source response envelope", () => {
+  const links = { _links: { self: { href: "/discovery/v2/events.json" } } };
+  const page = (overrides: Record<string, unknown> = {}) => ({
+    size: 50,
+    totalElements: 0,
+    totalPages: 0,
+    number: 0,
+    ...overrides,
+  });
+  const response = (events?: unknown, pageOverrides: Record<string, unknown> = {}) => ({
+    ...links,
+    page: page(pageOverrides),
+    ...(events === undefined ? {} : { _embedded: { events } }),
+  });
+
+  it("accepts a verified empty result and counts raw provider records", () => {
+    expect(ticketmasterResponsePage(response(), 0, 50)).toEqual({
+      eventCount: 0,
+      hasNextPage: false,
+    });
+    expect(ticketmasterResponsePage(response([]), 0, 50)).toEqual({
+      eventCount: 0,
+      hasNextPage: false,
+    });
+    expect(
+      ticketmasterResponsePage(
+        response([{ id: "a" }, { id: "" }], { totalElements: 2, totalPages: 1 }),
+        0,
+        50,
+      ),
+    ).toEqual({ eventCount: 2, hasNextPage: false });
+  });
+
+  it("rejects a missing envelope instead of interpreting an empty array as verified zero", () => {
+    expect(() => ticketmasterResponsePage({ _embedded: { events: [] } }, 0, 50)).toThrow(
+      "The source returned an invalid response envelope.",
+    );
+    expect(() => ticketmasterResponsePage({ unexpected: true }, 0, 50)).toThrow(
+      "The source returned an invalid response envelope.",
+    );
+    expect(() =>
+      ticketmasterResponsePage(
+        { ...links, page: page({ totalElements: 1, totalPages: 1 }) },
+        0,
+        50,
+      ),
+    ).toThrow("The source returned an invalid event collection.");
+  });
+
+  it("rejects malformed provider bodies, pagination metadata and event collections", () => {
+    expect(() => ticketmasterResponsePage(null, 0, 50)).toThrow(
+      "The source returned an invalid response.",
+    );
+    expect(() => ticketmasterResponsePage({ fault: { faultstring: "secret" } }, 0, 50)).toThrow(
+      "The source returned a provider fault.",
+    );
+    expect(() => ticketmasterResponsePage(response(null), 0, 50)).toThrow(
+      "The source returned an invalid event collection.",
+    );
+    expect(() =>
+      ticketmasterResponsePage(
+        response("not-an-array", { totalElements: 1, totalPages: 1 }),
+        0,
+        50,
+      ),
+    ).toThrow("The source returned an invalid event collection.");
+    expect(() =>
+      ticketmasterResponsePage(
+        response([{ id: "a" }], { totalElements: 1, totalPages: 1, number: 1 }),
+        0,
+        50,
+      ),
+    ).toThrow("The source returned an invalid response envelope.");
+    expect(() =>
+      ticketmasterResponsePage(response([{ id: "a" }], { totalElements: 1, totalPages: 2 }), 0, 50),
+    ).toThrow("The source returned an invalid event collection.");
+  });
+
+  it("surfaces continuation and rejects a short page when more pages are advertised", () => {
+    const fullPage = Array.from({ length: 50 }, (_, index) => ({ id: String(index) }));
+    expect(
+      ticketmasterResponsePage(response(fullPage, { totalElements: 100, totalPages: 2 }), 0, 50),
+    ).toEqual({ eventCount: 50, hasNextPage: true });
+    expect(() =>
+      ticketmasterResponsePage(
+        response([{ id: "only-one" }], { totalElements: 100, totalPages: 2 }),
+        0,
+        50,
+      ),
+    ).toThrow("The source returned an incomplete event page.");
+  });
+});
+
+describe("ingest storage result guard", () => {
+  it("accepts confirmed nullish database error values", () => {
+    expect(() => requireIngestStorageSuccess(null, "source-record lookup")).not.toThrow();
+    expect(() => requireIngestStorageSuccess(undefined, "source-record lookup")).not.toThrow();
+  });
+
+  it("marks an ingest run as failed so a storage error is not counted as a successful empty refresh", () => {
+    const outcome: IngestOutcome = {
+      source: "Ticketmaster",
+      read: 50,
+      imported: 3,
+      updated: 2,
+      duplicates: 1,
+      skipped: [],
+    };
+
+    markIngestStorageFailure(outcome);
+
+    expect(outcome.failure).toBe("One or more event storage operations could not be confirmed.");
+    expect(outcome.skipped).toEqual([
+      "An event was not stored because persistence could not be confirmed.",
+    ]);
+  });
+
+  it("turns any failed database operation into a safe unconfirmed outcome", () => {
+    let thrown: unknown;
+    try {
+      requireIngestStorageSuccess(
+        { message: "token=super-secret-value; row=private-event" },
+        "source-record lookup",
+      );
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(Error);
+    expect((thrown as Error).message).toBe(
+      "Ingest storage operation could not be confirmed: source-record lookup.",
+    );
+    expect((thrown as Error).message).not.toContain("super-secret-value");
+    expect((thrown as Error).message).not.toContain("private-event");
+  });
+});
+
 describe("how alive an event is", () => {
   const base = {
     startsAt: "2099-01-10T19:00:00Z",
@@ -448,6 +585,19 @@ describe("how alive an event is", () => {
     expect(dueForRefresh(source, new Date("2099-01-08T12:00:00Z"))).toBe(false);
     expect(dueForRefresh(source, new Date("2099-01-10T12:00:00Z"))).toBe(true);
     expect(dueForRefresh({ ...source, last_run_at: null } as SourceRow)).toBe(true);
+  });
+
+  it("treats corrupt or future last-run metadata as due instead of suppressing refresh forever", () => {
+    const now = new Date("2099-01-08T12:00:00Z");
+    const source = {
+      refresh_minutes: 1440,
+      last_run_at: "not-a-date",
+    } as unknown as SourceRow;
+    expect(dueForRefresh(source, now)).toBe(true);
+    expect(
+      dueForRefresh({ ...source, last_run_at: "2099-01-09T12:00:00Z" } as SourceRow, now),
+    ).toBe(true);
+    expect(dueForRefresh({ ...source, refresh_minutes: Number.NaN } as SourceRow, now)).toBe(true);
   });
 });
 

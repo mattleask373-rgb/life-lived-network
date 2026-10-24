@@ -21,6 +21,7 @@ import { cancellationFor, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent } from "./dedupe";
 import { TICKETMASTER_KEY, TICKETMASTER_ROOT, ticketmasterQuery } from "./ticketmaster";
 import { FIXTURE_SOURCE_KEY, fixturePayload } from "./fixture-source";
+import { markIngestStorageFailure, requireIngestStorageSuccess } from "./storage-result";
 
 const MAX_PAGES = 2;
 const MAX_EVENTS = 120;
@@ -64,8 +65,122 @@ export function sourceKeyFor(name: string): string {
 /** Is this source allowed to run right now? Interval is the source's own. */
 export function dueForRefresh(source: SourceRow, now = new Date()): boolean {
   if (!source.last_run_at) return true;
-  const since = now.getTime() - new Date(source.last_run_at).getTime();
+
+  const lastRunAt = Date.parse(source.last_run_at);
+  if (!Number.isFinite(lastRunAt) || lastRunAt > now.getTime()) return true;
+
+  if (!Number.isFinite(source.refresh_minutes) || source.refresh_minutes < 0) return true;
+
+  const since = now.getTime() - lastRunAt;
   return since >= Math.max(source.refresh_minutes, 15) * 60000;
+}
+
+/**
+ * Validate transport-level Ticketmaster response shape before interpreting an
+ * absent event list as a valid empty search result. The adapter parser remains
+ * deliberately non-throwing for fixture and test use; the server fetch boundary
+ * must distinguish malformed/provider-fault responses from a successful zero.
+ */
+export function ticketmasterResponsePage(
+  payload: unknown,
+  expectedPage: number,
+  requestedPageSize: number,
+): { eventCount: number; hasNextPage: boolean } {
+  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
+    throw new Error("The source returned an invalid response.");
+  }
+  if (
+    !Number.isSafeInteger(expectedPage) ||
+    expectedPage < 0 ||
+    !Number.isSafeInteger(requestedPageSize) ||
+    requestedPageSize < 1
+  ) {
+    throw new Error("The source returned an invalid response envelope.");
+  }
+
+  const record = payload as Record<string, unknown>;
+  if (Object.prototype.hasOwnProperty.call(record, "fault")) {
+    throw new Error("The source returned a provider fault.");
+  }
+
+  const embedded = record["_embedded"];
+  const hasEmbeddedProperty = Object.prototype.hasOwnProperty.call(record, "_embedded");
+  const page = record["page"];
+  const links = record["_links"];
+  const hasEmbedded = typeof embedded === "object" && embedded !== null && !Array.isArray(embedded);
+  const pageRecord =
+    typeof page === "object" && page !== null && !Array.isArray(page)
+      ? (page as Record<string, unknown>)
+      : null;
+  const linksRecord =
+    typeof links === "object" && links !== null && !Array.isArray(links)
+      ? (links as Record<string, unknown>)
+      : null;
+  const validPageMetadata =
+    pageRecord !== null &&
+    ["size", "totalElements", "totalPages", "number"].every((key) => {
+      const value = pageRecord[key];
+      return Number.isSafeInteger(value) && (value as number) >= 0;
+    });
+  const selfLink = linksRecord?.["self"];
+  const validSelfLink =
+    typeof selfLink === "object" &&
+    selfLink !== null &&
+    !Array.isArray(selfLink) &&
+    typeof (selfLink as Record<string, unknown>)["href"] === "string" &&
+    ((selfLink as Record<string, unknown>)["href"] as string).length > 0;
+
+  // An event array alone is not enough evidence that a provider read is complete.
+  // Require the pagination envelope for both non-empty and empty responses.
+  if (pageRecord === null || !validPageMetadata || !validSelfLink) {
+    throw new Error("The source returned an invalid response envelope.");
+  }
+  const pageSize = pageRecord["size"] as number;
+  const totalElements = pageRecord["totalElements"] as number;
+  const totalPages = pageRecord["totalPages"] as number;
+  const pageNumber = pageRecord["number"] as number;
+
+  if (pageNumber !== expectedPage || pageSize > requestedPageSize) {
+    throw new Error("The source returned an invalid response envelope.");
+  }
+  if (hasEmbeddedProperty && !hasEmbedded) {
+    throw new Error("The source returned an invalid event collection.");
+  }
+
+  const events = hasEmbedded ? (embedded as Record<string, unknown>)["events"] : undefined;
+  if (hasEmbedded && !Array.isArray(events)) {
+    throw new Error("The source returned an invalid event collection.");
+  }
+  const eventCount = Array.isArray(events) ? events.length : 0;
+
+  if (totalElements === 0) {
+    if (totalPages !== 0 || pageNumber !== 0 || eventCount !== 0) {
+      throw new Error("The source returned an invalid event collection.");
+    }
+    return { eventCount: 0, hasNextPage: false };
+  }
+
+  if (
+    pageSize === 0 ||
+    totalPages === 0 ||
+    pageNumber >= totalPages ||
+    !hasEmbedded ||
+    !Array.isArray(events) ||
+    eventCount === 0 ||
+    eventCount > requestedPageSize ||
+    eventCount > pageSize ||
+    Math.ceil(totalElements / pageSize) !== totalPages
+  ) {
+    throw new Error("The source returned an invalid event collection.");
+  }
+
+  const hasNextPage = pageNumber + 1 < totalPages;
+  // A short page before the advertised final page means records may be missing.
+  if (hasNextPage && eventCount < pageSize) {
+    throw new Error("The source returned an incomplete event page.");
+  }
+
+  return { eventCount, hasNextPage };
 }
 
 /** The map still wants a rough position; real coordinates stay approximate. */
@@ -84,7 +199,7 @@ export async function refreshSourceRun(request: RefreshRequest): Promise<IngestO
     .select("*")
     .eq("id", request.sourceId)
     .maybeSingle();
-  if (sourceError) throw sourceError;
+  requireIngestStorageSuccess(sourceError, "source configuration lookup");
   if (!sourceRow) throw new Error("That source does not exist.");
   const source = sourceRow as unknown as SourceRow;
 
@@ -131,7 +246,11 @@ export async function refreshSourceRun(request: RefreshRequest): Promise<IngestO
       if (result === "updated") outcome.updated += 1;
       if (result === "duplicate") outcome.duplicates += 1;
     } catch {
-      outcome.skipped.push(`Could not store ${event.title}`);
+      // Do not turn a failed write into a successful empty/partial refresh.
+      // Stop at the first uncertain persistence result; retry through the normal
+      // source refresh interval after the underlying storage problem is fixed.
+      markIngestStorageFailure(outcome);
+      break;
     }
   }
 
@@ -140,7 +259,7 @@ export async function refreshSourceRun(request: RefreshRequest): Promise<IngestO
   async function finish(row: SourceRow, result: IngestOutcome): Promise<IngestOutcome> {
     const failed = Boolean(result.failure);
     const now = new Date().toISOString();
-    await supabaseAdmin
+    const { error: statusUpdateError } = await supabaseAdmin
       .from("sources")
       .update({
         last_run_at: now,
@@ -153,6 +272,7 @@ export async function refreshSourceRun(request: RefreshRequest): Promise<IngestO
           : { last_success_at: now, last_error_category: "" }),
       })
       .eq("id", row.id);
+    requireIngestStorageSuccess(statusUpdateError, "source health update");
     return result;
   }
 }
@@ -210,11 +330,16 @@ async function readFromSource(
     if (!response.ok) throw new Error(`The source answered with ${response.status}.`);
 
     const payload: unknown = await response.json().catch(() => null);
+    const pageResult = ticketmasterResponsePage(payload, page, 50);
     const parsed = parse(payload);
     outcome.read += parsed.events.length;
     outcome.skipped.push(...parsed.skipped.slice(0, 10));
     collected.push(...parsed.events);
-    if (parsed.events.length < 50) break;
+    if (!pageResult.hasNextPage) break;
+    if (page === MAX_PAGES - 1) {
+      // Never report a capped multi-page read as a complete source refresh.
+      throw new Error("The source result exceeds the configured page limit.");
+    }
   }
   return collected;
 }
@@ -230,12 +355,13 @@ async function storeEvent(
   const now = new Date().toISOString();
   const hash = payloadHash(event);
 
-  const { data: existingRecord } = await admin
+  const { data: existingRecord, error: existingRecordError } = await admin
     .from("source_records")
     .select("id, listing_id, payload_hash")
     .eq("source_id", source.id)
     .eq("external_id", event.externalId)
     .maybeSingle();
+  requireIngestStorageSuccess(existingRecordError, "source-record lookup");
 
   const freshness = eventFreshness({
     lastCheckedAt: now,
@@ -285,18 +411,24 @@ async function storeEvent(
   // Already known to this source: update in place, keep its provenance.
   if (existingRecord?.listing_id) {
     if (existingRecord.payload_hash === hash) {
-      await admin
+      const { error: sourceSeenError } = await admin
         .from("source_records")
         .update({ last_seen_at: now, source_state: event.state })
         .eq("id", existingRecord.id);
-      await admin
+      requireIngestStorageSuccess(sourceSeenError, "source-record freshness update");
+      const { error: listingFreshnessError } = await admin
         .from("listings")
         .update({ last_checked_at: now, data_quality: listing.data_quality })
         .eq("id", existingRecord.listing_id);
+      requireIngestStorageSuccess(listingFreshnessError, "listing freshness update");
       return "duplicate";
     }
-    await admin.from("listings").update(listing).eq("id", existingRecord.listing_id);
-    await admin
+    const { error: listingUpdateError } = await admin
+      .from("listings")
+      .update(listing)
+      .eq("id", existingRecord.listing_id);
+    requireIngestStorageSuccess(listingUpdateError, "existing listing update");
+    const { error: sourceRecordUpdateError } = await admin
       .from("source_records")
       .update({
         last_seen_at: now,
@@ -306,12 +438,13 @@ async function storeEvent(
         source_updated_at: event.sourceUpdatedAt ?? null,
       })
       .eq("id", existingRecord.id);
+    requireIngestStorageSuccess(sourceRecordUpdateError, "source-record update");
     return "updated";
   }
 
   // A different source may already hold this event. Only merge on the stored
   // evidence rule; anything short of that stays two separate records.
-  const { data: nearby } = await admin
+  const { data: nearby, error: nearbyLookupError } = await admin
     .from("listings")
     .select("id, title, starts_at, place, place_id, origin")
     .eq("place_id", request.placeId)
@@ -319,6 +452,7 @@ async function storeEvent(
     .gte("starts_at", new Date(new Date(event.startsAt).getTime() - 7200000).toISOString())
     .lte("starts_at", new Date(new Date(event.startsAt).getTime() + 7200000).toISOString())
     .limit(50);
+  requireIngestStorageSuccess(nearbyLookupError, "cross-source deduplication lookup");
 
   for (const candidate of nearby ?? []) {
     if (!candidate.starts_at) continue;
@@ -333,7 +467,7 @@ async function storeEvent(
       },
     );
     if (decision.same) {
-      await admin.from("source_records").insert({
+      const { error: provenanceInsertError } = await admin.from("source_records").insert({
         source_id: source.id,
         external_id: event.externalId,
         source_url: event.sourceUrl,
@@ -342,6 +476,7 @@ async function storeEvent(
         source_state: event.state,
         last_seen_at: now,
       });
+      requireIngestStorageSuccess(provenanceInsertError, "cross-source provenance insert");
       return "duplicate";
     }
   }
@@ -353,7 +488,7 @@ async function storeEvent(
     .single();
   if (error) throw error;
 
-  await admin.from("source_records").insert({
+  const { error: sourceRecordInsertError } = await admin.from("source_records").insert({
     source_id: source.id,
     external_id: event.externalId,
     source_url: event.sourceUrl,
@@ -362,6 +497,14 @@ async function storeEvent(
     source_state: event.state,
     last_seen_at: now,
   });
+  if (sourceRecordInsertError) {
+    // Do not leave a newly public source-derived listing without its provenance
+    // row when the write fails. This compensating delete is best-effort; a DB
+    // transaction/RPC would be stronger and remains an explicit follow-up.
+    const { error: rollbackError } = await admin.from("listings").delete().eq("id", created.id);
+    requireIngestStorageSuccess(rollbackError, "listing rollback after provenance failure");
+    requireIngestStorageSuccess(sourceRecordInsertError, "new source provenance insert");
+  }
 
   const images = usableImages(event.images, source.store_images);
   if (images.length) {
