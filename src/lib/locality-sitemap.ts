@@ -19,8 +19,8 @@ export interface PublicListingSitemapRow {
   id: string;
   place_id: string | null;
   demonstration: boolean | null;
-  /** False when canonical public-discovery policy excludes this raw row. */
-  publiclyEligible?: boolean;
+  /** Must be explicitly true for a raw row to count as public sitemap evidence. */
+  publiclyEligible: boolean;
 }
 
 export interface LocalitySitemapBuildOptions {
@@ -93,7 +93,7 @@ export function indexableLocalityPaths(
     if ((placeCount.get(place.id) ?? 1) > LOCALITY_FILTER_CAP) continue;
     const firstPage = rowsByPlace.get(place.id) ?? [];
     const realCount = firstPage.filter(
-      (row) => row.publiclyEligible !== false && row.demonstration !== true,
+      (row) => row.publiclyEligible === true && row.demonstration !== true,
     ).length;
     if (realCount < 3) continue;
 
@@ -117,10 +117,25 @@ export class SitemapSourceLimitError extends Error {
  * cap is not returned as if it were complete; callers must fail closed rather
  * than publish a sitemap based on a truncated hierarchy.
  */
+/**
+ * Page payloads intentionally exclude count values. Count the complete source
+ * before and after the scan, then verify every requested range and row ID.
+ */
+export interface BoundedSitemapPage<T> {
+  rows: readonly T[];
+}
+
+/**
+ * Read a bounded source in deterministic pages. Counts are authoritative
+ * completeness evidence; short pages, changed counts, duplicate/missing IDs,
+ * and cap hits fail closed instead of publishing a plausible partial sitemap.
+ */
 export async function readBoundedSitemapPages<T>(
   sourceLimit: number,
   pageSize: number,
-  readPage: (from: number, to: number) => Promise<readonly T[]>,
+  readCount: () => Promise<number | null>,
+  readPage: (from: number, to: number) => Promise<BoundedSitemapPage<T>>,
+  getId: (row: T) => string,
 ): Promise<T[]> {
   if (
     !Number.isSafeInteger(sourceLimit) ||
@@ -131,16 +146,47 @@ export async function readBoundedSitemapPages<T>(
     throw new RangeError("Sitemap page limits must be positive safe integers");
   }
 
-  const rows: T[] = [];
-  for (let from = 0; from < sourceLimit; from += pageSize) {
-    const to = Math.min(from + pageSize - 1, sourceLimit - 1);
-    const page = await readPage(from, to);
-    rows.push(...page);
-
-    if (rows.length >= sourceLimit) {
-      throw new SitemapSourceLimitError();
-    }
-    if (page.length < to - from + 1) break;
+  const initialCount = await readCount();
+  if (
+    initialCount === null ||
+    !Number.isSafeInteger(initialCount) ||
+    initialCount < 0
+  ) {
+    throw new SitemapSourceLimitError("Sitemap source exact count is missing or invalid");
   }
+  if (initialCount >= sourceLimit) {
+    throw new SitemapSourceLimitError("Sitemap source reached or exceeded its configured cap");
+  }
+
+  const rows: T[] = [];
+  const seenIds = new Set<string>();
+  for (let from = 0; from < initialCount; from += pageSize) {
+    const to = Math.min(from + pageSize - 1, initialCount - 1);
+    const page = await readPage(from, to);
+    const expectedLength = to - from + 1;
+    if (!page || !Array.isArray(page.rows) || page.rows.length !== expectedLength) {
+      throw new SitemapSourceLimitError("Sitemap source returned a short or invalid page");
+    }
+
+    for (const row of page.rows) {
+      const id = getId(row);
+      if (typeof id !== "string" || !id.trim() || seenIds.has(id)) {
+        throw new SitemapSourceLimitError("Sitemap source contains a missing or duplicate row ID");
+      }
+      seenIds.add(id);
+    }
+    rows.push(...page.rows);
+  }
+
+  const finalCount = await readCount();
+  if (
+    finalCount === null ||
+    !Number.isSafeInteger(finalCount) ||
+    finalCount !== initialCount ||
+    rows.length !== initialCount
+  ) {
+    throw new SitemapSourceLimitError("Sitemap source count changed or did not match the scanned rows");
+  }
+
   return rows;
 }
