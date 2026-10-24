@@ -424,5 +424,3 @@ export function placeLabel(resolved: ResolvedPlace | null | undefined): string {
   if (!resolved) return PLACE_FALLBACK.name;
   return resolved.parent ? `${resolved.place.name}, ${resolved.parent.name}` : resolved.place.name;
 }
-
-
