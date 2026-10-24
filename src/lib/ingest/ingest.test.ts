@@ -416,9 +416,7 @@ describe("Ticketmaster source response envelope", () => {
     expect(() => ticketmasterResponseEventCount({ _embedded: null, page: {} })).toThrow(
       "The source returned an invalid event collection.",
     );
-    expect(() =>
-      ticketmasterResponseEventCount({ _embedded: { events: "not-an-array" } }),
-    ).toThrow(
+    expect(() => ticketmasterResponseEventCount({ _embedded: { events: "not-an-array" } })).toThrow(
       "The source returned an invalid event collection.",
     );
   });
