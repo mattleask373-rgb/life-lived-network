@@ -127,13 +127,11 @@ function buildShape(
   const allPricesKnown = steps.every((step) => step.entry.priceKnown !== false);
   const spendComplete = allPricesKnown && spendCurrency !== null;
   const spend = steps.reduce(
-    (total, step) =>
-      total + (step.entry.priceKnown === false ? 0 : Math.max(0, step.entry.cost)),
+    (total, step) => total + (step.entry.priceKnown === false ? 0 : Math.max(0, step.entry.cost)),
     0,
   );
   const earn = steps.reduce(
-    (total, step) =>
-      total + (step.entry.priceKnown === false ? 0 : Math.max(0, -step.entry.cost)),
+    (total, step) => total + (step.entry.priceKnown === false ? 0 : Math.max(0, -step.entry.cost)),
     0,
   );
   const uncertain = steps.filter((s) => !s.entry.verified).map((s) => s.entry.title);
@@ -154,7 +152,8 @@ function reason(entry: WorldEntry, brief: JourneyBrief): string {
   if (entry.priceKnown === false) {
     return "Price not provided; confirm the cost before deciding if it fits your budget.";
   }
-  if (entry.cost < 0) return `${money(entry.cost, entry.currency, "en", entry.priceKnown !== false)} the same day.`;
+  if (entry.cost < 0)
+    return `${money(entry.cost, entry.currency, "en", entry.priceKnown !== false)} the same day.`;
   if (brief.interests.includes(entry.layer) && entry.give)
     return `You said this interests you — and there's something to give here.`;
   if (brief.interests.includes(entry.layer)) return "You said this interests you.";
