@@ -116,15 +116,19 @@ BEGIN
     END IF;
 
     INSERT INTO private.locality_memberships (
-      user_id, place_id, status, verified_by, verified_at, updated_at
+      user_id, place_id, status, verified_by, verified_at, expires_at, updated_at
     )
     VALUES (
-      _user_id, _place_id, 'verified', _actor_id, pg_catalog.clock_timestamp(), pg_catalog.clock_timestamp()
+      _user_id, _place_id, 'verified', _actor_id,
+      pg_catalog.clock_timestamp(),
+      pg_catalog.clock_timestamp() + interval '180 days',
+      pg_catalog.clock_timestamp()
     )
     ON CONFLICT (user_id, place_id) DO UPDATE
     SET status = 'verified',
         verified_by = EXCLUDED.verified_by,
         verified_at = EXCLUDED.verified_at,
+        expires_at = EXCLUDED.expires_at,
         updated_at = EXCLUDED.updated_at
     RETURNING id, status INTO v_membership_id, v_status;
 
