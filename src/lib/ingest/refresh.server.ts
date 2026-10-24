@@ -116,7 +116,6 @@ export function ticketmasterResponseEventCount(payload: unknown): number {
   return embeddedRecord["events"].length;
 }
 
-
 /** The map still wants a rough position; real coordinates stay approximate. */
 function mapPosition(lat: number | null, lng: number | null): { x: number; y: number } {
   if (lat === null || lng === null) return { x: 50, y: 50 };
