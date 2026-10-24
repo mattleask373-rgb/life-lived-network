@@ -222,7 +222,9 @@ export function normaliseEvent(raw: SourceEvent): SourceEvent | null {
       typeof raw.cost === "number" && Number.isFinite(raw.cost) && raw.cost >= 0
         ? raw.cost
         : null,
-    currency: /^[A-Z]{3}$/i.test(raw.currency ?? "") ? raw.currency!.trim().toUpperCase() : "",
+    currency: /^[A-Z]{3}$/i.test((raw.currency ?? "").trim())
+      ? raw.currency!.trim().toUpperCase()
+      : "",
     ...(raw.images ? { images: raw.images } : {}),
     state:
       raw.state === "cancelled" || raw.state === "postponed" || raw.state === "removed"
