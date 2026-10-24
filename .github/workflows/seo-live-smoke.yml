@@ -26,6 +26,11 @@ jobs:
           bun-version: latest
       - name: Probe published origin
         env:
-          # Optional repository variable set by the owner after canonical-host confirmation.
+          # Required repository variable; owner must confirm the canonical host first.
           SEO_SMOKE_ORIGIN: ${{ vars.SEO_SMOKE_ORIGIN }}
-        run: bun scripts/seo-live-smoke.ts
+        run: |
+          if [ -z "${SEO_SMOKE_ORIGIN:-}" ]; then
+            echo "::error::Set repository variable SEO_SMOKE_ORIGIN to the owner-confirmed canonical HTTPS origin before running the live SEO smoke."
+            exit 1
+          fi
+          bun scripts/seo-live-smoke.ts
