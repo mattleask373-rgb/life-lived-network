@@ -11,8 +11,8 @@ import { normaliseEvent, plainText, safeUrl, usableImages } from "./normalise";
 import { cancellationFor, discoverable, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent, titleKey } from "./dedupe";
 import { dueForRefresh, sourceKeyFor, ticketmasterResponseEventCount } from "./refresh.server";
-import type { SourceEvent, SourceRow } from "./contract";
-import { requireIngestStorageSuccess } from "./storage-result";
+import type { IngestOutcome, SourceEvent, SourceRow } from "./contract";
+import { markIngestStorageFailure, requireIngestStorageSuccess } from "./storage-result";
 
 function payload(event: Record<string, unknown>) {
   return { _embedded: { events: [event] } };
@@ -432,6 +432,26 @@ describe("ingest storage result guard", () => {
   it("accepts confirmed nullish database error values", () => {
     expect(() => requireIngestStorageSuccess(null, "source-record lookup")).not.toThrow();
     expect(() => requireIngestStorageSuccess(undefined, "source-record lookup")).not.toThrow();
+  });
+
+  it("marks an ingest run as failed so a storage error is not counted as a successful empty refresh", () => {
+    const outcome: IngestOutcome = {
+      source: "Ticketmaster",
+      read: 50,
+      imported: 3,
+      updated: 2,
+      duplicates: 1,
+      skipped: [],
+    };
+
+    markIngestStorageFailure(outcome);
+
+    expect(outcome.failure).toBe(
+      "One or more event storage operations could not be confirmed.",
+    );
+    expect(outcome.skipped).toEqual([
+      "An event was not stored because persistence could not be confirmed.",
+    ]);
   });
 
   it("turns any failed database operation into a safe unconfirmed outcome", () => {
