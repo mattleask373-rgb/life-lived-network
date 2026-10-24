@@ -4,10 +4,7 @@ import { distanceKm } from "./geo-distance";
 
 describe("pure geographic distance", () => {
   it("computes straight-line distance across the international date line", () => {
-    const distance = distanceKm(
-      { lat: 0, lng: 179.5 },
-      { lat: 0, lng: -179.5 },
-    );
+    const distance = distanceKm({ lat: 0, lng: 179.5 }, { lat: 0, lng: -179.5 });
 
     expect(distance).toBe(111.2);
   });
