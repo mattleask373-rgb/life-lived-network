@@ -8,6 +8,7 @@
  * query's country and configured source coverage. Anything else stays
  * unresolved and must not become a public listing.
  */
+
 export interface CanonicalLocality {
   id: string;
   parent_id: string | null;
@@ -21,7 +22,7 @@ export interface SourceLocalityEvidence {
   localitySlug?: string;
   /** The locality/city label declared by the source, not the venue name. */
   neighbourhood?: string;
-  /** Optional two-letter country code from the provider's venue record. */
+  /** Optional two-letter country code declared by the provider's venue record. */
   countryCode?: string;
 }
 
@@ -56,6 +57,18 @@ export interface ResolveSourceLocalityInput {
   sourcePlaceIds?: readonly string[];
 }
 
+export type SourceLocalityResolverInput = Omit<ResolveSourceLocalityInput, "places">;
+export type SourceLocalityResolver = (
+  input: SourceLocalityResolverInput,
+) => SourceLocalityResolution;
+
+interface LocalityLookup {
+  places: readonly CanonicalLocality[];
+  byId: ReadonlyMap<string, CanonicalLocality>;
+  bySlug: ReadonlyMap<string, CanonicalLocality>;
+  byName: ReadonlyMap<string, readonly CanonicalLocality[]>;
+}
+
 /** Unicode-aware name folding; punctuation and diacritics do not create false mismatches. */
 export function normaliseLocalityLabel(value: string): string {
   return value
@@ -65,6 +78,28 @@ export function normaliseLocalityLabel(value: string): string {
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim()
     .replace(/\s+/g, " ");
+}
+
+function buildLookup(places: readonly CanonicalLocality[]): LocalityLookup {
+  const byId = new Map<string, CanonicalLocality>();
+  const bySlug = new Map<string, CanonicalLocality>();
+  const mutableByName = new Map<string, CanonicalLocality[]>();
+
+  for (const place of places) {
+    byId.set(place.id, place);
+    bySlug.set(place.slug.toLowerCase(), place);
+    const key = normaliseLocalityLabel(place.name);
+    const sameName = mutableByName.get(key) ?? [];
+    sameName.push(place);
+    mutableByName.set(key, sameName);
+  }
+
+  return {
+    places,
+    byId,
+    bySlug,
+    byName: mutableByName,
+  };
 }
 
 function isWithinPlace(
@@ -122,8 +157,9 @@ function resolved(
   };
 }
 
-export function resolveSourceLocality(
-  input: ResolveSourceLocalityInput,
+function resolveWithLookup(
+  input: SourceLocalityResolverInput,
+  lookup: LocalityLookup,
 ): SourceLocalityResolution {
   const queryCountryCode = input.queryCountryCode.trim().toUpperCase();
   if (!/^[A-Z]{2}$/.test(queryCountryCode)) {
@@ -139,25 +175,19 @@ export function resolveSourceLocality(
     return { status: "unresolved", reason: "COUNTRY_MISMATCH" };
   }
 
-  const byId = new Map<string, CanonicalLocality>(
-    input.places.map((place) => [place.id, place] as const),
-  );
-  const bySlug = new Map<string, CanonicalLocality>(
-    input.places.map((place) => [place.slug.toLowerCase(), place] as const),
-  );
-  if (input.sourcePlaceIds?.some((id) => !byId.has(id))) {
+  if (input.sourcePlaceIds?.some((id) => !lookup.byId.has(id))) {
     return { status: "unresolved", reason: "INVALID_SOURCE_SCOPE" };
   }
   const sourcePlaceIds = input.sourcePlaceIds ?? [];
   const suppliedSlug = input.evidence.localitySlug?.trim().toLowerCase() ?? "";
 
   if (suppliedSlug) {
-    const place = bySlug.get(suppliedSlug);
+    const place = lookup.bySlug.get(suppliedSlug);
     if (!place) return { status: "unresolved", reason: "NO_CANONICAL_MATCH" };
     if (place.country_code.trim().toUpperCase() !== queryCountryCode) {
       return { status: "unresolved", reason: "COUNTRY_MISMATCH" };
     }
-    if (!belongsToSourceScope(place, sourcePlaceIds, byId)) {
+    if (!belongsToSourceScope(place, sourcePlaceIds, lookup.byId)) {
       return { status: "unresolved", reason: "OUTSIDE_SOURCE_SCOPE" };
     }
     return resolved(place, "canonical_slug");
@@ -168,7 +198,7 @@ export function resolveSourceLocality(
   const key = normaliseLocalityLabel(label);
   if (!key) return { status: "unresolved", reason: "MISSING_LOCALITY" };
 
-  const sameName = input.places.filter((place) => normaliseLocalityLabel(place.name) === key);
+  const sameName = lookup.byName.get(key) ?? [];
   const sameCountry = sameName.filter(
     (place) => place.country_code.trim().toUpperCase() === queryCountryCode,
   );
@@ -180,11 +210,27 @@ export function resolveSourceLocality(
   }
   if (sameCountry.length === 1) {
     const place = sameCountry[0]!;
-    if (!belongsToSourceScope(place, sourcePlaceIds, byId)) {
+    if (!belongsToSourceScope(place, sourcePlaceIds, lookup.byId)) {
       return { status: "unresolved", reason: "OUTSIDE_SOURCE_SCOPE" };
     }
     return resolved(place, "exact_name_country");
   }
   if (sameName.length > 0) return { status: "unresolved", reason: "COUNTRY_MISMATCH" };
   return { status: "unresolved", reason: "NO_CANONICAL_MATCH" };
+}
+
+/** Build the locality/name maps once when resolving a batch of source events. */
+export function createSourceLocalityResolver(
+  places: readonly CanonicalLocality[],
+): SourceLocalityResolver {
+  const lookup = buildLookup(places);
+  return (input) => resolveWithLookup(input, lookup);
+}
+
+/** One-shot convenience for tests and callers handling a single source event. */
+export function resolveSourceLocality(
+  input: ResolveSourceLocalityInput,
+): SourceLocalityResolution {
+  const { places, ...resolverInput } = input;
+  return createSourceLocalityResolver(places)(resolverInput);
 }
