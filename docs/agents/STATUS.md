@@ -1,10 +1,46 @@
-# Agent System Status — live snapshot (24 October 2026)
+# Agent System Status — latest evidence snapshot (24 October 2026, 17:25 UTC)
 
 **Repository:** `mattleask373-rgb/life-lived-network`  
-**Default branch:** `main`  
-**Exact main SHA at this refresh:** `34245a75d8a53bd1a47fa74deddc3bdf14ee8a6d`  
-**Open PR inventory at refresh:** 84 open pull requests, including #379–#381. The backlog still includes old drafts and stacked branches.  
-**Release decision:** **BLOCKED** — do not merge or deploy while the main protection ruleset is reported disabled and independent reviews are absent.
+**Default branch SHA:** `c48599ee574c275737df31b4db73ea50dec23ebb`  
+**Latest open-PR inventory:** 86 open PRs in the current GitHub search result; several are stacked or stale. Refresh live ancestry before selecting or integrating another branch.  
+**Release decision:** **BLOCKED / NO-GO** — the latest recorded raw ruleset snapshot reports disabled enforcement; live-host SEO parity is not freshly verified; no persistent 24/7 worker has been proven.
+
+> **Snapshot precedence:** The section below is the current status. The remainder of this file preserves earlier audit records and may cite superseded heads, counts and checks. If a historical section conflicts with this timestamped snapshot, refresh live evidence and use the newer state.
+
+## Latest verified state — 24 October 2026
+
+### Source, test and PR state
+- Current `main`: `c48599ee574c275737df31b4db73ea50dec23ebb`.
+- Latest recorded successful exact-main Verify: [#40109624837](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40109624837). Later attempt [#40112794360](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40112794360) was cancelled; cancellation is not a failure and not a new pass. Main CodeQL / TypeScript / locked dependency audit passed in [#40107475244](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40107475244); Supabase Preview was **SKIPPED**, not passed.
+
+**Current isolated drafts (source code / docs only; none merged or deployed):**
+- [#384 — Bounded worker supervisor](https://github.com/mattleask373-rgb/life-lived-network/pull/384). Head `b86cffeb51dbe32f1162bca672ef29e586be2833`, based on current main; 19 commits ahead / 0 behind in the current comparison. Verify [#40115015701](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40115015701) and CodeQL [#40115015710](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40115015710) passed; 814 tests passed / 3 skipped. This is a dependency-injected supervisor and runtime cancellation core—not a connected worker.
+- [#386 — Ticketmaster adapter regression tests](https://github.com/mattleask373-rgb/life-lived-network/pull/386). Head `2772d70c72eb6536e519931a7977ebe797f0f5fb`, based on current main. Verify [#40115522942](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40115522942) and CodeQL [#40115522927](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40115522927) passed; 811 tests passed / 3 skipped. Tests cover the existing offline adapter/fixture behavior. No API calls, credentials, inventory activation or provider-rights approval.
+- [#387 — Fail closed on ingest storage/deduplication errors](https://github.com/mattleask373-rgb/life-lived-network/pull/387). Head `4446a9ef009207ff479b0be7bba042055912031a`, based on current main. Verify [#40115887137](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40115887137) and CodeQL [#40115887124](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40115887124) passed; 803 tests passed / 3 skipped. The code checks previously ignored lookup/write errors and attempts best-effort removal if a brand-new listing cannot receive its source-provenance row. That compensation is **not transactional**; atomic listing/provenance persistence still needs a separately reviewed RPC/migration and disposable-database proof.
+- [#385 — Current status document reconciliation](https://github.com/mattleask373-rgb/life-lived-network/pull/385) remains draft. This new snapshot update itself requires refreshed exact-head CI and review.
+
+**24/7 operation is not complete.** PR #384 still lacks a server-only adapter to the canonical durable control plane, verified server workload identity and workspace/project membership, a persistent scheduler, durable heartbeat/kill-switch wiring, provider quota/spend/cancellation enforcement, alerting, restart/recovery proof, and a measured non-production soak. Daily automation/reporting is not proof of a persistent executor.
+
+### Governance and environment
+- Last recorded raw ruleset [#24946178](https://github.com/mattleask373-rgb/life-lived-network/rules/24946178) reported `enforcement: disabled` at `2026-10-24T16:38:02.004+01:00`. Its stored definitions include a required review and `verify`, but they do not enforce themselves while disabled. No explicit deletion-protection rule appeared in the payload; effective deletion protection remains **NOT PROVEN**. A repository administrator must restore/confirm the effective ruleset. Agents must not change it or bypass human review.
+- Issue [#375 — owner environment and pilot gate](https://github.com/mattleask373-rgb/life-lived-network/issues/375) has its owner checkboxes marked complete, but exact Lovable destination, deployed build SHA, production Supabase link, disposable DB identity, and rollback path have not been independently reproduced from authoritative dashboards in this technical pass.
+- Keep divergent reconciliation [#383](https://github.com/mattleask373-rgb/life-lived-network/pull/383) draft and unmerged. Do not use a Lovable write/sync to bypass reviewed GitHub changes.
+
+### Published host, SEO, source rights and pricing
+- Latest available same-day GET-only SEO smoke remains historical run [#40088907466](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40088907466), around 11:11 UTC on 24 October. It reported 19 failures on `https://life-lived-network.lovable.app`, including `/sitemap.xml` 404, missing canonical metadata, missing `/life-list` noindex, and incomplete robots/sitemap directives. Later direct checks were **NOT RUN** when external retrieval was unavailable. This is not fresh proof of live behavior.
+- Ticketmaster remains disabled pending owner-approved terms, credentials, attribution, refresh/cache policy and removal handling. Passing adapter tests do not grant a right to store/display provider content.
+- New issue [#388 — unknown prices must not appear as free/GBP](https://github.com/mattleask373-rgb/life-lived-network/issues/388) records a concrete contract gap: the importer maps unknown `cost` to zero and missing currency to GBP, but the existing non-null numeric listing model cannot represent unknown prices. This needs a product/data-contract decision and separate schema review; do not silently drop international events or assume GBP.
+- No hosted DB, schema, RLS/grants, credential, production content, Lovable setting, deployment or provider activation was changed in these implementation passes.
+
+### Dependency-ordered next actions
+1. **Administrator gate:** restore/confirm ruleset enforcement and effective deletion protection; verify raw settings after the change.
+2. **Owner/security gate:** confirm exact disposable/development Supabase reference and approved workload identity through authoritative settings; do not share keys.
+3. **Independent review:** review drafts #384, #386 and #387; keep them unmerged until required checks and human review are satisfied.
+4. **Runtime continuation:** adapter + durable liveness/kill switch + quotas/cancellation + transactional run closure, only against the confirmed non-production target; then fault-inject and run a measured soak.
+5. **Ingest continuation:** design a transaction-safe listing/provenance RPC in a separate draft PR; resolve issue #388's unknown-price contract; verify source licensing/removal semantics before enabling feeds.
+6. **Release validation:** after an owner-authorized build on the confirmed host, rerun direct GET-only robots/sitemap/private-route/canonical checks, then perform the mobile/accessibility/manual map gates and a consent-based local pilot.
+
+---
 
 ## Current blocking governance finding
 
