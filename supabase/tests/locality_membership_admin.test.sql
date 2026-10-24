@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(20);
+SELECT plan(21);
 
 -- Synthetic admin and subject accounts only; the transaction rolls back.
 INSERT INTO auth.users (
@@ -113,6 +113,13 @@ SELECT is(
      AND place_id = '10000000-0000-4000-8000-000000000001'),
   'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid,
   'membership records the authenticated administrator as verifier'
+);
+SELECT ok(
+  (SELECT expires_at > now() + interval '179 days'
+   FROM private.locality_memberships
+   WHERE user_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+     AND place_id = '10000000-0000-4000-8000-000000000001'),
+  'administrator grant sets a fresh 180-day membership expiry'
 );
 SELECT is(
   (SELECT count(*) FROM private.locality_membership_events
