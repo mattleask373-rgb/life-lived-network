@@ -33,10 +33,13 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      # The exact `verify` status is required by the main ruleset. Keep the
-      # high/critical locked-dependency audit inside this required gate too;
-      # a separate CodeQL workflow can otherwise fail without blocking merge.
+      # The exact `verify` status is required by the main ruleset. Run the
+      # audit first for quick feedback, but do not skip independent tests/build/
+      # disposable migration checks just because an advisory is present. The
+      # final gate below still fails this required check unless the audit passed.
       - name: Audit locked dependencies (high and critical)
+        id: dependency-audit
+        continue-on-error: true
         run: bun audit --audit-level=high
       - run: bun run lint
       - run: bun run test
@@ -117,3 +120,14 @@ jobs:
       - name: Parse k6 script without sending traffic
         if: ${{ hashFiles('tests/load/staging-public-read.js') != '' }}
         run: k6 inspect --execution-requirements tests/load/staging-public-read.js
+
+      - name: Enforce required dependency audit gate
+        if: ${{ always() }}
+        env:
+          AUDIT_OUTCOME: ${{ steps.dependency-audit.outcome }}
+        run: |
+          set -euo pipefail
+          if [[ "$AUDIT_OUTCOME" != "success" ]]; then
+            echo "::error::Locked dependency audit did not pass. Required verify remains blocked even if the other validation steps passed."
+            exit 1
+          fi
