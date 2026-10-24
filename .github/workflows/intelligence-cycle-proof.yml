@@ -1,0 +1,28 @@
+name: Intelligence Cycle Proof
+
+on:
+  push:
+    branches:
+      - chatgpt-7day-intelligence-mission
+  pull_request:
+    paths:
+      - "src/lib/intelligence-cycle-runner.ts"
+      - "src/lib/intelligence-cycle-runner.test.ts"
+      - "package.json"
+      - "package-lock.json"
+
+permissions:
+  contents: read
+
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run src/lib/intelligence-cycle-runner.test.ts
