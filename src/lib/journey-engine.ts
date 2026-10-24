@@ -33,6 +33,9 @@ export interface Journey {
   steps: JourneyStep[];
   /** Sum of explicitly known amounts only; not a claim about missing prices. */
   spend: number;
+  /** Null when the entries' known prices use different or no currencies. */
+  spendCurrency: string | null;
+  /** True only when every step has a known price and one shared currency. */
   spendComplete: boolean;
   earn: number;
   uncertain: string[];
@@ -115,7 +118,14 @@ function buildShape(
     });
   }
 
-  const spendComplete = steps.every((step) => step.entry.priceKnown !== false);
+  const knownCurrencies = new Set(
+    steps
+      .filter((step) => step.entry.priceKnown !== false)
+      .map((step) => (step.entry.currency ?? "GBP").trim().toUpperCase()),
+  );
+  const spendCurrency = knownCurrencies.size === 1 ? [...knownCurrencies][0]! : null;
+  const allPricesKnown = steps.every((step) => step.entry.priceKnown !== false);
+  const spendComplete = allPricesKnown && spendCurrency !== null;
   const spend = steps.reduce(
     (total, step) =>
       total + (step.entry.priceKnown === false ? 0 : Math.max(0, step.entry.cost)),
@@ -128,7 +138,16 @@ function buildShape(
   );
   const uncertain = steps.filter((s) => !s.entry.verified).map((s) => s.entry.title);
 
-  return { name: shape.name, idea: shape.idea, steps, spend, spendComplete, earn, uncertain };
+  return {
+    name: shape.name,
+    idea: shape.idea,
+    steps,
+    spend,
+    spendCurrency,
+    spendComplete,
+    earn,
+    uncertain,
+  };
 }
 
 function reason(entry: WorldEntry, brief: JourneyBrief): string {
