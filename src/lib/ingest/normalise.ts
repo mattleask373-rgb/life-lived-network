@@ -212,7 +212,7 @@ export function normaliseEvent(raw: SourceEvent): SourceEvent | null {
     venueName: plainText(raw.venueName, 160),
     ...(raw.neighbourhood ? { neighbourhood: plainText(raw.neighbourhood, 120) } : {}),
     ...(raw.localitySlug ? { localitySlug: plainText(raw.localitySlug, 120) } : {}),
-    ...( /^[A-Z]{2}$/i.test((raw.countryCode ?? "").trim())
+    ...(/^[A-Z]{2}$/i.test((raw.countryCode ?? "").trim())
       ? { countryCode: raw.countryCode!.trim().toUpperCase() }
       : {}),
     lat: coordinate(raw.lat, 90),
