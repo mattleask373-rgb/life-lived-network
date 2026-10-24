@@ -398,6 +398,13 @@ describe("Ticketmaster source response envelope", () => {
       }),
     ).toBe(0);
     expect(ticketmasterResponseEventCount({ _embedded: { events: [] } })).toBe(0);
+    expect(() =>
+      ticketmasterResponseEventCount({
+        _embedded: { events: [] },
+        _links: { self: { href: "/discovery/v2/events.json" } },
+        page: { size: 50, totalElements: 1, totalPages: 1, number: 0 },
+      }),
+    ).toThrow("The source returned an invalid event collection.");
     expect(
       ticketmasterResponseEventCount({ _embedded: { events: [{ id: "a" }, { id: "" }] } }),
     ).toBe(2);

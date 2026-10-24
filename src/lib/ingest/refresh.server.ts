@@ -129,12 +129,24 @@ export function ticketmasterResponseEventCount(payload: unknown): number {
   }
 
   const embeddedRecord = embedded as Record<string, unknown>;
-  if (!Array.isArray(embeddedRecord["events"])) {
+  const events = embeddedRecord["events"];
+  if (!Array.isArray(events)) {
     throw new Error("The source returned an invalid event collection.");
+  }
+  if (hasPage) {
+    const pageRecord = page as Record<string, unknown>;
+    if (
+      (events.length === 0 &&
+        (pageRecord["totalElements"] !== 0 || pageRecord["totalPages"] !== 0)) ||
+      (events.length > 0 &&
+        (pageRecord["totalElements"] === 0 || pageRecord["totalPages"] === 0))
+    ) {
+      throw new Error("The source returned an invalid event collection.");
+    }
   }
   // Return the number of provider records before event validation. Pagination
   // must not stop early merely because some records in a full page were skipped.
-  return embeddedRecord["events"].length;
+  return events.length;
 }
 
 /** The map still wants a rough position; real coordinates stay approximate. */
