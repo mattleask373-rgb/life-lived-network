@@ -410,21 +410,16 @@ describe("Ticketmaster source response envelope", () => {
     expect(() => ticketmasterResponseEventCount({ unexpected: true })).toThrow(
       "The source returned an invalid response envelope.",
     );
-    expect(() =>
-      ticketmasterResponseEventCount({ fault: { faultstring: "secret" } }),
-    ).toThrow(
+    expect(() => ticketmasterResponseEventCount({ fault: { faultstring: "secret" } })).toThrow(
       "The source returned a provider fault.",
     );
-    expect(() =>
-      ticketmasterResponseEventCount({ _embedded: null, page: {} }),
-    ).toThrow(
+    expect(() => ticketmasterResponseEventCount({ _embedded: null, page: {} })).toThrow(
       "The source returned an invalid event collection.",
     );
-    expect(() =>
-      ticketmasterResponseEventCount({ _embedded: { events: "not-an-array" } }),
-    ).toThrow(
-      "The source returned an invalid event collection.",
-    );
+    expect(
+      () =>
+        ticketmasterResponseEventCount({ _embedded: { events: "not-an-array" } }),
+    ).toThrow("The source returned an invalid event collection.");
   });
 });
 
@@ -446,9 +441,7 @@ describe("ingest storage result guard", () => {
 
     markIngestStorageFailure(outcome);
 
-    expect(outcome.failure).toBe(
-      "One or more event storage operations could not be confirmed.",
-    );
+    expect(outcome.failure).toBe("One or more event storage operations could not be confirmed.");
     expect(outcome.skipped).toEqual([
       "An event was not stored because persistence could not be confirmed.",
     ]);
