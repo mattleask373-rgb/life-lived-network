@@ -153,6 +153,31 @@ describe("map/list synchronization", () => {
     expect(entriesForMapList(entries, partition, true)).toEqual(entries);
   });
 
+  it("does not let off-screen records consume the pin cap", () => {
+    const offScreen = Array.from({ length: 12 }, (_, index) =>
+      entry(`outside-${String(index + 1).padStart(3, "0")}`, view.lat, view.lng + 2),
+    );
+    const inFrame = Array.from({ length: MAX_MAP_PINS + 5 }, (_, index) =>
+      entry(`pin-${String(index + 1).padStart(3, "0")}`, view.lat, view.lng),
+    );
+
+    const entries = [...offScreen, ...inFrame];
+    const partition = partitionMapList(entries, view);
+
+    expect(partition.inView.map((item) => item.id)).toEqual(
+      inFrame.slice(0, MAX_MAP_PINS).map((item) => item.id),
+    );
+    expect(partition.unrenderedInView.map((item) => item.id)).toEqual(
+      inFrame.slice(MAX_MAP_PINS).map((item) => item.id),
+    );
+    expect(partition.outsideView.map((item) => item.id)).toEqual(
+      offScreen.map((item) => item.id),
+    );
+    expect(entriesForMapList(entries, partition, false).map((item) => item.id)).toEqual(
+      inFrame.slice(0, MAX_MAP_PINS).map((item) => item.id),
+    );
+  });
+
   it("returns no viewport matches for an empty input", () => {
     const partition = partitionMapList([], view);
 
