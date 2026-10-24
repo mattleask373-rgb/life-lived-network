@@ -1,4 +1,5 @@
 import { publicPage } from "@/lib/seo";
+import { parseQuerySearch } from "@/lib/search-context";
 import { isDataErrorCode } from "@/lib/data/errors";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -44,12 +45,14 @@ const description =
   "A living map of real work, music, food, nature, community projects and local opportunities. Find something, then go and live it.";
 
 export const Route = createFileRoute("/")({
+  validateSearch: parseQuerySearch,
   head: () => publicPage({ path: "/", title, description }),
   component: Home,
 });
 
 function Home() {
-  const [layers, setLayers] = useState<LayerId[]>([]);
+  const { layer: requestedLayer } = Route.useSearch();
+  const [layers, setLayers] = useState<LayerId[]>(requestedLayer ? [requestedLayer] : []);
   const [mobileListOpen, setMobileListOpen] = useState(false);
   const [showAllLoaded, setShowAllLoaded] = useState(false);
   const [showNeedsLayer, setShowNeedsLayer] = useState(true);
@@ -59,6 +62,10 @@ function Home() {
 
   const queryClient = useQueryClient();
   const { place, ancestors, setPlaceSlug, loading, index } = useWorldContext();
+
+  useEffect(() => {
+    setLayers(requestedLayer ? [requestedLayer] : []);
+  }, [requestedLayer]);
   const [view, setView] = useState<MapView | null>(null);
   const [viewportBounds, setViewportBounds] = useState<GeoBounds | null>(null);
   const [exploredSlug, setExploredSlug] = useState<string | null>(null);
@@ -401,6 +408,12 @@ function Home() {
               className="focus-ink inline-flex min-h-11 items-center rounded-full border border-border bg-card px-5 py-2.5 text-sm"
             >
               Plan a road trip
+            </Link>
+            <Link
+              to="/explore"
+              className="focus-ink inline-flex min-h-11 items-center rounded-full border border-border bg-card px-5 py-2.5 text-sm"
+            >
+              Explore all themes
             </Link>
           </div>
         </header>

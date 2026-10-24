@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
+import { EXPLORE_TOPIC_PATHS } from "./explore-topics";
 import {
   NOINDEX_PATHS,
   PRIVATE_PATHS,
@@ -101,7 +102,9 @@ describe("public sitemap privacy", () => {
       const path = loc.slice(SITE_ORIGIN.length);
       expect(path).not.toMatch(/[?#]/);
       expect(path).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-/i); // uuid
-      expect(path.split("/").filter(Boolean).length).toBeLessThanOrEqual(1);
+      const segments = path.split("/").filter(Boolean);
+      expect(segments.length).toBeLessThanOrEqual(path.startsWith("/explore/") ? 2 : 1);
+      if (path.startsWith("/explore/")) expect(EXPLORE_TOPIC_PATHS).toContain(path);
     }
     expect(xml.toLowerCase()).not.toMatch(/demo|blocked|reported|fixture/);
   });

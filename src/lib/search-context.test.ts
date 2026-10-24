@@ -88,6 +88,12 @@ describe("parseQuerySearch", () => {
     expect(parseQuerySearch({ q: "  a   b " }).q).toBe("a b");
     expect(parseQuerySearch({ q: "x".repeat(500) }).q).toHaveLength(200);
   });
+
+  it("preserves a known map layer and drops an unknown one", () => {
+    expect(parseQuerySearch({ layer: "music" })).toEqual({ layer: "music" });
+    expect(parseQuerySearch({ layer: "secret-inventory" })).toEqual({});
+    expect(parseQuerySearch({ layer: ["work"] })).toEqual({});
+  });
 });
 
 describe("filterEntriesByText", () => {

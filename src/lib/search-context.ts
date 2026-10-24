@@ -8,7 +8,7 @@
  */
 
 import { splitPlaceFromQuery, type Place, type PlaceIndex } from "./places";
-import type { WorldEntry } from "./world-data";
+import { LAYERS, type LayerId, type WorldEntry } from "./world-data";
 
 const MAX = 200;
 
@@ -17,6 +17,8 @@ export interface QuerySearch {
   q?: string;
   /** Everything the person originally typed. */
   from?: string;
+  /** Optional canonical map layer selected by a topic landing page. */
+  layer?: LayerId;
 }
 
 function clean(value: unknown): string | undefined {
@@ -30,8 +32,12 @@ export function parseQuerySearch(raw: Record<string, unknown>): QuerySearch {
   const out: QuerySearch = {};
   const q = clean(raw["q"]);
   const from = clean(raw["from"]);
+  const layer = clean(raw["layer"]);
   if (q) out.q = q;
   if (from) out.from = from;
+  if (layer && LAYERS.some((candidate) => candidate.id === layer)) {
+    out.layer = layer as LayerId;
+  }
   return out;
 }
 

@@ -3,6 +3,7 @@
  * static/generated sitemaps and the read-only deployed SEO smoke checker.
  * Keep this module free of runtime/environment-dependent behavior.
  */
+import { EXPLORE_TOPIC_PATHS } from "./explore-topics";
 import { SERVICE_SITEMAP_SHARD_PATHS } from "./sitemap-shards";
 
 export const PUBLIC_SITEMAP_CHILD_PATHS: readonly string[] = [
@@ -11,7 +12,15 @@ export const PUBLIC_SITEMAP_CHILD_PATHS: readonly string[] = [
   ...SERVICE_SITEMAP_SHARD_PATHS,
 ];
 
-export const PUBLIC_PATHS: readonly string[] = ["/", "/journey", "/road-trip", "/give", "/make"];
+export const PUBLIC_PATHS: readonly string[] = [
+  "/",
+  "/journey",
+  "/road-trip",
+  "/give",
+  "/make",
+  "/explore",
+  ...EXPLORE_TOPIC_PATHS,
+];
 
 /**
  * These pages must not be indexed, but crawlers must be able to fetch their
