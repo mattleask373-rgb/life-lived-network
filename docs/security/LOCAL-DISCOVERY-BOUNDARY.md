@@ -8,6 +8,7 @@
 - `local_discovery` needs may be read only by an authenticated user whose private, administrator-verified membership is for the exact place on the need.
 - `profiles.place_id` and query-string filters are not authorization evidence because the user can change them.
 - Membership and verification metadata live in the non-exposed `private.locality_memberships` table. Client roles have no direct table privileges. If a verifier account is deleted, a trigger revokes the memberships it verified and clears the verification timestamp, so account deletion does not fail on an inconsistent foreign-key/check-constraint combination. The helper function accepts only a need place ID and derives identity from `auth.uid()`; it does not accept a caller-supplied user ID.
+- Verified membership authorization expires after **180 days**. The database predicate denies expired rows even if their stored status remains `verified`; a steward/admin must re-verify through the reviewed grant RPC to renew the period. No automatic expiry sweep or background revocation is claimed in this slice.
 - Place access is exact by default. Membership at a parent locality does not automatically grant access to descendants; a village membership does not confer access to its parent or siblings. If inherited locality grants are introduced later, they need explicit product/security approval and their own matrix.
 
 ## Deliberate fail-closed product behavior
