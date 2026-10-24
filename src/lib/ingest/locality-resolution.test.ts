@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveSourceLocality, type CanonicalLocality } from "./locality-resolution";
+import {
+  isPlaceWithinSourceCoverage,
+  resolveSourceLocality,
+  type CanonicalLocality,
+} from "./locality-resolution";
 
 const places: CanonicalLocality[] = [
   { id: "gb", parent_id: null, name: "United Kingdom", slug: "united-kingdom", country_code: "GB" },
@@ -92,6 +96,14 @@ describe("source event canonical locality resolution", () => {
         places,
       }),
     ).toEqual({ status: "unresolved", reason: "COUNTRY_MISMATCH" });
+  });
+
+  it("validates the selected refresh place against an explicit source coverage scope", () => {
+    expect(isPlaceWithinSourceCoverage("digbeth", ["bham"], places)).toBe(true);
+    expect(isPlaceWithinSourceCoverage("lis", ["bham"], places)).toBe(false);
+    expect(isPlaceWithinSourceCoverage("lis", ["missing-place"], places)).toBe(false);
+    expect(isPlaceWithinSourceCoverage("lis", [], places)).toBe(true);
+    expect(isPlaceWithinSourceCoverage("missing-place", [], places)).toBe(false);
   });
 
   it("uses the country boundary to resolve identical labels across countries", () => {
