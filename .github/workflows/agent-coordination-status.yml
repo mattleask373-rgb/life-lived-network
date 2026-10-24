@@ -26,9 +26,22 @@ on:
       - "src/lib/service-sitemap*.ts"
       - "src/lib/seo*.ts"
       - "src/lib/world*.ts"
+      - "src/lib/grounded-matching*.ts"
+      - "src/lib/entry-card*.ts"
+      - "src/lib/locale*.ts"
+      - "src/lib/locale*.tsx"
+      - "src/lib/measurement-*.ts"
+      - "src/lib/local-supabase-database-url*.ts"
+      - "src/components/entry-card.tsx"
+      - "src/components/entry-sheet.tsx"
+      - "src/components/layer-colour.ts"
+      - "src/components/layer-filter.tsx"
+      - "src/hooks/use-life-list*.ts"
+      - "src/routes/auth*"
       - "src/routes/$country.$place.index.tsx"
       - "src/routes/need.*.tsx"
       - "scripts/test-local-discovery-postgrest.mjs"
+      - "scripts/test-ai-draft-quota-concurrency.ts"
       - "docs/agents/**"
       - "docs/security/**"
       - "docs/programme/**"
@@ -79,7 +92,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           EVENT_NAME: ${{ github.event_name }}
-          CAPTURED_AT: ${{ steps.state.outputs.captured_at }}
           MANUAL_REASON: ${{ inputs.reason || '' }}
         run: |
           set -euo pipefail
@@ -124,7 +136,7 @@ jobs:
           fi
 
           : > coordination-prs.jsonl
-          CRITICAL_PRS="353 358 356 348 350 352 354 351 349 335 339 336 344 357 355 272"
+          CRITICAL_PRS="353 358 356 348 350 352 354 351 349 335 339 336 344 357 355 272 340 341 343 345 346 347 193"
           for pr in $CRITICAL_PRS; do
             if pr_raw="$(gh pr view "$pr" --json number,title,state,isDraft,headRefOid,baseRefOid,url,reviews,statusCheckRollup 2>/dev/null)"; then
               pr_head_for_checks="$(jq -r '.headRefOid // ""' <<< "$pr_raw")"
