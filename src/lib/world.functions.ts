@@ -149,11 +149,7 @@ async function readWorld(
         .eq("discoverable", true)
         .abortSignal(signal);
       throwIfAborted(signal);
-      const profiles = requireQueryRows(
-        profileResult.data,
-        profileResult.error,
-        "Creator profile",
-      );
+      const profiles = requireQueryRows(profileResult.data, profileResult.error, "Creator profile");
       for (const p of profiles) {
         if (p.display_name) names.set(p.id, p.display_name);
       }
@@ -170,11 +166,7 @@ async function readWorld(
         .order("position", { ascending: true })
         .abortSignal(signal);
       throwIfAborted(signal);
-      const photoRows = requireQueryRows(
-        photoResult.data,
-        photoResult.error,
-        "Listing photo",
-      );
+      const photoRows = requireQueryRows(photoResult.data, photoResult.error, "Listing photo");
       for (const photo of photoRows) {
         const current = photos.get(photo.listing_id) ?? [];
         current.push({
