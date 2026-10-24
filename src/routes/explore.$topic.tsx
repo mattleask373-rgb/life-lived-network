@@ -67,7 +67,10 @@ function ExploreTopicPage() {
           <PlacePicker />
         </section>
 
-        <section aria-labelledby="topic-possibilities-heading" className="mt-9 card-paper p-5 sm:p-7">
+        <section
+          aria-labelledby="topic-possibilities-heading"
+          className="mt-9 card-paper p-5 sm:p-7"
+        >
           <h2 id="topic-possibilities-heading" className="font-display text-2xl">
             A good place to start
           </h2>
