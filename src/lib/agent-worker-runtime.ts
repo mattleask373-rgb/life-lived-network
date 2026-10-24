@@ -981,6 +981,11 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
         reason: "Lease was lost before the provider result could be accepted.",
       };
     }
+    // Cancellation can race with a provider that resolves at the same time as abort.
+    // Never start result validation/persistence after an already-observed stop request.
+    if (callerCancellationObserved || input.signal?.aborted) {
+      return persistCancellation();
+    }
 
     const validated = validateWorkerProviderResult(rawResult, task);
     if (!validated) {
