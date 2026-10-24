@@ -1,0 +1,308 @@
+name: Agent Coordination Status
+
+on:
+  schedule:
+    - cron: "5 */4 * * *"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Why this status run was triggered"
+        required: false
+        default: "manual refresh"
+        type: string
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+    paths:
+      - "package.json"
+      - "bun.lock"
+      - "supabase/migrations/**"
+      - "supabase/tests/**"
+      - "src/lib/needs*.ts"
+      - "src/lib/map-*.ts"
+      - "src/lib/listings.ts"
+      - "src/lib/agent-*.ts"
+      - "src/lib/geo-scope*.ts"
+      - "src/lib/locality-sitemap*.ts"
+      - "src/lib/service-sitemap*.ts"
+      - "src/lib/seo*.ts"
+      - "src/lib/world*.ts"
+      - "src/lib/grounded-matching*.ts"
+      - "src/lib/entry-card*.ts"
+      - "src/lib/locale*.ts"
+      - "src/lib/locale*.tsx"
+      - "src/lib/measurement-*.ts"
+      - "src/lib/local-supabase-database-url*.ts"
+      - "src/components/entry-card.tsx"
+      - "src/components/entry-sheet.tsx"
+      - "src/components/layer-colour.ts"
+      - "src/components/layer-filter.tsx"
+      - "src/hooks/use-life-list*.ts"
+      - "src/routes/auth*"
+      - "src/routes/$country.$place.index.tsx"
+      - "src/routes/need.*.tsx"
+      - "scripts/test-local-discovery-postgrest.mjs"
+      - "scripts/test-ai-draft-quota-concurrency.ts"
+      - "docs/agents/**"
+      - "docs/security/**"
+      - "docs/programme/**"
+      - "AGENT_HANDOFFS.md"
+      - "CURRENT_PRIORITIES.md"
+      - "SECURITY_GATES.md"
+      - ".github/workflows/**"
+
+concurrency:
+  group: agent-coordination-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+
+jobs:
+  status:
+    name: Produce coordination evidence ledger
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: read
+
+    steps:
+      - name: Check out main for scheduled/manual runs and the PR merge ref for PR runs
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (Node 24)
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.sha || github.event.repository.default_branch }}
+          fetch-depth: 0
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0 (Node 24)
+        with:
+          # Match the required Verify workflow's intentionally floating Bun version.
+          # The separate toolchain hardening task should pin an exact Bun release.
+          bun-version: latest
+
+      - name: Frozen install (read-only validation)
+        run: bun install --frozen-lockfile
+
+      - name: Capture live repository state
+        id: state
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          MANUAL_REASON: ${{ inputs.reason || '' }}
+        run: |
+          set -euo pipefail
+
+          MAIN_SHA="$(git rev-parse origin/main)"
+          CHECKED_OUT_SHA="$(git rev-parse HEAD)"
+          CAPTURED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          printf 'main_sha=%s\n' "$MAIN_SHA" >> "$GITHUB_OUTPUT"
+          printf 'checked_out_sha=%s\n' "$CHECKED_OUT_SHA" >> "$GITHUB_OUTPUT"
+          printf 'captured_at=%s\n' "$CAPTURED_AT" >> "$GITHUB_OUTPUT"
+
+          # Treat dispatch inputs as data, never as inline shell source.
+          reason="${MANUAL_REASON//$'\r'/ }"
+          reason="${reason//$'\n'/ }"
+          reason="${reason:0:240}"
+
+          {
+            printf '# Agent Coordination Status\n\n'
+            printf '**UTC:** %s\n' "$CAPTURED_AT"
+            printf '**Trigger:** %s\n' "$EVENT_NAME"
+            if [[ -n "$reason" ]]; then
+              printf '**Manual reason (max 240 characters):** %s\n' "$reason"
+            fi
+            printf '**Workflow run:** %s/%s/actions/runs/%s\n\n'               "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID"
+            printf '### Source refs\n\n'
+            printf -- '- Current main SHA: `%s`\n' "$MAIN_SHA"
+            printf -- '- Checked-out SHA: `%s`\n' "$CHECKED_OUT_SHA"
+            if [[ "$EVENT_NAME" == "pull_request" ]]; then
+              printf -- '- Audit scope: PR merge ref plus current main (reported separately below).\n\n'
+            else
+              printf -- '- Audit scope: default branch (main) for scheduled/manual runs.\n\n'
+            fi
+            printf '### Critical PR snapshots\n\n'
+            printf 'Exact refs, review states, check-run IDs, URLs, conclusions, and UTC start/completion timestamps are preserved in the machine-readable JSONL artifact. This workflow reports metadata; it does not approve or merge PRs.\n\n'
+          } > coordination-status.md
+
+          # Fail visibly if the most important human-gated PR cannot be read.
+          if ! gh pr view 353 --json number >/dev/null 2>&1; then
+            echo "::error::Cannot read critical PR #353 with the current read-only token."
+            exit 1
+          fi
+
+          : > coordination-prs.jsonl
+          CRITICAL_PRS="353 358 356 348 350 352 354 351 349 335 339 336 344 357 355 272 340 341 343 345 346 347 193"
+          for pr in $CRITICAL_PRS; do
+            if pr_raw="$(gh pr view "$pr" --json number,title,state,isDraft,headRefOid,baseRefOid,url,reviews,statusCheckRollup 2>/dev/null)"; then
+              pr_head_for_checks="$(jq -r '.headRefOid // ""' <<< "$pr_raw")"
+              check_runs_available=true
+              if [[ -n "$pr_head_for_checks" ]]; then
+                if check_runs_raw="$(gh api "repos/$GITHUB_REPOSITORY/commits/$pr_head_for_checks/check-runs" -F per_page=100 --jq '[.check_runs[] | {id, name, head_sha, status, conclusion, started_at, completed_at, html_url, check_suite_id: .check_suite.id}]' 2>/dev/null)"; then
+                  :
+                else
+                  check_runs_raw='[]'
+                  check_runs_available=false
+                fi
+              else
+                check_runs_raw='[]'
+                check_runs_available=false
+              fi
+              pr_json="$(jq -c --arg capturedAt "$CAPTURED_AT" --argjson checkRuns "$check_runs_raw" --argjson checkRunsAvailable "$check_runs_available" '{
+                capturedAt: $capturedAt,
+                number,
+                title,
+                state,
+                isDraft,
+                headRefOid,
+                baseRefOid,
+                url,
+                reviewStates: ((.reviews // []) | map({state, submittedAt, author: (.author.login // null)})),
+                checks: ((.statusCheckRollup // []) | map({name, status, conclusion, detailsUrl, startedAt, completedAt})),
+                checkRunsAvailable: $checkRunsAvailable,
+                checkRuns: $checkRuns
+              }' <<< "$pr_raw")"
+              printf '%s\n' "$pr_json" >> coordination-prs.jsonl
+
+              pr_number="$(jq -r '.number' <<< "$pr_raw")"
+              pr_state="$(jq -r '.state' <<< "$pr_raw")"
+              pr_draft="$(jq -r '.isDraft' <<< "$pr_raw")"
+              pr_head="$(jq -r '.headRefOid // "unknown"' <<< "$pr_raw")"
+              pr_base="$(jq -r '.baseRefOid // "unknown"' <<< "$pr_raw")"
+              pr_url="$(jq -r '.url' <<< "$pr_raw")"
+              printf -- '- PR #%s | state=%s | draft=%s | head=`%s` | base=`%s` | %s\n'                 "$pr_number" "$pr_state" "$pr_draft" "$pr_head" "$pr_base" "$pr_url" >> coordination-status.md
+            else
+              jq -cn --argjson number "$pr" --arg capturedAt "$CAPTURED_AT" '{number: $number, capturedAt: $capturedAt, available: false}' >> coordination-prs.jsonl
+              printf -- '- PR #%s: not found or inaccessible; verify manually.\n' "$pr" >> coordination-status.md
+            fi
+          done
+
+          {
+            printf '\n### Human-queued gates (not auto-closed)\n\n'
+            printf '1. Independent approval and protected-branch integration of PR #353.\n'
+            printf '2. Human-authoritative Lovable Git destination, published build SHA, canonical host, backend project and rollback evidence (Gate 0).\n'
+            printf '3. Independent security review of the reconciled #348 locality stack and disposable database evidence.\n'
+            printf '4. Authorized live SEO GETs on the verified host/build.\n'
+            printf '5. Human-verified isolated staging identity before any load traffic.\n'
+            printf '6. Founder decision on the first pilot market and local steward.\n'
+            printf '7. Explicit founder approval before any public AI surface is enabled.\n\n'
+            printf '### Limits and stop conditions\n\n'
+            printf -- '- This workflow does not fetch the administrator-level ruleset payload; a maintainer must refresh the live ruleset separately.\n'
+            printf -- '- No production host or hosted Supabase project is contacted.\n'
+            printf -- '- Green CI on a draft is not approval.\n'
+            printf -- '- Any uncertainty about production impact, environment identity, or effective grants/RLS is a stop condition.\n'
+          } >> coordination-status.md
+
+      - name: Audit high/critical dependencies on main and the candidate ref
+        id: audit
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MAIN_SHA: ${{ steps.state.outputs.main_sha }}
+          CHECKED_OUT_SHA: ${{ steps.state.outputs.checked_out_sha }}
+        run: |
+          set -euo pipefail
+
+          main_log="$RUNNER_TEMP/rwa-main-bun-audit.log"
+          candidate_log="$RUNNER_TEMP/rwa-candidate-bun-audit.log"
+          main_result="INDETERMINATE"
+          candidate_result="INDETERMINATE"
+
+          main_worktree="$RUNNER_TEMP/rwa-main-audit-worktree"
+          if git worktree add --quiet --detach "$main_worktree" "$MAIN_SHA"; then
+            if (cd "$main_worktree" && bun audit --audit-level=high) > "$main_log" 2>&1; then
+              main_result="CLEAN"
+            else
+              main_rc=$?
+              main_result="NONZERO/INDETERMINATE (exit $main_rc; inspect audit output for advisories versus registry/tool errors)"
+            fi
+            git worktree remove --force "$main_worktree"
+          else
+            printf 'Could not create a detached main worktree; no clean result can be claimed.\n' > "$main_log"
+          fi
+
+          if [[ "$CHECKED_OUT_SHA" == "$MAIN_SHA" ]]; then
+            cp "$main_log" "$candidate_log"
+            candidate_result="$main_result"
+          elif bun audit --audit-level=high > "$candidate_log" 2>&1; then
+            candidate_result="CLEAN"
+          else
+            candidate_rc=$?
+            candidate_result="NONZERO/INDETERMINATE (exit $candidate_rc; inspect audit output for advisories versus registry/tool errors)"
+          fi
+
+          {
+            printf '\n### Locked dependency audit — main\n\n'
+            printf '**Audited SHA:** `%s`\n' "$MAIN_SHA"
+            printf '**Result:** %s\n\n' "$main_result"
+            printf 'Output:\n\n```text\n'
+            cat "$main_log"
+            printf '\n```\n\n'
+            printf '### Locked dependency audit — checked-out candidate\n\n'
+            printf '**Audited SHA:** `%s`\n' "$CHECKED_OUT_SHA"
+            printf '**Result:** %s\n\n' "$candidate_result"
+            printf 'Output:\n\n```text\n'
+            cat "$candidate_log"
+            printf '\n```\n'
+          } >> coordination-status.md
+
+          main_clean=false
+          candidate_clean=false
+          [[ "$main_result" == "CLEAN" ]] && main_clean=true
+          [[ "$candidate_result" == "CLEAN" ]] && candidate_clean=true
+          printf 'main_audit_clean=%s\n' "$main_clean" >> "$GITHUB_OUTPUT"
+          printf 'candidate_audit_clean=%s\n' "$candidate_clean" >> "$GITHUB_OUTPUT"
+
+          jq -n \
+            --arg capturedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg event "$EVENT_NAME" \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg runUrl "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --arg mainSha "$MAIN_SHA" \
+            --arg checkedOutSha "$CHECKED_OUT_SHA" \
+            --arg mainAuditResult "$main_result" \
+            --arg candidateAuditResult "$candidate_result" \
+            '{
+              capturedAt: $capturedAt,
+              event: $event,
+              repository: $repository,
+              workflowRun: $runUrl,
+              mainSha: $mainSha,
+              checkedOutSha: $checkedOutSha,
+              audit: {
+                main: {result: $mainAuditResult, threshold: "high"},
+                checkedOutCandidate: {result: $candidateAuditResult, threshold: "high"}
+              },
+              prSnapshotFile: "coordination-prs.jsonl",
+              limitations: [
+                "The workflow does not fetch administrator-level ruleset configuration.",
+                "A nonzero bun audit result may represent advisories or registry/tool failure; inspect captured output.",
+                "CI state does not authorize approval, merge, deployment, hosted database access, or load testing."
+              ]
+            }' > coordination-status.json
+
+      - name: Upload coordination evidence
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # actions/upload-artifact v7.0.2
+        with:
+          name: coordination-status-${{ github.run_id }}
+          path: |
+            coordination-status.md
+            coordination-status.json
+            coordination-prs.jsonl
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Job summary
+        env:
+          MAIN_AUDIT_CLEAN: ${{ steps.audit.outputs.main_audit_clean }}
+          CANDIDATE_AUDIT_CLEAN: ${{ steps.audit.outputs.candidate_audit_clean }}
+        run: |
+          set -euo pipefail
+          cat coordination-status.md >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$MAIN_AUDIT_CLEAN" != "true" || "$CANDIDATE_AUDIT_CLEAN" != "true" ]]; then
+            echo "::warning::One or more locked-dependency audit runs were nonzero or indeterminate. Inspect the captured output; do not infer a clean audit."
+          fi
