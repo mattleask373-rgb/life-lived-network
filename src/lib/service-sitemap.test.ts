@@ -55,6 +55,7 @@ function rowsFor(entries: WorldEntry[]): PublicListingSitemapRow[] {
     id: value.id,
     place_id: "city",
     demonstration: value.demonstration ?? false,
+    publiclyEligible: true,
   }));
 }
 
@@ -121,7 +122,7 @@ describe("service sitemap indexability", () => {
     ]);
     const cleaner = entry({ id: "other-cleaner", placeId: "other-city" });
     const rows: PublicListingSitemapRow[] = [
-      { id: cleaner.id, place_id: "other-city", demonstration: false },
+      { id: cleaner.id, place_id: "other-city", demonstration: false, publiclyEligible: true },
     ];
     const paths = indexableServicePaths(wideIndex, rows, new Map([[cleaner.id, cleaner]]));
 
