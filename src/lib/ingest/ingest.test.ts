@@ -12,6 +12,7 @@ import { cancellationFor, discoverable, eventFreshness, qualityFor } from "./fre
 import { payloadHash, sameEvent, titleKey } from "./dedupe";
 import { dueForRefresh, sourceKeyFor } from "./refresh.server";
 import type { SourceEvent, SourceRow } from "./contract";
+import { requireIngestStorageSuccess } from "./storage-result";
 
 function payload(event: Record<string, unknown>) {
   return { _embedded: { events: [event] } };
@@ -385,6 +386,31 @@ describe("making outside text safe", () => {
   it("refuses an event with nothing to stand on", () => {
     const bare = { externalId: "", title: "", startsAt: "" } as unknown as SourceEvent;
     expect(normaliseEvent(bare)).toBeNull();
+  });
+});
+
+describe("ingest storage result guard", () => {
+  it("accepts confirmed nullish database error values", () => {
+    expect(() => requireIngestStorageSuccess(null, "source-record lookup")).not.toThrow();
+    expect(() => requireIngestStorageSuccess(undefined, "source-record lookup")).not.toThrow();
+  });
+
+  it("turns any failed database operation into a safe unconfirmed outcome", () => {
+    let thrown: unknown;
+    try {
+      requireIngestStorageSuccess(
+        { message: "token=super-secret-value; row=private-event" },
+        "source-record lookup",
+      );
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(Error);
+    expect((thrown as Error).message).toBe(
+      "Ingest storage operation could not be confirmed: source-record lookup.",
+    );
+    expect((thrown as Error).message).not.toContain("super-secret-value");
+    expect((thrown as Error).message).not.toContain("private-event");
   });
 });
 
