@@ -35,12 +35,12 @@ export const SITE_ORIGIN: string = (() => {
 })();
 
 /** A path made absolute and stripped of query strings, fragments and duplicate slashes. */
-export function absoluteUrl(path: string): string {
+export function absoluteUrl(path: string, origin: string = SITE_ORIGIN): string {
   const clean = (path.split("#")[0] ?? "").split("?")[0] ?? "";
   const withSlash = clean.startsWith("/") ? clean : `/${clean}`;
   const collapsed = withSlash.replace(/\/{2,}/g, "/");
   const trimmed = collapsed.length > 1 ? collapsed.replace(/\/+$/, "") : "/";
-  return `${SITE_ORIGIN}${trimmed}`;
+  return `${origin.replace(/\/+$/, "")}${trimmed}`;
 }
 
 export interface PageMeta {
@@ -127,9 +127,11 @@ export function sitemapXml(urls: SitemapUrl[]): string {
 }
 
 /** A sitemap index, so locality, service, provider and event sitemaps can be added without churn. */
-export function sitemapIndexXml(paths: readonly string[]): string {
+export function sitemapIndexXml(paths: readonly string[], origin: string = SITE_ORIGIN): string {
   const entries = paths
-    .map((path) => `  <sitemap>\n    <loc>${escapeXml(absoluteUrl(path))}</loc>\n  </sitemap>`)
+    .map(
+      (path) => `  <sitemap>\n    <loc>${escapeXml(absoluteUrl(path, origin))}</loc>\n  </sitemap>`,
+    )
     .join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries}\n</sitemapindex>\n`;
 }
@@ -148,7 +150,7 @@ export const XML_HEADERS = {
  * routes are repeated in that group because a crawler-specific group should
  * not rely on inheriting rules from the wildcard group.
  */
-export function robotsTxt(): string {
+export function robotsTxt(origin: string = SITE_ORIGIN): string {
   const privateDisallows = PRIVATE_PATHS.map((path) => `Disallow: ${path}`);
   const lines = [
     "# ChatGPT Search may discover eligible public Atlas content.",
@@ -163,7 +165,7 @@ export function robotsTxt(): string {
     "",
     "# /life-list intentionally stays crawlable so crawlers can observe its noindex metadata.",
     "# The sitemap index lists only pages that pass the shared public-content indexability gates.",
-    `Sitemap: ${SITE_ORIGIN}/sitemap.xml`,
+    `Sitemap: ${origin.replace(/\/+$/, "")}/sitemap.xml`,
     "",
   ];
   return lines.join("\n");

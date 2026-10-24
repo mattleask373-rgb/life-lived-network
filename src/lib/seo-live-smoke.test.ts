@@ -9,6 +9,7 @@ import {
 import {
   DEFAULT_SEO_SMOKE_ORIGIN,
   evaluateSeoSmoke,
+  validateSeoSmokeOrigin,
   type SeoSmokeDocuments,
   type SitemapChildSmokeDocument,
   type SmokeDocument,
@@ -102,6 +103,18 @@ function healthyIndexDocuments(): SeoSmokeDocuments {
 }
 
 describe("public SEO live smoke contract", () => {
+  it("accepts only a canonical HTTPS origin for the live smoke target", () => {
+    expect(validateSeoSmokeOrigin("https://atlas.example/")).toBe("https://atlas.example");
+    expect(() => validateSeoSmokeOrigin("http://atlas.example")).toThrow();
+    expect(() => validateSeoSmokeOrigin("https://user:secret@atlas.example")).toThrow();
+    expect(() => validateSeoSmokeOrigin("https://atlas.example/app")).toThrow();
+    expect(() => validateSeoSmokeOrigin("https://atlas.example?campaign=1")).toThrow();
+    expect(() => validateSeoSmokeOrigin("https://atlas.example#section")).toThrow();
+    expect(() => validateSeoSmokeOrigin("https://atlas.example?")).toThrow();
+    expect(() => validateSeoSmokeOrigin("https://atlas.example#")).toThrow();
+    expect(() => validateSeoSmokeOrigin("not-a-url")).toThrow();
+  });
+
   it("accepts a correct public robots file, URL-set sitemap, rendered homepage and crawlable noindex page", () => {
     expect(evaluateSeoSmoke(healthyDocuments())).toEqual([]);
   });
