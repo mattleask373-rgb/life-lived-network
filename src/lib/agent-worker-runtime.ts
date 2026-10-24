@@ -183,6 +183,7 @@ export type WorkerGateCode =
   | "ACTIVE_ATTEMPT_EXISTS"
   | "READINESS_EVIDENCE_UNAVAILABLE"
   | "DISPATCH_REJECTED"
+  | "DISPATCH_REPLAYED"
   | "INVALID_LEASE"
   | "LEASE_LOST"
   | "EXECUTION_TIMEOUT"
@@ -728,6 +729,17 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
         "Atomic durable dispatch was rejected or could not be confirmed; provider execution was not started.",
     };
   }
+  // A replay is an idempotency acknowledgement, not permission to repeat an
+  // external side effect. Handle it explicitly instead of mislabelling it as
+  // an expired/malformed lease.
+  if (lease?.status === "REPLAYED") {
+    return held(
+      taskId,
+      "DISPATCH_REPLAYED",
+      "Durable dispatch reports this correlation was already dispatched; provider execution was not repeated.",
+    );
+  }
+
   // A lease that expires before the first heartbeat cannot safely own provider execution.
   // Require one heartbeat interval plus a small scheduling/network margin.
   if (!validateLease(lease, request, Date.now(), input.heartbeatIntervalMs + 1_000)) {
