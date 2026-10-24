@@ -130,8 +130,7 @@ export function sitemapXml(urls: SitemapUrl[]): string {
 export function sitemapIndexXml(paths: readonly string[], origin: string = SITE_ORIGIN): string {
   const entries = paths
     .map(
-      (path) =>
-        `  <sitemap>\n    <loc>${escapeXml(absoluteUrl(path, origin))}</loc>\n  </sitemap>`,
+      (path) => `  <sitemap>\n    <loc>${escapeXml(absoluteUrl(path, origin))}</loc>\n  </sitemap>`,
     )
     .join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries}\n</sitemapindex>\n`;
