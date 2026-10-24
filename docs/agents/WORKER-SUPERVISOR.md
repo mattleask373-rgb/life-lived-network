@@ -18,9 +18,13 @@ use the canonical durable agent control plane.
   tokens in heartbeat records.
 - Poll with a bounded interval and apply capped exponential backoff after adapter/runtime failures.
   There is no local retry queue and no automatic retry of a claimed attempt.
-- Stop between cycles on the operator's AbortSignal. The current runtime's own hard deadline remains
-  the maximum bound for an in-flight cycle; immediate cancellation requires the server adapter and
-  provider to propagate cancellation through the runtime and must be proven separately.
+- Pass the operator's AbortSignal into the active runtime cycle. The runtime aborts its
+  provider signal and attempts to persist a fenced `CANCELLED` attempt record; rejected or
+  unconfirmed persistence is reported distinctly. The provider/server adapter must actually honor
+  the AbortSignal to cancel network-side work. That external effect and durable cancellation adapter
+  still require non-production fault-injection proof.
+- Stop between cycles on the same AbortSignal. The runtime hard deadline remains a separate bound
+  for provider execution; shutdown cancellation must not be counted as an ordinary retry failure.
 - The supervisor never marks a task accepted/integrated and never grants merge, deploy, SQL, or
   production authority.
 
