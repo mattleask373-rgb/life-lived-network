@@ -392,7 +392,7 @@ export const ticketmasterAdapter: SourceAdapter = {
 
       const venue = asRecord(asArray(asRecord(event["_embedded"])["venues"])[0]);
       const venueCountry = asRecord(venue["country"]);
-      const countryCode = plainText(venueCountry["countryCode"], 2).toUpperCase();
+      const countryCode = plainText(venueCountry["countryCode"], 10).trim().toUpperCase();
       const location = asRecord(venue["location"]);
       const price = asRecord(asArray(event["priceRanges"])[0]);
       const attraction = asRecord(asArray(asRecord(event["_embedded"])["attractions"])[0]);
