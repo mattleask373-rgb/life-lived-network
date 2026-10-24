@@ -176,6 +176,7 @@ async function readFromSource(
         lng: request.lng,
         localityName: request.localityName ?? "",
         timezone: request.timezone ?? "Europe/London",
+        countryCode: request.countryCode,
       }),
     );
     outcome.read += parsed.events.length;
