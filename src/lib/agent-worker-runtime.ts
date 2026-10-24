@@ -67,7 +67,11 @@ export interface WorkerProvider {
   capabilities: readonly WorkerCapability[];
   maxAutonomy: WorkerAutonomy;
   maxRiskWithoutHumanGate: WorkerRisk;
-  execute(task: WorkerTask, context: WorkerProviderContext, signal: AbortSignal): Promise<unknown>;
+  execute(
+    task: WorkerTask,
+    context: WorkerProviderContext,
+    signal: AbortSignal,
+  ): Promise<unknown>;
 }
 
 export interface WorkerProviderHealth {
