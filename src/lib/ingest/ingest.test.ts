@@ -463,22 +463,14 @@ describe("Ticketmaster source response envelope", () => {
       ),
     ).toThrow("The source returned an invalid response envelope.");
     expect(() =>
-      ticketmasterResponsePage(
-        response([{ id: "a" }], { totalElements: 1, totalPages: 2 }),
-        0,
-        50,
-      ),
+      ticketmasterResponsePage(response([{ id: "a" }], { totalElements: 1, totalPages: 2 }), 0, 50),
     ).toThrow("The source returned an invalid event collection.");
   });
 
   it("surfaces continuation and rejects a short page when more pages are advertised", () => {
     const fullPage = Array.from({ length: 50 }, (_, index) => ({ id: String(index) }));
     expect(
-      ticketmasterResponsePage(
-        response(fullPage, { totalElements: 100, totalPages: 2 }),
-        0,
-        50,
-      ),
+      ticketmasterResponsePage(response(fullPage, { totalElements: 100, totalPages: 2 }), 0, 50),
     ).toEqual({ eventCount: 50, hasNextPage: true });
     expect(() =>
       ticketmasterResponsePage(

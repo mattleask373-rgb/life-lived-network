@@ -107,8 +107,7 @@ export function ticketmasterResponsePage(
   const hasEmbeddedProperty = Object.prototype.hasOwnProperty.call(record, "_embedded");
   const page = record["page"];
   const links = record["_links"];
-  const hasEmbedded =
-    typeof embedded === "object" && embedded !== null && !Array.isArray(embedded);
+  const hasEmbedded = typeof embedded === "object" && embedded !== null && !Array.isArray(embedded);
   const pageRecord =
     typeof page === "object" && page !== null && !Array.isArray(page)
       ? (page as Record<string, unknown>)
