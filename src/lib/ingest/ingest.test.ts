@@ -410,6 +410,22 @@ describe("Ticketmaster source response envelope", () => {
     expect(() => ticketmasterResponseEventCount({ unexpected: true })).toThrow(
       "The source returned an invalid response envelope.",
     );
+    expect(() =>
+      ticketmasterResponseEventCount({
+        page: { size: 50, totalElements: 0, totalPages: 0, number: 0 },
+      }),
+    ).toThrow("The source returned an invalid response envelope.");
+    expect(() =>
+      ticketmasterResponseEventCount({
+        _links: { self: { href: "/discovery/v2/events.json" } },
+      }),
+    ).toThrow("The source returned an invalid response envelope.");
+    expect(() =>
+      ticketmasterResponseEventCount({
+        _links: { self: { href: "/discovery/v2/events.json" } },
+        page: { size: 50, totalElements: 1, totalPages: 1, number: 0 },
+      }),
+    ).toThrow("The source returned an invalid event collection.");
     expect(() => ticketmasterResponseEventCount({ fault: { faultstring: "secret" } })).toThrow(
       "The source returned a provider fault.",
     );

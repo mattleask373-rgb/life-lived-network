@@ -102,10 +102,31 @@ export function ticketmasterResponseEventCount(payload: unknown): number {
   if (!hasEmbedded && hasEmbeddedProperty) {
     throw new Error("The source returned an invalid event collection.");
   }
-  if (!hasEmbedded && !hasPage && !hasLinks) {
-    throw new Error("The source returned an invalid response envelope.");
+  if (!hasEmbedded) {
+    const pageRecord = hasPage ? (page as Record<string, unknown>) : null;
+    const validPageMetadata =
+      pageRecord !== null &&
+      ["size", "totalElements", "totalPages", "number"].every((key) => {
+        const value = pageRecord[key];
+        return Number.isSafeInteger(value) && (value as number) >= 0;
+      });
+    const linksRecord = hasLinks ? (links as Record<string, unknown>) : null;
+    const selfLink = linksRecord?.["self"];
+    const validSelfLink =
+      typeof selfLink === "object" &&
+      selfLink !== null &&
+      !Array.isArray(selfLink) &&
+      typeof (selfLink as Record<string, unknown>)["href"] === "string" &&
+      ((selfLink as Record<string, unknown>)["href"] as string).length > 0;
+
+    if (!validPageMetadata || !validSelfLink) {
+      throw new Error("The source returned an invalid response envelope.");
+    }
+    if (pageRecord["totalElements"] !== 0 || pageRecord["totalPages"] !== 0) {
+      throw new Error("The source returned an invalid event collection.");
+    }
+    return 0;
   }
-  if (!hasEmbedded) return 0;
 
   const embeddedRecord = embedded as Record<string, unknown>;
   if (!Array.isArray(embeddedRecord["events"])) {
