@@ -37,8 +37,8 @@ export interface AgentWorkerSupervisorAdapters {
   selectNextReadyTask(): Promise<string | null>;
   /** Generate a new UUID for this scheduler invocation; never reuse caller input. */
   createCycleId(): string;
-  /** Call the existing bounded worker runtime with its server-only adapters. */
-  runCycle(taskId: string, cycleId: string): Promise<WorkerCycleResult>;
+  /** Call the existing bounded worker runtime and propagate the supervisor stop signal. */
+  runCycle(taskId: string, cycleId: string, signal: AbortSignal): Promise<WorkerCycleResult>;
   /**
    * Persist redacted liveness only. Do not include task content, provider output,
    * raw exceptions, lease tokens, credentials, or private actor claims.
@@ -220,7 +220,7 @@ export async function runAgentWorkerSupervisor(
           // bounded by that runtime's own hard timeout and provider cancellation.
           if (signal.aborted) break;
 
-          const result = await adapters.runCycle(taskId, cycleId);
+          const result = await adapters.runCycle(taskId, cycleId, signal);
           if (!result || typeof result.outcome !== "string") {
             throw new Error("Worker runtime returned an invalid result.");
           }
