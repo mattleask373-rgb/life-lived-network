@@ -733,7 +733,9 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
       outcome: "CANCELLED",
       taskId,
       code: "EXECUTION_CANCELLED",
-      reason: "Cancellation was requested before durable dispatch; provider execution was not started.",
+      reason:
+        "Cancellation was requested before durable dispatch; " +
+        "provider execution was not started.",
     };
   }
 
@@ -834,7 +836,9 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
         taskId,
         attemptId: lease.attemptId,
         code: "EXECUTION_CANCELLED",
-        reason: "Provider cancellation was requested and durably recorded under the active lease fence.",
+        reason:
+          "Provider cancellation was requested and durably " +
+          "recorded under the active lease fence.",
       };
     } catch {
       if (leaseLostFault) {
