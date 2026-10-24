@@ -7,8 +7,16 @@
 
 import { createServerFn } from "@tanstack/react-start";
 
-import { decodeCursor, pageLimit, toPage, type DiscoveryContext, type Page } from "./data/contract";
+import {
+  decodeCursor,
+  pageLimit,
+  splitPageWithLookahead,
+  toPage,
+  type DiscoveryContext,
+  type Page,
+} from "./data/contract";
 import { asDataError } from "./data/errors";
+import { requireQueryRows } from "./data/query-rows";
 import type { HourOffer } from "./hours";
 
 export const getOpenHours = createServerFn({ method: "GET" })
@@ -35,22 +43,25 @@ async function readHours(context: DiscoveryContext): Promise<Page<HourOffer>> {
       .select("*")
       .eq("status", "open")
       .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+      .order("id", { ascending: true })
+      // One sentinel row makes hasMore truthful even when the final page is full.
+      .range(offset, offset + limit);
     if (context.placeId) query = query.eq("place_id", context.placeId);
 
     const { data: rows, error } = await query;
-    if (error) throw error;
-
-    const offers = (rows ?? []) as unknown as HourOffer[];
+    const completeRows = requireQueryRows(rows, error, "Open hours");
+    const boundedRows = splitPageWithLookahead(completeRows, limit);
+    const offers = boundedRows.items as unknown as HourOffer[];
     const names = new Map<string, string>();
     const ids = [...new Set(offers.map((r) => r.user_id))];
     if (ids.length) {
-      const { data: profiles } = await supabase
+      const { data: profileRows, error: profileError } = await supabase
         .from("profiles")
         .select("id, display_name")
         .in("id", ids)
         .eq("discoverable", true);
-      for (const p of profiles ?? []) {
+      const profiles = requireQueryRows(profileRows, profileError, "Open-hours profile");
+      for (const p of profiles) {
         if (p.display_name) names.set(p.id, p.display_name);
       }
     }
@@ -61,7 +72,7 @@ async function readHours(context: DiscoveryContext): Promise<Page<HourOffer>> {
         return person ? { ...r, person } : r;
       }),
       offset,
-      limit,
+      boundedRows.hasMore,
     );
   } catch (error) {
     throw asDataError(error);
