@@ -17,6 +17,13 @@ describe("email authentication paths", () => {
     expect(authSource).toContain('{mode === "up" || mode === "in" ? (');
   });
 
+  it("handles thrown confirmation resend errors and blocks repeated in-flight requests", () => {
+    expect(authSource).toContain("const [resendingConfirmation, setResendingConfirmation] = useState(false);");
+    expect(authSource).toContain("disabled={busy || resendingConfirmation || !email}");
+    expect(authSource).toContain("catch {\n                  setError(\"We couldn't resend that just now. Try again in a minute.\");");
+    expect(authSource).toContain("finally {\n                  setResendingConfirmation(false);");
+  });
+
   it("keeps password sign-in, account creation, Google OAuth and password recovery available", () => {
     expect(authSource).toContain("supabase.auth.signInWithPassword({ email, password })");
     expect(authSource).toContain("supabase.auth.signUp({");
