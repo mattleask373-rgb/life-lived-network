@@ -46,7 +46,9 @@ export function renderSeoStaticAssets(originValue?: string): SeoStaticAssets {
     }
   }
   if (robots.includes("Disallow: /life-list")) {
-    throw new Error("The noindex life list must remain crawlable so crawlers can read its metadata.");
+    throw new Error(
+      "The noindex life list must remain crawlable so crawlers can read its metadata.",
+    );
   }
   if (!robots.includes("Sitemap: " + origin + "/sitemap.xml")) {
     throw new Error("Generated robots policy is missing its canonical sitemap directive.");
