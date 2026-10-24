@@ -163,6 +163,11 @@ export interface WorkerRuntimeAdapters {
   recordResultFenced(lease: WorkerLease, result: WorkerProviderResult): Promise<boolean>;
   /** Persist only a safe failure code/message under the same lease fence. */
   recordFailureFenced(lease: WorkerLease, failure: WorkerFailure): Promise<boolean>;
+  /**
+   * Persist operator/scheduler cancellation as CANCELLED under the same lease
+   * generation/token fence, including durable audit evidence.
+   */
+  recordCancellationFenced(lease: WorkerLease): Promise<boolean>;
 }
 
 export type WorkerGateCode =
@@ -192,6 +197,7 @@ export type WorkerGateCode =
   | "DISPATCH_REPLAYED"
   | "INVALID_LEASE"
   | "LEASE_LOST"
+  | "EXECUTION_CANCELLED"
   | "EXECUTION_TIMEOUT"
   | "PROVIDER_FAILED"
   | "PROVIDER_RESULT_INVALID"
@@ -202,6 +208,7 @@ export type WorkerCycleOutcome =
   | "HELD"
   | "DISPATCH_REJECTED"
   | "LEASE_LOST"
+  | "CANCELLED"
   | "TIMED_OUT"
   | "PROVIDER_FAILED"
   | "INVALID_PROVIDER_RESULT"
@@ -232,6 +239,8 @@ export interface WorkerCycleInput {
   excludedProviderIds: readonly string[];
   timeoutMs: number;
   heartbeatIntervalMs: number;
+  /** Optional scheduler/operator cancellation signal. */
+  signal?: AbortSignal;
   adapters: WorkerRuntimeAdapters;
 }
 
@@ -498,6 +507,14 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
       reason: "Worker feature flag is not explicitly enabled.",
     };
   }
+  if (input.signal?.aborted) {
+    return {
+      outcome: "CANCELLED",
+      taskId,
+      code: "EXECUTION_CANCELLED",
+      reason: "Cancellation was requested before a durable task or provider was touched.",
+    };
+  }
   if (!UUID_PATTERN.test(input.cycleId)) {
     return held(
       taskId,
@@ -711,6 +728,15 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
       "Cycle/task correlation ID exceeds the durable storage bound.",
     );
   }
+  if (input.signal?.aborted) {
+    return {
+      outcome: "CANCELLED",
+      taskId,
+      code: "EXECUTION_CANCELLED",
+      reason: "Cancellation was requested before durable dispatch; provider execution was not started.",
+    };
+  }
+
   const request: WorkerDispatchRequest = {
     cycleId: input.cycleId,
     correlationId,
@@ -770,6 +796,65 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
     rejectLeaseLost(leaseLostFault);
   };
 
+  let callerCancellationObserved = false;
+  let rejectCallerCancellation: (error: Error) => void = () => undefined;
+  const callerCancellationPromise = new Promise<never>((_resolve, reject) => {
+    rejectCallerCancellation = reject;
+  });
+  const onCallerAbort = () => {
+    if (callerCancellationObserved) return;
+    callerCancellationObserved = true;
+    const cancellationError = new Error("EXECUTION_CANCELLED");
+    controller.abort(cancellationError);
+    rejectCallerCancellation(cancellationError);
+  };
+  if (input.signal?.aborted) {
+    onCallerAbort();
+  } else {
+    input.signal?.addEventListener("abort", onCallerAbort, { once: true });
+  }
+
+  const persistCancellation = async (): Promise<WorkerCycleResult> => {
+    try {
+      const persisted = await Promise.race([
+        input.adapters.recordCancellationFenced(lease),
+        leaseLostPromise,
+      ]);
+      if (!persisted) {
+        return {
+          outcome: "LEASE_LOST",
+          taskId,
+          attemptId: lease.attemptId,
+          code: "LEASE_LOST",
+          reason: "Cancellation could not be recorded because the lease fence was rejected.",
+        };
+      }
+      return {
+        outcome: "CANCELLED",
+        taskId,
+        attemptId: lease.attemptId,
+        code: "EXECUTION_CANCELLED",
+        reason: "Provider cancellation was requested and durably recorded under the active lease fence.",
+      };
+    } catch {
+      if (leaseLostFault) {
+        return {
+          outcome: "LEASE_LOST",
+          taskId,
+          attemptId: lease.attemptId,
+          code: "LEASE_LOST",
+          reason: "The lease was lost before cancellation could be durably recorded.",
+        };
+      }
+      return safeCycleError(
+        taskId,
+        lease.attemptId,
+        "PERSISTENCE_UNCONFIRMED",
+        "Cancellation was requested but its durable fenced record could not be confirmed.",
+      );
+    }
+  };
+
   let heartbeatRunning = false;
   let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
   let timeoutTimer: ReturnType<typeof setTimeout> | undefined;
@@ -816,11 +901,13 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
     let rawResult: unknown;
     try {
       rawResult = await Promise.race([
-        Promise.resolve().then(() =>
-          input.provider.execute(task, providerContext, controller.signal),
-        ),
+        Promise.resolve().then(() => {
+          if (callerCancellationObserved) throw new Error("EXECUTION_CANCELLED");
+          return input.provider.execute(task, providerContext, controller.signal);
+        }),
         timeoutPromise,
         leaseLostPromise,
+        callerCancellationPromise,
       ]);
     } catch {
       if (leaseLostFault) {
@@ -832,6 +919,9 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
           reason:
             "Lease heartbeat was rejected or unavailable; provider signal was aborted and no result was accepted.",
         };
+      }
+      if (callerCancellationObserved || input.signal?.aborted) {
+        return persistCancellation();
       }
       const failureCode: WorkerFailureCode = timedOut ? "EXECUTION_TIMEOUT" : "PROVIDER_FAILED";
       try {
@@ -980,6 +1070,7 @@ export async function runAgentWorkerCycle(input: WorkerCycleInput): Promise<Work
   } finally {
     if (heartbeatTimer) clearInterval(heartbeatTimer);
     if (timeoutTimer) clearTimeout(timeoutTimer);
+    input.signal?.removeEventListener("abort", onCallerAbort);
     controller.abort();
   }
 }
