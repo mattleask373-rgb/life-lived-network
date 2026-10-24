@@ -257,6 +257,90 @@ async function readFromSource(
 
 type Admin = Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"];
 
+/**
+ * Keep an internal identity/provenance pointer for an event whose locality is
+ * not deterministic. It intentionally creates no public listing and stores no
+ * event-text snapshot; the source URL/ID/hash allow a later bounded refresh to
+ * retry resolution without claiming that a guessed locality is correct.
+ */
+async function rememberUnresolvedSourceRecord(
+  admin: Admin,
+  source: SourceRow,
+  event: SourceEvent,
+): Promise<void> {
+  const now = new Date().toISOString();
+  const hash = payloadHash(event);
+  const { data: existingRecord, error: lookupError } = await admin
+    .from("source_records")
+    .select("id, listing_id")
+    .eq("source_id", source.id)
+    .eq("external_id", event.externalId)
+    .maybeSingle();
+
+  if (lookupError) throw new Error("Unresolved source identity lookup was not confirmed.");
+
+  if (existingRecord) {
+    const { error: sourceRecordError } = await admin
+      .from("source_records")
+      .update({
+        last_seen_at: now,
+        source_state: event.state,
+        ...(existingRecord.listing_id
+          ? {}
+          : {
+              source_url: event.sourceUrl,
+              payload_hash: hash,
+              source_updated_at: event.sourceUpdatedAt ?? null,
+            }),
+      })
+      .eq("id", existingRecord.id);
+    if (sourceRecordError) throw new Error("Unresolved source identity update was not confirmed.");
+
+    if (existingRecord.listing_id) {
+      if (event.state === "live") {
+        const { error: cautionError } = await admin
+          .from("listings")
+          .update({ data_quality: "may have changed" })
+          .eq("id", existingRecord.listing_id);
+        if (cautionError) throw new Error("Existing listing caution could not be confirmed.");
+      } else {
+        const { error: cancellationError } = await admin
+          .from("listings")
+          .update({
+            cancellation: cancellationFor(event.state),
+            last_checked_at: now,
+            data_quality: qualityFor(
+              eventFreshness({
+                lastCheckedAt: now,
+                sourceUpdatedAt: event.sourceUpdatedAt ?? null,
+                startsAt: event.startsAt,
+                endsAt: event.endsAt ?? null,
+                refreshMinutes: source.refresh_minutes,
+              }),
+            ),
+          })
+          .eq("id", existingRecord.listing_id);
+        if (cancellationError) {
+          throw new Error("Source cancellation could not be confirmed on the existing listing.");
+        }
+      }
+    }
+    return;
+  }
+
+  const { error: insertError } = await admin.from("source_records").insert({
+    source_id: source.id,
+    external_id: event.externalId,
+    source_url: event.sourceUrl,
+    payload_hash: hash,
+    listing_id: null,
+    source_state: event.state,
+    last_seen_at: now,
+    source_updated_at: event.sourceUpdatedAt ?? null,
+  });
+  if (insertError) throw new Error("Unresolved source identity insert was not confirmed.");
+}
+
 async function storeEvent(
   admin: Admin,
   source: SourceRow,
