@@ -131,14 +131,11 @@ function JourneyPage() {
                 <h2 className="text-2xl">{j.name}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{j.idea}</p>
                 <p className="mt-2 text-sm">
-                  {j.spendComplete
-                    ? `You'd spend about ${currencySymbol(place?.currency)}${j.spend}`
-                    : `Known prices total about ${currencySymbol(place?.currency)}${j.spend}; some prices were not provided`}
-                  {j.earn > 0
-                    ? ` and earn about ${currencySymbol(place?.currency)}${j.earn}.`
+                  {j.spendCurrency === null
+                    ? "A combined total isn't shown because prices are missing or use different currencies."
                     : j.spendComplete
-                      ? "."
-                      : ". The final cost may be higher."}
+                      ? `You'd spend about ${currencySymbol(j.spendCurrency)}${j.spend}${j.earn > 0 ? ` and earn about ${currencySymbol(j.spendCurrency)}${j.earn}.` : "."}`
+                      : `Known prices in ${j.spendCurrency} total ${currencySymbol(j.spendCurrency)}${j.spend}; some prices were not provided, so the final cost may be higher.`}
                 </p>
 
                 <ol className="mt-4 space-y-3">
