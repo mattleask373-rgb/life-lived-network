@@ -41,7 +41,7 @@
 
 13. **#335/#355** robots, sitemap and private-route parity. Confirm Gate 0; retain completeness assertions and fresh host GET evidence before any authorized republish.
 14. **#346** partial four-locale foundation. Finish target market strings/forms/legal/safety content and manual accessibility review.
-15. **#359** worker/dispatch core. CodeQL passes; Verify was still running at latest read. It is not a live 24/7 service.
+15. **#359** worker/dispatch core. Current exact-head Verify [#40096233954](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40096233954) and CodeQL [#40096233948](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40096233948) both pass. It is reviewable as a core, not a live 24/7 service.
 16. **#361** broad 49-package update. Verify/CodeQL passed on its own head but it is 48 commits behind current main; refresh ancestry and run targeted UI regressions before review.
 
 ## Owner-only Gate 0

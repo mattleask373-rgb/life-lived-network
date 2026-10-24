@@ -20,7 +20,7 @@
 - #350 fact-scope changes were not released through #348. They are ported into #362 as the current-main candidate.
 - #363 covers membership administration. No real memberships should be provisioned before independent review and owner-authorised non-production rehearsal.
 - Public “Ask this place” remains OFF. Draft-assist is not global AI discovery; quota deployment, provider spend caps, kill switch, evaluations and locality-isolation proof remain open.
-- #359 remains an implementation core, not a live 24/7 service. Adapter, persistent scheduler, heartbeat/liveness, alerts, recovery, cancellation, budget enforcement, kill switch and non-production soak remain.
+- #359 current exact-head Verify [#40096233954](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40096233954) and CodeQL [#40096233948](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40096233948) pass. It is an implementation core, not a live 24/7 service. Adapter, persistent scheduler, heartbeat/liveness, alerts, recovery, cancellation, budget enforcement, kill switch and non-production soak remain.
 - No verified rights-cleared pilot supply, steward, real request → response → outcome loop, or global-scale load/restore proof is established.
 
 ## Merge queue rules
