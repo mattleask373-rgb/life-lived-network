@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { entriesForMapList, mergeViewportEntries, partitionMapList } from "./map-list-sync";
-import type { MapView } from "./map-view";
+import { MAX_MAP_PINS, type MapView } from "./map-view";
 import type { WorldEntry } from "./world-data";
 
 function entry(id: string, lat: number | null, lng: number | null): WorldEntry {
@@ -117,10 +117,35 @@ describe("map/list synchronization", () => {
     expect(mergeViewportEntries([updated], [staleUnpinned])[0]).toBe(updated);
   });
 
+  it("keeps the list aligned with rendered pins and reports in-view records beyond the pin cap", () => {
+    const entries = Array.from({ length: MAX_MAP_PINS + 5 }, (_, index) =>
+      entry(`pin-${String(index + 1).padStart(3, "0")}`, view.lat, view.lng),
+    );
+
+    const partition = partitionMapList(entries, view);
+
+    expect(partition.inView).toHaveLength(MAX_MAP_PINS);
+    expect(partition.unrenderedInView.map((item) => item.id)).toEqual([
+      "pin-301",
+      "pin-302",
+      "pin-303",
+      "pin-304",
+      "pin-305",
+    ]);
+    expect(partition.outsideView).toEqual([]);
+    expect(entriesForMapList(entries, partition, false)).toEqual(entries.slice(0, MAX_MAP_PINS));
+    expect(entriesForMapList(entries, partition, true)).toEqual(entries);
+  });
+
   it("returns no viewport matches for an empty input", () => {
     const partition = partitionMapList([], view);
 
-    expect(partition).toEqual({ inView: [], unpinned: [], outsideView: [] });
+    expect(partition).toEqual({
+      inView: [],
+      unpinned: [],
+      outsideView: [],
+      unrenderedInView: [],
+    });
     expect(entriesForMapList([], partition, false)).toEqual([]);
   });
 });
