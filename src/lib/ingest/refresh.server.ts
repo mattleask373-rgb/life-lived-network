@@ -81,7 +81,7 @@ export function dueForRefresh(source: SourceRow, now = new Date()): boolean {
  * deliberately non-throwing for fixture and test use; the server fetch boundary
  * must distinguish malformed/provider-fault responses from a successful zero.
  */
-export function assertTicketmasterResponseEnvelope(payload: unknown): void {
+export function ticketmasterResponseEventCount(payload: unknown): number {
   if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
     throw new Error("The source returned an invalid response.");
   }
@@ -92,25 +92,28 @@ export function assertTicketmasterResponseEnvelope(payload: unknown): void {
   }
 
   const embedded = record["_embedded"];
+  const hasEmbeddedProperty = Object.prototype.hasOwnProperty.call(record, "_embedded");
   const page = record["page"];
   const links = record["_links"];
   const hasEmbedded = typeof embedded === "object" && embedded !== null && !Array.isArray(embedded);
   const hasPage = typeof page === "object" && page !== null && !Array.isArray(page);
   const hasLinks = typeof links === "object" && links !== null && !Array.isArray(links);
 
+  if (!hasEmbedded && hasEmbeddedProperty) {
+    throw new Error("The source returned an invalid event collection.");
+  }
   if (!hasEmbedded && !hasPage && !hasLinks) {
     throw new Error("The source returned an invalid response envelope.");
   }
+  if (!hasEmbedded) return 0;
 
-  if (hasEmbedded) {
-    const embeddedRecord = embedded as Record<string, unknown>;
-    if (
-      embeddedRecord["events"] !== undefined &&
-      !Array.isArray(embeddedRecord["events"])
-    ) {
-      throw new Error("The source returned an invalid event collection.");
-    }
+  const embeddedRecord = embedded as Record<string, unknown>;
+  if (!Array.isArray(embeddedRecord["events"])) {
+    throw new Error("The source returned an invalid event collection.");
   }
+  // Return the number of provider records before event validation. Pagination
+  // must not stop early merely because some records in a full page were skipped.
+  return embeddedRecord["events"].length;
 }
 
 
@@ -257,12 +260,12 @@ async function readFromSource(
     if (!response.ok) throw new Error(`The source answered with ${response.status}.`);
 
     const payload: unknown = await response.json().catch(() => null);
-    assertTicketmasterResponseEnvelope(payload);
+    const rawEventCount = ticketmasterResponseEventCount(payload);
     const parsed = parse(payload);
     outcome.read += parsed.events.length;
     outcome.skipped.push(...parsed.skipped.slice(0, 10));
     collected.push(...parsed.events);
-    if (parsed.events.length < 50) break;
+    if (rawEventCount < 50) break;
   }
   return collected;
 }
