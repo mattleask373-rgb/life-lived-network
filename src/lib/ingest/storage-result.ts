@@ -1,3 +1,5 @@
+import type { IngestOutcome } from "./contract";
+
 /**
  * Refuse to interpret a failed database operation as an empty result or success.
  *
@@ -10,8 +12,6 @@ export function requireIngestStorageSuccess(error: unknown, operation: string): 
     throw new Error(`Ingest storage operation could not be confirmed: ${operation}.`);
   }
 }
-
-import type { IngestOutcome } from "./contract";
 
 /**
  * Mark an ingest run as failed when persistence was not confirmed.
