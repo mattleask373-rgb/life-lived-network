@@ -68,6 +68,42 @@ describe("rowToEntry is the single normalisation seam", () => {
     expect(entry.verified).toBe(false);
   });
 
+  it("preserves known free price separately from an unknown source price", () => {
+    const knownFree = rowToEntry({
+      ...row,
+      origin: "source",
+      cost: 0,
+      currency: "GBP",
+      price_known: true,
+    });
+    expect(knownFree.priceKnown).toBe(true);
+    expect(knownFree.currency).toBe("GBP");
+    expect(knownFree.cost).toBe(0);
+
+    const unknown = rowToEntry({
+      ...row,
+      origin: "source",
+      cost: 0,
+      currency: "XXX",
+      price_known: false,
+    });
+    expect(unknown.priceKnown).toBe(false);
+    expect(unknown.currency).toBe("XXX");
+    expect(unknown.cost).toBe(0);
+  });
+
+  it("does not replace unknown source currency with GBP", () => {
+    const unknown = rowToEntry({
+      ...row,
+      origin: "source",
+      cost: 20,
+      currency: "GBP",
+      price_known: false,
+    });
+    expect(unknown.priceKnown).toBe(false);
+    expect(unknown.currency).toBe("XXX");
+  });
+
   it("never leaves a person's location blank or invents an address", () => {
     const entry = rowToEntry(row);
     expect(entry.place).toBe("Shared once you say you're coming");
