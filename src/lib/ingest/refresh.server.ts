@@ -245,6 +245,11 @@ async function storeEvent(
     refreshMinutes: source.refresh_minutes,
   });
 
+  const hasUsableAmount =
+    typeof event.cost === "number" && Number.isFinite(event.cost) && event.cost >= 0;
+  const hasUsableCurrency = /^[A-Z]{3}$/.test(event.currency ?? "") && event.currency !== "XXX";
+  const priceKnown = hasUsableAmount && hasUsableCurrency;
+
   const listing = {
     creator_id: null,
     kind: "event",
@@ -261,8 +266,9 @@ async function storeEvent(
     when_text: whenWording(event.startsAt, event.endsAt, event.timezone),
     band: bandFor(event.startsAt, event.timezone),
     minutes: minutesBetween(event.startsAt, event.endsAt),
-    cost: event.cost ?? 0,
-    currency: event.currency || "GBP",
+    cost: hasUsableAmount ? event.cost! : 0,
+    currency: priceKnown ? event.currency! : "XXX",
+    price_known: priceKnown,
     social: "friendly",
     outdoors: false,
     skills: [],
