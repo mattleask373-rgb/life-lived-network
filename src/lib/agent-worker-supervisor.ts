@@ -10,12 +10,7 @@
  */
 import type { WorkerCycleResult } from "./agent-worker-runtime";
 
-export type AgentWorkerSupervisorStatus =
-  | "IDLE"
-  | "PAUSED"
-  | "RUNNING"
-  | "DEGRADED"
-  | "STOPPED";
+export type AgentWorkerSupervisorStatus = "IDLE" | "PAUSED" | "RUNNING" | "DEGRADED" | "STOPPED";
 
 export interface AgentWorkerSupervisorOptions {
   /** Delay between completed cycles, including when the durable queue is empty. */
@@ -85,7 +80,11 @@ function isNonBlankTaskId(value: unknown): value is string {
   if (typeof value !== "string" || value.trim().length === 0 || value.length > 200) {
     return false;
   }
-  return !/[\u0000-\u001f\u007f]/.test(value);
+  for (const character of value) {
+    const code = character.charCodeAt(0);
+    if (code <= 31 || code === 127) return false;
+  }
+  return true;
 }
 
 function validateOptions(options: AgentWorkerSupervisorOptions): void {
