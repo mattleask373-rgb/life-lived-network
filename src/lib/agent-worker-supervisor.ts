@@ -188,12 +188,10 @@ export async function runAgentWorkerSupervisor(
       const enabled = await adapters.readEnabled();
       if (!enabled) {
         // A closed kill switch is an intentional pause, not a failure.
-        consecutiveFailures = 0;
         status = "PAUSED";
       } else {
         const taskId = await adapters.selectNextReadyTask();
         if (taskId === null) {
-          consecutiveFailures = 0;
           status = "IDLE";
         } else {
           if (!isNonBlankTaskId(taskId)) {
@@ -234,7 +232,6 @@ export async function runAgentWorkerSupervisor(
             consecutiveFailures += 1;
             status = "DEGRADED";
           } else {
-            consecutiveFailures = 0;
             status = "IDLE";
           }
         }
@@ -248,6 +245,9 @@ export async function runAgentWorkerSupervisor(
     const heartbeat = snapshot(status, now(), completedCycles, consecutiveFailures, lastOutcome);
     if (!(await tryWriteHeartbeat(adapters, heartbeat))) {
       consecutiveFailures += 1;
+    } else if (status !== "DEGRADED") {
+      // A tick is healthy only after its final liveness write succeeds.
+      consecutiveFailures = 0;
     }
 
     const delay =
