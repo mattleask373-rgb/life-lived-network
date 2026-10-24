@@ -95,6 +95,7 @@ function adapters(overrides: Partial<WorkerRuntimeAdapters> = {}): WorkerRuntime
     heartbeatFenced: vi.fn(async () => true),
     recordResultFenced: vi.fn(async () => true),
     recordFailureFenced: vi.fn(async () => true),
+    recordCancellationFenced: vi.fn(async () => true),
     ...overrides,
   };
 }
@@ -348,6 +349,94 @@ describe("bounded agent worker runtime", () => {
     expect(model.execute).not.toHaveBeenCalled();
     expect(db.recordResultFenced).not.toHaveBeenCalled();
     expect(db.recordFailureFenced).not.toHaveBeenCalled();
+  });
+
+  it("does not load or dispatch a task when the caller has already cancelled the cycle", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const db = adapters();
+
+    const result = await runAgentWorkerCycle(input({ signal: controller.signal, adapters: db }));
+
+    expect(result).toMatchObject({ outcome: "CANCELLED", code: "EXECUTION_CANCELLED" });
+    expect(db.loadTask).not.toHaveBeenCalled();
+    expect(db.dispatchAtomically).not.toHaveBeenCalled();
+    expect(db.recordCancellationFenced).not.toHaveBeenCalled();
+  });
+
+  it("persists caller cancellation under the lease fence and aborts an in-flight provider", async () => {
+    const controller = new AbortController();
+    const db = adapters();
+    const execute = vi.fn(
+      (_task, _context, providerSignal) =>
+        new Promise<unknown>(() => {
+          controller.abort();
+          expect(providerSignal.aborted).toBe(true);
+        }),
+    );
+
+    const result = await runAgentWorkerCycle(
+      input({
+        signal: controller.signal,
+        adapters: db,
+        provider: provider({ execute }),
+      }),
+    );
+
+    expect(result).toMatchObject({ outcome: "CANCELLED", code: "EXECUTION_CANCELLED" });
+    expect(result.reason).toContain("durably recorded");
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(db.recordCancellationFenced).toHaveBeenCalledTimes(1);
+    expect(db.recordFailureFenced).not.toHaveBeenCalled();
+    expect(db.recordResultFenced).not.toHaveBeenCalled();
+  });
+
+  it("records cancellation if the scheduler stops after dispatch but before provider invocation", async () => {
+    const controller = new AbortController();
+    const model = provider();
+    const db = adapters({
+      dispatchAtomically: vi.fn(async (request) => {
+        const acquired = lease(request);
+        controller.abort();
+        return acquired;
+      }),
+    });
+
+    const result = await runAgentWorkerCycle(
+      input({
+        signal: controller.signal,
+        adapters: db,
+        provider: model,
+      }),
+    );
+
+    expect(result).toMatchObject({ outcome: "CANCELLED", code: "EXECUTION_CANCELLED" });
+    expect(model.execute).not.toHaveBeenCalled();
+    expect(db.recordCancellationFenced).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports unconfirmed persistence if a cancellation cannot be recorded", async () => {
+    const controller = new AbortController();
+    const db = adapters({
+      recordCancellationFenced: vi.fn(async () => false),
+    });
+    const execute = vi.fn((_task, _context, _providerSignal) => {
+      controller.abort();
+      return new Promise<unknown>(() => undefined);
+    });
+
+    const result = await runAgentWorkerCycle(
+      input({
+        signal: controller.signal,
+        adapters: db,
+        provider: provider({ execute }),
+      }),
+    );
+
+    expect(result).toMatchObject({
+      outcome: "PERSISTENCE_UNCONFIRMED",
+      code: "PERSISTENCE_UNCONFIRMED",
+    });
   });
 
   it("aborts and records a timeout rather than retrying a slow provider", async () => {
