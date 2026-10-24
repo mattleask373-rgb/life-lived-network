@@ -21,7 +21,7 @@ import { cancellationFor, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent } from "./dedupe";
 import { TICKETMASTER_KEY, TICKETMASTER_ROOT, ticketmasterQuery } from "./ticketmaster";
 import { FIXTURE_SOURCE_KEY, fixturePayload } from "./fixture-source";
-import { requireIngestStorageSuccess } from "./storage-result";
+import { markIngestStorageFailure, requireIngestStorageSuccess } from "./storage-result";
 
 const MAX_PAGES = 2;
 const MAX_EVENTS = 120;
@@ -179,7 +179,11 @@ export async function refreshSourceRun(request: RefreshRequest): Promise<IngestO
       if (result === "updated") outcome.updated += 1;
       if (result === "duplicate") outcome.duplicates += 1;
     } catch {
-      outcome.skipped.push(`Could not store ${event.title}`);
+      // Do not turn a failed write into a successful empty/partial refresh.
+      // Stop at the first uncertain persistence result; retry through the normal
+      // source refresh interval after the underlying storage problem is fixed.
+      markIngestStorageFailure(outcome);
+      break;
     }
   }
 
