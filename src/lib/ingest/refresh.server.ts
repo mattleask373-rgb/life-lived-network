@@ -133,10 +133,15 @@ export function ticketmasterResponsePage(
 
   // An event array alone is not enough evidence that a provider read is complete.
   // Require the pagination envelope for both non-empty and empty responses.
-  if (!validPageMetadata || !validSelfLink) {
+  if (pageRecord === null || !validPageMetadata || !validSelfLink) {
     throw new Error("The source returned an invalid response envelope.");
   }
-  if (pageRecord.number !== expectedPage || pageRecord.size > requestedPageSize) {
+  const pageSize = pageRecord["size"] as number;
+  const totalElements = pageRecord["totalElements"] as number;
+  const totalPages = pageRecord["totalPages"] as number;
+  const pageNumber = pageRecord["number"] as number;
+
+  if (pageNumber !== expectedPage || pageSize > requestedPageSize) {
     throw new Error("The source returned an invalid response envelope.");
   }
   if (hasEmbeddedProperty && !hasEmbedded) {
@@ -149,30 +154,30 @@ export function ticketmasterResponsePage(
   }
   const eventCount = Array.isArray(events) ? events.length : 0;
 
-  if (pageRecord.totalElements === 0) {
-    if (pageRecord.totalPages !== 0 || pageRecord.number !== 0 || eventCount !== 0) {
+  if (totalElements === 0) {
+    if (totalPages !== 0 || pageNumber !== 0 || eventCount !== 0) {
       throw new Error("The source returned an invalid event collection.");
     }
     return { eventCount: 0, hasNextPage: false };
   }
 
   if (
-    pageRecord.size === 0 ||
-    pageRecord.totalPages === 0 ||
-    pageRecord.number >= pageRecord.totalPages ||
+    pageSize === 0 ||
+    totalPages === 0 ||
+    pageNumber >= totalPages ||
     !hasEmbedded ||
     !Array.isArray(events) ||
     eventCount === 0 ||
     eventCount > requestedPageSize ||
-    eventCount > pageRecord.size ||
-    Math.ceil(pageRecord.totalElements / pageRecord.size) !== pageRecord.totalPages
+    eventCount > pageSize ||
+    Math.ceil(totalElements / pageSize) !== totalPages
   ) {
     throw new Error("The source returned an invalid event collection.");
   }
 
-  const hasNextPage = pageRecord.number + 1 < pageRecord.totalPages;
+  const hasNextPage = pageNumber + 1 < totalPages;
   // A short page before the advertised final page means records may be missing.
-  if (hasNextPage && eventCount < pageRecord.size) {
+  if (hasNextPage && eventCount < pageSize) {
     throw new Error("The source returned an incomplete event page.");
   }
 
