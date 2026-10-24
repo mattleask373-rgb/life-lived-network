@@ -150,16 +150,18 @@ export function resolveSourceLocality(
   const sameCountry = sameName.filter(
     (place) => place.country_code.trim().toUpperCase() === queryCountryCode,
   );
-  const inScope = sameCountry.filter((place) =>
-    belongsToSourceScope(place, sourcePlaceIds, byId),
-  );
 
-  if (inScope.length === 1) return resolved(inScope[0]!, "exact_name_country");
-  if (inScope.length > 1) {
+  // Never let a source coverage list disambiguate duplicate locality names:
+  // coverage says where a source may operate, not where this particular event is.
+  if (sameCountry.length > 1) {
     return { status: "unresolved", reason: "AMBIGUOUS_CANONICAL_NAME" };
   }
-  if (sameCountry.length > 0) {
-    return { status: "unresolved", reason: "OUTSIDE_SOURCE_SCOPE" };
+  if (sameCountry.length === 1) {
+    const place = sameCountry[0]!;
+    if (!belongsToSourceScope(place, sourcePlaceIds, byId)) {
+      return { status: "unresolved", reason: "OUTSIDE_SOURCE_SCOPE" };
+    }
+    return resolved(place, "exact_name_country");
   }
   if (sameName.length > 0) return { status: "unresolved", reason: "COUNTRY_MISMATCH" };
   return { status: "unresolved", reason: "NO_CANONICAL_MATCH" };
