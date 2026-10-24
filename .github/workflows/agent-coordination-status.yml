@@ -108,7 +108,7 @@ jobs:
           fi
 
           : > coordination-prs.jsonl
-          CRITICAL_PRS="353 348 350 352 354 351 349 355"
+          CRITICAL_PRS="353 358 356 348 350 352 354 351 349 335 339 336 344 357 355 272"
           for pr in $CRITICAL_PRS; do
             if pr_raw="$(gh pr view "$pr" --json number,title,state,isDraft,headRefOid,baseRefOid,url,reviews,statusCheckRollup 2>/dev/null)"; then
               pr_json="$(jq -c '{
