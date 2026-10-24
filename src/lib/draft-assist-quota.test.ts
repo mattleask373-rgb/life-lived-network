@@ -123,6 +123,14 @@ describe("AI draft quota database security contract", () => {
     expect(quota).toBeGreaterThan(stop);
     expect(provider).toBeGreaterThan(quota);
     expect(serverFunction).toContain('code: "RATE_LIMITED"');
+    expect(serverFunction).toContain("setResponseStatus(429)");
+    expect(serverFunction).toContain(
+      'setResponseHeader("Retry-After", String(quota.retryAfterSeconds))',
+    );
+    expect(serverFunction).toContain('setResponseHeader("Cache-Control", "no-store")');
+    expect(serverFunction.indexOf("setResponseStatus(429)")).toBeLessThan(
+      serverFunction.indexOf('code: "RATE_LIMITED"'),
+    );
     expect(serverFunction).toContain('code: "UNAVAILABLE"');
   });
 });

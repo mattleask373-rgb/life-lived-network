@@ -9,7 +9,7 @@
 - Every validated, sufficiently long request consumes one attempt, including attempts rejected after the cap. Short/invalid input and an enabled emergency stop do not consume a quota.
 - Counters contain only account ID, UTC window starts, aggregate counts and update time. The table does not store prompts, completions, auth tokens, IP addresses or provider payloads.
 - The database RPC derives identity from `auth.uid()`; it does not accept a caller-supplied user ID. A single row lock/upsert serializes concurrent requests across server instances.
-- Missing, errored or malformed quota evidence fails closed before the AI provider module is imported. Limit responses include a retry estimate; the current Server Function protocol represents this as a typed result, not a guaranteed HTTP-level 429 status. If an HTTP 429 contract is required, add and test a dedicated endpoint/transport before declaring that acceptance criterion complete.
+- Missing, errored or malformed quota evidence fails closed before the AI provider module is imported. A valid quota denial returns the typed `RATE_LIMITED` result and sets HTTP status `429`, a positive `Retry-After` header in seconds, and `Cache-Control: no-store`. Exact-head CI must verify this source contract; a hosted request-level smoke is still needed before treating the deployed transport as proven.
 
 These are starting guardrails, not an estimate of sustainable capacity or a provider cost ceiling. Review thresholds against actual usage and the provider's price/terms before enabling broader access.
 
