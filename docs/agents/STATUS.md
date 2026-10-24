@@ -3,7 +3,7 @@
 **Repository:** `mattleask373-rgb/life-lived-network`  
 **Default branch:** `main`  
 **Exact main SHA at this refresh:** `34245a75d8a53bd1a47fa74deddc3bdf14ee8a6d`  
-**Open PR inventory at refresh:** 84 open pull requests, including new #379 and #380. The backlog still includes old drafts and stacked branches.  
+**Open PR inventory at refresh:** 84 open pull requests, including #379–#381. The backlog still includes old drafts and stacked branches.  
 **Release decision:** **BLOCKED** — do not merge or deploy while the main protection ruleset is reported disabled and independent reviews are absent.
 
 ## Current blocking governance finding
@@ -38,8 +38,8 @@ These merges improve source code and local verification. They do **not** prove h
 | PR | Exact head / evidence | Decision |
 | --- | --- | --- |
 | [#379 — HTTP 429 for durable quota denials](https://github.com/mattleask373-rgb/life-lived-network/pull/379) | Head `0e36dc1c6b4bf090915393a1ceb1e58d48f0bcf8`. Exact-head Verify, CodeQL, TypeScript analysis and locked-dependency audit passed. Supabase Preview is skipped. No review submissions found in the latest review read. | Ready for independent review, not merge-authorized. It sets status 429, a validated positive Retry-After header and Cache-Control no-store on a valid durable quota denial while preserving the typed result. A deployed request smoke is still needed. |
-| [#380 — quota concurrency test on current main](https://github.com/mattleask373-rgb/life-lived-network/pull/380) | Head `9d0b443f2f98487e087e1ce92657c4cc4cab7cde`. CodeQL, TypeScript analysis and locked-dependency audit passed; one Verify run passed and the latest required Verify run was still in progress at this refresh. Supabase Preview is skipped. | Keep open until latest exact-head Verify completes. It ports the old #340 concurrency harness onto main and adds a loopback-only database guard plus local CI integration. Require review and inspect any failures before approval. |
-| [#340 — old quota concurrency PR](https://github.com/mattleask373-rgb/life-lived-network/pull/340) | Open on a stale base/head; its diff includes unrelated dependency/lockfile changes. | Do not merge the old branch. Once #380 is green and independently reviewed, close #340 as superseded or otherwise reconcile it explicitly to avoid duplicate implementations. |
+| [#380 — quota concurrency test on current main](https://github.com/mattleask373-rgb/life-lived-network/pull/380) | Head `9d0b443f2f98487e087e1ce92657c4cc4cab7cde`. Exact-head Verify (both observed runs), CodeQL, TypeScript analysis and locked-dependency audit passed. Supabase Preview is skipped. | Ready for independent review, not merge-authorized. It ports the #340 concurrency harness onto main and adds a loopback-only database guard plus local CI integration. Require review of the integration harness and cleanup/failure behavior. |
+| [#340 — old quota concurrency PR](https://github.com/mattleask373-rgb/life-lived-network/pull/340) | Closed unmerged after current-main replacement #380 was opened and exact-head checks passed. Its diff included unrelated dependency/lockfile and workflow changes. | Do not reopen or merge this branch. Keep #380 as the sole active concurrency-test implementation and require independent review. |
 
 ### What remains for issue #290
 
@@ -78,7 +78,7 @@ Remain disabled by default and never allow worker output to merge, deploy, chang
 1. **Repository administrator:** restore/confirm active enforcement for ruleset #24946178, verify the effective rules and deletion protection, and re-read the raw configuration. No merge before that.
 2. **#380:** wait for latest exact-head Verify; fix any failure and repeat all required checks. Then request independent review of #379/#380.
 3. **#379/#380:** after governance enforcement and independent approval are restored, merge separately with exact-head checks and resolved threads; do not merge both if one changes the other's required base/checks.
-4. **#340:** retire as superseded only after #380's test is confirmed green and reviewer agrees the useful coverage is preserved.
+4. **#340:** closed unmerged as superseded by #380. Keep #380 as the only active concurrency harness; its tests are local disposable CI evidence, not hosted DB or provider-spend proof.
 5. **#290:** implement/review provider budget alerts, operator kill controls and bounded abuse protections; prove in a named disposable project.
 6. **#373:** build concrete worker adapter, persistent scheduler, observability and fault-injection rehearsal as small PRs; leave production activation off.
 7. **Market rollout:** close the technical and owner gates only with recorded reproducible evidence; launch one small pilot before replication.
