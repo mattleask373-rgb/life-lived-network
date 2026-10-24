@@ -166,3 +166,14 @@ The stacked candidate at PR #354 head `d9e6fe78f66729724dc251f7e5d3852623524244`
 - The current draft audit PR #339 has no submitted reviews or inline review threads. Its latest Verify [#40089757320](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40089757320) and CodeQL [#40089757296](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40089757296) failed overall at the dependency-audit gate.
 
 Do not claim a continuous executor. A scheduler, authenticated provider adapter, persisted heartbeat, lease fencing across dispatch/heartbeat/release, idempotent attempts, cancellation, capped retry/spend, dead-letter visibility, kill switch, and recovery still require isolated environment proof and independent review. No hosted mutation, provider call, or deployment is authorized by these results.
+
+
+## Current source and operations status — 24 October 2026
+
+**Latest canonical main:** 70a3e261b18e3be5e90429e4ad4defd1fd8008c7. Main Verify [#40094349108](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40094349108) and CodeQL [#40094349114](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40094349114) pass.
+
+The earlier source recheck above named main SHA 182fe7f05c9efbee9ac17ccbca4d420cc0f1b24f. Its statement about repository source at that SHA is historical; recheck filenames and effective diff before relying on it for any current migration decision. Migration files in Git still do not prove remote applied history.
+
+- Current worker candidate #359, head 5940f20054ad38cd380ef04767bd7d8fe4fc85db, passes Verify [#40096233954](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40096233954) and CodeQL [#40096233948](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40096233948). CI used an isolated local Supabase stack. The candidate still has no live scheduler, trusted deployed adapter, continuous liveness/alert evidence, or production execution proof.
+- Current locality consumer candidate #362 passes Verify [#40095183795](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40095183795) and CodeQL [#40095183720](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40095183720); current membership-administration candidate #363 passes Verify [#40095409897](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40095409897) and CodeQL [#40095409761](https://github.com/mattleask373-rgb/life-lived-network/actions/runs/40095409761). Those runs establish candidate behavior on local disposable databases, not hosted grants, project identity or remote migration history.
+- The owner must confirm the production project and a separate disposable project before any remote migration-history inspection, rehearsal, membership provisioning or schema/RLS change. Do not deploy, write hosted data, or activate production dispatch from a green local replay alone.
