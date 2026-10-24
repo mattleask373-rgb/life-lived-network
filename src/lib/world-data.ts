@@ -199,11 +199,10 @@ export function relatedEntries(entries: WorldEntry[], entry: WorldEntry, limit =
         e.neighbourhood === entry.neighbourhood &&
         (!bothPlaceIdsKnown || sameCanonicalPlace) &&
         (!hasGeographicDistance || geographicDistance <= 50);
-      const sameArea = sameCanonicalPlace
-        ? hasGeographicDistance ? -0.25 : -20
-        : sameNeighbourhoodLabel
-          ? hasGeographicDistance ? -0.25 : -20
-          : 0;
+      let sameArea = 0;
+      if (sameCanonicalPlace || sameNeighbourhoodLabel) {
+        sameArea = hasGeographicDistance ? -0.25 : -20;
+      }
       const sameBand = e.band === entry.band ? (hasGeographicDistance ? -0.1 : -8) : 0;
       return { e, score: distance + sameArea + sameBand };
     })
