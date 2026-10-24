@@ -1,8 +1,8 @@
 BEGIN;
-SELECT plan(5);
+SELECT plan(7);
 
--- Integration contract for the server-only dispatch RPC. The enclosing
--- transaction rolls back all synthetic control-plane records.
+-- Integration contract for the server-only dispatch RPC. All synthetic
+-- control-plane rows and assertions are rolled back with this transaction.
 INSERT INTO public.agent_events (
   event_id, delivery_id, webhook_id, event_type, entity_id, workspace_id, raw_payload
 )
@@ -32,11 +32,12 @@ CREATE TEMP TABLE dispatch_probe (
   project_id TEXT,
   lease_generation BIGINT,
   lease_token TEXT,
-  correlation_id TEXT NOT NULL
+  correlation_id TEXT NOT NULL,
+  status TEXT NOT NULL
 ) ON COMMIT DROP;
 
 INSERT INTO dispatch_probe
-SELECT attempt_id, task_id, run_id, project_id, lease_generation, lease_token, correlation_id
+SELECT attempt_id, task_id, run_id, project_id, lease_generation, lease_token, correlation_id, status
 FROM public.dispatch_agent_attempt(
   'audit-dispatch-task-1',
   '00000000-0000-4000-8000-00000000d101',
@@ -48,16 +49,17 @@ FROM public.dispatch_agent_attempt(
 );
 
 SELECT ok(
-  (SELECT count(*) = 1 AND bool_and(attempt_id IS NOT NULL) FROM dispatch_probe)
+  (SELECT count(*) = 1 AND bool_and(status = 'DISPATCHED' AND attempt_id IS NOT NULL AND lease_token IS NOT NULL)
+   FROM dispatch_probe)
   AND (SELECT status = 'CLAIMED' AND lease_token IS NOT NULL AND lease_expiry > now()
        FROM public.agent_tasks WHERE task_id = 'audit-dispatch-task-1'),
-  'first dispatch creates one attempt and a live fenced task lease'
+  'first invocation creates one attempt and a live fenced task lease'
 );
 
--- A retry with identical scope after the task left READY must return the exact
--- same attempt/lease, without creating a second attempt or audit event.
+-- Replay must not return a lease token or a fresh DISPATCHED status, since
+-- either would permit an accidental second provider invocation.
 INSERT INTO dispatch_probe
-SELECT attempt_id, task_id, run_id, project_id, lease_generation, lease_token, correlation_id
+SELECT attempt_id, task_id, run_id, project_id, lease_generation, lease_token, correlation_id, status
 FROM public.dispatch_agent_attempt(
   'audit-dispatch-task-1',
   '00000000-0000-4000-8000-00000000d101',
@@ -66,6 +68,14 @@ FROM public.dispatch_agent_attempt(
   'audit-project',
   'test-provider',
   'audit-correlation-idempotent'
+);
+
+SELECT ok(
+  (SELECT status = 'REPLAYED' AND lease_token IS NULL
+          AND attempt_id = (SELECT attempt_id FROM dispatch_probe WHERE status = 'DISPATCHED')
+          AND lease_generation = 1
+   FROM dispatch_probe WHERE status = 'REPLAYED'),
+  'an exact retry returns the same attempt metadata with no lease token'
 );
 
 SELECT ok(
@@ -74,7 +84,7 @@ SELECT ok(
        WHERE correlation_id = 'audit-correlation-idempotent')
   AND (SELECT count(*) = 1 FROM public.agent_execution_audit
        WHERE evidence ->> 'correlation_id' = 'audit-correlation-idempotent'),
-  'an exact retry reuses the same live attempt without duplicate side effects'
+  'an exact retry creates no second attempt or audit side effect'
 );
 
 SELECT throws_ok(
@@ -89,20 +99,47 @@ SELECT throws_ok(
   ) $$,
   'P0001',
   'correlation ID already bound to a different dispatch scope',
-  'a correlation collision across tasks/runs is rejected rather than returning another lease'
+  'correlation reuse across tasks/runs is rejected'
 );
 
-SELECT is(
-  (SELECT count(*) FROM public.agent_execution_attempts
-   WHERE correlation_id = 'audit-correlation-idempotent'),
-  1::bigint,
-  'a conflicting retry cannot create a second attempt'
+SELECT throws_ok(
+  $$ SELECT * FROM public.dispatch_agent_attempt(
+    'audit-dispatch-task-1',
+    '00000000-0000-4000-8000-00000000d101',
+    'audit-worker',
+    'audit-workspace',
+    'audit-project',
+    'provider-attacker',
+    'audit-correlation-idempotent'
+  ) $$,
+  'P0001',
+  'correlation ID already bound to a different dispatch scope',
+  'correlation reuse across providers is rejected'
+);
+
+SELECT throws_ok(
+  $$ SELECT * FROM public.dispatch_agent_attempt(
+    'audit-dispatch-task-1',
+    '00000000-0000-4000-8000-00000000d102',
+    'audit-worker',
+    'audit-workspace',
+    'audit-project',
+    'test-provider',
+    'audit-correlation-idempotent'
+  ) $$,
+  'P0001',
+  'correlation ID already bound to a different dispatch scope',
+  'correlation reuse across execution runs is rejected'
 );
 
 SELECT ok(
-  (SELECT lease_generation = 1 AND lease_token = (SELECT lease_token FROM dispatch_probe LIMIT 1)
-   FROM public.agent_tasks WHERE task_id = 'audit-dispatch-task-1'),
-  'an exact retry does not rotate the lease generation or token'
+  (SELECT lease_generation = 1
+          AND lease_token = (SELECT lease_token FROM dispatch_probe WHERE status = 'DISPATCHED')
+          AND status = 'CLAIMED'
+   FROM public.agent_tasks WHERE task_id = 'audit-dispatch-task-1')
+  AND (SELECT count(*) = 1 FROM public.agent_execution_attempts
+       WHERE correlation_id = 'audit-correlation-idempotent'),
+  'replays and collisions do not rotate the task lease or create another attempt'
 );
 
 SELECT * FROM finish();
