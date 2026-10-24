@@ -32,7 +32,7 @@ describe("normaliseEvent price evidence", () => {
   });
 
   it("does not invent an amount or default an absent currency to GBP", () => {
-    expect(normaliseEvent({ ...base, cost: null, currency: undefined })).toMatchObject({
+    expect(normaliseEvent({ ...base, cost: null })).toMatchObject({
       cost: null,
       currency: "",
     });
