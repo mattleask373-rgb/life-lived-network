@@ -475,6 +475,19 @@ describe("how alive an event is", () => {
     expect(dueForRefresh(source, new Date("2099-01-10T12:00:00Z"))).toBe(true);
     expect(dueForRefresh({ ...source, last_run_at: null } as SourceRow)).toBe(true);
   });
+
+  it("treats corrupt or future last-run metadata as due instead of suppressing refresh forever", () => {
+    const now = new Date("2099-01-08T12:00:00Z");
+    const source = {
+      refresh_minutes: 1440,
+      last_run_at: "not-a-date",
+    } as unknown as SourceRow;
+    expect(dueForRefresh(source, now)).toBe(true);
+    expect(
+      dueForRefresh({ ...source, last_run_at: "2099-01-09T12:00:00Z" } as SourceRow, now),
+    ).toBe(true);
+    expect(dueForRefresh({ ...source, refresh_minutes: Number.NaN } as SourceRow, now)).toBe(true);
+  });
 });
 
 describe("deciding when two records are one event", () => {
