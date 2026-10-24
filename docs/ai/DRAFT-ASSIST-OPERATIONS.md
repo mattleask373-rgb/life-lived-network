@@ -15,6 +15,18 @@ To stop this feature:
 
 The comparison is case-insensitive and trims whitespace. Only the literal value `true` enables the stop. If the host requires a rebuild/redeploy to load environment variables, the change is not instantaneous; use an already-approved provider-level kill/budget control when a faster emergency stop is required.
 
+## Per-attempt bounds in source
+
+The current draft provider call sets these limits in code:
+
+- **800 maximum output tokens** per generation attempt.
+- **Zero SDK retries**, preventing automatic retry amplification for a single quota-approved attempt.
+- **30-second total request timeout**.
+
+The constants and their use are covered by a source-contract regression test. A timeout or token ceiling can still result in a failed/incomplete draft, which must remain an ordinary recoverable error rather than being saved or published automatically.
+
+These are per-call safeguards only. They are not a provider-side billing cap, usage alert, distributed concurrency lease, or guarantee of a particular currency cost. The repository contains a source-level atomic account-quota RPC and a concurrent-test harness, but the migration has not been applied to any environment and disposable-database proof is still required. Do not treat the quota as a live operational control until that proof and deployment identity are independently confirmed. Provider-side budget/alert settings also require owner configuration and independent verification.
+
 ## What this control does — and does not — prove
 
 - It prevents this app's draft endpoint from making a paid AI call when the flag is set and loaded by the running server.
