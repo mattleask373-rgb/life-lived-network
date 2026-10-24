@@ -264,6 +264,15 @@ describe("public SEO live smoke contract", () => {
     const failures = evaluateSeoSmoke(documents);
     expect(failures).toContain("sitemap.xml: URL must not contain embedded credentials");
     expect(failures.join("\n")).not.toContain("user:secret");
+
+    const encodedCredentials = healthyDocuments();
+    encodedCredentials.sitemap.body = encodedCredentials.sitemap.body.replace(
+      origin + "/journey",
+      "https://user%40name:p%3Ass@" + new URL(origin).host + "/journey",
+    );
+    const encodedFailures = evaluateSeoSmoke(encodedCredentials);
+    expect(encodedFailures).toContain("sitemap.xml: URL must not contain embedded credentials");
+    expect(encodedFailures.join("\n")).not.toContain("user%40name");
   });
 
   it("rejects private URLs in a sitemap and cross-origin URLs", () => {
