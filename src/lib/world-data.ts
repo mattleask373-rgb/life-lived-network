@@ -42,6 +42,11 @@ export interface WorldEntry {
   /** Currency of `cost`, so a price is never shown in the wrong money. */
   currency?: string;
   /**
+   * False means the source has not supplied a usable amount and currency.
+   * Omitted retains the historical first-party contract (cost=0 means free).
+   */
+  priceKnown?: boolean;
+  /**
    * True for clearly-labelled demonstration records. Real activity never sets
    * this, and the interface always says so where it appears.
    */
