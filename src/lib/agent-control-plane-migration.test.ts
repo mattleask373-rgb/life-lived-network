@@ -58,6 +58,14 @@ describe("agent control-plane migration lineage (static contract)", () => {
     expect(migration("20261023130000_agent_dispatch_idempotency_scope.sql")).not.toContain(
       "attempt_row.lease_generation, attempt_row.lease_token,",
     );
+
+    const dispatchTest = readFileSync(
+      new URL("../../supabase/tests/agent_dispatch_idempotency.test.sql", import.meta.url),
+      "utf8",
+    );
+    expect(dispatchTest).toContain("'REPLAYED'");
+    expect(dispatchTest).toContain("lease_token IS NULL");
+    expect(dispatchTest).toContain("existing dispatch lease is no longer active");
   });
 
   it("keeps client table access denied and execution RPCs service-role only", () => {
