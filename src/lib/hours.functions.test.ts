@@ -15,9 +15,7 @@ describe("open-hours pagination and completeness contract", () => {
 
   it("fails closed on missing main rows and failed creator-profile enrichment", () => {
     expect(source).toContain('requireQueryRows(rows, error, "Open hours")');
-    expect(source).toContain(
-      'requireQueryRows(profileRows, profileError, "Open-hours profile")',
-    );
+    expect(source).toContain('requireQueryRows(profileRows, profileError, "Open-hours profile")');
     expect(source).not.toContain("rows ?? []");
     expect(source).not.toContain("profiles ?? []");
   });
