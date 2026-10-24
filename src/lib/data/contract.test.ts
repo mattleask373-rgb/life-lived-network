@@ -38,15 +38,20 @@ describe("paging is bounded and opaque", () => {
     expect(() => splitPageWithLookahead([1], 1.5)).toThrow(RangeError);
   });
 
-  it("only offers a next page when the read filled the limit", () => {
-    const full = toPage([1, 2, 3], 0, 3);
-    expect(full.hasMore).toBe(true);
-    expect(full.nextCursor).not.toBeNull();
+  it("uses explicit lookahead evidence rather than guessing from page length", () => {
+    const exactlyFullFinalPage = toPage([1, 2, 3], 0, false);
+    expect(exactlyFullFinalPage.hasMore).toBe(false);
+    expect(exactlyFullFinalPage.nextCursor).toBeNull();
 
-    const partial = toPage([1, 2], 0, 3);
-    expect(partial.hasMore).toBe(false);
-    expect(partial.nextCursor).toBeNull();
+    const fullPageWithMore = toPage([1, 2, 3], 0, true);
+    expect(fullPageWithMore.hasMore).toBe(true);
+    expect(fullPageWithMore.nextCursor).toBe(encodeCursor(3));
 
+    const partialFinalPage = toPage([1, 2], 0, false);
+    expect(partialFinalPage.hasMore).toBe(false);
+    expect(partialFinalPage.nextCursor).toBeNull();
+
+    expect(() => toPage<number>([], 0, true)).toThrow(RangeError);
     expect(emptyPage<number>()).toEqual({ items: [], nextCursor: null, hasMore: false });
   });
 });

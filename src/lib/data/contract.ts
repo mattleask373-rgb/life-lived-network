@@ -87,12 +87,17 @@ export function emptyPage<T>(): Page<T> {
   return { items: [], nextCursor: null, hasMore: false };
 }
 
-/** Builds a page from a bounded read, without leaking the mechanism. */
-export function toPage<T>(items: T[], offset: number, limit: number): Page<T> {
-  const hasMore = items.length === limit;
+/**
+ * Builds a page from a bounded read using an explicit lookahead/count decision.
+ * Page length alone cannot prove that another page exists.
+ */
+export function toPage<T>(items: T[], offset: number, hasMore: boolean): Page<T> {
+  if (hasMore && items.length === 0) {
+    throw new RangeError("A page with more results must advance its cursor");
+  }
   return {
     items,
     hasMore,
-    nextCursor: hasMore ? encodeCursor(offset + limit) : null,
+    nextCursor: hasMore ? encodeCursor(offset + items.length) : null,
   };
 }
