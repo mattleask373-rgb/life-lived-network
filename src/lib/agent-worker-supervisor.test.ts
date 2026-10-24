@@ -188,6 +188,32 @@ describe("bounded agent worker supervisor", () => {
     }
   });
 
+  it("backs off when consecutive status-heartbeat writes fail", async () => {
+    const controller = new AbortController();
+    const delays: number[] = [];
+    const persisted: AgentWorkerSupervisorHeartbeat[] = [];
+    let writes = 0;
+    const adapters = baseAdapters({
+      selectNextReadyTask: vi.fn(async () => null),
+      writeHeartbeat: vi.fn(async (heartbeat: AgentWorkerSupervisorHeartbeat) => {
+        writes += 1;
+        if (writes <= 2) throw new Error("token=heartbeat-secret");
+        persisted.push(heartbeat);
+      }),
+      sleep: abortOnSleep(controller, 2, delays),
+    });
+
+    const summary = await runAgentWorkerSupervisor(adapters, controller.signal, {
+      pollIntervalMs: 1000,
+      maxBackoffMs: 4000,
+    });
+
+    expect(delays).toEqual([1000, 2000]);
+    expect(summary.consecutiveFailures).toBe(2);
+    expect(persisted.every((heartbeat) => heartbeat.status === "STOPPED")).toBe(true);
+    expect(JSON.stringify(persisted)).not.toContain("heartbeat-secret");
+  });
+
   it("rejects invalid intervals instead of creating a fast retry loop", async () => {
     const controller = new AbortController();
     const adapters = baseAdapters();
