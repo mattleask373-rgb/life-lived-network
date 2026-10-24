@@ -131,11 +131,14 @@ function JourneyPage() {
                 <h2 className="text-2xl">{j.name}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{j.idea}</p>
                 <p className="mt-2 text-sm">
-                  You'd spend about {currencySymbol(place?.currency)}
-                  {j.spend}
+                  {j.spendComplete
+                    ? `You'd spend about ${currencySymbol(place?.currency)}${j.spend}`
+                    : `Known prices total about ${currencySymbol(place?.currency)}${j.spend}; some prices were not provided`}
                   {j.earn > 0
                     ? ` and earn about ${currencySymbol(place?.currency)}${j.earn}.`
-                    : "."}
+                    : j.spendComplete
+                      ? "."
+                      : ". The final cost may be higher."}
                 </p>
 
                 <ol className="mt-4 space-y-3">
@@ -154,7 +157,7 @@ function JourneyPage() {
                         </span>
                         <span className="block text-sm text-muted-foreground">
                           {s.entry.place} · {duration(s.entry.minutes)} ·{" "}
-                          {money(s.entry.cost, s.entry.currency)}
+                          {money(s.entry.cost, s.entry.currency, "en", s.entry.priceKnown !== false)}
                         </span>
                       </button>
                       <p className="mt-1 text-sm text-foreground/75 italic">{s.why}</p>
