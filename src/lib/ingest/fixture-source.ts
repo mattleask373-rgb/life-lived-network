@@ -26,6 +26,7 @@ export interface FixtureRequest {
   /** The locality's own name, used only as the fixture venue's town. */
   localityName: string;
   timezone: string;
+  countryCode?: string;
   now?: Date;
 }
 
@@ -53,7 +54,13 @@ export function fixturePayload(request: FixtureRequest): unknown {
   const lng = request.lng;
   const location =
     lat === null || lng === null ? {} : { latitude: String(lat), longitude: String(lng) };
-  const venue = { name: `${town} demonstration hall`, city: { name: town }, location };
+  const countryCode = request.countryCode?.trim().toUpperCase() ?? "";
+  const venue = {
+    name: `${town} demonstration hall`,
+    city: { name: town },
+    ...( /^[A-Z]{2}$/.test(countryCode) ? { country: { countryCode } } : {}),
+    location,
+  };
   const timezone = request.timezone || "Europe/London";
 
   const primaryStart = at(now, 2, 19);
