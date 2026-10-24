@@ -462,7 +462,9 @@ async function storeEvent(
       .from("listings")
       .update(listing)
       .eq("id", existingRecord.listing_id);
-    if (listingUpdateError) throw new Error("Existing source listing update could not be confirmed.");
+    if (listingUpdateError) {
+      throw new Error("Existing source listing update could not be confirmed.");
+    }
     const { error: sourceRecordUpdateError } = await admin
       .from("source_records")
       .update({
@@ -473,7 +475,9 @@ async function storeEvent(
         source_updated_at: event.sourceUpdatedAt ?? null,
       })
       .eq("id", existingRecord.id);
-    if (sourceRecordUpdateError) throw new Error("Source provenance update could not be confirmed.");
+    if (sourceRecordUpdateError) {
+      throw new Error("Source provenance update could not be confirmed.");
+    }
     return "updated";
   }
 
@@ -557,7 +561,9 @@ async function storeEvent(
       .eq("id", existingRecord.id);
     if (provenanceUpdateError) {
       const { error: rollbackError } = await admin.from("listings").delete().eq("id", created.id);
-      if (rollbackError) throw new Error("Listing rollback after provenance failure could not be confirmed.");
+      if (rollbackError) {
+        throw new Error("Listing rollback after provenance failure could not be confirmed.");
+      }
       throw new Error("Resolved source provenance update could not be confirmed.");
     }
   } else {
