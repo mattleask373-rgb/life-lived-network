@@ -391,6 +391,35 @@ describe("bounded agent worker runtime", () => {
     expect(db.recordResultFenced).not.toHaveBeenCalled();
   });
 
+  it("does not persist a successful result when caller cancellation wins the provider race", async () => {
+    const controller = new AbortController();
+    const db = adapters();
+    const execute = vi.fn(async () => {
+      controller.abort();
+      return {
+        status: "VERIFYING",
+        summary: "Prepared a bounded change for review.",
+        evidenceRefs: ["https://github.com/example/repo/commit/abc123"],
+        changedPaths: ["src/lib/worker.ts"],
+        providerReportedTests: "PASS",
+        uncertainties: ["Independent CI is still required."],
+        nextAction: "Run exact-head verification and request review.",
+      };
+    });
+
+    const result = await runAgentWorkerCycle(
+      input({
+        signal: controller.signal,
+        adapters: db,
+        provider: provider({ execute }),
+      }),
+    );
+
+    expect(result).toMatchObject({ outcome: "CANCELLED", code: "EXECUTION_CANCELLED" });
+    expect(db.recordCancellationFenced).toHaveBeenCalledTimes(1);
+    expect(db.recordResultFenced).not.toHaveBeenCalled();
+  });
+
   it("records cancellation if the scheduler stops after dispatch but before provider invocation", async () => {
     const controller = new AbortController();
     const model = provider();
