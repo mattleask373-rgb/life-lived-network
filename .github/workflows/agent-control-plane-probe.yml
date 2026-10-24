@@ -1,0 +1,86 @@
+name: Agent Control-Plane Read-Only Probe
+
+on:
+  schedule:
+    # Offset from the top of the hour to reduce contention with other scheduled jobs.
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-control-plane-readonly-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Probe documented control-plane contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out scheduled revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+
+      - name: Verify contracts and report an observed heartbeat
+        shell: bash
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          REF_NAME: ${{ github.ref }}
+          REVISION: ${{ github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          required_files=(
+            "AGENTS.md"
+            "docs/agents/STATE-MACHINE.md"
+            "docs/agents/CLAIM-LEASE-HEARTBEAT.md"
+            "docs/agents/INVARIANTS.md"
+            "docs/agents/OBSERVABILITY.md"
+            "docs/adr/002-agent-control-plane.md"
+          )
+
+          for file in "${required_files[@]}"; do
+            if [[ ! -s "$file" ]]; then
+              echo "::error::Required control-plane contract is missing or empty: $file"
+              exit 1
+            fi
+          done
+
+          grep -Fq "No autonomous merge to main" AGENTS.md
+          grep -Fq "No secret exposure" docs/agents/INVARIANTS.md
+          grep -Fq 'findSupply()' AGENTS.md
+
+          heartbeat_at="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          run_url="${SERVER_URL}/${REPOSITORY}/actions/runs/${RUN_ID}"
+
+          {
+            echo "## Agent control-plane read-only probe"
+            echo
+            echo "- **Probe result:** PASS"
+            echo "- **Heartbeat observed at (UTC):** ${heartbeat_at}"
+            echo "- **Revision:** \`${REVISION}\`"
+            echo "- **Ref:** \`${REF_NAME}\`"
+            echo "- **Trigger:** \`${EVENT_NAME}\`"
+            echo "- **Run:** [${RUN_ID} / attempt ${RUN_ATTEMPT}](${run_url})"
+            echo
+            echo "### Explicit scope"
+            echo "- Control-plane contract files: checked"
+            echo "- Supabase / application database: **not contacted**"
+            echo "- Agent dispatch / model provider calls: **not attempted**"
+            echo "- Production data, credentials, repository files or settings: **not mutated**"
+            echo
+            echo "> This proves only that this scheduled repository probe ran and the documented guardrails were present at this revision. It does not prove a persistent agent executor, hosted control-plane schema, authenticated provider, queue processing, or production health."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          printf 'probe_result=PASS\n'
+          printf 'heartbeat_at_utc=%s\n' "$heartbeat_at"
+          printf 'revision=%s\n' "$REVISION"
+          printf 'run_url=%s\n' "$run_url"
