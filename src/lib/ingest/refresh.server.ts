@@ -374,7 +374,14 @@ async function storeEvent(
     source_state: event.state,
     last_seen_at: now,
   });
-  requireIngestStorageSuccess(sourceRecordInsertError, "new source provenance insert");
+  if (sourceRecordInsertError) {
+    // Do not leave a newly public source-derived listing without its provenance
+    // row when the write fails. This compensating delete is best-effort; a DB
+    // transaction/RPC would be stronger and remains an explicit follow-up.
+    const { error: rollbackError } = await admin.from("listings").delete().eq("id", created.id);
+    requireIngestStorageSuccess(rollbackError, "listing rollback after provenance failure");
+    requireIngestStorageSuccess(sourceRecordInsertError, "new source provenance insert");
+  }
 
   const images = usableImages(event.images, source.store_images);
   if (images.length) {
