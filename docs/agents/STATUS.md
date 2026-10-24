@@ -1,4 +1,127 @@
-# Agent System Status — 2026-10-22 (live coordination snapshot)
+
+# Agent System Status — 2026-10-24 (authoritative current snapshot)
+
+**Audit timestamp:** 2026-10-24 13:32 UTC  
+**Repository:** `mattleask373-rgb/life-lived-network`  
+**Main SHA at audit start:** `70a3e261b18e3be5e90429e4ad4defd1fd8008c7` (re-fetched at 13:31 UTC; still current)  
+**Decision:** **Not ready for global rollout or autonomous 24/7 production execution.** Continue bounded source work and non-production validation; keep public AI activation, hosted schema/RLS writes, production deployment, paid campaigns, and global expansion behind owner/security gates.
+
+
+**Open-PR backlog snapshot (13:30 UTC):** 97 open PRs: 78 drafts, 19 non-drafts, 14 based on other unmerged branches. Track the remaining dependency graph in [issue #374](https://github.com/mattleask373-rgb/life-lived-network/issues/374), and the owner-controlled canonical deploy/Supabase/first-market identity gate in [issue #375](https://github.com/mattleask373-rgb/life-lived-network/issues/375). Prior checks do not make a stale stacked head merge-ready.
+
+This snapshot supersedes the historical coordination notes retained below. Re-verify exact heads and external environment state before any merge or deployment.
+
+## 1. Verified governance and CI baseline
+
+- GitHub ruleset `24946178` (“living World - protect main”) was read as **active** on 2026-10-24. It requires one approving review, dismissal of stale approvals on push, approval of the latest push, resolved review threads, a strict required `verify` status, and no non-fast-forward updates. No bypass actor was configured in the returned ruleset.
+- Passing CI is necessary but insufficient: no currently reviewed candidate should be merged without an independent approving review and resolved threads.
+- Current main's `.github/workflows/verify.yml` continues independent lint/test/build and eligible disposable-local database checks after the dependency audit, then deliberately fails the required `verify` job if the high/critical locked dependency audit is non-green. Keep this hard gate. At the time of this update, exact-head Verify and CodeQL both passed for fresh-main PR #364, so stale stacked-branch audit failures must not be generalized to current main. The remaining workflow issue was that the concurrency group omitted `github.event_name`; #364 fixes it.
+- The exact current public-host identity, deployed build SHA, authoritative Lovable Git/sync target, production Supabase project ID, and named disposable Supabase project have **not** been verified in this audit. Do not infer them from repository source or CI.
+
+## 2. Current candidate PR findings
+
+| PR | Current evidence | Decision / next action |
+| --- | --- | --- |
+| [#361 — grouped Bun minor/patch dependency updates](https://github.com/mattleask373-rgb/life-lived-network/pull/361) | Non-draft; Verify and CodeQL passed on head `f3a30b2c23a8feaa9fd3d30143dd3ceef3d70c83`, but GitHub compares it as **diverged: 1 commit ahead / 48 behind main**. It changes `package.json` and `bun.lock` for 49 grouped updates. No review submissions were found. Dependabot also reported that the configured `dependencies` label does not exist. | Not merge-ready. Refresh/recreate from current main and regenerate the frozen lockfile; do not copy an old lockfile blindly. Run Verify + CodeQL on the fresh head and independently review the compatibility/changelog impact before approving. |
+| [#362 — authenticated locality discovery and fact-level RLS](https://github.com/mattleask373-rgb/life-lived-network/pull/362) | Ready for review on main. Verify and CodeQL passed on exact head `c881ad42689ee052021a278bbb9e8f4ebda2afce`. Adds per-fact policies, authenticated readers, scope/query completeness guards and synthetic local/PostgREST tests. No review submissions were found. | Still blocked from merge until an independent security reviewer examines policy composition, place/descendant semantics, every fact table's privacy contract, owner-read policies, identity derivation, and list → detail → supply parity. Local CI is not hosted RLS proof and does not authorize a migration. |
+| [#359 — bounded worker core and idempotent dispatch](https://github.com/mattleask373-rgb/life-lived-network/pull/359) | Ready for review on main. Verify and CodeQL passed on exact head `5940f20054ad38cd380ef04767bd7d8fe4fc85db` after correcting the Prettier assertion. Worker remains an implementation core; no provider, adapter, scheduler or hosted runtime is activated. #336 and #344 were closed as superseded to prevent duplicate worker/SQL merges. | Independent security review remains mandatory for correlation replay, task/workspace scope, privilege matrix, stale-worker fencing and authoritative identity. Require a server adapter/scheduler PR and disposable non-production rehearsal before activation. |
+| [#343 — email magic-link sign-in](https://github.com/mattleask373-rgb/life-lived-network/pull/343) | Non-draft, based on main. Latest observed head `55c5d726b10f6595e1a23f45f954876e8750dcd6` has Verify and CodeQL passing. No reviews were recorded. | Eligible for independent review, but not merge-ready until approval and review-thread resolution. Review redirect allowlists, account-enumeration behavior, rate limits, expiry, and production provider settings. |
+| [#341 — Life List write integrity](https://github.com/mattleask373-rgb/life-lived-network/pull/341) | Retargeted to `main`; Verify passed on exact head `3e23fef6df368b1d0227eb8030c23b1f1efb76f2` (`40095513665`). | Has source/test CI evidence, but needs independent review and base/mergeability recheck immediately before merge. Review account-switch fencing, failure recovery and guest-data preservation. |
+| [#346 — four-locale discovery foundation](https://github.com/mattleask373-rgb/life-lived-network/pull/346) | Retargeted to `main`; Verify passed on exact head `23541c59021755af4bdfc19c68b20b49c4f7b68a` (`40095525556`). | Needs independent product/accessibility review and exact-base recheck before merge. Review locale tags, date/time/currency formatting, persistence, keyboard/screen-reader support and fallback. Four locale primitives are not complete global localization. |
+| [#354 — auditable locality membership provisioning](https://github.com/mattleask373-rgb/life-lived-network/pull/354) and [#363 — current-main membership administration](https://github.com/mattleask373-rgb/life-lived-network/pull/363) | #354 is closed unmerged. #363 is the current-main replacement; Verify + CodeQL passed on exact head `6d9680219b1754c62af243b5dc3af860b6f7e9e3`. | #363 still requires independent security review of the privileged RPC, SECURITY DEFINER ownership/search_path, service-role-only grants, actor binding, self-approval denial, audit atomicity, expiry renewal/revocation and the effective RLS/grant matrix. Do not provision real memberships or apply hosted migrations from CI. |
+| [#351 / #360 — fail-closed world reads and pagination completeness](https://github.com/mattleask373-rgb/life-lived-network/pull/351) / [#360](https://github.com/mattleask373-rgb/life-lived-network/pull/360) | #351 is now based on `main`, with Verify passed on exact head `ebac87266499c89346f9c0e829cb9539d80504d4` (`40095450777`). #360 still stacks on #351 to reuse its shared row guard. | Review/merge #351 first, then refresh #360 onto the merged base and re-run exact-head Verify. Review only bounded/tested pagination correctness; don’t merge stale stack blindly. |
+| [#355 — published SEO mismatch evidence](https://github.com/mattleask373-rgb/life-lived-network/pull/355), [#368 — static crawler assets](https://github.com/mattleask373-rgb/life-lived-network/pull/368), [#369 — sitemap completeness](https://github.com/mattleask373-rgb/life-lived-network/pull/369) | #368 and #369 are fresh-main ports and each has exact-head Verify + CodeQL passing. #368 generates `robots.txt`/`sitemap.xml` and validates the canonical origin; #369 adds exact-count, fail-closed sitemap reads and requires explicit positive eligibility. #355’s last recorded GET evidence through 11:33 UTC reported robots/sitemap mismatch; this audit did not obtain a fresh host response. | #368/#369 are ready for review; owner must still confirm canonical host/build/Supabase/Lovable target and authorize deployment before site parity can be claimed. #335 is closed unmerged; taxonomy expansion is separately tracked in issue #370. Never infer private-data exposure from SEO mismatch alone. |
+| [#339 — audit/growth design pack](https://github.com/mattleask373-rgb/life-lived-network/pull/339) and [#283 — status/ADR refresh](https://github.com/mattleask373-rgb/life-lived-network/pull/283) | Draft documentation branches contain older baseline SHAs and status claims that conflict with the current live ruleset snapshot. | Do not merge as-is. Reconcile their useful docs with this current snapshot and preserve historical entries as history, not current evidence. |
+| [#358 — run independent validation after dependency-audit failure](https://github.com/mattleask373-rgb/life-lived-network/pull/358) | Closed as a duplicate of #364. #336/#344 are closed in favour of #359; #349 in favour of #367; #335 in favour of #368/#369; #347 in favour of #371. | Use current-main replacements only; don’t merge stale branches or duplicate migrations. |
+| [#340 — concurrent AI draft quota test](https://github.com/mattleask373-rgb/life-lived-network/pull/340) | Still an old/stacked candidate for cross-request quota verification. #367 is a fresh-main per-attempt bounds port with Verify + CodeQL passing; its limits do not equal a distributed quota or provider billing cap. | Port/reconcile #340 to current main, prove atomic cross-request quota/replay behavior, and add provider spend caps/alerts plus a tested kill switch before paid/public AI. Worker/scheduler follow-up is tracked in [issue #373](https://github.com/mattleask373-rgb/life-lived-network/issues/373). |
+
+| [#367 — per-attempt AI cost bounds](https://github.com/mattleask373-rgb/life-lived-network/pull/367) | Fresh-main PR; Verify + CodeQL passed on head `d39e64b9e80ad91c4542d0b8cd129f01166f254a`. | Ready for independent review. Per-call safeguards only; do not enable AI on that basis alone. |
+| [#368 — canonical static SEO assets](https://github.com/mattleask373-rgb/life-lived-network/pull/368) | Fresh-main PR; Verify + CodeQL passed on head `f0cb7e28a64cc08050159fea550657ed0e975ef7`. | Ready for independent review; owner-authorized deployment and a fresh host smoke are still required to fix/prove the live host. |
+| [#369 — fail-closed sitemap completeness](https://github.com/mattleask373-rgb/life-lived-network/pull/369) | Fresh-main PR; Verify + CodeQL passed on head `def7ee6a7a479954e49ff94911278a5463608db6`. | Ready for independent review; source-level count checks do not prove live data completeness or indexation. |
+| [#371 — privacy-safe outcome measurement contract](https://github.com/mattleask373-rgb/life-lived-network/pull/371) | Current-main port. Exact-head Verify passed (run `40098370188`) and CodeQL passed (run `40098370255`) on head `e40002d92fd89378f3ae9af6d710aed774a4736b`. Adds day-bucket need lifecycle events and coarse dimensions; removes an unused parallel contract after code search found no production callers. | Ready for independent review. Contract/docs only; no event sink, persistence or instrumentation. Any future sink requires separate consent/purpose/retention/RLS review. |
+### PRs created from this audit
+
+- [#364 — isolate push and pull-request Verify runs](https://github.com/mattleask373-rgb/life-lived-network/pull/364): ready for review; exact-head Verify and CodeQL passed. Awaits independent approval.
+- [#365 — remove Dependabot's nonexistent label assignment](https://github.com/mattleask373-rgb/life-lived-network/pull/365): ready for review; exact-head Verify and CodeQL passed. Awaits independent approval.
+- [#366 — global expansion and continuous AI readiness status](https://github.com/mattleask373-rgb/life-lived-network/pull/366): current readiness doc; latest status commit must pass exact-head Verify + CodeQL before merge.
+- [#367 — AI per-attempt bounds](https://github.com/mattleask373-rgb/life-lived-network/pull/367): Verify + CodeQL passed; ready for independent review.
+- [#368 — static robots/sitemap generation](https://github.com/mattleask373-rgb/life-lived-network/pull/368): Verify + CodeQL passed; ready for independent review.
+- [#369 — fail-closed sitemap source counts](https://github.com/mattleask373-rgb/life-lived-network/pull/369): Verify + CodeQL passed; ready for independent review.
+- [#371 — privacy-minimised need lifecycle measurement](https://github.com/mattleask373-rgb/life-lived-network/pull/371): Verify + CodeQL passed on `e40002d92fd89378f3ae9af6d710aed774a4736b`; ready for independent review.
+- [#363 — audited locality membership administration](https://github.com/mattleask373-rgb/life-lived-network/pull/363): current-main replacement for closed #354; Verify + CodeQL passed, but independent security review remains mandatory.
+
+## 3. Dependency-ordered merge queue
+
+Use this order to minimize risk and avoid stale stacked merges. It is an execution plan, not permission to merge. The active ruleset requires independent approval, resolved review threads and current exact-head required `verify` status.
+
+1. **#364 — Verify concurrency isolation.** Verify + CodeQL passed on exact head; obtain independent approval and resolve review threads before merge. #358 is closed as duplicate.
+2. **#365 — Dependabot label correction.** Verify + CodeQL passed; obtain independent approval before merge.
+3. **#351 — fail-closed world reads.** Retargeted to main; Verify passed. Review the shared row guard and merge before #360.
+4. **#360 — truthful pagination/read completeness.** Refresh after #351 merges; rerun exact-head Verify and inspect lookahead, stable ordering and explicit completeness.
+5. **#362 — locality/fact-level RLS and authenticated reads.** Verify + CodeQL passed. Independent security review must cover policy composition, owner-read policies, fact privacy, exact-place vs descendant query scope and list/detail/supply parity. No hosted migration from CI.
+6. **#363 — audited locality membership administration.** Fresh-main replacement for closed #354; Verify + CodeQL passed. Review the server authorization and RPC service-role grants, SECURITY DEFINER owner/search_path, actor binding, self-approval prohibition, audit atomicity, expiry renewal and revocation. Keep behind #362 review and owner authorization.
+7. **#357 — map/list pin-cap truthfulness.** Retargeted to main; Verify passed. Review list/pin parity and finish manual keyboard/mobile/date-line QA.
+8. **#368 — canonical static crawler assets**, then **#369 — fail-closed sitemap source counts**. Both Verify + CodeQL passed. Require independent review. Owner must confirm canonical host, Lovable sync target, actual deployed build SHA and authorization before release; source PRs alone do not repair/prove live host parity.
+9. **#343 — magic-link authentication.** Verify + CodeQL passed on current head; review redirect allowlists, enumeration behavior, expiry/rates and production-provider settings.
+10. **#341 — Life List write integrity.** Retargeted to main; Verify passed. Review account-switch fencing, write-failure recovery and guest-data preservation.
+11. **#346 — localization foundation.** Retargeted to main; Verify passed. Review full journeys, accessibility, date/time/currency and fallback; add markets only with native QA and evidence.
+12. **#367 — per-attempt AI bounds.** Verify + CodeQL passed; review token/retry/timeout limits. These are not a global quota or provider billing cap; keep paid/public AI disabled until separate controls are proven.
+13. **#371 — privacy-safe need lifecycle measurement.** Verify + CodeQL passed and is ready for review. Contract/docs only; no telemetry sink. Do not claim conversion/retention attribution from aggregate daily counts.
+14. **#361 — grouped dependency updates.** Not merge-ready: 48 commits behind main. Recreate/refresh on current main, regenerate the frozen lockfile, rerun Verify + CodeQL and obtain independent compatibility review.
+15. **#340 — atomic AI quota/concurrency proof.** Reconcile/port to current main after #367. Require cross-request quota/replay tests, provider spend caps/alerts and a tested kill switch before paid AI.
+16. **#359 — bounded worker core + idempotent dispatch.** Verify + CodeQL passed and ready for independent security review. Not a live 24/7 service; adapter/scheduler/rehearsal is tracked in [issue #373](https://github.com/mattleask373-rgb/life-lived-network/issues/373).
+17. **#345 — need freshness/lifecycle.** Do not merge the old stack. [Issue #372](https://github.com/mattleask373-rgb/life-lived-network/issues/372) records reconciliation with #362 locality RLS; after #362 is reviewed/merged, port non-overlapping freshness/lifecycle work to current main.
+18. **#366 / #339 / #283 / #338 and orchestration docs.** Merge current, non-duplicative governance docs only after factual review and exact-head checks. Maintain one canonical status file.
+19. **Remaining 14 stacked PRs.** Reconcile in [issue #374](https://github.com/mattleask373-rgb/life-lived-network/issues/374); preserve real dependency edges (#360→#351, #109→#108→#106, #103→#102→#101, #104→#103, #57→#54, #58→#49, #62→#61, #86→#72). Port diagnostic-base candidates to current main rather than merging workflow scaffolding or duplicate feature commits.
+
+The ordering is a dependency plan, not permission to merge. Any changed head invalidates prior exact-head checks; SQL/authorization PRs require independent human security review.
+
+## 4. Global expansion acceptance gates
+
+- **Identity/governance:** owner records the canonical repository, Lovable Git destination/sync branch, published host/build SHA, production Supabase project reference, and a separately named disposable project. Verify permissions and recovery access. Never infer which database is production from an environment variable name alone.
+- **Privacy/security:** direct RLS/PostgREST tests for anonymous, owner, verified same-place, different-place, descendant-place, expired membership, non-discoverable profiles and each fact table; current/expired need freshness; cross-account reads/writes blocked. Review export/deletion, retention, abuse reporting, moderation, consent and audit logs.
+- **Truthful exchange loop:** prove one consent-based locality pilot with real, rights-cleared supply; measure supply → discovery → request → human response → completed outcome → follow-up. Distinguish zero supply from query failure/capping; do not fabricate listings or claim marketplace liquidity without evidence.
+- **Host/SEO:** published build must match source; valid sitemap, robots directives, canonical/noindex on private pages, metadata and structured data; automated public GET smoke must prove parity before expansion.
+- **Internationalization:** translate complete user journeys and policy/consent/support content; normalize dates/time zones/currencies and local units; validate country-specific formats, accessibility, language fallback and moderation/support routes. Add locales only with native review and market demand evidence.
+- **Market/compliance:** per-country legal review of privacy/data handling, consumer/marketplace terms, work and volunteering classification, payments/tax, marketing consent, age/safeguarding, copyright/licensing, accessibility and localization. Do not assume UK/EU requirements generalize globally.
+- **Reliability/capacity:** define SLOs, availability/latency/error budgets, backup and restore tests, incident response/on-call, secret rotation, vulnerability patching, rate limits and staged load tests. k6 syntax inspection is not a capacity benchmark. No 1M-DAU claim without measured load and cost data.
+- **Economics/supply:** track consented activation, verified supply coverage, response/completion, retention and contribution costs; validate one paid pilot and unit economics before automating spend or scaling acquisition.
+- **Rollout:** launch one named market/locality at a time with rollback, measurable exit criteria and named human owner; only expand after the previous cohort demonstrates real outcomes without privacy, safety or economic regressions.
+
+## 5. Requirements for continuous AI operations
+
+The product repo now contains pieces of a bounded worker/control-plane design, but passing code tests is not proof of an active persistent executor. “24/8” is treated here as a request for always-on coverage; the normal operational target is **24/7/365**, with explicit human on-call coverage for failures.
+
+Before production autonomy:
+1. A durable queue/task store with a single canonical state machine, authenticated workload identity, workspace/project/task scope, immutable audit trail, leases with monotonic fencing, idempotent dispatch/completion, and bounded retry/dead-letter recovery.
+2. A scheduler with missed-run recovery, concurrency caps, jitter/backoff, provider timeouts, circuit breakers, cancellation, stale-lease reclamation, and duplicate-call protection.
+3. A model/tool allowlist, untrusted-input boundary, egress restrictions, permission tiers, rate limits, per-task and global spend caps, provider budgets/alerts, and tested kill switches.
+4. Independent evidence collection, exact-SHA checks, observability for queue age, success/error rates, model/tool cost, latency, retries and drift; actionable alerts and tested incident/runbook procedures.
+5. Low-autonomy pilot only: read/research/draft/test within explicit workspace scope. High-impact actions (merge, deploy, schema/ACL changes, production data, outbound campaigns, payments and public AI activation) remain human-approved.
+6. A non-production 24/7 rehearsal proving restart/recovery, duplicate delivery, expired lease, provider outage, quota exhaustion, secret rotation, alert delivery, restore and kill-switch behavior. Only after this evidence and owner sign-off should any production pilot be considered.
+
+## 6. Portfolio scope note
+
+The connected `real-world-atlas-agent-orchestration` repository has an open draft documentation PR [#1](https://github.com/mattleask373-rgb/real-world-atlas-agent-orchestration/pull/1) describing roles, task contracts and revenue experiments; it explicitly does not install tools, execute providers or claim tests. The connected `real-world-atlas-marketing`, `real-world-atlas-monetization` and `real-world-atlas-compliance` repositories reported repository size `0` in the current inventory. Treat these as placeholders, not operational capabilities. Define ownership and canonical sources before splitting work further; do not assume separate empty repositories provide separation of duties or compliance.
+
+## 7. Owner/reviewer handoffs
+
+- **Repository admin:** confirm the active ruleset remains enforced; check deletion protection separately; define approved reviewers and required checks.
+- **Product/environment owner:** confirm the authoritative Lovable Git and Supabase project identities, the published build SHA, market scope, pilot budget and rollback owner.
+- **Canonical environment gate:** close [issue #375](https://github.com/mattleask373-rgb/life-lived-network/issues/375) with non-secret references for canonical repo/Lovable sync target, public host/deployed build SHA, separate production and disposable Supabase project refs, first pilot locality/country, and release/rollback authority.
+- **Independent security reviewer:** review #362 and refreshed #354 as one authorization boundary; review #359's dispatch/execution boundary before any worker activation.
+- **Operations owner:** define production SLOs, alert routing, on-call, backup/restore, cost limits and kill switch; prove them in a disposable 24/7 rehearsal.
+- **Market owner:** approve first locality/country, legitimate supply partners, native-language QA and legal review before any public rollout.
+
+## Evidence discipline
+
+This is an on-demand repository/PR snapshot, not a continuous monitor. CI results are tied to the cited commit SHA; source-level or local disposable tests do not prove production state. The latest recorded SEO probe in #355 is historical evidence through 11:33 UTC, not a fresh confirmation in this audit. No hosted database mutation, production deployment, secret change, public AI activation, paid campaign or PR merge was performed by this audit.
+
+---
+
+## Historical snapshot retained verbatim (2026-10-22 and earlier; superseded unless re-verified)
+
+# Historical Agent System Status — 2026-10-22 (superseded)
 
 ## Authoritative snapshot — live refresh 22 October 2026, 20:20 UTC
 
