@@ -138,8 +138,7 @@ export function ticketmasterResponseEventCount(payload: unknown): number {
     if (
       (events.length === 0 &&
         (pageRecord["totalElements"] !== 0 || pageRecord["totalPages"] !== 0)) ||
-      (events.length > 0 &&
-        (pageRecord["totalElements"] === 0 || pageRecord["totalPages"] === 0))
+      (events.length > 0 && (pageRecord["totalElements"] === 0 || pageRecord["totalPages"] === 0))
     ) {
       throw new Error("The source returned an invalid event collection.");
     }
