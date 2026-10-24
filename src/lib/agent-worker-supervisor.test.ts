@@ -114,6 +114,48 @@ describe("bounded agent worker supervisor", () => {
     expect(delays).toEqual([1000, 1000]);
   });
 
+  it("propagates the stop signal into the active worker cycle", async () => {
+    const controller = new AbortController();
+    const heartbeatRows: AgentWorkerSupervisorHeartbeat[] = [];
+    const runCycle = vi.fn(
+      async (taskId: string, _cycleId: string, signal: AbortSignal): Promise<WorkerCycleResult> => {
+        expect(signal).toBe(controller.signal);
+        controller.abort();
+        expect(signal.aborted).toBe(true);
+        return {
+          outcome: "CANCELLED",
+          taskId,
+          code: "EXECUTION_CANCELLED",
+          reason: "Cancelled and durably recorded under the lease fence.",
+        };
+      },
+    );
+    const adapters = baseAdapters({
+      selectNextReadyTask: vi.fn(async () => "task-a"),
+      runCycle,
+      writeHeartbeat: vi.fn(async (heartbeat: AgentWorkerSupervisorHeartbeat) => {
+        heartbeatRows.push(heartbeat);
+      }),
+      sleep: async (_milliseconds, signal) => {
+        expect(signal).toBe(controller.signal);
+      },
+    });
+
+    const summary = await runAgentWorkerSupervisor(
+      adapters,
+      controller.signal,
+      { pollIntervalMs: 1000, maxBackoffMs: 2000 },
+    );
+
+    expect(runCycle).toHaveBeenCalledTimes(1);
+    expect(summary).toMatchObject({
+      status: "STOPPED",
+      completedCycles: 1,
+      lastOutcome: "CANCELLED",
+    });
+    expect(heartbeatRows.at(-1)?.status).toBe("STOPPED");
+  });
+
   it("backs off with a cap and never puts exception diagnostics in liveness records", async () => {
     const controller = new AbortController();
     const delays: number[] = [];
