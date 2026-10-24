@@ -21,6 +21,7 @@ import { cancellationFor, eventFreshness, qualityFor } from "./freshness";
 import { payloadHash, sameEvent } from "./dedupe";
 import { TICKETMASTER_KEY, TICKETMASTER_ROOT, ticketmasterQuery } from "./ticketmaster";
 import { FIXTURE_SOURCE_KEY, fixturePayload } from "./fixture-source";
+import { resolveSourceLocality, type CanonicalLocality } from "./locality-resolution";
 
 const MAX_PAGES = 2;
 const MAX_EVENTS = 120;
@@ -119,14 +120,48 @@ export async function refreshSourceRun(request: RefreshRequest): Promise<IngestO
     return finish(source, { ...outcome, failure });
   }
 
+  let canonicalPlaces: CanonicalLocality[] = [];
+  if (events.length > 0) {
+    try {
+      // Reject incomplete/capped hierarchies rather than guessing from a partial
+      // index. This is an internal, reviewer-only refresh path, not a user read.
+      const { loadPlaceIndex } = await import("../place-index.server");
+      const placeIndex = await loadPlaceIndex(supabaseAdmin);
+      canonicalPlaces = placeIndex.places;
+    } catch {
+      return finish(source, {
+        ...outcome,
+        failure: "The canonical locality hierarchy could not be confirmed.",
+      });
+    }
+  }
+
   for (const raw of events.slice(0, MAX_EVENTS)) {
     const event = normaliseEvent(raw);
     if (!event) {
       outcome.skipped.push("A record arrived too incomplete to keep");
       continue;
     }
+
+    const locality = resolveSourceLocality({
+      evidence: event,
+      queryCountryCode: request.countryCode,
+      places: canonicalPlaces,
+      sourcePlaceIds: source.place_ids,
+    });
+    if (locality.status !== "resolved") {
+      outcome.skipped.push(`Unresolved source locality (${locality.reason}).`);
+      try {
+        await rememberUnresolvedSourceRecord(supabaseAdmin, source, event);
+      } catch {
+        outcome.skipped.push("Could not retain unresolved source identity.");
+      }
+      continue;
+    }
+
     try {
-      const result = await storeEvent(supabaseAdmin, source, request, event);
+      const resolvedRequest = { ...request, placeId: locality.placeId };
+      const result = await storeEvent(supabaseAdmin, source, resolvedRequest, event);
       if (result === "imported") outcome.imported += 1;
       if (result === "updated") outcome.updated += 1;
       if (result === "duplicate") outcome.duplicates += 1;
