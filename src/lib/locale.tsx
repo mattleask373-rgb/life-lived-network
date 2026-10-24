@@ -58,6 +58,7 @@ const EN = {
   "layer.nature": "Nature",
   "layer.food": "Food",
   "money.free": "Free",
+  "money.unknown": "Price not provided",
   "money.pays": "Pays",
   "duration.none": "No fixed time",
   "duration.minutesShort": "min",
@@ -95,6 +96,7 @@ const MESSAGES: Record<Locale, Dictionary> = {
     "nav.signIn": "Entrar",
     "nav.you": "Perfil",
     "money.free": "Grátis",
+    "money.unknown": "Preço não indicado",
     "money.pays": "Paga",
     "duration.none": "Sem duração fixa",
     "duration.minutesShort": "min",
@@ -136,6 +138,7 @@ const MESSAGES: Record<Locale, Dictionary> = {
     "nav.signIn": "Iniciar sesión",
     "nav.you": "Tú",
     "money.free": "Gratis",
+    "money.unknown": "Precio no indicado",
     "money.pays": "Paga",
     "duration.none": "Sin duración fija",
     "duration.minutesShort": "min",
@@ -177,6 +180,7 @@ const MESSAGES: Record<Locale, Dictionary> = {
     "nav.signIn": "ログイン",
     "nav.you": "あなた",
     "money.free": "無料",
+    "money.unknown": "価格情報なし",
     "money.pays": "報酬",
     "duration.none": "時間指定なし",
     "duration.minutesShort": "分",
@@ -207,7 +211,17 @@ export function translate(locale: Locale, key: TranslationKey): string {
   return MESSAGES[locale][key] ?? MESSAGES.en[key] ?? key;
 }
 
-export function formatLocalizedCurrency(cost: number, currency: string, locale: Locale): string {
+export function formatLocalizedCurrency(
+  cost: number,
+  currency: string,
+  locale: Locale,
+  priceKnown = true,
+): string {
+  // Unknown is not zero. XXX is the ISO no-currency sentinel used for legacy
+  // and source records whose amount/currency has not been substantiated.
+  if (!priceKnown || currency.trim().toUpperCase() === "XXX") {
+    return translate(locale, "money.unknown");
+  }
   if (cost === 0) return translate(locale, "money.free");
   const amount = Math.abs(cost);
   try {
