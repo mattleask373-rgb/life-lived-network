@@ -52,9 +52,7 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { layer: requestedLayer } = Route.useSearch();
-  const [layers, setLayers] = useState<LayerId[]>(() =>
-    requestedLayer ? [requestedLayer] : [],
-  );
+  const [layers, setLayers] = useState<LayerId[]>(requestedLayer ? [requestedLayer] : []);
   const [mobileListOpen, setMobileListOpen] = useState(false);
   const [showAllLoaded, setShowAllLoaded] = useState(false);
   const [showNeedsLayer, setShowNeedsLayer] = useState(true);
